@@ -1,14 +1,8 @@
 [
     {
-        "eui": "test1234567890ab",
-        "nwKey": "00112233445566778899AABBCCDDEE01",
-        "shortAddr": "1234",
-        "bidi": false
-    },
-    {
-        "eui": "TEST1234567890GH",
-        "nwKey": "00112233445566778899AABBCCDDEE04",
-        "shortAddr": "1237",
+        "eui": "00124B001CBCE171",
+        "nwKey": "08596059015260490152709608136098",
+        "shortAddr": "A171",
         "bidi": false
     }
 ]

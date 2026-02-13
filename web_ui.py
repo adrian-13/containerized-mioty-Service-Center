@@ -223,6 +223,7 @@ def ensure_json_api():
 # Global variables for log storage and configuration
 log_entries: List[Dict[str, Any]] = []
 max_log_entries = 1000
+web_log_handler = None
 
 # Custom log handler to capture all logs with timezone support
 class WebUILogHandler(logging.Handler):
@@ -285,15 +286,29 @@ class WebUILogHandler(logging.Handler):
         if len(log_entries) > max_log_entries:
             log_entries = log_entries[-max_log_entries:]
 
-# Add our custom handler to the root logger (only once)
-if not any(isinstance(h, WebUILogHandler) for h in logging.getLogger().handlers):
-    web_handler = WebUILogHandler()
-    logging.getLogger().addHandler(web_handler)
-    logging.getLogger().setLevel(logging.DEBUG)
+def ensure_web_log_handler():
+    """Ensure in-memory web log handler is attached even after logger reconfiguration."""
+    global web_log_handler
 
-    # Specifically capture important logs
+    root_logger = logging.getLogger()
+    existing_handler = next((h for h in root_logger.handlers if isinstance(h, WebUILogHandler)), None)
+
+    if existing_handler is None:
+        web_log_handler = WebUILogHandler()
+        root_logger.addHandler(web_log_handler)
+    else:
+        web_log_handler = existing_handler
+
+    # Keep visibility for INFO/DEBUG logs in the web logs page.
+    if root_logger.level > logging.DEBUG:
+        root_logger.setLevel(logging.DEBUG)
+
     logging.getLogger('TLSServer').setLevel(logging.DEBUG)
     logging.getLogger('mqtt_interface').setLevel(logging.DEBUG)
+
+
+# Attach handler at import time; call again from runtime paths after any logging reset.
+ensure_web_log_handler()
 
 @app.context_processor
 def inject_user():
@@ -317,7 +332,7 @@ def login():
             session['username'] = username
             logger.info(f"User '{username}' logged in")
             return redirect(url_for('index'))
-        error = 'Ungültiger Benutzername oder Passwort'
+        error = 'Invalid username or password'
     return render_template('login.html', error=error)
 
 @app.route('/logout')
@@ -348,7 +363,7 @@ def api_users():
         data = request.get_json()
         username = data.get('username', '').strip()
         if not username or username in users_data.get('users', {}):
-            return jsonify({'success': False, 'error': 'Benutzername ungültig oder bereits vorhanden'}), 400
+            return jsonify({'success': False, 'error': 'Username is invalid or already exists'}), 400
         users_data['users'][username] = {
             'password': data.get('password', 'password123'),
             'role': data.get('role', 'viewer'),
@@ -361,7 +376,7 @@ def api_users():
         data = request.get_json()
         username = data.get('username')
         if username not in users_data.get('users', {}):
-            return jsonify({'success': False, 'error': 'Benutzer nicht gefunden'}), 404
+            return jsonify({'success': False, 'error': 'User not found'}), 404
         if 'password' in data and data['password']:
             users_data['users'][username]['password'] = data['password']
         if 'role' in data:
@@ -375,7 +390,7 @@ def api_users():
         data = request.get_json()
         username = data.get('username')
         if username == session.get('username'):
-            return jsonify({'success': False, 'error': 'Eigenen Benutzer kann nicht gelöscht werden'}), 400
+            return jsonify({'success': False, 'error': 'Cannot delete your own user account'}), 400
         if username in users_data.get('users', {}):
             del users_data['users'][username]
             save_users(users_data)
@@ -1854,6 +1869,7 @@ def get_oms_stats():
 @login_required
 def get_logs():
     global log_entries
+    ensure_web_log_handler()
 
     # Get query parameters for filtering
     level_filter = request.args.get('level', 'all').upper()
@@ -3175,3 +3191,4 @@ def restart_service():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+

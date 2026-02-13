@@ -3,408 +3,1472 @@
 
 {% block content %}
 <style>
-.status-card {
-    border-radius: 12px;
-    padding: 1.5rem;
-    text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
-    height: 100%;
-    border: none;
+.dashboard-shell {
+    display: grid;
+    gap: 0.7rem;
 }
-.status-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    cursor: pointer;
+
+@keyframes deck-enter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
-a.card-link {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    height: 100%;
+
+.hero-panel {
+    border: 1px solid #cfd9e8;
+    border-radius: 0.95rem;
+    background:
+        radial-gradient(800px 240px at 0% 0%, rgba(244, 162, 74, 0.24) 0%, transparent 65%),
+        radial-gradient(900px 300px at 100% -20%, rgba(42, 139, 183, 0.16) 0%, transparent 62%),
+        linear-gradient(155deg, #121d31 0%, #1e304a 42%, #274261 100%);
+    color: #f6fbff;
+    box-shadow: 0 12px 28px rgba(10, 20, 36, 0.3);
+    overflow: hidden;
+    animation: deck-enter 0.42s ease both;
 }
-.health-card.clickable:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    cursor: pointer;
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 0.74rem;
+    padding: 0.72rem 0.78rem;
 }
-.health-header.clickable:hover {
-    opacity: 0.9;
+
+.hero-kicker {
+    margin: 0;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(219, 233, 248, 0.82);
+    font-weight: 800;
 }
-.status-card.success {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
+
+.hero-title {
+    margin: 0.2rem 0 0;
+    font-family: "Sora", "Manrope", sans-serif;
+    font-size: 1.34rem;
+    line-height: 1.16;
+    font-weight: 700;
+    color: #ffffff;
 }
-.status-card.danger {
-    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
-    color: white;
+
+.hero-subtitle {
+    margin: 0.32rem 0 0;
+    max-width: 60ch;
+    color: rgba(221, 233, 247, 0.88);
+    font-size: 0.79rem;
 }
-.status-card.primary {
-    background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
-    color: white;
+
+.hero-pills {
+    margin-top: 0.56rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.36rem;
 }
-.status-card.info {
-    background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
-    color: white;
+
+.hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    padding: 0.2rem 0.52rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: rgba(243, 249, 255, 0.9);
 }
-.status-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
+
+.version-chip {
+    justify-self: end;
+    width: min(100%, 300px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.78rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.58rem 0.66rem;
+    display: grid;
+    gap: 0.34rem;
 }
-.status-icon img {
-    width: 50px;
-    height: 50px;
-    filter: brightness(0) invert(1);
-}
-.status-value {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 0.25rem;
-}
-.status-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-}
-.status-detail {
-    font-size: 0.75rem;
-    opacity: 0.8;
-    margin-top: 0.5rem;
-}
-.eui-list {
-    font-size: 0.7rem;
-    opacity: 0.85;
-    margin-top: 0.5rem;
-    max-height: 60px;
-    overflow-y: auto;
-}
-.health-card {
-    border-radius: 12px;
-    border: 1px solid #dee2e6;
-}
-.health-header {
-    background: linear-gradient(135deg, #343a40 0%, #495057 100%);
-    color: white;
-    border-radius: 12px 12px 0 0;
-    padding: 1rem 1.5rem;
-}
-.health-body {
-    padding: 1.5rem;
-}
-.health-indicator {
+
+.version-row {
     display: flex;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
+    justify-content: space-between;
+    gap: 0.6rem;
 }
-.health-indicator:last-child {
-    border-bottom: none;
+
+.version-label {
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(214, 231, 248, 0.8);
+    font-weight: 800;
 }
-.health-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 12px;
-    flex-shrink: 0;
+
+.version-value {
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: #fff;
 }
-.health-dot.excellent { background: #28a745; }
-.health-dot.good { background: #20c997; }
-.health-dot.warning { background: #ffc107; }
-.health-dot.danger { background: #dc3545; }
-.health-dot.inactive { background: #6c757d; }
-.health-label {
-    flex-grow: 1;
-    font-weight: 500;
-}
-.health-value {
-    font-weight: bold;
-    color: #495057;
-}
-.gauge-container {
+
+.control-actions {
+    margin-top: 0;
     display: flex;
-    justify-content: space-around;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.42rem;
+    flex-wrap: wrap;
+}
+
+.control-meta {
+    font-size: 0.66rem;
+    color: rgba(216, 231, 248, 0.9);
+    font-weight: 700;
+}
+
+.layout-controls {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    min-height: 2rem;
+}
+
+.layout-toolbar {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0;
+    flex-wrap: nowrap;
+}
+
+.layout-toggle-btn {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid #b8c8dd;
+    background: linear-gradient(180deg, #ffffff 0%, #eff5fd 100%);
+    color: #2f4f74;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 7px 16px rgba(15, 23, 42, 0.1);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.layout-toggle-btn:hover {
+    transform: translateY(-1px);
+    border-color: #8aa8c6;
+    box-shadow: 0 9px 18px rgba(15, 23, 42, 0.14);
+}
+
+.layout-toggle-btn[aria-expanded="true"] {
+    border-color: #5d84ae;
+    background: linear-gradient(180deg, #eef5ff 0%, #dfeeff 100%);
+    color: #1f3f64;
+}
+
+.layout-manager {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.34rem);
+    z-index: 50;
+    width: min(100%, 420px);
+    border: 1px solid #d7e1ee;
+    border-radius: 0.8rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+    padding: 0.62rem;
+}
+
+.layout-manager-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.5rem;
+    margin-bottom: 0.58rem;
+}
+
+.layout-manager-preset {
+    display: grid;
+    gap: 0.22rem;
+}
+
+.layout-manager-preset label {
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #59708e;
+}
+
+.layout-card {
+    border: 1px solid #dce5f2;
+    border-radius: 0.7rem;
+    background: #fbfdff;
+    padding: 0.56rem;
+}
+
+.layout-card-title {
+    margin: 0 0 0.42rem;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #61728c;
+    font-weight: 800;
+}
+
+.layout-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.28rem 0;
+    border-bottom: 1px solid #ebf1f8;
+}
+
+.layout-row:last-child {
+    border-bottom: 0;
+}
+
+.layout-row label {
+    font-size: 0.74rem;
+    color: #2f3f56;
+    font-weight: 600;
+}
+
+.layout-note {
+    margin: 0.46rem 0 0;
+    font-size: 0.7rem;
+    color: #5f7088;
+    font-weight: 600;
+}
+
+.layout-widget {
+    position: relative;
+}
+
+[data-draggable-widget] {
+    grid-column: span var(--widget-span, 12);
+    min-width: 0;
+}
+
+[data-drop-zone].drop-target {
+    outline: 2px dashed #8fb2d8;
+    outline-offset: 4px;
+    border-radius: 0.8rem;
+}
+
+.drop-marker {
+    border: 2px dashed #5d8fc4;
+    border-radius: 0.66rem;
+    background: rgba(93, 143, 196, 0.08);
+    min-height: 54px;
+    margin: 0.28rem 0;
+    pointer-events: none;
+    grid-column: span var(--widget-span, 12);
+}
+
+.layout-editing [data-draggable-widget] {
+    cursor: move;
+}
+
+.layout-editing [data-draggable-widget].dragging {
+    opacity: 0.62;
+    transform: scale(0.99);
+}
+
+.layout-editing .resizable-widget {
+    resize: none;
+    overflow: visible;
+    min-width: 260px;
+    min-height: 160px;
+    max-width: 100%;
+}
+
+.layout-editing .resizable-widget::-webkit-resizer {
+    background:
+        linear-gradient(135deg, transparent 0%, transparent 48%, #6f90b4 48%, #6f90b4 56%, transparent 56%, transparent 100%);
+}
+
+.widget-resize-handle {
+    position: absolute;
+    right: 0.36rem;
+    bottom: 0.36rem;
+    width: 1rem;
+    height: 1rem;
+    border: 0;
+    border-radius: 0.22rem;
+    background: linear-gradient(135deg, rgba(21, 49, 86, 0.12), rgba(21, 49, 86, 0.3));
+    cursor: nwse-resize;
+    z-index: 30;
+    display: none;
+}
+
+.widget-resize-handle::before {
+    content: "";
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 7px;
+    height: 7px;
+    background:
+        linear-gradient(135deg, transparent 0%, transparent 43%, #dce8f8 43%, #dce8f8 57%, transparent 57%, transparent 100%),
+        linear-gradient(135deg, transparent 0%, transparent 70%, #dce8f8 70%, #dce8f8 84%, transparent 84%, transparent 100%);
+}
+
+.layout-editing .widget-resize-handle {
+    display: block;
+}
+
+body.resizing-widget {
+    user-select: none;
+    cursor: nwse-resize !important;
+}
+
+[data-draggable-widget].widget-density-compact .deck-head small {
+    display: none;
+}
+
+[data-draggable-widget].widget-density-compact .deck-head h5 {
+    font-size: 0.8rem;
+}
+
+#kpi-grid.widget-density-compact {
+    grid-template-columns: 1fr;
+}
+
+#kpi-grid.widget-density-medium {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#kpi-grid.widget-density-compact .kpi-trend {
+    display: none;
+}
+
+#topology-panel.widget-height-short .topology-empty-note {
+    display: none;
+}
+
+#signal-panel.widget-density-compact .signal-bar {
+    grid-template-columns: 62px 1fr 30px;
+}
+
+#signal-panel.widget-height-short .signal-issues {
+    display: none;
+}
+
+#traffic-panel.widget-density-compact .traffic-meta {
+    display: block;
+}
+
+#traffic-panel.widget-density-compact #traffic-peak {
+    display: none;
+}
+
+#traffic-panel.widget-height-short .stat-grid {
+    display: none;
+}
+
+#traffic-panel.widget-density-compact .gauge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.incident-strip {
+    border: 1px solid #f4c488;
+    border-radius: 0.72rem;
+    background: linear-gradient(180deg, #fff8ee 0%, #fff3df 100%);
+    box-shadow: 0 8px 18px rgba(165, 95, 12, 0.12);
+    padding: 0.44rem 0.58rem;
+    display: none;
+    animation: deck-enter 0.42s ease both;
+    animation-delay: 0.06s;
+}
+
+.incident-strip.danger {
+    border-color: #efb5ba;
+    background: linear-gradient(180deg, #fff2f3 0%, #ffe9eb 100%);
+}
+
+.incident-title {
+    margin: 0 0 0.24rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8a5614;
+    font-weight: 800;
+}
+
+.incident-strip.danger .incident-title {
+    color: #9b2431;
+}
+
+.incident-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.18rem;
+}
+
+.incident-item {
+    display: flex;
+    align-items: center;
+    gap: 0.42rem;
+    font-size: 0.74rem;
+    color: #36465e;
+}
+
+.incident-dot {
+    width: 0.48rem;
+    height: 0.48rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #e4a313;
+}
+
+.incident-item.danger .incident-dot {
+    background: #cb3a42;
+}
+
+.command-grid {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.command-grid.split-default {
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+}
+
+.command-grid.split-balanced {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+
+.command-grid.split-focus {
+    grid-template-columns: minmax(0, 2.45fr) minmax(0, 0.85fr);
+}
+
+.command-grid.only-main,
+.command-grid.only-side {
+    grid-template-columns: 1fr;
+}
+
+.dashboard-canvas {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.9rem;
+    align-items: stretch;
+}
+
+.dashboard-canvas.fixed-layout {
+    grid-template-areas:
+        "kpi kpi kpi kpi topo topo topo topo topo topo topo topo"
+        "alert alert alert alert topo topo topo topo topo topo topo topo"
+        "gateway gateway gateway gateway signal signal signal signal traffic traffic traffic traffic";
+}
+
+.dashboard-canvas.fixed-layout.layout-topology {
+    grid-template-areas:
+        "topo topo topo topo topo topo topo topo kpi kpi kpi kpi"
+        "topo topo topo topo topo topo topo topo alert alert alert alert"
+        "topo topo topo topo topo topo topo topo gateway gateway gateway gateway"
+        "signal signal signal signal signal signal traffic traffic traffic traffic traffic traffic";
+}
+
+.dashboard-canvas.fixed-layout.layout-analytics {
+    grid-template-areas:
+        "kpi kpi kpi kpi alert alert alert alert gateway gateway gateway gateway"
+        "signal signal signal signal signal signal traffic traffic traffic traffic traffic traffic"
+        "topo topo topo topo topo topo topo topo topo topo topo topo";
+}
+
+.dashboard-canvas.fixed-layout [data-draggable-widget] {
+    grid-column: auto;
+    min-width: 0;
+}
+
+.dashboard-canvas.fixed-layout #kpi-grid {
+    grid-area: kpi;
+}
+
+.dashboard-canvas.fixed-layout #topology-panel {
+    grid-area: topo;
+}
+
+.dashboard-canvas.fixed-layout #alert-panel {
+    grid-area: alert;
+}
+
+.dashboard-canvas.fixed-layout #gateway-panel {
+    grid-area: gateway;
+}
+
+.dashboard-canvas.fixed-layout #signal-panel {
+    grid-area: signal;
+}
+
+.dashboard-canvas.fixed-layout #traffic-panel {
+    grid-area: traffic;
+}
+
+.dashboard-canvas.fixed-layout #topology-panel {
+    min-height: 560px;
+}
+
+.dashboard-canvas.fixed-layout #kpi-grid {
+    min-height: 246px;
+}
+
+.dashboard-canvas.fixed-layout #alert-panel,
+.dashboard-canvas.fixed-layout #gateway-panel {
+    min-height: 146px;
+}
+
+.dashboard-canvas.fixed-layout #signal-panel,
+.dashboard-canvas.fixed-layout #traffic-panel {
+    min-height: 350px;
+}
+
+.dashboard-canvas.fixed-layout.layout-topology #topology-panel {
+    min-height: 640px;
+}
+
+.dashboard-canvas.fixed-layout.layout-analytics #topology-panel {
+    min-height: 420px;
+}
+
+.main-column {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.72rem;
+}
+
+.kpi-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.status-card {
+    border: 1px solid #d6dfec;
+    border-radius: 0.92rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    padding: 0.85rem;
+    min-height: 122px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    animation: deck-enter 0.38s ease both;
+}
+
+.kpi-grid > .kpi-link:nth-child(1) .status-card { animation-delay: 0.02s; }
+.kpi-grid > .kpi-link:nth-child(2) .status-card { animation-delay: 0.05s; }
+.kpi-grid > .kpi-link:nth-child(3) .status-card { animation-delay: 0.08s; }
+.kpi-grid > .kpi-link:nth-child(4) .status-card { animation-delay: 0.11s; }
+
+.status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
+}
+
+.status-card.success {
+    background: linear-gradient(145deg, #0f9d69 0%, #11b07b 100%);
+    border-color: rgba(15, 157, 105, 0.56);
+    color: #fff;
+}
+
+.status-card.danger {
+    background: linear-gradient(145deg, #cb3a42 0%, #de5a63 100%);
+    border-color: rgba(203, 58, 66, 0.53);
+    color: #fff;
+}
+
+.status-card.warm {
+    background: linear-gradient(145deg, #e97c13 0%, #f39e45 100%);
+    border-color: rgba(233, 124, 19, 0.55);
+    color: #fff;
+}
+
+.status-card.cool {
+    background: linear-gradient(145deg, #007f99 0%, #1ca8c9 100%);
+    border-color: rgba(0, 127, 153, 0.52);
+    color: #fff;
+}
+
+.status-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
+}
+
+.status-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 800;
+    opacity: 0.86;
+}
+
+.status-icon {
+    width: 1.95rem;
+    height: 1.95rem;
+    border-radius: 0.62rem;
+    background: rgba(255, 255, 255, 0.22);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.status-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.status-detail {
+    margin-top: 0.34rem;
+    font-size: 0.75rem;
+    opacity: 0.9;
+}
+
+.kpi-trend {
+    margin-top: 0.28rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    opacity: 0.92;
+}
+
+.kpi-trend.up {
+    color: #0f9d69;
+}
+
+.kpi-trend.down {
+    color: #cb3a42;
+}
+
+.kpi-trend.neutral {
+    color: #6b7a91;
+}
+
+.status-card.success .kpi-trend,
+.status-card.danger .kpi-trend,
+.status-card.warm .kpi-trend,
+.status-card.cool .kpi-trend {
+    color: rgba(255, 255, 255, 0.93);
+}
+
+.deck-panel {
+    border: 1px solid #d5deeb;
+    border-radius: 0.98rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    animation: deck-enter 0.46s ease both;
+}
+
+.deck-panel.clickable {
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.deck-panel.clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+}
+
+.deck-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    padding: 0.8rem 0.95rem;
+    border-bottom: 1px solid #dce5f2;
+    background: linear-gradient(150deg, #1b2840 0%, #2a3f60 100%);
+    color: #f8fbff;
+}
+
+.deck-head h5 {
+    margin: 0;
+    font-size: 0.89rem;
+    font-weight: 700;
+}
+
+.deck-head small {
+    opacity: 0.82;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.deck-body {
+    padding: 0.88rem;
+}
+
+.network-canvas {
+    border: 1px solid #d6deea;
+    border-radius: 0.72rem;
+    background: #eef3fa;
+    height: clamp(300px, 40vh, 520px);
+}
+
+.topology-wrap {
+    position: relative;
+}
+
+.topology-empty {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+}
+
+.topology-empty-card {
+    width: min(92%, 350px);
+    border: 1px dashed #c6d2e3;
+    border-radius: 0.88rem;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.86rem;
+}
+
+.topology-empty-title {
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: #273549;
+    margin: 0;
+}
+
+.topology-empty-note {
+    margin: 0.35rem 0 0;
+    color: #5e6f87;
+    font-size: 0.78rem;
+}
+
+.side-column {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.9rem;
+    align-content: start;
+}
+
+.health-list {
+    display: grid;
+    gap: 0.46rem;
+}
+
+.health-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.56rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid #ebf1f8;
+}
+
+.health-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.health-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+}
+
+.health-dot.excellent { background: #14a36f; }
+.health-dot.good { background: #1ab884; }
+.health-dot.warning { background: #e4a313; }
+.health-dot.danger { background: #cb3a42; }
+.health-dot.inactive { background: #8d9cb0; }
+
+.health-label {
+    font-size: 0.81rem;
+    font-weight: 700;
+    color: #2f3b4d;
+}
+
+.health-value {
+    font-size: 0.79rem;
+    font-weight: 700;
+    color: #53647d;
+}
+
+.eui-list {
+    max-height: 170px;
+    overflow-y: auto;
+    border: 1px dashed #cfd9e8;
+    border-radius: 0.72rem;
+    background: #f7faff;
+    padding: 0.64rem;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 0.76rem;
+    color: #344155;
+    line-height: 1.5;
+}
+
+.rail-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.34rem;
+}
+
+.rail-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.52rem;
+    border-bottom: 1px solid #eaf0f8;
+    padding-bottom: 0.36rem;
+    font-size: 0.79rem;
+}
+
+.rail-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.rail-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #93a3ba;
+}
+
+.rail-dot.good {
+    background: #14a36f;
+}
+
+.rail-dot.warn {
+    background: #e4a313;
+}
+
+.rail-dot.bad {
+    background: #cb3a42;
+}
+
+.rail-note {
+    font-size: 0.74rem;
+    color: #5f7088;
+    text-align: right;
+}
+
+.gateway-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.gateway-item {
+    border: 1px solid #dce5f2;
+    border-radius: 0.72rem;
+    background: #f8fbff;
+    padding: 0.5rem 0.56rem;
+    display: grid;
+    gap: 0.26rem;
+}
+
+.gateway-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+
+.gateway-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #213047;
+}
+
+.gateway-meta {
+    font-size: 0.72rem;
+    color: #607089;
+    display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
-.gauge-item {
-    text-align: center;
-    min-width: 70px;
+
+.gateway-status {
+    border-radius: 999px;
+    padding: 0.1rem 0.44rem;
+    font-size: 0.67rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #fff;
 }
+
+.gateway-status.connected { background: #14a36f; }
+.gateway-status.connecting { background: #e4a313; color: #253046; }
+.gateway-status.offline { background: #8e9db1; }
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.signal-bar {
+    display: grid;
+    grid-template-columns: 78px 1fr 34px;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.4rem;
+}
+
+.signal-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.signal-track {
+    height: 0.86rem;
+    border: 1px solid #d6deea;
+    border-radius: 999px;
+    background: #e9eff7;
+    overflow: hidden;
+}
+
+.signal-fill {
+    width: 0;
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.signal-val {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #4c5f79;
+    text-align: right;
+}
+
+.signal-issues {
+    margin-top: 0.62rem;
+    border-top: 1px dashed #d5deeb;
+    padding-top: 0.52rem;
+}
+
+.signal-issues h6 {
+    margin: 0 0 0.34rem;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #607089;
+    font-weight: 800;
+}
+
+.problem-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.26rem;
+    font-size: 0.76rem;
+    color: #3a4a61;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-top: 0.78rem;
+}
+
+.stat-chip {
+    text-align: center;
+    border: 1px solid #dce5f2;
+    border-radius: 0.72rem;
+    background: #f8fbff;
+    padding: 0.56rem 0.42rem;
+}
+
+.stat-value {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #122038;
+    line-height: 1;
+}
+
+.stat-label {
+    margin-top: 0.25rem;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.gauge-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin-bottom: 0.8rem;
+}
+
+.gauge {
+    text-align: center;
+}
+
 .gauge-circle {
     width: 60px;
     height: 60px;
     border-radius: 50%;
+    margin: 0 auto 0.42rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 0.5rem;
-    font-size: 1rem;
-    font-weight: bold;
-    color: white;
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 800;
+    box-shadow: 0 9px 18px rgba(15, 23, 42, 0.16);
 }
+
 .gauge-label {
-    font-size: 0.7rem;
-    color: #6c757d;
+    font-size: 0.72rem;
+    color: #5a6c86;
+    font-weight: 700;
 }
-.signal-bar {
+
+.traffic-meta {
     display: flex;
     align-items: center;
-    margin-bottom: 0.5rem;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.74rem;
+    color: #566881;
+    font-weight: 700;
+    margin-bottom: 0.56rem;
 }
-.signal-bar-label {
-    width: 70px;
-    font-size: 0.75rem;
-    font-weight: 500;
+
+.layout-empty {
+    border: 1px dashed #cdd8e7;
+    border-radius: 0.9rem;
+    background: #f8fbff;
+    color: #53657e;
+    padding: 0.9rem;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 700;
 }
-.signal-bar-track {
-    flex-grow: 1;
-    height: 20px;
-    background: #e9ecef;
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 0 8px;
+
+.is-hidden {
+    display: none !important;
 }
-.signal-bar-fill {
-    height: 100%;
-    border-radius: 10px;
-    transition: width 0.5s ease;
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-panel,
+    .incident-strip,
+    .status-card,
+    .deck-panel {
+        animation: none;
+    }
+
+    .status-card,
+    .deck-panel {
+        transition: none;
+    }
 }
-.signal-bar-value {
-    width: 35px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    text-align: right;
+
+@media (max-width: 1350px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-canvas.fixed-layout {
+        grid-template-areas:
+            "kpi kpi kpi kpi kpi kpi topo topo topo topo topo topo"
+            "alert alert alert alert gateway gateway topo topo topo topo topo topo"
+            "signal signal signal signal signal signal traffic traffic traffic traffic traffic traffic";
+    }
+
+    .dashboard-canvas.fixed-layout.layout-topology,
+    .dashboard-canvas.fixed-layout.layout-analytics {
+        grid-template-areas:
+            "kpi kpi kpi kpi kpi kpi topo topo topo topo topo topo"
+            "alert alert alert alert gateway gateway topo topo topo topo topo topo"
+            "signal signal signal signal signal signal traffic traffic traffic traffic traffic traffic";
+    }
+
+    .command-grid,
+    .analytics-grid,
+    .hero-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .version-chip {
+        justify-self: start;
+    }
 }
-.network-container {
-    height: 300px;
-    border-radius: 8px;
-    background: #f8f9fa;
+
+@media (max-width: 575.98px) {
+    [data-draggable-widget] {
+        grid-column: span 12 !important;
+    }
+
+    .dashboard-canvas.fixed-layout {
+        grid-template-areas:
+            "kpi kpi kpi kpi kpi kpi kpi kpi kpi kpi kpi kpi"
+            "topo topo topo topo topo topo topo topo topo topo topo topo"
+            "signal signal signal signal signal signal signal signal signal signal signal signal"
+            "traffic traffic traffic traffic traffic traffic traffic traffic traffic traffic traffic traffic"
+            "alert alert alert alert alert alert alert alert alert alert alert alert"
+            "gateway gateway gateway gateway gateway gateway gateway gateway gateway gateway gateway gateway";
+    }
+
+    .dashboard-canvas.fixed-layout.layout-topology,
+    .dashboard-canvas.fixed-layout.layout-analytics {
+        grid-template-areas:
+            "kpi kpi kpi kpi kpi kpi kpi kpi kpi kpi kpi kpi"
+            "topo topo topo topo topo topo topo topo topo topo topo topo"
+            "signal signal signal signal signal signal signal signal signal signal signal signal"
+            "traffic traffic traffic traffic traffic traffic traffic traffic traffic traffic traffic traffic"
+            "alert alert alert alert alert alert alert alert alert alert alert alert"
+            "gateway gateway gateway gateway gateway gateway gateway gateway gateway gateway gateway gateway";
+    }
+
+    .signal-bar {
+        grid-template-columns: 64px 1fr 28px;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .layout-controls {
+        justify-content: flex-start;
+    }
+
+    .layout-manager {
+        right: auto;
+        left: 0;
+        width: min(100%, 360px);
+    }
 }
 </style>
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Dashboard</h2>
-        <div class="d-flex align-items-center gap-3">
-            <a href="/config" id="update-badge" class="badge bg-success text-decoration-none" style="display: none; cursor: pointer;">
-                Update verfügbar!
-            </a>
-            <span class="text-muted" id="version-display"></span>
+<div class="dashboard-shell">
+    <section class="hero-panel">
+        <div class="hero-grid">
+            <div>
+                <p class="hero-kicker">Mission Control</p>
+                <h2 class="hero-title">Service Center Command Deck</h2>
+                <p class="hero-subtitle">Unified overview of secure transport, gateway availability and sensor signal quality. Use this as your first stop for operational decisions.</p>
+                <div class="hero-pills">
+                    <span class="hero-pill"><i class="fas fa-shield-alt"></i> Secure Links</span>
+                    <span class="hero-pill"><i class="fas fa-broadcast-tower"></i> Gateway Fleet</span>
+                    <span class="hero-pill"><i class="fas fa-signal"></i> Radio Quality</span>
+                </div>
+            </div>
+            <div class="version-chip">
+                <div class="version-row">
+                    <span class="version-label">Platform Version</span>
+                    <span class="version-value" id="version-display">v--</span>
+                </div>
+                <a href="/config" id="update-badge" class="badge bg-success text-decoration-none" style="display: none; width: fit-content;">Update available</a>
+                <div class="control-actions">
+                    <div class="form-check form-switch m-0">
+                        <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" checked>
+                        <label class="form-check-label text-white-50 small ms-1" for="auto-refresh-toggle">Auto-refresh</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-light" id="refresh-now"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+                <div class="control-meta" id="last-updated">Waiting for first update...</div>
+            </div>
         </div>
+    </section>
+
+    <section id="incident-strip" class="incident-strip">
+        <p class="incident-title">Operational Alerts</p>
+        <ul id="incident-list" class="incident-list"></ul>
+    </section>
+
+    <div class="layout-controls">
+        <section class="layout-toolbar">
+            <button type="button" class="layout-toggle-btn" id="layout-customize-toggle" aria-expanded="false" aria-controls="layout-manager" title="Layout options">
+                <i class="fas fa-sliders-h"></i>
+                <span class="visually-hidden">Layout options</span>
+            </button>
+        </section>
+
+        <section id="layout-manager" class="layout-manager is-hidden">
+            <div class="layout-manager-head">
+                <div class="layout-manager-preset">
+                    <label for="layout-preset-select">Preset</label>
+                    <select id="layout-preset-select" class="form-select form-select-sm">
+                        <option value="balanced">Balanced</option>
+                        <option value="topology">Topology Focus</option>
+                        <option value="analytics">Analytics Focus</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="layout-reset">Reset</button>
+            </div>
+            <div class="layout-card">
+                <p class="layout-card-title">Show Or Hide Widgets</p>
+                <div class="layout-row">
+                    <label for="layout-toggle-incident">Operational alerts strip</label>
+                    <input id="layout-toggle-incident" class="form-check-input" type="checkbox" data-visibility-target="incident-strip" checked>
+                </div>
+                <div class="layout-row">
+                    <label for="layout-toggle-kpi">KPI status cards</label>
+                    <input id="layout-toggle-kpi" class="form-check-input" type="checkbox" data-visibility-target="kpi-grid" checked>
+                </div>
+                <div class="layout-row">
+                    <label for="layout-toggle-topology">Live topology panel</label>
+                    <input id="layout-toggle-topology" class="form-check-input" type="checkbox" data-visibility-target="topology-panel" checked>
+                </div>
+                <div class="layout-row">
+                    <label for="layout-toggle-signal">Signal quality panel</label>
+                    <input id="layout-toggle-signal" class="form-check-input" type="checkbox" data-visibility-target="signal-panel" checked>
+                </div>
+                <div class="layout-row">
+                    <label for="layout-toggle-traffic">Traffic and capacity panel</label>
+                    <input id="layout-toggle-traffic" class="form-check-input" type="checkbox" data-visibility-target="traffic-panel" checked>
+                </div>
+                <div class="layout-row">
+                    <label for="layout-toggle-alert">Alert feed panel</label>
+                    <input id="layout-toggle-alert" class="form-check-input" type="checkbox" data-visibility-target="alert-panel" checked>
+                </div>
+                <div class="layout-row">
+                    <label for="layout-toggle-gateway">Gateway actions panel</label>
+                    <input id="layout-toggle-gateway" class="form-check-input" type="checkbox" data-visibility-target="gateway-panel" checked>
+                </div>
+            </div>
+            <p class="layout-note">Simple mode: choose a preset and show or hide panels. Settings are saved in this browser.</p>
+        </section>
     </div>
 
-    <!-- Status Cards Row -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <a href="/config" class="card-link">
+    <section id="dashboard-canvas" class="dashboard-canvas" data-drop-zone data-zone="canvas">
+        <div id="kpi-grid" class="kpi-grid layout-widget resizable-widget" data-widget-id="kpi-grid" data-draggable-widget>
+            <a href="/config" class="kpi-link">
                 <div class="status-card" id="tls-card">
-                    <div class="status-icon">&#128274;</div>
+                    <div class="status-head">
+                        <span class="status-label">TLS Server</span>
+                        <span class="status-icon"><i class="fas fa-lock"></i></span>
+                    </div>
                     <div class="status-value" id="tls-status">--</div>
-                    <div class="status-label">TLS Server</div>
                     <div class="status-detail" id="tls-detail">Port --</div>
+                    <div class="kpi-trend neutral" id="tls-trend">Baseline establishing...</div>
                 </div>
             </a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a href="/config" class="card-link">
+
+            <a href="/config" class="kpi-link">
                 <div class="status-card" id="mqtt-card">
-                    <div class="status-icon">
-                        <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
-                            <path d="M12 18l-4-4h2.5v-4h3v4H16l-4 4z" fill="rgba(255,255,255,0.3)"/>
-                        </svg>
+                    <div class="status-head">
+                        <span class="status-label">MQTT Broker</span>
+                        <span class="status-icon"><i class="fas fa-cloud"></i></span>
                     </div>
                     <div class="status-value" id="mqtt-status">--</div>
-                    <div class="status-label">MQTT Broker</div>
                     <div class="status-detail" id="mqtt-detail">--</div>
+                    <div class="kpi-trend neutral" id="mqtt-trend">Baseline establishing...</div>
                 </div>
             </a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a href="/base-stations" class="card-link">
-                <div class="status-card primary" id="bs-card">
-                    <div class="status-icon">
-                        <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="12,2 8,22 10,22 12,12 14,22 16,22"/>
-                            <line x1="6" y1="18" x2="18" y2="18" stroke="currentColor" stroke-width="1.5"/>
-                            <line x1="7" y1="14" x2="17" y2="14" stroke="currentColor" stroke-width="1.5"/>
-                            <path d="M6 6c0 0 2-2 6-2s6 2 6 2" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
-                            <path d="M8 8c0 0 1.5-1.5 4-1.5s4 1.5 4 1.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>
-                            <circle cx="12" cy="5" r="1.5"/>
-                        </svg>
+
+            <a href="/base-stations" class="kpi-link">
+                <div class="status-card warm" id="bs-card">
+                    <div class="status-head">
+                        <span class="status-label">Base Stations</span>
+                        <span class="status-icon"><i class="fas fa-broadcast-tower"></i></span>
                     </div>
                     <div class="status-value" id="bs-count">0</div>
-                    <div class="status-label">Base Stations</div>
-                    <div class="eui-list" id="bs-euis"></div>
+                    <div class="status-detail" id="bs-detail">Connected gateways</div>
+                    <div class="kpi-trend neutral" id="bs-trend">Baseline establishing...</div>
                 </div>
             </a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a href="/sensors" class="card-link">
-                <div class="status-card info" id="sensor-card">
-                    <div class="status-icon">
-                        <svg width="50" height="50" viewBox="0 0 24 26" fill="currentColor">
-                            <rect x="7" y="12" width="10" height="12" rx="2"/>
-                            <rect x="9" y="14" width="6" height="3" fill="rgba(255,255,255,0.3)"/>
-                            <circle cx="12" cy="21" r="1.5" fill="rgba(255,255,255,0.5)"/>
-                            <path d="M8 9c0 0 1-3 4-3s4 3 4 3" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
-                            <path d="M5 6c0 0 2-5 7-5s7 5 7 5" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
-                        </svg>
+
+            <a href="/sensors" class="kpi-link">
+                <div class="status-card cool" id="sensor-card">
+                    <div class="status-head">
+                        <span class="status-label">Sensors</span>
+                        <span class="status-icon"><i class="fas fa-microchip"></i></span>
                     </div>
                     <div class="status-value" id="sensor-count">0</div>
-                    <div class="status-label">Sensoren aktiv</div>
-                    <div class="status-detail" id="sensor-detail">0 konfiguriert</div>
+                    <div class="status-detail" id="sensor-detail">0 configured</div>
+                    <div class="kpi-trend neutral" id="sensor-trend">Baseline establishing...</div>
                 </div>
             </a>
         </div>
-    </div>
 
-    <!-- Network Topology and System Health Row -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-8">
-            <div class="health-card h-100 clickable" onclick="window.location='/network'">
-                <div class="health-header d-flex justify-content-between align-items-center clickable">
-                    <h5 class="mb-0">&#128752; Netzwerk Topologie</h5>
-                    <small class="opacity-75">Klicken zum Bearbeiten</small>
-                </div>
-                <div class="card-body p-2">
-                    <div id="cy-mini" class="network-container"></div>
-                </div>
+        <div id="topology-panel" class="deck-panel clickable panel-size-normal layout-widget resizable-widget" data-widget-id="topology-panel" data-draggable-widget data-nav="/network">
+            <div class="deck-head">
+                <h5><i class="fas fa-project-diagram me-2"></i>Live Topology Canvas</h5>
+                <small>Click for full network editor</small>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="health-card h-100">
-                <div class="health-header">
-                    <h5 class="mb-0">&#128200; System Status</h5>
-                </div>
-                <div class="health-body">
-                    <div class="health-indicator">
-                        <div class="health-dot" id="health-tls"></div>
-                        <span class="health-label">TLS Server</span>
-                        <span class="health-value" id="health-tls-value">--</span>
-                    </div>
-                    <div class="health-indicator">
-                        <div class="health-dot" id="health-mqtt"></div>
-                        <span class="health-label">MQTT</span>
-                        <span class="health-value" id="health-mqtt-value">--</span>
-                    </div>
-                    <div class="health-indicator">
-                        <div class="health-dot" id="health-bs"></div>
-                        <span class="health-label">Base Stations</span>
-                        <span class="health-value" id="health-bs-value">--</span>
-                    </div>
-                    <div class="health-indicator">
-                        <div class="health-dot" id="health-sensors"></div>
-                        <span class="health-label">Sensoren</span>
-                        <span class="health-value" id="health-sensors-value">--</span>
-                    </div>
-                    <div class="health-indicator">
-                        <div class="health-dot" id="health-vm"></div>
-                        <span class="health-label">VM Sub-Channel</span>
-                        <span class="health-value" id="health-vm-value">--</span>
+            <div class="deck-body topology-wrap">
+                <div id="cy-mini" class="network-canvas"></div>
+                <div id="topology-empty" class="topology-empty">
+                    <div class="topology-empty-card">
+                        <p class="topology-empty-title">Topology needs more live nodes</p>
+                        <p class="topology-empty-note">When additional base stations or sensors connect, graph layout appears automatically.</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Sensor Health and Network Stats Row -->
-    <div class="row g-3">
-        <div class="col-md-6">
-            <div class="health-card clickable" onclick="window.location='/health'">
-                <div class="health-header clickable">
-                    <h5 class="mb-0">&#128202; Sensor Signalqualität</h5>
+        <div id="alert-panel" class="deck-panel panel-size-normal layout-widget resizable-widget" data-widget-id="alert-panel" data-draggable-widget>
+            <div class="deck-head">
+                <h5><i class="fas fa-exclamation-triangle me-2"></i>Alert Feed</h5>
+                <small>Issues requiring attention</small>
+            </div>
+            <div class="deck-body">
+                <ul id="alert-feed" class="rail-list">
+                    <li class="rail-item">
+                        <span class="rail-dot good"></span>
+                        <span>No critical incidents detected</span>
+                        <span class="rail-note">healthy</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="gateway-panel" class="deck-panel panel-size-normal layout-widget resizable-widget" data-widget-id="gateway-panel" data-draggable-widget>
+            <div class="deck-head">
+                <h5><i class="fas fa-list me-2"></i>Gateway Actions</h5>
+                <small>Quick gateway context</small>
+            </div>
+            <div class="deck-body">
+                <ul id="gateway-action-list" class="gateway-list">
+                    <li class="gateway-item">
+                        <div class="gateway-head">
+                            <span class="gateway-name">No gateways yet</span>
+                            <span class="gateway-status offline">offline</span>
+                        </div>
+                        <div class="gateway-meta"><span>Waiting for data...</span></div>
+                    </li>
+                </ul>
+                <div id="bs-euis" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div id="signal-panel" class="deck-panel clickable panel-size-normal layout-widget resizable-widget" data-widget-id="signal-panel" data-draggable-widget data-nav="/health">
+            <div class="deck-head">
+                <h5><i class="fas fa-signal me-2"></i>Signal Quality Distribution</h5>
+                <small>Open health analytics</small>
+            </div>
+            <div class="deck-body">
+                <div class="signal-bar">
+                    <span class="signal-label" style="color: #14a36f;">Excellent</span>
+                    <div class="signal-track"><div class="signal-fill" id="signal-excellent" style="background: #14a36f;"></div></div>
+                    <span class="signal-val" id="signal-excellent-val">0</span>
                 </div>
-                <div class="health-body">
-                    <div class="signal-bar">
-                        <span class="signal-bar-label" style="color: #28a745;">Exzellent</span>
-                        <div class="signal-bar-track">
-                            <div class="signal-bar-fill" id="signal-excellent" style="width: 0%; background: #28a745;"></div>
-                        </div>
-                        <span class="signal-bar-value" id="signal-excellent-val">0</span>
+                <div class="signal-bar">
+                    <span class="signal-label" style="color: #1ab884;">Good</span>
+                    <div class="signal-track"><div class="signal-fill" id="signal-good" style="background: #1ab884;"></div></div>
+                    <span class="signal-val" id="signal-good-val">0</span>
+                </div>
+                <div class="signal-bar">
+                    <span class="signal-label" style="color: #e4a313;">Fair</span>
+                    <div class="signal-track"><div class="signal-fill" id="signal-fair" style="background: #e4a313;"></div></div>
+                    <span class="signal-val" id="signal-fair-val">0</span>
+                </div>
+                <div class="signal-bar">
+                    <span class="signal-label" style="color: #f58634;">Poor</span>
+                    <div class="signal-track"><div class="signal-fill" id="signal-poor" style="background: #f58634;"></div></div>
+                    <span class="signal-val" id="signal-poor-val">0</span>
+                </div>
+                <div class="signal-bar">
+                    <span class="signal-label" style="color: #cb3a42;">Critical</span>
+                    <div class="signal-track"><div class="signal-fill" id="signal-critical" style="background: #cb3a42;"></div></div>
+                    <span class="signal-val" id="signal-critical-val">0</span>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-chip">
+                        <div class="stat-value" id="avg-snr">--</div>
+                        <div class="stat-label">Avg SNR</div>
                     </div>
-                    <div class="signal-bar">
-                        <span class="signal-bar-label" style="color: #20c997;">Gut</span>
-                        <div class="signal-bar-track">
-                            <div class="signal-bar-fill" id="signal-good" style="width: 0%; background: #20c997;"></div>
-                        </div>
-                        <span class="signal-bar-value" id="signal-good-val">0</span>
+                    <div class="stat-chip">
+                        <div class="stat-value" id="avg-rssi">--</div>
+                        <div class="stat-label">Avg RSSI</div>
                     </div>
-                    <div class="signal-bar">
-                        <span class="signal-bar-label" style="color: #ffc107;">Mittel</span>
-                        <div class="signal-bar-track">
-                            <div class="signal-bar-fill" id="signal-fair" style="width: 0%; background: #ffc107;"></div>
-                        </div>
-                        <span class="signal-bar-value" id="signal-fair-val">0</span>
+                    <div class="stat-chip">
+                        <div class="stat-value" id="avg-loss">--</div>
+                        <div class="stat-label">Avg Loss</div>
                     </div>
-                    <div class="signal-bar">
-                        <span class="signal-bar-label" style="color: #fd7e14;">Schwach</span>
-                        <div class="signal-bar-track">
-                            <div class="signal-bar-fill" id="signal-poor" style="width: 0%; background: #fd7e14;"></div>
-                        </div>
-                        <span class="signal-bar-value" id="signal-poor-val">0</span>
+                </div>
+
+                <div class="signal-issues">
+                    <h6>Top Problem Sensors</h6>
+                    <ul id="problem-sensors" class="problem-list">
+                        <li>No sensor incidents detected yet.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="traffic-panel" class="deck-panel clickable panel-size-normal layout-widget resizable-widget" data-widget-id="traffic-panel" data-draggable-widget data-nav="/traffic">
+            <div class="deck-head">
+                <h5><i class="fas fa-chart-line me-2"></i>Traffic and Capacity</h5>
+                <small>Open traffic dashboard</small>
+            </div>
+            <div class="deck-body">
+                <div class="traffic-meta">
+                    <span id="traffic-trend">Trend unavailable</span>
+                    <span id="traffic-peak">Peak: --</span>
+                </div>
+
+                <div class="gauge-grid">
+                    <div class="gauge">
+                        <div class="gauge-circle" id="gauge-packets" style="background: #6c7a90;">0</div>
+                        <div class="gauge-label">Packets/hr</div>
                     </div>
-                    <div class="signal-bar">
-                        <span class="signal-bar-label" style="color: #dc3545;">Kritisch</span>
-                        <div class="signal-bar-track">
-                            <div class="signal-bar-fill" id="signal-critical" style="width: 0%; background: #dc3545;"></div>
-                        </div>
-                        <span class="signal-bar-value" id="signal-critical-val">0</span>
+                    <div class="gauge">
+                        <div class="gauge-circle" id="gauge-loss" style="background: #14a36f;">0%</div>
+                        <div class="gauge-label">Packet Loss</div>
                     </div>
-                    <hr>
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <div class="h5 mb-0" id="avg-snr">--</div>
-                            <small class="text-muted">Ø SNR (dB)</small>
-                        </div>
-                        <div class="col-4">
-                            <div class="h5 mb-0" id="avg-rssi">--</div>
-                            <small class="text-muted">Ø RSSI (dBm)</small>
-                        </div>
-                        <div class="col-4">
-                            <div class="h5 mb-0" id="avg-loss">--</div>
-                            <small class="text-muted">Ø Verlust</small>
-                        </div>
+                    <div class="gauge">
+                        <div class="gauge-circle" id="gauge-vm" style="background: #6c7a90;">0</div>
+                        <div class="gauge-label">VM-capable BS</div>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-chip">
+                        <div class="stat-value" id="total-messages">0</div>
+                        <div class="stat-label">Messages Today</div>
+                    </div>
+                    <div class="stat-chip">
+                        <div class="stat-value" id="active-sensors-today">0</div>
+                        <div class="stat-label">Active Sensors</div>
+                    </div>
+                    <div class="stat-chip">
+                        <div class="stat-value" id="total-connections">0</div>
+                        <div class="stat-label">Live Links</div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="health-card clickable" onclick="window.location='/traffic'">
-                <div class="health-header clickable">
-                    <h5 class="mb-0">&#128202; Netzwerk Statistik</h5>
-                </div>
-                <div class="health-body">
-                    <div class="gauge-container mb-3">
-                        <div class="gauge-item">
-                            <div class="gauge-circle" id="gauge-packets" style="background: #6c757d;">0</div>
-                            <div class="gauge-label">Pakete/Std</div>
-                        </div>
-                        <div class="gauge-item">
-                            <div class="gauge-circle" id="gauge-loss" style="background: #28a745;">0%</div>
-                            <div class="gauge-label">Paketverlust</div>
-                        </div>
-                        <div class="gauge-item">
-                            <div class="gauge-circle" id="gauge-vm" style="background: #6c757d;">0</div>
-                            <div class="gauge-label">VM-fähig</div>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <div class="h4 mb-0" id="total-messages">0</div>
-                            <small class="text-muted">Telegramme heute</small>
-                        </div>
-                        <div class="col-4">
-                            <div class="h4 mb-0" id="active-sensors-today">0</div>
-                            <small class="text-muted">Aktive Sensoren</small>
-                        </div>
-                        <div class="col-4">
-                            <div class="h4 mb-0" id="total-connections">0</div>
-                            <small class="text-muted">Verbindungen</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
+
+    <section id="dashboard-empty-state" class="layout-empty is-hidden">
+        All dashboard widgets are currently hidden. Use <strong>Customize layout</strong> to show panels again.
+    </section>
 </div>
 {% endblock %}
 
@@ -412,6 +1476,239 @@ a.card-link {
 <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 <script>
 let cyMini = null;
+let refreshTimer = null;
+let autoRefreshEnabled = true;
+
+const previousSnapshot = {
+    tlsActive: null,
+    mqttActive: null,
+    connectedBs: null,
+    registeredSensors: null,
+    messagesIn: null,
+    packetLoss: null
+};
+
+const SIMPLE_LAYOUT_STORAGE_KEY = 'service-center.dashboard.simple.v1';
+const FIXED_WIDGET_ORDER = ['kpi-grid', 'topology-panel', 'signal-panel', 'traffic-panel', 'alert-panel', 'gateway-panel'];
+const SIMPLE_PRESETS = ['balanced', 'topology', 'analytics'];
+const SIMPLE_VISIBLE_IDS = ['incident-strip', ...FIXED_WIDGET_ORDER];
+
+function createDefaultSimpleLayout() {
+    return {
+        managerOpen: false,
+        preset: 'balanced',
+        visibility: Object.fromEntries(SIMPLE_VISIBLE_IDS.map(id => [id, true]))
+    };
+}
+
+let simpleLayout = createDefaultSimpleLayout();
+
+function loadSimpleLayout() {
+    const fallback = createDefaultSimpleLayout();
+    try {
+        const raw = localStorage.getItem(SIMPLE_LAYOUT_STORAGE_KEY);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        fallback.managerOpen = Boolean(parsed.managerOpen);
+        if (SIMPLE_PRESETS.includes(parsed.preset)) {
+            fallback.preset = parsed.preset;
+        }
+        if (parsed.visibility && typeof parsed.visibility === 'object') {
+            SIMPLE_VISIBLE_IDS.forEach(id => {
+                if (typeof parsed.visibility[id] === 'boolean') {
+                    fallback.visibility[id] = parsed.visibility[id];
+                }
+            });
+        }
+    } catch (error) {
+        return fallback;
+    }
+    return fallback;
+}
+
+function saveSimpleLayout() {
+    try {
+        localStorage.setItem(SIMPLE_LAYOUT_STORAGE_KEY, JSON.stringify(simpleLayout));
+    } catch (error) {
+        // ignore localStorage issues
+    }
+}
+
+function applyWidgetVisibility(id, visible) {
+    const node = document.getElementById(id);
+    if (!node) return;
+    node.classList.toggle('is-hidden', !visible);
+}
+
+function applySimpleLayout() {
+    const canvas = document.getElementById('dashboard-canvas');
+    if (!canvas) return;
+
+    canvas.classList.add('fixed-layout');
+    canvas.classList.remove('layout-balanced', 'layout-topology', 'layout-analytics');
+    canvas.classList.add(`layout-${simpleLayout.preset}`);
+
+    FIXED_WIDGET_ORDER.forEach(widgetId => {
+        const widget = document.getElementById(widgetId);
+        if (!widget) return;
+        canvas.appendChild(widget);
+        widget.style.removeProperty('--widget-span');
+        widget.style.removeProperty('height');
+        widget.style.removeProperty('width');
+        widget.classList.remove('panel-size-compact', 'panel-size-expanded');
+        widget.classList.add('panel-size-normal');
+        applyWidgetVisibility(widgetId, simpleLayout.visibility[widgetId] !== false);
+    });
+
+    applyWidgetVisibility('incident-strip', simpleLayout.visibility['incident-strip'] !== false);
+
+    const anyWidgetVisible = FIXED_WIDGET_ORDER.some(id => simpleLayout.visibility[id] !== false);
+    applyWidgetVisibility('dashboard-canvas', anyWidgetVisible);
+    applyWidgetVisibility('dashboard-empty-state', !anyWidgetVisible && simpleLayout.visibility['incident-strip'] === false);
+
+    const manager = document.getElementById('layout-manager');
+    const toggle = document.getElementById('layout-customize-toggle');
+    if (manager) manager.classList.toggle('is-hidden', !simpleLayout.managerOpen);
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', String(simpleLayout.managerOpen));
+        toggle.setAttribute('title', simpleLayout.managerOpen ? 'Close layout options' : 'Layout options');
+    }
+
+    document.getElementById('layout-preset-select').value = simpleLayout.preset;
+    document.querySelectorAll('[data-visibility-target]').forEach(input => {
+        const target = input.getAttribute('data-visibility-target');
+        input.checked = simpleLayout.visibility[target] !== false;
+    });
+
+    saveSimpleLayout();
+
+    if (cyMini && simpleLayout.visibility['topology-panel'] !== false) {
+        requestAnimationFrame(() => {
+            cyMini.resize();
+            cyMini.fit(undefined, 30);
+        });
+    }
+}
+
+function bindSimpleLayoutControls() {
+    const toggle = document.getElementById('layout-customize-toggle');
+    const manager = document.getElementById('layout-manager');
+
+    toggle.addEventListener('click', () => {
+        simpleLayout.managerOpen = !simpleLayout.managerOpen;
+        applySimpleLayout();
+    });
+
+    document.getElementById('layout-preset-select').addEventListener('change', (event) => {
+        const nextPreset = event.target.value;
+        simpleLayout.preset = SIMPLE_PRESETS.includes(nextPreset) ? nextPreset : 'balanced';
+        applySimpleLayout();
+    });
+
+    document.getElementById('layout-reset').addEventListener('click', () => {
+        const keepOpen = simpleLayout.managerOpen;
+        simpleLayout = createDefaultSimpleLayout();
+        simpleLayout.managerOpen = keepOpen;
+        applySimpleLayout();
+    });
+
+    document.querySelectorAll('[data-visibility-target]').forEach(input => {
+        input.addEventListener('change', (event) => {
+            const target = event.target.getAttribute('data-visibility-target');
+            simpleLayout.visibility[target] = event.target.checked;
+            applySimpleLayout();
+        });
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!simpleLayout.managerOpen) return;
+        if (!manager || !toggle) return;
+        if (manager.contains(event.target) || toggle.contains(event.target)) return;
+        simpleLayout.managerOpen = false;
+        applySimpleLayout();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || !simpleLayout.managerOpen) return;
+        simpleLayout.managerOpen = false;
+        applySimpleLayout();
+    });
+}
+
+function bindPanelNavigation() {
+    document.querySelectorAll('[data-nav]').forEach(panel => {
+        panel.addEventListener('click', () => {
+            const url = panel.getAttribute('data-nav');
+            if (url) window.location = url;
+        });
+    });
+}
+
+function toNumber(value, fallback = 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function shortId(value, size = 8) {
+    const text = String(value ?? '');
+    if (!text) return 'unknown';
+    return text.length > size ? `${text.slice(0, size)}...` : text;
+}
+
+function fetchJson(url) {
+    return fetch(url)
+        .then(response => response.ok ? response.json() : null)
+        .catch(() => null);
+}
+
+function setTrendState(id, current, previous, labels) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (previous === null) {
+        el.className = 'kpi-trend neutral';
+        el.textContent = 'Baseline established';
+        return;
+    }
+    if (current === previous) {
+        el.className = 'kpi-trend neutral';
+        el.textContent = labels.stable;
+        return;
+    }
+    el.className = 'kpi-trend ' + (current ? 'up' : 'down');
+    el.textContent = current ? labels.up : labels.down;
+}
+
+function setTrendNumeric(id, current, previous, suffix) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (previous === null) {
+        el.className = 'kpi-trend neutral';
+        el.textContent = 'Baseline established';
+        return;
+    }
+    const diff = current - previous;
+    if (diff === 0) {
+        el.className = 'kpi-trend neutral';
+        el.textContent = 'No change in last refresh';
+        return;
+    }
+    el.className = 'kpi-trend ' + (diff > 0 ? 'up' : 'down');
+    const sign = diff > 0 ? '+' : '';
+    el.textContent = `${sign}${diff}${suffix} vs previous refresh`;
+}
+
+function updateLastUpdatedLabel() {
+    document.getElementById('last-updated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+}
 
 function initMiniNetwork() {
     cyMini = cytoscape({
@@ -420,7 +1717,7 @@ function initMiniNetwork() {
             {
                 selector: 'node[type="base_station"]',
                 style: {
-                    'background-color': '#ff8c00',
+                    'background-color': '#e97c13',
                     'label': 'data(label)',
                     'width': 40,
                     'height': 40,
@@ -429,40 +1726,40 @@ function initMiniNetwork() {
                     'text-valign': 'bottom',
                     'text-margin-y': 5,
                     'border-width': 2,
-                    'border-color': '#cc7000'
+                    'border-color': '#b95d07'
                 }
             },
             {
                 selector: 'node[type="base_station"][?connected]',
                 style: {
-                    'border-color': '#28a745',
+                    'border-color': '#0f9d69',
                     'border-width': 3
                 }
             },
             {
                 selector: 'node[type="sensor"]',
                 style: {
-                    'background-color': '#17a2b8',
+                    'background-color': '#008a93',
                     'label': '',
-                    'width': 15,
-                    'height': 15
+                    'width': 14,
+                    'height': 14
                 }
             },
             {
                 selector: 'edge',
                 style: {
                     'width': 1,
-                    'line-color': '#aaa',
+                    'line-color': '#8ea3bf',
                     'curve-style': 'bezier',
-                    'opacity': 0.5
+                    'opacity': 0.55
                 }
             },
             {
                 selector: 'edge[?primary]',
                 style: {
                     'width': 2,
-                    'line-color': '#28a745',
-                    'opacity': 0.8
+                    'line-color': '#0f9d69',
+                    'opacity': 0.86
                 }
             }
         ],
@@ -475,203 +1772,331 @@ function initMiniNetwork() {
     });
 }
 
-function loadMiniTopology() {
-    fetch('/api/network')
-        .then(r => r.json())
-        .then(data => {
-            if (!data.success || !cyMini) return;
-            
-            cyMini.elements().remove();
-            
-            const elements = [];
-            data.nodes.forEach(node => {
-                elements.push({ data: node });
-            });
-            data.edges.forEach(edge => {
-                elements.push({ data: edge });
-            });
-            
-            cyMini.add(elements);
-            
-            cyMini.layout({
-                name: 'cose',
-                idealEdgeLength: 80,
-                nodeOverlap: 20,
-                refresh: 20,
-                fit: true,
-                padding: 20,
-                randomize: false,
-                componentSpacing: 60,
-                nodeRepulsion: 5000,
-                edgeElasticity: 50,
-                gravity: 50,
-                numIter: 500,
-                animate: false
-            }).run();
-            
-            document.getElementById('total-connections').textContent = data.edges.length;
-        })
-        .catch(error => console.error('Error loading topology:', error));
+function updateTopologyPanel(data) {
+    if (!cyMini || !data || !data.success) return;
+
+    cyMini.elements().remove();
+
+    const elements = [];
+    (data.nodes || []).forEach(node => elements.push({ data: node }));
+    (data.edges || []).forEach(edge => elements.push({ data: edge }));
+
+    if (elements.length > 0) {
+        cyMini.add(elements);
+        cyMini.layout({
+            name: 'cose',
+            idealEdgeLength: 80,
+            nodeOverlap: 20,
+            refresh: 20,
+            fit: true,
+            padding: 20,
+            randomize: false,
+            componentSpacing: 60,
+            nodeRepulsion: 5000,
+            edgeElasticity: 50,
+            gravity: 50,
+            numIter: 500,
+            animate: false
+        }).run();
+    }
+
+    document.getElementById('topology-empty').style.display = (data.nodes || []).length <= 1 ? 'flex' : 'none';
+    document.getElementById('total-connections').textContent = (data.edges || []).length;
 }
 
-function updateDashboard() {
-    fetch('/api/bssci/status')
-        .then(response => response.json())
-        .then(data => {
-            const tlsCard = document.getElementById('tls-card');
-            const tlsActive = data.tls_server && data.tls_server.active;
-            tlsCard.className = 'status-card ' + (tlsActive ? 'success' : 'danger');
-            document.getElementById('tls-status').textContent = tlsActive ? 'Aktiv' : 'Inaktiv';
-            document.getElementById('tls-detail').textContent = tlsActive ? 
-                'Port ' + (data.tls_server.listening_port || '--') : 'Nicht verbunden';
-            
-            document.getElementById('health-tls').className = 'health-dot ' + (tlsActive ? 'excellent' : 'danger');
-            document.getElementById('health-tls-value').textContent = tlsActive ? 'Läuft' : 'Gestoppt';
-            
-            const mqttCard = document.getElementById('mqtt-card');
-            const mqttActive = data.mqtt_broker && data.mqtt_broker.active;
-            mqttCard.className = 'status-card ' + (mqttActive ? 'success' : 'danger');
-            document.getElementById('mqtt-status').textContent = mqttActive ? 'Verbunden' : 'Getrennt';
-            document.getElementById('mqtt-detail').textContent = mqttActive ? 
-                (data.mqtt_broker.broker_host || '--') : 'Keine Verbindung';
-            
-            document.getElementById('health-mqtt').className = 'health-dot ' + (mqttActive ? 'excellent' : 'danger');
-            document.getElementById('health-mqtt-value').textContent = mqttActive ? 'Verbunden' : 'Getrennt';
-            
-            const bsCount = data.base_stations ? data.base_stations.total_connected : 0;
-            document.getElementById('bs-count').textContent = bsCount;
-            
-            const euiList = document.getElementById('bs-euis');
-            if (data.base_stations && data.base_stations.connected && data.base_stations.connected.length > 0) {
-                euiList.innerHTML = data.base_stations.connected.map(bs => bs.eui.substring(0, 12) + '...').join('<br>');
-            } else {
-                euiList.innerHTML = 'Keine verbunden';
-            }
-            
-            let bsHealth = 'inactive';
-            let bsHealthText = 'Keine';
-            if (bsCount >= 3) { bsHealth = 'excellent'; bsHealthText = bsCount + ' online'; }
-            else if (bsCount >= 1) { bsHealth = 'good'; bsHealthText = bsCount + ' online'; }
-            document.getElementById('health-bs').className = 'health-dot ' + bsHealth;
-            document.getElementById('health-bs-value').textContent = bsHealthText;
-            
-            const totalSensors = data.tls_server ? (data.tls_server.total_sensors || 0) : 0;
-            const registeredSensors = data.tls_server ? (data.tls_server.registered_sensors || 0) : 0;
-            document.getElementById('sensor-count').textContent = registeredSensors;
-            document.getElementById('sensor-detail').textContent = totalSensors + ' konfiguriert';
-            
-            let sensorHealth = 'inactive';
-            let sensorHealthText = 'Keine';
-            const sensorRatio = totalSensors > 0 ? registeredSensors / totalSensors : 0;
-            if (sensorRatio >= 0.8) { sensorHealth = 'excellent'; sensorHealthText = Math.round(sensorRatio * 100) + '%'; }
-            else if (sensorRatio >= 0.5) { sensorHealth = 'good'; sensorHealthText = Math.round(sensorRatio * 100) + '%'; }
-            else if (sensorRatio > 0) { sensorHealth = 'warning'; sensorHealthText = Math.round(sensorRatio * 100) + '%'; }
-            document.getElementById('health-sensors').className = 'health-dot ' + sensorHealth;
-            document.getElementById('health-sensors-value').textContent = sensorHealthText;
-            
-            document.getElementById('active-sensors-today').textContent = registeredSensors;
-        })
-        .catch(error => console.error('Error fetching status:', error));
-    
-    fetch('/api/vm/status')
-        .then(response => response.json())
-        .then(data => {
-            const vmCapable = data.vm_capable_base_stations ? data.vm_capable_base_stations.length : 0;
-            const gaugeVm = document.getElementById('gauge-vm');
-            gaugeVm.textContent = vmCapable;
-            gaugeVm.style.background = vmCapable >= 2 ? '#28a745' : vmCapable >= 1 ? '#ffc107' : '#6c757d';
-            
-            let vmHealth = 'inactive';
-            let vmHealthText = 'Keine';
-            if (vmCapable >= 2) { vmHealth = 'excellent'; vmHealthText = vmCapable + ' BS'; }
-            else if (vmCapable >= 1) { vmHealth = 'good'; vmHealthText = vmCapable + ' BS'; }
-            document.getElementById('health-vm').className = 'health-dot ' + vmHealth;
-            document.getElementById('health-vm-value').textContent = vmHealthText;
-        })
-        .catch(error => console.error('Error fetching VM status:', error));
-    
-    fetch('/api/traffic/stats')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('total-messages').textContent = data.total_messages || 0;
-            const packetsPerHour = Math.round((data.total_messages || 0) / 24);
-            const gaugePackets = document.getElementById('gauge-packets');
-            gaugePackets.textContent = packetsPerHour;
-            gaugePackets.style.background = packetsPerHour > 100 ? '#28a745' : packetsPerHour > 10 ? '#ffc107' : '#6c757d';
-        })
-        .catch(error => console.error('Error fetching traffic:', error));
-    
-    fetch('/api/health/stats')
-        .then(response => response.json())
-        .then(data => {
-            if (data.sensors && data.sensors.length > 0) {
-                let totalSnr = 0, totalRssi = 0, totalLoss = 0, count = 0;
-                let excellent = 0, good = 0, fair = 0, poor = 0, critical = 0;
-                
-                data.sensors.forEach(s => {
-                    if (s.avg_snr !== undefined) {
-                        totalSnr += s.avg_snr;
-                        count++;
-                        if (s.avg_snr >= 15) excellent++;
-                        else if (s.avg_snr >= 10) good++;
-                        else if (s.avg_snr >= 5) fair++;
-                        else if (s.avg_snr >= 0) poor++;
-                        else critical++;
-                    }
-                    if (s.avg_rssi) totalRssi += s.avg_rssi;
-                    if (s.packet_loss_rate !== undefined) totalLoss += s.packet_loss_rate;
-                });
-                
-                const total = excellent + good + fair + poor + critical;
-                if (total > 0) {
-                    document.getElementById('signal-excellent').style.width = (excellent / total * 100) + '%';
-                    document.getElementById('signal-excellent-val').textContent = excellent;
-                    document.getElementById('signal-good').style.width = (good / total * 100) + '%';
-                    document.getElementById('signal-good-val').textContent = good;
-                    document.getElementById('signal-fair').style.width = (fair / total * 100) + '%';
-                    document.getElementById('signal-fair-val').textContent = fair;
-                    document.getElementById('signal-poor').style.width = (poor / total * 100) + '%';
-                    document.getElementById('signal-poor-val').textContent = poor;
-                    document.getElementById('signal-critical').style.width = (critical / total * 100) + '%';
-                    document.getElementById('signal-critical-val').textContent = critical;
-                }
-                
-                if (count > 0) {
-                    document.getElementById('avg-snr').textContent = Math.round(totalSnr / count) + ' dB';
-                    document.getElementById('avg-rssi').textContent = Math.round(totalRssi / count) + ' dBm';
-                    const avgLoss = Math.round(totalLoss / count * 10) / 10;
-                    document.getElementById('avg-loss').textContent = avgLoss + '%';
-                    
-                    const gaugeLoss = document.getElementById('gauge-loss');
-                    gaugeLoss.textContent = avgLoss + '%';
-                    gaugeLoss.style.background = avgLoss < 1 ? '#28a745' : avgLoss < 5 ? '#ffc107' : '#dc3545';
-                }
-            }
-        })
-        .catch(error => console.error('Error fetching health stats:', error));
-    
-    fetch('/api/system/version')
-        .then(response => response.json())
-        .then(data => {
-            const version = data.current_version || '--';
-            document.getElementById('version-display').textContent = version.startsWith('v') ? version : 'v' + version;
-            
-            if (data.update_available) {
-                const badge = document.getElementById('update-badge');
-                badge.style.display = 'inline-block';
-                badge.textContent = 'Update: v' + data.remote_version;
-            }
-        })
-        .catch(error => console.error('Error fetching version:', error));
+function updateStatusCards(data) {
+    const tlsActive = data.tls_server && data.tls_server.active;
+    const mqttActive = data.mqtt_broker && data.mqtt_broker.active;
+
+    const tlsCard = document.getElementById('tls-card');
+    tlsCard.classList.remove('success', 'danger');
+    tlsCard.classList.add(tlsActive ? 'success' : 'danger');
+    document.getElementById('tls-status').textContent = tlsActive ? 'Active' : 'Inactive';
+    document.getElementById('tls-detail').textContent = tlsActive
+        ? 'Port ' + (data.tls_server.listening_port || '--')
+        : 'Not connected';
+
+    setTrendState('tls-trend', tlsActive, previousSnapshot.tlsActive, {
+        up: 'Recovered: TLS is online',
+        down: 'Warning: TLS went offline',
+        stable: tlsActive ? 'Stable online' : 'Still offline'
+    });
+    previousSnapshot.tlsActive = tlsActive;
+
+    const mqttCard = document.getElementById('mqtt-card');
+    mqttCard.classList.remove('success', 'danger');
+    mqttCard.classList.add(mqttActive ? 'success' : 'danger');
+    document.getElementById('mqtt-status').textContent = mqttActive ? 'Connected' : 'Disconnected';
+    document.getElementById('mqtt-detail').textContent = mqttActive
+        ? (data.mqtt_broker.broker_host || '--')
+        : 'No connection';
+
+    setTrendState('mqtt-trend', mqttActive, previousSnapshot.mqttActive, {
+        up: 'Recovered: MQTT connected',
+        down: 'Warning: MQTT disconnected',
+        stable: mqttActive ? 'Stable connection' : 'Still disconnected'
+    });
+    previousSnapshot.mqttActive = mqttActive;
+
+    const bsCount = data.base_stations ? toNumber(data.base_stations.total_connected) : 0;
+    const connectingCount = data.base_stations ? toNumber(data.base_stations.total_connecting) : 0;
+    document.getElementById('bs-count').textContent = bsCount;
+    document.getElementById('bs-detail').textContent = `${connectingCount} connecting`;
+    setTrendNumeric('bs-trend', bsCount, previousSnapshot.connectedBs, ' BS');
+    previousSnapshot.connectedBs = bsCount;
+
+    const totalSensors = data.tls_server ? toNumber(data.tls_server.total_sensors) : 0;
+    const registeredSensors = data.tls_server ? toNumber(data.tls_server.registered_sensors) : 0;
+    document.getElementById('sensor-count').textContent = registeredSensors;
+    document.getElementById('sensor-detail').textContent = totalSensors + ' configured';
+    setTrendNumeric('sensor-trend', registeredSensors, previousSnapshot.registeredSensors, ' sensors');
+    previousSnapshot.registeredSensors = registeredSensors;
+    document.getElementById('active-sensors-today').textContent = registeredSensors;
+
+    const connectedEuis = data.base_stations && data.base_stations.connected
+        ? data.base_stations.connected.map(bs => String(bs.eui || '')).filter(Boolean)
+        : [];
+    document.getElementById('bs-euis').textContent = connectedEuis.join(', ');
+}
+
+function updateVmMetrics(data) {
+    const vmCapable = data && data.vm_capable_base_stations ? data.vm_capable_base_stations.length : 0;
+    const gaugeVm = document.getElementById('gauge-vm');
+    gaugeVm.textContent = vmCapable;
+    gaugeVm.style.background = vmCapable >= 2 ? '#0f9d69' : vmCapable >= 1 ? '#e4a313' : '#6c7a90';
+    return vmCapable;
+}
+
+function updateTrafficMetrics(data) {
+    const metrics = data && data.metrics ? data.metrics : {};
+    const totalMessages = toNumber(metrics.messages_in);
+    const droppedMessages = toNumber(metrics.messages_dropped);
+    document.getElementById('total-messages').textContent = totalMessages;
+
+    let packetsPerHour = 0;
+    if (metrics.start_time) {
+        const uptimeHours = Math.max((Date.now() / 1000 - metrics.start_time) / 3600, 1 / 60);
+        packetsPerHour = Math.round(totalMessages / uptimeHours);
+    } else {
+        packetsPerHour = Math.round(totalMessages / 24);
+    }
+
+    const gaugePackets = document.getElementById('gauge-packets');
+    gaugePackets.textContent = packetsPerHour;
+    gaugePackets.style.background = packetsPerHour > 100 ? '#0f9d69' : packetsPerHour > 10 ? '#e4a313' : '#6c7a90';
+
+    let dedupRatio = 0;
+    if (totalMessages > 0) dedupRatio = (droppedMessages / totalMessages) * 100;
+
+    document.getElementById('traffic-trend').textContent = previousSnapshot.messagesIn === null
+        ? 'Trend: collecting baseline'
+        : `Trend: ${totalMessages - previousSnapshot.messagesIn >= 0 ? '+' : ''}${totalMessages - previousSnapshot.messagesIn} msgs since last refresh`;
+    previousSnapshot.messagesIn = totalMessages;
+
+    const history = Array.isArray(data && data.history) ? data.history : [];
+    let peakMessages = totalMessages;
+    if (history.length > 0) {
+        peakMessages = Math.max(...history.map(item => toNumber(item.messages_in)), totalMessages);
+    }
+    document.getElementById('traffic-peak').textContent = `Peak: ${peakMessages.toLocaleString()} messages`;
+
+    return { dedupRatio };
+}
+
+function updateHealthMetrics(data) {
+    if (!data || !data.success) return { packetLoss: 0 };
+
+    if (data.system) {
+        document.getElementById('active-sensors-today').textContent = toNumber(data.system.active_sensors);
+    }
+
+    let packetLoss = data.system && data.system.overall_packet_loss_rate
+        ? toNumber(data.system.overall_packet_loss_rate)
+        : 0;
+
+    const gaugeLoss = document.getElementById('gauge-loss');
+    gaugeLoss.textContent = packetLoss.toFixed(1) + '%';
+    gaugeLoss.style.background = packetLoss < 1 ? '#0f9d69' : packetLoss < 5 ? '#e4a313' : '#cb3a42';
+
+    const distribution = data.signal_distribution || {};
+    const total = Object.values(distribution).reduce((a, b) => a + toNumber(b), 0);
+    const mapBar = (fillId, valId, key) => {
+        const value = toNumber(distribution[key]);
+        document.getElementById(valId).textContent = value;
+        document.getElementById(fillId).style.width = total > 0 ? ((value / total) * 100) + '%' : '0%';
+    };
+    mapBar('signal-excellent', 'signal-excellent-val', 'excellent');
+    mapBar('signal-good', 'signal-good-val', 'good');
+    mapBar('signal-fair', 'signal-fair-val', 'fair');
+    mapBar('signal-poor', 'signal-poor-val', 'poor');
+    mapBar('signal-critical', 'signal-critical-val', 'critical');
+
+    if (Array.isArray(data.sensors) && data.sensors.length > 0) {
+        const avgSnr = data.sensors.reduce((acc, s) => acc + toNumber(s.avg_snr), 0) / data.sensors.length;
+        const avgRssi = data.sensors.reduce((acc, s) => acc + toNumber(s.avg_rssi), 0) / data.sensors.length;
+        const avgLoss = data.sensors.reduce((acc, s) => acc + toNumber(s.packet_loss_rate), 0) / data.sensors.length;
+        document.getElementById('avg-snr').textContent = Math.round(avgSnr) + ' dB';
+        document.getElementById('avg-rssi').textContent = Math.round(avgRssi) + ' dBm';
+        document.getElementById('avg-loss').textContent = avgLoss.toFixed(1) + '%';
+
+        const topIssues = [...data.sensors]
+            .filter(s => toNumber(s.packet_loss_rate) > 0)
+            .sort((a, b) => toNumber(b.packet_loss_rate) - toNumber(a.packet_loss_rate))
+            .slice(0, 3);
+        const issueList = document.getElementById('problem-sensors');
+        issueList.innerHTML = topIssues.length === 0
+            ? '<li>No sensor incidents detected.</li>'
+            : topIssues.map(item =>
+                `<li><strong>${escapeHtml(shortId(item.eui, 8))}</strong> loss ${toNumber(item.packet_loss_rate).toFixed(1)}% | SNR ${toNumber(item.avg_snr).toFixed(1)} dB</li>`
+              ).join('');
+
+        packetLoss = avgLoss;
+    } else {
+        document.getElementById('avg-snr').textContent = '--';
+        document.getElementById('avg-rssi').textContent = '--';
+        document.getElementById('avg-loss').textContent = '--';
+        document.getElementById('problem-sensors').innerHTML = '<li>No sensor incidents detected yet.</li>';
+    }
+
+    return { packetLoss };
+}
+
+function updateVersion(data) {
+    if (!data) return;
+    const version = data.current_version || '--';
+    document.getElementById('version-display').textContent = version.startsWith('v') ? version : 'v' + version;
+
+    const badge = document.getElementById('update-badge');
+    if (data.update_available) {
+        badge.style.display = 'inline-block';
+        badge.textContent = 'Update: v' + data.remote_version;
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function updateGatewayActions(data) {
+    const list = document.getElementById('gateway-action-list');
+    if (!data || !data.success || !Array.isArray(data.base_stations) || data.base_stations.length === 0) {
+        list.innerHTML = `<li class="gateway-item"><div class="gateway-head"><span class="gateway-name">No gateways detected</span><span class="gateway-status offline">offline</span></div><div class="gateway-meta"><span>Check base station configuration.</span></div></li>`;
+        return;
+    }
+
+    list.innerHTML = data.base_stations.slice(0, 6).map(bs => {
+        const rawStatus = String(bs.status || 'offline').toLowerCase();
+        const status = rawStatus === 'connected' || rawStatus === 'connecting' ? rawStatus : 'offline';
+        const sensors = toNumber(bs.connected_sensors);
+        const ip = escapeHtml(bs.configured_ip || 'no IP');
+        const eui = String(bs.eui || '');
+        const name = escapeHtml(bs.name || shortId(eui, 8));
+        return `<li class="gateway-item"><div class="gateway-head"><span class="gateway-name">${name}</span><span class="gateway-status ${status}">${status}</span></div><div class="gateway-meta"><span><code>${escapeHtml(shortId(eui, 12))}</code></span><span>${sensors} sensors</span><span>${ip}</span></div></li>`;
+    }).join('');
+}
+
+function buildIncidents(status, healthPacketLoss, vmCapable, trafficInfo) {
+    const incidents = [];
+    const tlsActive = status && status.tls_server && status.tls_server.active;
+    const mqttActive = status && status.mqtt_broker && status.mqtt_broker.active;
+    const connectedBs = status && status.base_stations ? toNumber(status.base_stations.total_connected) : 0;
+    const totalSensors = status && status.tls_server ? toNumber(status.tls_server.total_sensors) : 0;
+    const registeredSensors = status && status.tls_server ? toNumber(status.tls_server.registered_sensors) : 0;
+
+    if (!tlsActive) incidents.push({ level: 'danger', text: 'TLS server is offline.' });
+    if (!mqttActive) incidents.push({ level: 'danger', text: 'MQTT broker is disconnected.' });
+    if (connectedBs === 0) incidents.push({ level: 'danger', text: 'No connected base stations.' });
+    if (totalSensors > 0 && registeredSensors / totalSensors < 0.5) incidents.push({ level: 'warn', text: `Only ${Math.round((registeredSensors / totalSensors) * 100)}% sensors are active.` });
+    if (healthPacketLoss > 5) incidents.push({ level: 'warn', text: `Packet loss elevated at ${healthPacketLoss.toFixed(1)}%.` });
+    if (vmCapable === 0 && connectedBs > 0) incidents.push({ level: 'warn', text: 'No VM-capable base station detected.' });
+    if (trafficInfo && trafficInfo.dedupRatio > 20) incidents.push({ level: 'warn', text: `Dedup ratio high (${trafficInfo.dedupRatio.toFixed(1)}%).` });
+
+    return incidents;
+}
+
+function renderIncidents(incidents) {
+    const strip = document.getElementById('incident-strip');
+    const list = document.getElementById('incident-list');
+    const rail = document.getElementById('alert-feed');
+
+    if (!incidents || incidents.length === 0) {
+        strip.style.display = 'none';
+        strip.classList.remove('danger');
+        list.innerHTML = '';
+        rail.innerHTML = '<li class="rail-item"><span class="rail-dot good"></span><span>No critical incidents detected</span><span class="rail-note">healthy</span></li>';
+        return;
+    }
+
+    const hasDanger = incidents.some(item => item.level === 'danger');
+    strip.style.display = 'block';
+    strip.classList.toggle('danger', hasDanger);
+
+    list.innerHTML = incidents.slice(0, 4).map(item =>
+        `<li class="incident-item ${item.level === 'danger' ? 'danger' : ''}"><span class="incident-dot"></span><span>${item.text}</span></li>`
+    ).join('');
+
+    rail.innerHTML = incidents.slice(0, 5).map(item =>
+        `<li class="rail-item"><span class="rail-dot ${item.level === 'danger' ? 'bad' : 'warn'}"></span><span>${item.text}</span><span class="rail-note">${item.level === 'danger' ? 'critical' : 'attention'}</span></li>`
+    ).join('');
+}
+
+function scheduleAutoRefresh() {
+    if (refreshTimer) {
+        clearInterval(refreshTimer);
+        refreshTimer = null;
+    }
+    if (autoRefreshEnabled) {
+        refreshTimer = setInterval(() => refreshNow(false), 5000);
+    }
+}
+
+async function refreshNow(manualTrigger) {
+    const [statusData, vmData, trafficData, healthData, versionData, topologyData, gatewaysData] = await Promise.all([
+        fetchJson('/api/bssci/status'),
+        fetchJson('/api/vm/status'),
+        fetchJson('/api/traffic/metrics'),
+        fetchJson('/api/health'),
+        fetchJson('/api/system/version'),
+        fetchJson('/api/network'),
+        fetchJson('/api/base-stations')
+    ]);
+
+    if (statusData) updateStatusCards(statusData);
+    if (topologyData) updateTopologyPanel(topologyData);
+    const vmCapable = updateVmMetrics(vmData || {});
+    const trafficInfo = updateTrafficMetrics(trafficData || {});
+    const healthInfo = updateHealthMetrics(healthData || {});
+    updateVersion(versionData || {});
+    updateGatewayActions(gatewaysData || {});
+    renderIncidents(buildIncidents(statusData || {}, healthInfo.packetLoss || 0, vmCapable, trafficInfo));
+
+    if (previousSnapshot.packetLoss !== null) {
+        const delta = (healthInfo.packetLoss || 0) - previousSnapshot.packetLoss;
+        if (Math.abs(delta) >= 0.2) {
+            document.getElementById('traffic-trend').textContent = `Packet loss ${delta > 0 ? '+' : ''}${delta.toFixed(1)}% vs previous refresh`;
+        }
+    }
+    previousSnapshot.packetLoss = healthInfo.packetLoss || 0;
+
+    updateLastUpdatedLabel();
+    if (manualTrigger) {
+        document.getElementById('refresh-now').blur();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    bindPanelNavigation();
+    simpleLayout = loadSimpleLayout();
+    bindSimpleLayoutControls();
     initMiniNetwork();
-    loadMiniTopology();
-    updateDashboard();
-    
-    setInterval(updateDashboard, 5000);
-    setInterval(loadMiniTopology, 30000);
+    applySimpleLayout();
+    document.getElementById('refresh-now').addEventListener('click', () => refreshNow(true));
+    document.getElementById('auto-refresh-toggle').addEventListener('change', function(e) {
+        autoRefreshEnabled = e.target.checked;
+        scheduleAutoRefresh();
+        document.getElementById('last-updated').textContent = autoRefreshEnabled ? 'Auto-refresh enabled' : 'Auto-refresh paused';
+    });
+
+    refreshNow(false);
+    scheduleAutoRefresh();
 });
 </script>
 {% endblock %}

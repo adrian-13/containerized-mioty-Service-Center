@@ -10,6 +10,7 @@ LISTEN_PORT = int(os.getenv("LISTEN_PORT", "16018"))
 CERT_FILE = os.getenv("CERT_FILE", "certs/service_center_cert.pem")
 KEY_FILE = os.getenv("KEY_FILE", "certs/service_center_key.pem")
 CA_FILE = os.getenv("CA_FILE", "certs/ca_cert.pem")
+TLS_CLIENT_CERT_MODE = os.getenv("TLS_CLIENT_CERT_MODE", "required").strip().lower()
 
 # MQTT Configuration - read from .env
 MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")

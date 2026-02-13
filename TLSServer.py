@@ -1,14 +1,16 @@
 import asyncio
+import hashlib
 import json
 import logging
 import os
 import ssl
+import msgpack
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, Set
 
 import bssci_config
 import messages
-from protocol import decode_messages, encode_message
+from protocol import encode_message
 
 logger = logging.getLogger(__name__)
 
@@ -160,23 +162,98 @@ class TLSServer:
             local_time = utc_time + timedelta(hours=1)
         return local_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
+    def _extract_protocol_messages(self, rx_buffer: bytearray) -> list[dict[str, Any]]:
+        """Extract complete BSSCI protocol frames from a streaming TCP buffer."""
+        messages: list[dict[str, Any]] = []
+        header_len = len(IDENTIFIER) + 4
+        max_frame_size = 1_048_576  # 1 MiB sanity limit
+
+        while True:
+            if len(rx_buffer) < header_len:
+                break
+
+            marker_pos = rx_buffer.find(IDENTIFIER)
+            if marker_pos < 0:
+                # Keep only tail in case identifier is split across packets.
+                keep_tail = max(0, len(IDENTIFIER) - 1)
+                if len(rx_buffer) > keep_tail:
+                    del rx_buffer[:-keep_tail]
+                break
+
+            if marker_pos > 0:
+                # Discard garbage preceding the next valid protocol marker.
+                del rx_buffer[:marker_pos]
+
+            if len(rx_buffer) < header_len:
+                break
+
+            payload_len = int.from_bytes(rx_buffer[len(IDENTIFIER):header_len], byteorder="little")
+            if payload_len <= 0 or payload_len > max_frame_size:
+                logger.warning(f"⚠️ Invalid protocol payload length {payload_len}, resyncing stream parser")
+                del rx_buffer[:len(IDENTIFIER)]
+                continue
+
+            frame_len = header_len + payload_len
+            if len(rx_buffer) < frame_len:
+                # Wait for remaining bytes in next read.
+                break
+
+            payload = bytes(rx_buffer[header_len:frame_len])
+            del rx_buffer[:frame_len]
+
+            try:
+                unpacker = msgpack.Unpacker(raw=False, strict_map_key=False)
+                unpacker.feed(payload)
+                for decoded in unpacker:
+                    if isinstance(decoded, dict):
+                        messages.append(decoded)
+                    else:
+                        logger.warning(f"⚠️ Ignoring non-dict BSSCI payload item of type {type(decoded).__name__}")
+            except Exception as exc:
+                logger.error(f"❌ Failed to decode BSSCI payload: {exc}")
+
+        return messages
+
     async def start_server(self) -> None:
         logger.info("🔐 Setting up SSL/TLS context for BSSCI server...")
         logger.info(f"   Certificate file: {bssci_config.CERT_FILE}")
         logger.info(f"   Key file: {bssci_config.KEY_FILE}")
         logger.info(f"   CA file: {bssci_config.CA_FILE}")
+        logger.info(
+            f"   Client certificate mode: {getattr(bssci_config, 'TLS_CLIENT_CERT_MODE', 'required')}"
+        )
 
         try:
             ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             ssl_ctx.load_cert_chain(
                 certfile=bssci_config.CERT_FILE, keyfile=bssci_config.KEY_FILE
             )
-            ssl_ctx.load_verify_locations(cafile=bssci_config.CA_FILE)
-            ssl_ctx.verify_mode = ssl.CERT_REQUIRED
+            cert_mode = str(
+                getattr(bssci_config, "TLS_CLIENT_CERT_MODE", "required")
+            ).strip().lower()
+
+            if cert_mode not in {"required", "optional", "none"}:
+                logger.warning(
+                    f"⚠️ Invalid TLS_CLIENT_CERT_MODE={cert_mode!r}, falling back to 'required'"
+                )
+                cert_mode = "required"
+
+            if cert_mode in {"required", "optional"}:
+                ssl_ctx.load_verify_locations(cafile=bssci_config.CA_FILE)
+
+            if cert_mode == "required":
+                ssl_ctx.verify_mode = ssl.CERT_REQUIRED
+                logger.info("✓ Client certificate verification is REQUIRED")
+            elif cert_mode == "optional":
+                ssl_ctx.verify_mode = ssl.CERT_OPTIONAL
+                logger.info("⚠️ Client certificate verification is OPTIONAL")
+            else:
+                ssl_ctx.verify_mode = ssl.CERT_NONE
+                logger.warning("⚠️ Client certificate verification is DISABLED (insecure)")
 
             # Log SSL context details
             logger.info(f"   TLS Protocol versions: {ssl_ctx.minimum_version.name} - {ssl_ctx.maximum_version.name}")
-            logger.info("✓ SSL context configured successfully with client certificate verification")
+            logger.info("✓ SSL context configured successfully")
 
         except FileNotFoundError as e:
             logger.error(f"❌ SSL certificate file not found: {e}")
@@ -756,18 +833,22 @@ class TLSServer:
             logger.info(f"🔗 New BSSCI connection attempt from {addr}")
 
             if ssl_obj:
+                der = ssl_obj.getpeercert(binary_form=True)
                 cert = ssl_obj.getpeercert()
-                if cert:
-                    subject = cert.get('subject', [])
-                    cn = None
-                    for field in subject:
-                        for name, value in field:
-                            if name == 'commonName':
-                                cn = value
-                                break
-                    logger.info(f"   ✓ SSL handshake successful - Client certificate CN: {cn}")
+                logger.info(f"   TLS cipher: {ssl_obj.cipher()}")
+                logger.info(f"   TLS version: {ssl_obj.version()}")
+                if der:
+                        fp = hashlib.sha256(der).hexdigest().upper()
+                        logger.info(f"   Client cert SHA256: {fp}")
                 else:
-                    logger.warning(f"   ⚠️  SSL handshake completed but no client certificate provided")
+                        logger.warning("   ⚠️  No client cert (binary_form is empty)")
+
+                if cert:
+                        logger.info(f"   Client cert subject: {cert.get('subject')}")
+                        logger.info(f"   Client cert issuer: {cert.get('issuer')}")
+                        logger.info(f"   Client cert SAN: {cert.get('subjectAltName')}")
+                else:
+                        logger.warning("   ⚠️  getpeercert() returned empty dict")
             else:
                 logger.error(f"   ❌ No SSL object found - connection may not be encrypted")
 
@@ -782,6 +863,7 @@ class TLSServer:
 
         connection_start_time = asyncio.get_event_loop().time()
         messages_processed = 0
+        rx_buffer = bytearray()
 
         try:
             while True:
@@ -789,8 +871,9 @@ class TLSServer:
                 if not data:
                     break
                 self.traffic_metrics['bytes_in'] += len(data)
-                # try:
-                for message in decode_messages(data):
+                rx_buffer.extend(data)
+
+                for message in self._extract_protocol_messages(rx_buffer):
                     msg_type = message.get("command", "")
                     messages_processed += 1
 

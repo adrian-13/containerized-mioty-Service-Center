@@ -99,6 +99,7 @@ async def main() -> None:
         # Start both services concurrently
         await asyncio.gather(
             tls_server.start_server(),
+            tls_server.process_mqtt_messages(),
             mqtt_client.start(),
             return_exceptions=True
         )

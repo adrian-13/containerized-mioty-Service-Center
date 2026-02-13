@@ -1,10 +1,9 @@
 {
   "base_stations": {
-    "70b3d59cd00009f6": {
+    "129af3fffe01f124": {
       "name": "",
       "tags": [],
-      "cert_generated": "2026-02-10T07:51:35",
-      "cert_expires": "2027-02-10T07:51:35"
+      "ip": "192.168.10.50"
     }
   }
 }

@@ -49,24 +49,24 @@
                     </div>
                     <div class="col-12">
                         <button class="btn btn-primary me-2" onclick="vmActivate()" style="background-color: #ff8c00; border-color: #ff8c00;">
-                            VM aktivieren
+                            Activate VM
                         </button>
                         <button class="btn btn-outline-secondary" onclick="vmStatus()">
-                            VM Status abfragen
+                            Query VM status
                         </button>
                     </div>
                     <div class="col-12 border-top pt-3 mt-2">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="periodicStatusCheck" onchange="togglePeriodicStatus()">
                             <label class="form-check-label" for="periodicStatusCheck">
-                                Periodische Status-Abfrage
+                                Periodic status query
                             </label>
                         </div>
                         <div class="input-group mt-2" style="max-width: 200px;">
                             <input type="number" class="form-control" id="statusIntervalInput" value="60" min="10" max="3600">
-                            <span class="input-group-text">Sekunden</span>
+                            <span class="input-group-text">seconds</span>
                         </div>
-                        <small class="text-muted">Automatische VM Status-Abfrage (10-3600s)</small>
+                        <small class="text-muted">Automatic VM status query (10-3600s)</small>
                     </div>
                 </div>
             </div>
@@ -90,11 +90,11 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header" style="background-color: #ff8c00; color: white;">
-                <h5 class="mb-0">VM-fähige Basisstationen</h5>
+                <h5 class="mb-0">VM-capable base stations</h5>
             </div>
             <div class="card-body">
                 <div id="vm-capable-container">
-                    <p class="text-muted mb-0">Lade VM-fähige Basisstationen...</p>
+                    <p class="text-muted mb-0">Lade VM-capable base stations...</p>
                 </div>
             </div>
         </div>
@@ -190,11 +190,11 @@ function togglePeriodicStatus() {
         localStorage.setItem('vmPeriodicStatusEnabled', 'true');
         localStorage.setItem('vmPeriodicStatusInterval', interval.toString());
         startPeriodicStatus(interval);
-        showAlert(`Periodische Status-Abfrage aktiviert (alle ${interval} Sekunden)`, 'success');
+        showAlert(`Periodic status query enabled (every ${interval} seconds)`, 'success');
     } else {
         localStorage.setItem('vmPeriodicStatusEnabled', 'false');
         stopPeriodicStatus();
-        showAlert('Periodische Status-Abfrage deaktiviert', 'info');
+        showAlert('Periodic status query disabled', 'info');
     }
 }
 
@@ -237,12 +237,12 @@ function refreshVmCapable() {
                 const totalConnected = data.total_connected || 0;
                 
                 if (connected.length === 0) {
-                    container.innerHTML = '<p class="text-muted mb-0">Keine Basisstationen verbunden.</p>';
+                    container.innerHTML = '<p class="text-muted mb-0">No base stations connected.</p>';
                 } else if (vmCapable.length === 0) {
                     container.innerHTML = `
                         <p class="text-muted mb-0">
-                            <strong>${totalConnected}</strong> Basisstation(en) verbunden, aber keine VM-Unterstützung bestätigt.
-                            <br><small>Senden Sie eine VM Status-Abfrage, um die VM-Unterstützung zu ermitteln.</small>
+                            <strong>${totalConnected}</strong> base station(s) connected, but VM support is not confirmed.
+                            <br><small>Send a VM status query to detect VM support.</small>
                         </p>
                         <div class="mt-2">
                             ${connected.map(bs => `<span class="badge bg-secondary me-1">${bs}</span>`).join('')}
@@ -253,30 +253,30 @@ function refreshVmCapable() {
                     container.innerHTML = `
                         <div class="row">
                             <div class="col-md-6">
-                                <h6 class="text-success"><i class="bi bi-check-circle"></i> VM-fähig (${vmCapable.length})</h6>
+                                <h6 class="text-success"><i class="bi bi-check-circle"></i> VM-capable (${vmCapable.length})</h6>
                                 <div>
                                     ${vmCapable.map(bs => `<span class="badge bg-success me-1 mb-1">${bs}</span>`).join('')}
                                 </div>
                             </div>
                             ${notVmCapable.length > 0 ? `
                             <div class="col-md-6">
-                                <h6 class="text-secondary"><i class="bi bi-question-circle"></i> Nicht bestätigt (${notVmCapable.length})</h6>
+                                <h6 class="text-secondary"><i class="bi bi-question-circle"></i> Not confirmed (${notVmCapable.length})</h6>
                                 <div>
                                     ${notVmCapable.map(bs => `<span class="badge bg-secondary me-1 mb-1">${bs}</span>`).join('')}
                                 </div>
                             </div>
                             ` : ''}
                         </div>
-                        <small class="text-muted mt-2 d-block">Gesamt: ${totalConnected} Basisstation(en) verbunden</small>
+                        <small class="text-muted mt-2 d-block">Total: ${totalConnected} base station(s) connected</small>
                     `;
                 }
             } else {
-                container.innerHTML = '<p class="text-danger mb-0">Fehler beim Laden der VM-fähigen Basisstationen.</p>';
+                container.innerHTML = '<p class="text-danger mb-0">Error loading VM-capable base stations.</p>';
             }
         })
         .catch(error => {
             console.error('Error fetching VM capable base stations:', error);
-            document.getElementById('vm-capable-container').innerHTML = '<p class="text-danger mb-0">Fehler beim Laden.</p>';
+            document.getElementById('vm-capable-container').innerHTML = '<p class="text-danger mb-0">Error loading data.</p>';
         });
 }
 
@@ -403,3 +403,5 @@ refreshData();
 refreshInterval = setInterval(refreshData, 30000);
 </script>
 {% endblock %}
+
+

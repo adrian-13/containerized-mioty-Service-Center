@@ -2,179 +2,353 @@
 {% block title %}Network{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Network</h2>
+<style>
+.network-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.95rem;
+}
+
+.network-kicker {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #5f7088;
+    font-weight: 800;
+}
+
+.network-title {
+    margin: 0.2rem 0 0;
+    font-family: "Sora", "Manrope", sans-serif;
+    font-size: 1.34rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.network-subtitle {
+    margin: 0.35rem 0 0;
+    font-size: 0.84rem;
+    color: #5f7088;
+}
+
+.network-action-groups {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.network-section {
+    border: 1px solid #d5deeb;
+    border-radius: 0.98rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    margin-bottom: 0.9rem;
+}
+
+.network-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.84rem 0.96rem;
+    border-bottom: 1px solid #dce5f2;
+    background: linear-gradient(150deg, #1b2840 0%, #2a3f60 100%);
+    color: #f8fbff;
+}
+
+.network-section-head h5 {
+    margin: 0;
+    font-size: 0.89rem;
+    font-weight: 700;
+}
+
+.network-section-head small {
+    opacity: 0.82;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.network-section-body {
+    padding: 0.86rem;
+}
+
+.workspace-tabs {
+    margin-bottom: 0.82rem;
+    padding: 0.22rem;
+    border: 1px solid #d5deeb;
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.workspace-tabs .nav-link {
+    border: 0;
+    border-radius: 0.7rem;
+    color: #495c76;
+    font-size: 0.81rem;
+    font-weight: 700;
+    padding: 0.5rem 0.84rem;
+}
+
+.workspace-tabs .nav-link.active {
+    color: #fff;
+    background: linear-gradient(145deg, #e97c13 0%, #f39e45 100%);
+    box-shadow: 0 9px 16px rgba(233, 124, 19, 0.26);
+}
+
+.network-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+    gap: 0.8rem;
+}
+
+.network-side-panel {
+    border: 1px solid #d5deeb;
+    border-radius: 0.9rem;
+    background: #fff;
+    overflow: hidden;
+    margin-bottom: 0.7rem;
+}
+
+.network-side-panel:last-child {
+    margin-bottom: 0;
+}
+
+.network-side-head {
+    padding: 0.7rem 0.78rem;
+    border-bottom: 1px solid #e1e9f4;
+    background: #f4f8fd;
+    font-size: 0.79rem;
+    font-weight: 800;
+    color: #2d3b4f;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
+.network-side-body {
+    padding: 0.76rem;
+}
+
+.map-canvas {
+    border: 1px solid #d6deea;
+    border-radius: 0.76rem;
+    overflow: hidden;
+    background: #eef3fa;
+}
+
+#osmMap,
+#cy {
+    height: 600px;
+    width: 100%;
+}
+
+#floorplanContainer {
+    height: 600px;
+    width: 100%;
+    overflow: auto;
+    background: #eef3fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.legend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.58rem;
+    margin-bottom: 0.44rem;
+    font-size: 0.79rem;
+    color: #334258;
+}
+
+.legend-row:last-child {
+    margin-bottom: 0;
+}
+
+.legend-chip-circle {
+    border-radius: 50%;
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.46rem;
+}
+
+.stat-row:last-child {
+    margin-bottom: 0;
+}
+
+.device-panel {
+    border: 1px solid #d6deea;
+    border-radius: 0.9rem;
+    background: #fff;
+}
+
+.device-panel-head {
+    padding: 0.72rem 0.8rem;
+    border-bottom: 1px solid #e1e9f4;
+    background: #f4f8fd;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #2d3b4f;
+}
+
+.device-panel-body {
+    padding: 0.76rem;
+}
+
+@media (max-width: 1200px) {
+    .network-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .network-header {
+        flex-direction: column;
+    }
+
+    .network-action-groups {
+        justify-content: flex-start;
+    }
+}
+</style>
+
+<div class="network-header">
     <div>
-        <button class="btn btn-success btn-sm me-2" onclick="saveCoveragePositions()">Save Positions</button>
-        <button class="btn btn-secondary btn-sm me-2" onclick="clearPositions()">Clear Positions</button>
-        <button class="btn btn-primary btn-sm" onclick="generateHeatmap()">Generate Heatmap</button>
+        <p class="network-kicker">Coverage and Routing</p>
+        <h2 class="network-title">Network Workspace</h2>
+        <p class="network-subtitle">Edit floorplan placements, inspect signal distribution and maintain topology routing layout.</p>
+    </div>
+    <div class="network-action-groups">
+        <button class="btn btn-success btn-sm" onclick="saveCoveragePositions()"><i class="fas fa-save"></i> Save Coverage</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearPositions()"><i class="fas fa-eraser"></i> Clear Coverage</button>
+        <button class="btn btn-primary btn-sm" onclick="generateHeatmap()"><i class="fas fa-fire"></i> Generate Heatmap</button>
+        <button class="btn btn-success btn-sm" onclick="saveTopoPositions()"><i class="fas fa-save"></i> Save Topology</button>
+        <button class="btn btn-secondary btn-sm" onclick="resetLayout()"><i class="fas fa-compress-arrows-alt"></i> Reset Topology</button>
+        <button class="btn btn-primary btn-sm" onclick="loadTopology()"><i class="fas fa-sync"></i> Refresh Topology</button>
     </div>
 </div>
 
-<h4 class="mb-3">Coverage Map</h4>
-
-<div class="row mb-3">
-    <div class="col-12">
-        <ul class="nav nav-tabs" id="mapTabs" role="tablist">
+<div class="network-section">
+    <div class="network-section-head">
+        <h5><i class="fas fa-map-marked-alt me-2"></i>Coverage Map Workspace</h5>
+        <small>OSM and floorplan mode</small>
+    </div>
+    <div class="network-section-body">
+        <ul class="nav nav-pills workspace-tabs" id="mapTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="osm-tab" data-bs-toggle="tab" data-bs-target="#osm-pane" type="button" role="tab">
-                    OpenStreetMap
-                </button>
+                <button class="nav-link" id="osm-tab" data-bs-toggle="tab" data-bs-target="#osm-pane" type="button" role="tab">OpenStreetMap</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="floorplan-tab" data-bs-toggle="tab" data-bs-target="#floorplan-pane" type="button" role="tab">
-                    Floor Plan
-                </button>
+                <button class="nav-link active" id="floorplan-tab" data-bs-toggle="tab" data-bs-target="#floorplan-pane" type="button" role="tab">Floor Plan</button>
             </li>
         </ul>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-md-9">
-        <div class="tab-content">
-            <div class="tab-pane fade" id="osm-pane" role="tabpanel">
-                <div class="card">
-                    <div class="card-body p-0">
-                        <div id="osmMap" style="height: 600px; width: 100%;"></div>
+        <div class="network-grid">
+            <div class="tab-content">
+                <div class="tab-pane fade" id="osm-pane" role="tabpanel">
+                    <div class="map-canvas">
+                        <div id="osmMap"></div>
                     </div>
                 </div>
-            </div>
-            <div class="tab-pane fade show active" id="floorplan-pane" role="tabpanel">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <input type="file" id="floorplanUpload" accept="image/*" class="form-control form-control-sm" style="max-width: 250px; display: inline-block;">
-                        </div>
-                        <div class="btn-group btn-group-sm" id="zoomControls" style="display: none;">
-                            <button class="btn btn-outline-secondary" onclick="zoomFloorplan(-0.25)" title="Zoom Out">-</button>
-                            <button class="btn btn-outline-secondary" id="zoomLevel">100%</button>
-                            <button class="btn btn-outline-secondary" onclick="zoomFloorplan(0.25)" title="Zoom In">+</button>
-                            <button class="btn btn-outline-secondary ms-2" onclick="fitFloorplan()" title="Fit to View">Fit</button>
-                            <button class="btn btn-outline-secondary" onclick="resetZoom()" title="Reset to 100%">1:1</button>
+                <div class="tab-pane fade show active" id="floorplan-pane" role="tabpanel">
+                    <div class="network-side-panel mb-2">
+                        <div class="network-side-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <input type="file" id="floorplanUpload" accept="image/*" class="form-control form-control-sm" style="max-width: 260px;">
+                            <div class="btn-group btn-group-sm" id="zoomControls" style="display: none;">
+                                <button class="btn btn-outline-secondary" onclick="zoomFloorplan(-0.25)" title="Zoom Out">-</button>
+                                <button class="btn btn-outline-secondary" id="zoomLevel">100%</button>
+                                <button class="btn btn-outline-secondary" onclick="zoomFloorplan(0.25)" title="Zoom In">+</button>
+                                <button class="btn btn-outline-secondary ms-2" onclick="fitFloorplan()" title="Fit to View">Fit</button>
+                                <button class="btn btn-outline-secondary" onclick="resetZoom()" title="Reset to 100%">1:1</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-body p-0" style="position: relative;">
-                        <div id="floorplanContainer" style="height: 600px; width: 100%; overflow: auto; background: #f5f5f5; display: flex; align-items: center; justify-content: center;">
-                            <div id="floorplanPlaceholder" class="text-muted">
-                                <i>Upload a floor plan image to get started</i>
-                            </div>
+                    <div class="map-canvas">
+                        <div id="floorplanContainer">
+                            <div id="floorplanPlaceholder" class="text-muted"><i>Upload a floor plan image to get started</i></div>
                             <canvas id="floorplanCanvas" style="display: none; cursor: crosshair;"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="card mb-3">
-            <div class="card-header">
-                <h6 class="mb-0">Legend</h6>
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div style="width: 24px; height: 24px; background: #ff8c00; border-radius: 50%; margin-right: 10px;"></div>
-                    <span>Base Station</span>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <div style="width: 16px; height: 16px; background: #17a2b8; border-radius: 50%; margin-right: 10px;"></div>
-                    <span>Sensor</span>
-                </div>
-                <hr>
-                <div class="mb-2"><strong>Signal Quality</strong></div>
-                <div class="d-flex align-items-center mb-1">
-                    <div style="width: 20px; height: 12px; background: #00ff00; margin-right: 10px;"></div>
-                    <span>Excellent (&gt;10 dB)</span>
-                </div>
-                <div class="d-flex align-items-center mb-1">
-                    <div style="width: 20px; height: 12px; background: #7fff00; margin-right: 10px;"></div>
-                    <span>Good (5-10 dB)</span>
-                </div>
-                <div class="d-flex align-items-center mb-1">
-                    <div style="width: 20px; height: 12px; background: #ffff00; margin-right: 10px;"></div>
-                    <span>Fair (0-5 dB)</span>
-                </div>
-                <div class="d-flex align-items-center mb-1">
-                    <div style="width: 20px; height: 12px; background: #ff7f00; margin-right: 10px;"></div>
-                    <span>Poor (-5-0 dB)</span>
-                </div>
-                <div class="d-flex align-items-center">
-                    <div style="width: 20px; height: 12px; background: #ff0000; margin-right: 10px;"></div>
-                    <span>Critical (&lt;-5 dB)</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mb-3">
-            <div class="card-header">
-                <h6 class="mb-0">Statistics</h6>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Base Stations:</span>
-                    <strong id="cov_bsCount">0</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Sensors:</span>
-                    <strong id="cov_sensorCount">0</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span>Positioned:</span>
-                    <strong id="positionedCount">0</strong>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mb-3">
-            <div class="card-header">
-                <h6 class="mb-0">Filters</h6>
-            </div>
-            <div class="card-body">
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="showHeatmap" checked>
-                    <label class="form-check-label" for="showHeatmap">Show Heatmap</label>
-                </div>
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="showBaseStations" checked>
-                    <label class="form-check-label" for="showBaseStations">Show Base Stations</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="showSensors" checked>
-                    <label class="form-check-label" for="showSensors">Show Sensors</label>
-                </div>
-                <hr>
-                <label class="form-label">Metric:</label>
-                <select class="form-select form-select-sm" id="metricSelect">
-                    <option value="snr" selected>SNR (dB)</option>
-                    <option value="rssi">RSSI (dBm)</option>
-                </select>
-            </div>
-        </div>
-        
-        <div class="card" id="cov_detailsCard" style="display: none;">
-            <div class="card-header">
-                <h6 class="mb-0" id="cov_detailsTitle">Details</h6>
-            </div>
-            <div class="card-body" id="cov_detailsBody"></div>
-        </div>
-    </div>
-</div>
 
-<div class="row mt-3">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">Devices - Click to position on map</h6>
+            <div>
+                <div class="network-side-panel">
+                    <div class="network-side-head">Legend</div>
+                    <div class="network-side-body">
+                        <div class="legend-row"><span class="legend-chip-circle" style="width: 22px; height: 22px; background: #ff8c00;"></span><span>Base Station</span></div>
+                        <div class="legend-row"><span class="legend-chip-circle" style="width: 14px; height: 14px; background: #17a2b8;"></span><span>Sensor</span></div>
+                        <hr>
+                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #00ff00;"></span><span>Excellent (&gt;10 dB)</span></div>
+                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #7fff00;"></span><span>Good (5-10 dB)</span></div>
+                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #ffff00;"></span><span>Fair (0-5 dB)</span></div>
+                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff7f00;"></span><span>Poor (-5-0 dB)</span></div>
+                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff0000;"></span><span>Critical (&lt;-5 dB)</span></div>
+                    </div>
+                </div>
+
+                <div class="network-side-panel">
+                    <div class="network-side-head">Coverage Stats</div>
+                    <div class="network-side-body">
+                        <div class="stat-row"><span>Base Stations</span><strong id="cov_bsCount">0</strong></div>
+                        <div class="stat-row"><span>Sensors</span><strong id="cov_sensorCount">0</strong></div>
+                        <div class="stat-row"><span>Positioned</span><strong id="positionedCount">0</strong></div>
+                    </div>
+                </div>
+
+                <div class="network-side-panel">
+                    <div class="network-side-head">Filters</div>
+                    <div class="network-side-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="showHeatmap" checked>
+                            <label class="form-check-label" for="showHeatmap">Show Heatmap</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="showBaseStations" checked>
+                            <label class="form-check-label" for="showBaseStations">Show Base Stations</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showSensors" checked>
+                            <label class="form-check-label" for="showSensors">Show Sensors</label>
+                        </div>
+                        <hr>
+                        <label class="form-label">Metric</label>
+                        <select class="form-select form-select-sm" id="metricSelect">
+                            <option value="snr" selected>SNR (dB)</option>
+                            <option value="rssi">RSSI (dBm)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="network-side-panel" id="cov_detailsCard" style="display: none;">
+                    <div class="network-side-head" id="cov_detailsTitle">Details</div>
+                    <div class="network-side-body" id="cov_detailsBody"></div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
+        </div>
+
+        <div class="device-panel mt-3">
+            <div class="device-panel-head">Devices - Click to position on map</div>
+            <div class="device-panel-body">
+                <div class="row g-3">
                     <div class="col-md-6">
-                        <h6>Base Stations</h6>
+                        <h6 class="mb-2">Base Stations</h6>
                         <div id="baseStationList" class="d-flex flex-wrap gap-2"></div>
                     </div>
                     <div class="col-md-6">
-                        <h6>Sensors</h6>
+                        <h6 class="mb-2">Sensors</h6>
                         <div id="sensorList" class="d-flex flex-wrap gap-2" style="max-height: 150px; overflow-y: auto;"></div>
                     </div>
                 </div>
@@ -183,76 +357,42 @@
     </div>
 </div>
 
-<hr class="my-4">
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">Network Topology</h4>
-    <div>
-        <button class="btn btn-success btn-sm me-2" onclick="saveTopoPositions()">Save Positions</button>
-        <button class="btn btn-secondary btn-sm me-2" onclick="resetLayout()">Reset Layout</button>
-        <button class="btn btn-primary btn-sm" onclick="loadTopology()">Refresh</button>
+<div class="network-section">
+    <div class="network-section-head">
+        <h5><i class="fas fa-project-diagram me-2"></i>Topology Workspace</h5>
+        <small>Route and connection inspection</small>
     </div>
-</div>
+    <div class="network-section-body">
+        <div class="network-grid">
+            <div class="map-canvas">
+                <div id="cy"></div>
+            </div>
 
-<div class="row mb-3">
-    <div class="col-md-9">
-        <div class="card">
-            <div class="card-body p-0">
-                <div id="cy" style="height: 600px; width: 100%;"></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card mb-3">
-            <div class="card-header">
-                <h6 class="mb-0">Legend</h6>
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div style="width: 24px; height: 24px; background: #ff8c00; border-radius: 50%; margin-right: 10px;"></div>
-                    <span>Base Station</span>
+            <div>
+                <div class="network-side-panel">
+                    <div class="network-side-head">Legend</div>
+                    <div class="network-side-body">
+                        <div class="legend-row"><span class="legend-chip-circle" style="width: 22px; height: 22px; background: #ff8c00;"></span><span>Base Station</span></div>
+                        <div class="legend-row"><span class="legend-chip-circle" style="width: 14px; height: 14px; background: #17a2b8;"></span><span>Sensor</span></div>
+                        <hr>
+                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #28a745;"></span><span>Primary Route</span></div>
+                        <div class="legend-row"><span style="width: 28px; height: 2px; background: #aaa;"></span><span>Secondary Route</span></div>
+                    </div>
                 </div>
-                <div class="d-flex align-items-center mb-2">
-                    <div style="width: 16px; height: 16px; background: #17a2b8; border-radius: 50%; margin-right: 10px;"></div>
-                    <span>Sensor</span>
+
+                <div class="network-side-panel">
+                    <div class="network-side-head">Topology Stats</div>
+                    <div class="network-side-body">
+                        <div class="stat-row"><span>Base Stations</span><strong id="topo_bsCount">0</strong></div>
+                        <div class="stat-row"><span>Sensors</span><strong id="topo_sensorCount">0</strong></div>
+                        <div class="stat-row"><span>Connections</span><strong id="edgeCount">0</strong></div>
+                    </div>
                 </div>
-                <hr>
-                <div class="d-flex align-items-center mb-2">
-                    <div style="width: 30px; height: 4px; background: #28a745; margin-right: 10px;"></div>
-                    <span>Primary Route</span>
+
+                <div class="network-side-panel" id="topo_detailsCard" style="display: none;">
+                    <div class="network-side-head" id="topo_detailsTitle">Details</div>
+                    <div class="network-side-body" id="topo_detailsBody"></div>
                 </div>
-                <div class="d-flex align-items-center">
-                    <div style="width: 30px; height: 2px; background: #aaa; margin-right: 10px;"></div>
-                    <span>Secondary Route</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mb-3">
-            <div class="card-header">
-                <h6 class="mb-0">Statistics</h6>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Base Stations:</span>
-                    <strong id="topo_bsCount">0</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Sensors:</span>
-                    <strong id="topo_sensorCount">0</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span>Connections:</span>
-                    <strong id="edgeCount">0</strong>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card" id="topo_detailsCard" style="display: none;">
-            <div class="card-header">
-                <h6 class="mb-0" id="topo_detailsTitle">Details</h6>
-            </div>
-            <div class="card-body" id="topo_detailsBody">
             </div>
         </div>
     </div>
@@ -1400,3 +1540,4 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 </script>
 {% endblock %}
+

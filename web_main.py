@@ -3,6 +3,7 @@ import logging
 import threading
 import time
 import os
+import web_ui
 from web_ui import app
 from main import main as bssci_main
 
@@ -39,7 +40,8 @@ class TimezoneFormatter(logging.Formatter):
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
 )
 
 # Apply timezone formatter to all handlers
@@ -49,6 +51,12 @@ timezone_formatter = TimezoneFormatter(
 )
 for handler in logging.root.handlers:
     handler.setFormatter(timezone_formatter)
+
+# Re-attach in-memory web log handler after force-reset of logging handlers.
+try:
+    web_ui.ensure_web_log_handler()
+except Exception as e:
+    logging.getLogger(__name__).warning(f"Could not attach web log handler: {e}")
 
 logger = logging.getLogger(__name__)
 
