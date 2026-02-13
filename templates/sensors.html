@@ -2,53 +2,455 @@
 {% block title %}Sensors{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Sensor Management</h1>
-    <div>
-        <div class="btn-group me-2">
-            <button class="btn btn-outline-secondary" onclick="exportSensors()" title="Export sensors to CSV file">
-                <i class="fas fa-download"></i> Export CSV
+<style>
+.sensor-page {
+    display: grid;
+    gap: 0.82rem;
+}
+
+.sensor-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.9rem;
+    margin-bottom: 0.1rem;
+    padding: 0.76rem 0.86rem;
+    border: 1px solid #d5deeb;
+    border-radius: 0.98rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.sensor-kicker {
+    margin: 0;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5f7088;
+    font-weight: 800;
+}
+
+.sensor-title {
+    margin: 0.14rem 0 0;
+    font-family: "Sora", "Manrope", sans-serif;
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.sensor-subtitle {
+    margin: 0.24rem 0 0;
+    font-size: 0.78rem;
+    color: #5f7088;
+}
+
+.sensor-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.44rem;
+    justify-content: flex-end;
+}
+
+.sensor-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.74rem;
+    margin-bottom: 0.85rem;
+}
+
+.sensor-summary-card {
+    border: 1px solid #d5deeb;
+    border-radius: 0.88rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    padding: 0.72rem 0.82rem;
+}
+
+.sensor-summary-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #607089;
+    font-weight: 800;
+}
+
+.sensor-summary-value {
+    margin-top: 0.28rem;
+    font-size: 1.26rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #0f172a;
+}
+
+.sensor-summary-note {
+    margin-top: 0.24rem;
+    font-size: 0.7rem;
+    color: #5f7088;
+}
+
+.sensor-table-panel {
+    border: 1px solid #d5deeb;
+    border-radius: 0.88rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.sensor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.72rem 0.82rem;
+    border-bottom: 1px solid #dce5f2;
+    background: #f8fbff;
+}
+
+.sensor-toolbar-left {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.sensor-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.sensor-search {
+    min-width: 280px;
+}
+
+.sensor-meta-note {
+    font-size: 0.72rem;
+    color: #5f7088;
+    font-weight: 600;
+}
+
+.sensor-refresh-note {
+    font-size: 0.72rem;
+    color: #5f7088;
+    font-weight: 600;
+}
+
+.sensor-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.42rem;
+    flex-wrap: wrap;
+    padding: 0.58rem 0.82rem;
+    border-bottom: 1px solid #e4ecf7;
+    background: #fbfdff;
+}
+
+.sensor-filter-chip {
+    border: 1px solid #c7d5e7;
+    background: #fff;
+    color: #324a67;
+    border-radius: 999px;
+    padding: 0.24rem 0.62rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    line-height: 1.1;
+}
+
+.sensor-filter-chip .count {
+    font-size: 0.68rem;
+    color: #5f7088;
+    background: #f0f5fd;
+    border-radius: 999px;
+    padding: 0.12rem 0.42rem;
+}
+
+.sensor-filter-chip.is-active {
+    border-color: #2f6cab;
+    color: #17497d;
+    background: #e9f3ff;
+}
+
+.sensor-bulkbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.56rem;
+    flex-wrap: wrap;
+    padding: 0.56rem 0.82rem;
+    border-bottom: 1px solid #dce5f2;
+    background: linear-gradient(180deg, #fffaf0 0%, #fff6e6 100%);
+}
+
+.sensor-bulkbar-note {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #80570f;
+}
+
+.sensor-bulkbar-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.sensor-table-wrap {
+    padding: 0.62rem 0.72rem 0.78rem;
+}
+
+.sensor-table-wrap table {
+    margin-bottom: 0;
+}
+
+.sensor-table-wrap td,
+.sensor-table-wrap th {
+    vertical-align: middle;
+}
+
+.sensor-table-wrap code {
+    font-size: 0.74rem;
+}
+
+.sensor-id-cell {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.sensor-subline {
+    font-size: 0.72rem;
+    color: #5f7088;
+}
+
+.sensor-badge-stack {
+    display: inline-flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+}
+
+.sensor-path-note {
+    font-size: 0.72rem;
+    color: #516683;
+}
+
+.sensor-actions-menu .dropdown-toggle::after {
+    margin-left: 0.38rem;
+}
+
+.sensor-view-menu {
+    min-width: 220px;
+}
+
+.sensor-view-menu .form-check-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #324a67;
+}
+
+.table-empty {
+    text-align: center;
+    color: #6b7f98;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 1rem 0.6rem !important;
+}
+
+.is-hidden {
+    display: none !important;
+}
+
+.sensor-page.is-compact .sensor-header {
+    padding: 0.58rem 0.72rem;
+}
+
+.sensor-page.is-compact .sensor-summary-card {
+    padding: 0.56rem 0.66rem;
+}
+
+.sensor-page.is-compact .sensor-toolbar {
+    padding: 0.54rem 0.7rem;
+}
+
+.sensor-page.is-compact .sensor-filter-row {
+    padding: 0.44rem 0.7rem;
+}
+
+.sensor-page.is-compact .sensor-table-wrap {
+    padding: 0.46rem 0.62rem 0.66rem;
+}
+
+.sensor-page.is-compact .sensor-table-wrap td,
+.sensor-page.is-compact .sensor-table-wrap th {
+    padding-top: 0.38rem;
+    padding-bottom: 0.38rem;
+}
+
+@media (max-width: 1200px) {
+    .sensor-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .sensor-header {
+        flex-direction: column;
+    }
+
+    .sensor-actions {
+        justify-content: flex-start;
+    }
+
+    .sensor-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sensor-toolbar-right {
+        justify-content: space-between;
+    }
+
+    .sensor-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sensor-search {
+        width: 100%;
+        min-width: 0;
+    }
+}
+</style>
+
+<div class="sensor-page" id="sensorPage">
+    <div class="sensor-header">
+        <div>
+            <p class="sensor-kicker">Device Registry</p>
+            <h2 class="sensor-title">Sensor Management</h2>
+            <p class="sensor-subtitle">Manage registration, monitor activity, and run safe bulk operations.</p>
+        </div>
+        <div class="sensor-actions">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sensorModal" onclick="openSensorModal()">
+                <i class="fas fa-plus"></i> Add Sensor
             </button>
-            <button class="btn btn-outline-secondary" onclick="document.getElementById('importFile').click()" title="Import sensors from CSV/TXT file">
-                <i class="fas fa-upload"></i> Import
+            <button class="btn btn-success" onclick="attachAllSensors()" title="Attach all sensors to base stations">
+                <i class="fas fa-link"></i> Attach All
             </button>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-ellipsis-h"></i> More
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" onclick="reloadSensors()"><i class="fas fa-sync-alt me-2"></i>Reload Config</button></li>
+                    <li><button class="dropdown-item" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload me-2"></i>Import</button></li>
+                    <li><button class="dropdown-item" onclick="exportSensors()"><i class="fas fa-download me-2"></i>Export CSV</button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item text-warning" onclick="detachAllSensors()"><i class="fas fa-unlink me-2"></i>Detach All</button></li>
+                    <li><button class="dropdown-item text-danger" onclick="clearAllSensors()"><i class="fas fa-trash me-2"></i>Clear All</button></li>
+                </ul>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="View options">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-2 sensor-view-menu">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="viewShowSummary" checked>
+                        <label class="form-check-label" for="viewShowSummary">Show summary cards</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="viewShowQuickFilters" checked>
+                        <label class="form-check-label" for="viewShowQuickFilters">Show quick filters</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="viewCompactMode">
+                        <label class="form-check-label" for="viewCompactMode">Compact density</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary w-100" type="button" onclick="resetSensorViewPrefs()">Reset view</button>
+                </div>
+            </div>
             <input type="file" id="importFile" accept=".csv,.txt" style="display: none;" onchange="importSensors(this)">
         </div>
-        <button class="btn me-2" onclick="reloadSensors()" title="Reload sensor configuration" style="background-color: #6c757d; color: white; border-color: #6c757d;">
-            Reload Config
-        </button>
-        <button class="btn btn-success me-2" onclick="attachAllSensors()" title="Attach all sensors to base stations">
-            Attach All
-        </button>
-        <button class="btn btn-warning me-2" onclick="detachAllSensors()" title="Detach all sensors from base stations">
-            Detach All
-        </button>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sensorModal" onclick="openSensorModal()" style="background-color: #ff8c00; border-color: #ff8c00;">
-            Add New Sensor
-        </button>
     </div>
-</div>
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>EUI</th>
-                        <th>Network Key</th>
-                        <th>Short Address</th>
-                        <th>Bidirectional</th>
-                        <th>Registration Status</th>
-                        <th>Activity Status</th>
-                        <th>Preferred Downlink Path</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="sensors-table">
-                    <!-- Sensors will be loaded here -->
-                </tbody>
-            </table>
+    <div class="sensor-summary-grid" id="sensorSummaryGrid">
+        <div class="sensor-summary-card">
+            <div class="sensor-summary-label">Total Sensors</div>
+            <div class="sensor-summary-value" id="sensorTotalCount">0</div>
+            <div class="sensor-summary-note">Configured in registry</div>
+        </div>
+        <div class="sensor-summary-card">
+            <div class="sensor-summary-label">Registered</div>
+            <div class="sensor-summary-value text-success" id="sensorRegisteredCount">0</div>
+            <div class="sensor-summary-note">Has active registration</div>
+        </div>
+        <div class="sensor-summary-card">
+            <div class="sensor-summary-label">Active</div>
+            <div class="sensor-summary-value text-info" id="sensorActiveCount">0</div>
+            <div class="sensor-summary-note">Recent traffic observed</div>
+        </div>
+        <div class="sensor-summary-card">
+            <div class="sensor-summary-label">Warnings</div>
+            <div class="sensor-summary-value text-warning" id="sensorWarningCount">0</div>
+            <div class="sensor-summary-note">Warning or detached state</div>
+        </div>
+    </div>
+
+    <div class="sensor-table-panel">
+        <div class="sensor-toolbar">
+            <div class="sensor-toolbar-left">
+                <input type="text" id="sensorSearch" class="form-control form-control-sm sensor-search" placeholder="Search by EUI, short addr, base station or status...">
+                <small id="sensorTableMeta" class="sensor-meta-note">Live configuration overview</small>
+            </div>
+            <div class="sensor-toolbar-right">
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked>
+                    <label class="form-check-label" for="autoRefreshToggle">Auto-refresh</label>
+                </div>
+                <span id="sensorLastRefresh" class="sensor-refresh-note">Waiting for first refresh...</span>
+            </div>
+        </div>
+
+        <div id="sensorQuickFilters" class="sensor-filter-row">
+            <button type="button" class="sensor-filter-chip is-active" data-filter="all">All <span class="count" id="filter-count-all">0</span></button>
+            <button type="button" class="sensor-filter-chip" data-filter="active">Active <span class="count" id="filter-count-active">0</span></button>
+            <button type="button" class="sensor-filter-chip" data-filter="warning">Warning <span class="count" id="filter-count-warning">0</span></button>
+            <button type="button" class="sensor-filter-chip" data-filter="detached">Detached <span class="count" id="filter-count-detached">0</span></button>
+            <button type="button" class="sensor-filter-chip" data-filter="no_data">No Data <span class="count" id="filter-count-no_data">0</span></button>
+            <button type="button" class="sensor-filter-chip" data-filter="unregistered">Unregistered <span class="count" id="filter-count-unregistered">0</span></button>
+        </div>
+
+        <div id="sensorBulkBar" class="sensor-bulkbar is-hidden">
+            <div class="sensor-bulkbar-note"><span id="sensorBulkCount">0</span> sensor(s) selected</div>
+            <div class="sensor-bulkbar-actions">
+                <button type="button" class="btn btn-sm btn-success" id="bulkAttachBtn" onclick="bulkAttachSelected()">Attach selected</button>
+                <button type="button" class="btn btn-sm btn-warning" id="bulkDetachBtn" onclick="bulkDetachSelected()">Detach selected</button>
+                <button type="button" class="btn btn-sm btn-danger" id="bulkDeleteBtn" onclick="bulkDeleteSelected()">Delete selected</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSensorSelection()">Clear selection</button>
+            </div>
+        </div>
+
+        <div class="sensor-table-wrap">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 36px;"><input type="checkbox" id="sensorSelectAll" class="form-check-input"></th>
+                            <th>Sensor</th>
+                            <th>Status</th>
+                            <th>Last Seen</th>
+                            <th>Primary Path</th>
+                            <th>Coverage</th>
+                            <th style="width: 110px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sensors-table">
+                        <tr>
+                            <td colspan="7" class="table-empty">Loading sensors...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -97,13 +499,13 @@
 <div class="modal fade" id="sensorDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header" style="background-color: #ff8c00; color: white;">
+            <div class="modal-header">
                 <h5 class="modal-title" id="sensorDetailsTitle">Sensor Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="sensorDetailsBody">
                 <div class="text-center p-5">
-                    <div class="spinner-border" style="color: #ff8c00;" role="status">
+                    <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                 </div>
@@ -116,6 +518,18 @@
 {% block scripts %}
 <script>
 let editingEui = null;
+let sensorCache = [];
+let activeQuickFilter = 'all';
+let selectedSensors = new Set();
+let sensorRefreshTimer = null;
+const SENSOR_AUTO_REFRESH_MS = 10000;
+const SENSOR_VIEW_PREFS_KEY = 'sensors_view_prefs_v1';
+const defaultSensorViewPrefs = {
+    showSummary: true,
+    showQuickFilters: true,
+    compact: false
+};
+let sensorViewPrefs = { ...defaultSensorViewPrefs };
 
 function showAlert(type, message) {
     const alertContainer = document.getElementById('alert-container') || createAlertContainer();
@@ -136,96 +550,336 @@ function showAlert(type, message) {
 function createAlertContainer() {
     const container = document.createElement('div');
     container.id = 'alert-container';
-    container.style.cssText = 'position: fixed; top: 70px; right: 20px; z-index: 9999; max-width: 400px;';
+    container.style.cssText = 'position: fixed; top: 70px; right: 20px; z-index: 9999; max-width: 420px;';
     document.body.appendChild(container);
     return container;
 }
 
-function getActivityStatusHtml(sensor) {
-    const lastSeenHours = sensor.hours_since_last_seen || 0;
-    
-    // Handle different activity statuses
-    switch(sensor.activity_status) {
-        case 'auto_detached':
-            const autoDetachInfo = sensor.auto_detach_info || {};
-            return `<span class="badge bg-danger">Auto-Detached</span>
-                    <br><small><strong>Reason:</strong> ${autoDetachInfo.reason || 'inactivity'}</small>
-                    <br><small><strong>Inactive:</strong> ${autoDetachInfo.inactive_hours || 'N/A'}h</small>
-                    <br><small><strong>Detached:</strong> ${autoDetachInfo.detach_time || 'N/A'}</small>`;
-        
-        case 'warning':
-            const warningInfo = sensor.warning_info || {};
-            return `<span class="badge bg-warning text-dark">⚠️ Warning</span>
-                    <br><small><strong>Inactive:</strong> ${warningInfo.hours_inactive?.toFixed(1) || lastSeenHours.toFixed(1)}h</small>
-                    <br><small><strong>Auto-detach in:</strong> ${warningInfo.hours_until_detach?.toFixed(1) || 'N/A'}h</small>
-                    <br><small><strong>Warning sent:</strong> ${warningInfo.warning_sent ? 'Yes' : 'No'}</small>`;
-        
-        case 'auto_detach_pending':
-            return `<span class="badge bg-danger">Detach Pending</span>
-                    <br><small><strong>Inactive:</strong> ${lastSeenHours.toFixed(1)}h</small>
-                    <br><small><strong>Status:</strong> Will be detached soon</small>`;
-        
-        case 'active':
-            return `<span class="badge bg-success">Active</span>
-                    <br><small><strong>Last seen:</strong> ${lastSeenHours.toFixed(1)}h ago</small>`;
-        
-        case 'no_data':
-        default:
-            // Check if sensor has data but status not set properly
-            if (sensor.preferredDownlinkPath || lastSeenHours > 0) {
-                // Sensor has data, should be active
-                return `<span class="badge bg-success">Active</span>
-                        <br><small><strong>Last seen:</strong> ${lastSeenHours > 0 ? lastSeenHours.toFixed(1) + 'h ago' : 'Recently'}</small>`;
-            }
-            return '<span class="badge bg-secondary">No Data</span>';
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function isRegistered(sensor) {
+    return Boolean(sensor.registered || sensor.preferredDownlinkPath || (sensor.last_seen_timestamp || 0) > 0);
+}
+
+function saveSensorViewPrefs() {
+    localStorage.setItem(SENSOR_VIEW_PREFS_KEY, JSON.stringify(sensorViewPrefs));
+}
+
+function loadSensorViewPrefs() {
+    try {
+        const raw = localStorage.getItem(SENSOR_VIEW_PREFS_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        sensorViewPrefs = {
+            ...defaultSensorViewPrefs,
+            ...parsed
+        };
+    } catch (error) {
+        sensorViewPrefs = { ...defaultSensorViewPrefs };
     }
 }
 
-function loadSensors() {
+function applySensorViewPrefs() {
+    const page = document.getElementById('sensorPage');
+    const summary = document.getElementById('sensorSummaryGrid');
+    const quickFilters = document.getElementById('sensorQuickFilters');
+
+    if (!page || !summary || !quickFilters) return;
+
+    summary.classList.toggle('is-hidden', !sensorViewPrefs.showSummary);
+    quickFilters.classList.toggle('is-hidden', !sensorViewPrefs.showQuickFilters);
+    page.classList.toggle('is-compact', sensorViewPrefs.compact);
+
+    document.getElementById('viewShowSummary').checked = sensorViewPrefs.showSummary;
+    document.getElementById('viewShowQuickFilters').checked = sensorViewPrefs.showQuickFilters;
+    document.getElementById('viewCompactMode').checked = sensorViewPrefs.compact;
+
+    if (!sensorViewPrefs.showQuickFilters && activeQuickFilter !== 'all') {
+        activeQuickFilter = 'all';
+        refreshSensorView();
+    }
+}
+
+function resetSensorViewPrefs() {
+    sensorViewPrefs = { ...defaultSensorViewPrefs };
+    saveSensorViewPrefs();
+    applySensorViewPrefs();
+    refreshSensorView();
+    showAlert('info', 'View preferences reset.');
+}
+
+function getSensorStatusType(sensor) {
+    const activity = sensor.activity_status || 'no_data';
+    if (activity === 'auto_detached') return 'detached';
+    if (activity === 'warning' || activity === 'auto_detach_pending') return 'warning';
+    if (activity === 'active') return 'active';
+    if (!isRegistered(sensor)) return 'unregistered';
+    return 'no_data';
+}
+
+function getSensorStatusLabel(sensor) {
+    switch (getSensorStatusType(sensor)) {
+        case 'active':
+            return { text: 'Active', klass: 'bg-success' };
+        case 'warning':
+            return { text: 'Warning', klass: 'bg-warning text-dark' };
+        case 'detached':
+            return { text: 'Auto-detached', klass: 'bg-danger' };
+        case 'unregistered':
+            return { text: 'Unregistered', klass: 'bg-secondary' };
+        default:
+            return { text: 'No Data', klass: 'bg-secondary' };
+    }
+}
+
+function formatHoursAgo(hours) {
+    if (hours === null || hours === undefined || Number.isNaN(Number(hours))) {
+        return 'Never';
+    }
+    const value = Number(hours);
+    if (value < 1) return `${Math.max(1, Math.round(value * 60))}m ago`;
+    if (value < 24) return `${value.toFixed(1)}h ago`;
+    return `${(value / 24).toFixed(1)}d ago`;
+}
+
+function getPrimaryPath(sensor) {
+    const path = sensor.preferredDownlinkPath || {};
+    const baseStation = path.baseStation || (Array.isArray(sensor.base_stations) ? sensor.base_stations[0] : null);
+    return {
+        baseStation: baseStation || null,
+        snr: path.snr,
+        messageCount: path.messageCount || 0
+    };
+}
+
+function updateLastRefreshNote() {
+    const label = document.getElementById('sensorLastRefresh');
+    label.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+}
+
+function updateSensorOverview(sensors) {
+    const total = sensors.length;
+    const registered = sensors.filter(sensor => isRegistered(sensor)).length;
+    const active = sensors.filter(sensor => getSensorStatusType(sensor) === 'active').length;
+    const warnings = sensors.filter(sensor => {
+        const status = getSensorStatusType(sensor);
+        return status === 'warning' || status === 'detached';
+    }).length;
+
+    document.getElementById('sensorTotalCount').textContent = total;
+    document.getElementById('sensorRegisteredCount').textContent = registered;
+    document.getElementById('sensorActiveCount').textContent = active;
+    document.getElementById('sensorWarningCount').textContent = warnings;
+}
+
+function getQuickFilterCounts() {
+    const counts = {
+        all: sensorCache.length,
+        active: 0,
+        warning: 0,
+        detached: 0,
+        no_data: 0,
+        unregistered: 0
+    };
+
+    sensorCache.forEach(sensor => {
+        const status = getSensorStatusType(sensor);
+        if (status === 'active') counts.active += 1;
+        if (status === 'warning') counts.warning += 1;
+        if (status === 'detached') counts.detached += 1;
+        if (status === 'no_data') counts.no_data += 1;
+        if (status === 'unregistered') counts.unregistered += 1;
+    });
+
+    return counts;
+}
+
+function refreshQuickFilters() {
+    const counts = getQuickFilterCounts();
+    Object.entries(counts).forEach(([key, value]) => {
+        const node = document.getElementById(`filter-count-${key}`);
+        if (node) node.textContent = value;
+    });
+
+    document.querySelectorAll('#sensorQuickFilters [data-filter]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-filter') === activeQuickFilter);
+    });
+}
+
+function matchesQuickFilter(sensor) {
+    const status = getSensorStatusType(sensor);
+    if (activeQuickFilter === 'all') return true;
+    if (activeQuickFilter === 'active') return status === 'active';
+    if (activeQuickFilter === 'warning') return status === 'warning';
+    if (activeQuickFilter === 'detached') return status === 'detached';
+    if (activeQuickFilter === 'no_data') return status === 'no_data';
+    if (activeQuickFilter === 'unregistered') return status === 'unregistered';
+    return true;
+}
+
+function getFilteredSensors() {
+    const needle = (document.getElementById('sensorSearch').value || '').trim().toLowerCase();
+    return sensorCache.filter(sensor => {
+        if (!matchesQuickFilter(sensor)) return false;
+        if (!needle) return true;
+
+        const path = getPrimaryPath(sensor);
+        const tags = [
+            sensor.eui,
+            sensor.shortAddr,
+            sensor.activity_status,
+            isRegistered(sensor) ? 'registered' : 'unregistered',
+            path.baseStation || '',
+            Array.isArray(sensor.base_stations) ? sensor.base_stations.join(' ') : '',
+            Array.isArray(sensor.missing_registrations) ? sensor.missing_registrations.join(' ') : ''
+        ].join(' ').toLowerCase();
+        return tags.includes(needle);
+    });
+}
+
+function updateBulkBar() {
+    const bulkBar = document.getElementById('sensorBulkBar');
+    const selectedCount = selectedSensors.size;
+    document.getElementById('sensorBulkCount').textContent = selectedCount;
+    bulkBar.classList.toggle('is-hidden', selectedCount === 0);
+
+    const allBox = document.getElementById('sensorSelectAll');
+    const visibleSensors = getFilteredSensors();
+    const visibleSelected = visibleSensors.filter(sensor => selectedSensors.has(sensor.eui)).length;
+    allBox.checked = visibleSensors.length > 0 && visibleSelected === visibleSensors.length;
+    allBox.indeterminate = visibleSelected > 0 && visibleSelected < visibleSensors.length;
+}
+
+function renderSensors(sensors) {
+    const tbody = document.getElementById('sensors-table');
+    if (sensors.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No sensors match current filters.</td></tr>';
+        document.getElementById('sensorTableMeta').textContent = `Showing 0 of ${sensorCache.length} sensors`;
+        updateBulkBar();
+        return;
+    }
+
+    tbody.innerHTML = sensors.map(sensor => {
+        const status = getSensorStatusLabel(sensor);
+        const primaryPath = getPrimaryPath(sensor);
+        const lastSeen = formatHoursAgo(sensor.hours_since_last_seen);
+        const missing = Array.isArray(sensor.missing_registrations) ? sensor.missing_registrations.length : 0;
+        const totalAvailable = sensor.total_available_bases || 0;
+        const totalRegistrations = sensor.total_registrations || (Array.isArray(sensor.base_stations) ? sensor.base_stations.length : 0);
+        const bidiLabel = sensor.bidi ? 'Bi-directional' : 'Uplink only';
+        const baseInfo = Array.isArray(sensor.base_stations) && sensor.base_stations.length > 0
+            ? escapeHtml(sensor.base_stations.join(', '))
+            : 'none';
+
+        return `
+            <tr data-sensor-eui="${escapeHtml(sensor.eui)}">
+                <td>
+                    <input type="checkbox" class="form-check-input sensor-select" data-eui="${escapeHtml(sensor.eui)}" ${selectedSensors.has(sensor.eui) ? 'checked' : ''}>
+                </td>
+                <td>
+                    <div class="sensor-id-cell">
+                        <a href="#" onclick="showSensorDetails('${escapeHtml(sensor.eui)}'); return false;" class="text-decoration-none">
+                            <code>${escapeHtml(sensor.eui)}</code>
+                        </a>
+                        <span class="sensor-subline">Addr ${escapeHtml(sensor.shortAddr)} | ${bidiLabel}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="sensor-badge-stack">
+                        <span class="badge ${status.klass}">${status.text}</span>
+                        ${isRegistered(sensor) ? '<span class="badge bg-success-subtle text-success-emphasis">Registered</span>' : '<span class="badge bg-secondary-subtle text-secondary-emphasis">Not registered</span>'}
+                    </div>
+                    <div class="sensor-subline mt-1">BS: ${baseInfo}</div>
+                </td>
+                <td>
+                    <div>${lastSeen}</div>
+                    <div class="sensor-subline">${sensor.last_seen_timestamp ? 'Traffic seen' : 'No traffic yet'}</div>
+                </td>
+                <td>
+                    ${primaryPath.baseStation ? `<div><strong>${escapeHtml(primaryPath.baseStation)}</strong></div>` : '<div class="text-muted">No path yet</div>'}
+                    <div class="sensor-path-note">SNR: ${primaryPath.snr !== undefined && primaryPath.snr !== null ? Number(primaryPath.snr).toFixed(1) + ' dB' : 'n/a'}</div>
+                    <div class="sensor-path-note">Msgs: ${primaryPath.messageCount || 0}</div>
+                </td>
+                <td>
+                    <div><strong>${totalRegistrations}</strong> / ${totalAvailable || 0}</div>
+                    <div class="sensor-subline">${missing > 0 ? `${missing} missing` : 'Full coverage'}</div>
+                    ${missing > 0 ? `<div class="sensor-subline text-warning">${escapeHtml((sensor.missing_registrations || []).join(', '))}</div>` : ''}
+                </td>
+                <td>
+                    <div class="dropdown sensor-actions-menu">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><button class="dropdown-item" onclick="showSensorDetails('${escapeHtml(sensor.eui)}')"><i class="fas fa-chart-line me-2"></i>Details</button></li>
+                            <li><button class="dropdown-item" onclick="attachSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-link me-2"></i>Attach</button></li>
+                            <li><button class="dropdown-item" onclick="detachSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-unlink me-2"></i>Detach</button></li>
+                            <li><button class="dropdown-item" onclick="editSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-pen me-2"></i>Edit</button></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item text-danger" onclick="deleteSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-trash me-2"></i>Delete</button></li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    document.getElementById('sensorTableMeta').textContent = `Showing ${sensors.length} of ${sensorCache.length} sensor${sensorCache.length === 1 ? '' : 's'}`;
+    updateBulkBar();
+}
+
+function refreshSensorView() {
+    refreshQuickFilters();
+    renderSensors(getFilteredSensors());
+}
+
+async function apiRequest(url, method = 'POST', body = null) {
+    const options = { method, headers: {} };
+    if (body && !(body instanceof FormData)) {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(body);
+    } else if (body instanceof FormData) {
+        options.body = body;
+    }
+
+    const response = await fetch(url, options);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.success === false) {
+        throw new Error(data.message || data.error || `Request failed (${response.status})`);
+    }
+    return data;
+}
+
+function setAutoRefresh(enabled) {
+    if (sensorRefreshTimer) {
+        clearInterval(sensorRefreshTimer);
+        sensorRefreshTimer = null;
+    }
+    if (enabled) {
+        sensorRefreshTimer = setInterval(() => loadSensors(true), SENSOR_AUTO_REFRESH_MS);
+    }
+}
+
+function loadSensors(silent = false) {
     fetch('/api/sensors')
         .then(response => response.json())
         .then(sensorStatus => {
-            const tbody = document.getElementById('sensors-table');
-            tbody.innerHTML = Object.values(sensorStatus).map(sensor => `
-                <tr>
-                    <td><a href="#" onclick="showSensorDetails('${sensor.eui}'); return false;" class="text-decoration-none"><code style="color: #17a2b8; cursor: pointer;">${sensor.eui}</code></a></td>
-                    <td><code>${sensor.nwKey.substring(0, 8)}...</code></td>
-                    <td><code>${sensor.shortAddr}</code></td>
-                    <td>${sensor.bidi ? 'Yes' : 'No'}</td>
-                    <td>
-                        ${(sensor.registered || sensor.preferredDownlinkPath || sensor.last_seen_timestamp > 0) ? 
-                            `<span class="badge bg-success">Registered</span>
-                            <br><small><strong>Registered on:</strong> ${sensor.total_registrations || (sensor.base_stations ? sensor.base_stations.length : 0)} of ${sensor.total_available_bases || 3} base stations</small>
-                            <br><small><strong>Base Stations:</strong> ${sensor.base_stations && sensor.base_stations.length > 0 ? sensor.base_stations.join(', ') : 
-                                (sensor.preferredDownlinkPath ? sensor.preferredDownlinkPath.baseStation : 'Active')}</small>
-                            ${sensor.missing_registrations && sensor.missing_registrations.length > 0 ? 
-                                `<br><small class="text-warning"><strong>Missing on:</strong> ${sensor.missing_registrations.join(', ')}</small>` : ''}` : 
-                            '<span class="badge bg-warning">Not Registered</span>'}</td>
-                    <td>${getActivityStatusHtml(sensor)}</td>
-                    <td>${sensor.preferredDownlinkPath ? 
-                            `<strong>BS:</strong> ${sensor.preferredDownlinkPath.baseStation}
-                            <br><small><strong>SNR:</strong> ${sensor.preferredDownlinkPath.snr} dB</small>
-                            <br><small><strong>Messages:</strong> ${sensor.preferredDownlinkPath.messageCount}</small>
-                            <br><small><strong>Updated:</strong> ${new Date(sensor.preferredDownlinkPath.lastUpdated).toLocaleString()}</small>` : 
-                            '<span class="text-muted">No data received</span>'}</td>
-                    <td>
-                        <div class="btn-group" role="group" aria-label="Sensor actions">
-                            <button class="btn btn-sm btn-success" onclick="attachSensor('${sensor.eui}')" title="Attach to base stations" style="min-width: 65px;">
-                                Attach
-                            </button>
-                            <button class="btn btn-sm btn-primary" onclick="editSensor('${sensor.eui}')" style="background-color: #ff8c00; border-color: #ff8c00; min-width: 65px;">
-                                Edit
-                            </button>
-                            <button class="btn btn-sm btn-warning" onclick="detachSensor('${sensor.eui}')" title="Detach from all base stations" style="min-width: 65px;">
-                                Detach
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteSensor('${sensor.eui}')" style="min-width: 65px;">
-                                Delete
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            sensorCache = Object.values(sensorStatus || {}).sort((a, b) => String(a.eui).localeCompare(String(b.eui)));
+            selectedSensors = new Set([...selectedSensors].filter(eui => sensorCache.some(sensor => sensor.eui === eui)));
+            updateSensorOverview(sensorCache);
+            refreshSensorView();
+            updateLastRefreshNote();
+            if (!silent && sensorCache.length === 0) {
+                showAlert('warning', 'No sensors configured yet. Add your first sensor to start tracking.');
+            }
+        })
+        .catch(error => {
+            showAlert('danger', `Error loading sensors: ${error.message}`);
         });
 }
 
@@ -246,215 +900,235 @@ function openSensorModal(sensor = null) {
 }
 
 function editSensor(eui) {
-    fetch('/api/sensors')
-        .then(response => response.json())
-        .then(sensorStatus => {
-            const sensor = Object.values(sensorStatus).find(s => s.eui === eui);
-            if (sensor) {
-                openSensorModal(sensor);
-                new bootstrap.Modal(document.getElementById('sensorModal')).show();
-            }
-        });
+    const sensor = sensorCache.find(item => item.eui === eui);
+    if (!sensor) {
+        showAlert('warning', `Sensor ${eui} not found in current cache. Reloading list.`);
+        loadSensors(true);
+        return;
+    }
+    openSensorModal(sensor);
+    new bootstrap.Modal(document.getElementById('sensorModal')).show();
 }
 
 function saveSensor() {
     const formData = {
-        eui: document.getElementById('eui').value.toUpperCase(),
-        nwKey: document.getElementById('nwKey').value.toUpperCase(),
-        shortAddr: document.getElementById('shortAddr').value.toUpperCase(),
+        eui: document.getElementById('eui').value.toUpperCase().trim(),
+        nwKey: document.getElementById('nwKey').value.toUpperCase().trim(),
+        shortAddr: document.getElementById('shortAddr').value.toUpperCase().trim(),
         bidi: document.getElementById('bidi').checked
     };
 
-    fetch('/api/sensors', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            bootstrap.Modal.getInstance(document.getElementById('sensorModal')).hide();
-            loadSensors();
-        } else {
-            alert('Error: ' + result.message);
-        }
-    });
-}
-
-function detachSensor(eui) {
-        if (confirm(`Are you sure you want to detach sensor ${eui} from all base stations?`)) {
-            fetch(`/api/sensors/${eui}/detach`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert('success', data.message);
-                    loadSensors();
-                } else {
-                    showAlert('danger', data.message);
-                }
-            })
-            .catch(error => {
-                showAlert('danger', 'Error detaching sensor: ' + error.message);
-            });
-        }
-    }
-
-    function deleteSensor(eui) {
-        if (confirm(`Are you sure you want to delete sensor ${eui}?`)) {
-            fetch(`/api/sensors/${eui}`, {
-                method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert('success', data.message);
-                    loadSensors();
-                } else {
-                    showAlert('danger', data.message);
-                }
-            })
-            .catch(error => {
-                showAlert('danger', 'Error deleting sensor: ' + error.message);
-            });
-        }
-    }
-
-function reloadSensors() {
-    fetch('/api/sensors/reload', {
-        method: 'POST'
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            loadSensors();
-            alert('Sensor configuration reloaded successfully');
-        } else {
-            alert('Error: ' + result.message);
-        }
-    });
-}
-
-function attachAllSensors() {
-    if (confirm('Are you sure you want to attach ALL configured sensors to base stations?')) {
-        fetch('/api/sensors/attach-all', {
-            method: 'POST'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('success', data.message);
-                loadSensors();
-            } else {
-                showAlert('danger', data.message);
-            }
+    apiRequest('/api/sensors', 'POST', formData)
+        .then(result => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('sensorModal'));
+            if (modal) modal.hide();
+            showAlert('success', result.message || `Sensor ${formData.eui} saved.`);
+            loadSensors(true);
         })
         .catch(error => {
-            showAlert('danger', 'Error attaching sensors: ' + error.message);
+            showAlert('danger', `Error saving sensor: ${error.message}`);
         });
-    }
 }
 
 function attachSensor(eui) {
-    if (confirm(`Are you sure you want to attach sensor ${eui} to all base stations?`)) {
-        fetch(`/api/sensors/${eui}/attach`, {
-            method: 'POST'
-        })
-        .then(response => response.json())
+    if (!confirm(`Attach sensor ${eui} to all connected base stations?`)) return;
+    apiRequest(`/api/sensors/${eui}/attach`, 'POST')
         .then(data => {
-            if (data.success) {
-                showAlert('success', data.message);
-                loadSensors();
-            } else {
-                showAlert('danger', data.message);
-            }
+            showAlert('success', data.message || `Attach requested for ${eui}.`);
+            loadSensors(true);
         })
-        .catch(error => {
-            showAlert('danger', 'Error attaching sensor: ' + error.message);
-        });
-    }
+        .catch(error => showAlert('danger', `Error attaching sensor: ${error.message}`));
+}
+
+function detachSensor(eui) {
+    if (!confirm(`Detach sensor ${eui} from all base stations?`)) return;
+    apiRequest(`/api/sensors/${eui}/detach`, 'POST')
+        .then(data => {
+            showAlert('success', data.message || `Sensor ${eui} detached.`);
+            loadSensors(true);
+        })
+        .catch(error => showAlert('danger', `Error detaching sensor: ${error.message}`));
+}
+
+function deleteSensor(eui) {
+    if (!confirm(`Delete sensor ${eui}? This removes configuration from registry.`)) return;
+    apiRequest(`/api/sensors/${eui}`, 'DELETE')
+        .then(data => {
+            selectedSensors.delete(eui);
+            showAlert('success', data.message || `Sensor ${eui} deleted.`);
+            loadSensors(true);
+        })
+        .catch(error => showAlert('danger', `Error deleting sensor: ${error.message}`));
+}
+
+function reloadSensors() {
+    apiRequest('/api/sensors/reload', 'POST')
+        .then(result => {
+            showAlert('success', result.message || 'Sensor configuration reloaded.');
+            loadSensors(true);
+        })
+        .catch(error => showAlert('danger', `Error reloading sensors: ${error.message}`));
+}
+
+function attachAllSensors() {
+    if (!confirm('Attach all configured sensors to connected base stations?')) return;
+    apiRequest('/api/sensors/attach-all', 'POST')
+        .then(data => {
+            showAlert('success', data.message || 'Attach-all requested.');
+            loadSensors(true);
+        })
+        .catch(error => showAlert('danger', `Error attaching sensors: ${error.message}`));
 }
 
 function detachAllSensors() {
-    if (confirm('Are you sure you want to detach ALL sensors from base stations? This will not delete the sensor configurations.')) {
-        fetch('/api/sensors/detach-all', {
-            method: 'POST'
-        })
-        .then(response => response.json())
+    if (!confirm('Detach all sensors from all base stations?')) return;
+    apiRequest('/api/sensors/detach-all', 'POST')
         .then(data => {
-            if (data.success) {
-                showAlert('success', data.message);
-                loadSensors();
-            } else {
-                showAlert('danger', data.message);
-            }
+            showAlert('success', data.message || 'Detach-all requested.');
+            loadSensors(true);
         })
-        .catch(error => {
-            showAlert('danger', 'Error detaching sensors: ' + error.message);
-        });
-    }
+        .catch(error => showAlert('danger', `Error detaching sensors: ${error.message}`));
 }
 
 function clearAllSensors() {
-        if (confirm('Are you sure you want to clear ALL sensors? This will detach all sensors from base stations and remove all configurations. This action cannot be undone.')) {
-            fetch('/api/sensors/clear', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert('success', data.message);
-                    loadSensors();
-                } else {
-                    showAlert('danger', data.message);
-                }
-            })
-            .catch(error => {
-                showAlert('danger', 'Error clearing sensors: ' + error.message);
-            });
-        }
-    }
+    if (!confirm('Clear all sensors, detach them, and remove all configurations? This cannot be undone.')) return;
+    apiRequest('/api/sensors/clear', 'POST')
+        .then(data => {
+            selectedSensors.clear();
+            showAlert('success', data.message || 'All sensors cleared.');
+            loadSensors(true);
+        })
+        .catch(error => showAlert('danger', `Error clearing sensors: ${error.message}`));
+}
 
 function exportSensors() {
     window.location.href = '/api/sensors/export';
 }
 
 function importSensors(input) {
-    if (input.files.length === 0) return;
-    
-    const file = input.files[0];
+    if (!input.files || input.files.length === 0) return;
+
     const formData = new FormData();
-    formData.append('file', file);
-    
+    formData.append('file', input.files[0]);
     showAlert('info', 'Importing sensors...');
-    
-    fetch('/api/sensors/import', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            let message = data.message;
-            if (data.errors && data.errors.length > 0) {
-                message += '<br><small>Errors: ' + data.errors.join(', ') + '</small>';
+
+    apiRequest('/api/sensors/import', 'POST', formData)
+        .then(data => {
+            let message = data.message || 'Import complete.';
+            if (Array.isArray(data.errors) && data.errors.length > 0) {
+                message += `<br><small>Errors: ${escapeHtml(data.errors.join(', '))}</small>`;
             }
             showAlert('success', message);
-            loadSensors();
-        } else {
-            showAlert('danger', data.message);
-        }
-    })
-    .catch(error => {
-        showAlert('danger', 'Error importing sensors: ' + error.message);
-    })
-    .finally(() => {
-        input.value = '';
-    });
+            loadSensors(true);
+        })
+        .catch(error => showAlert('danger', `Error importing sensors: ${error.message}`))
+        .finally(() => {
+            input.value = '';
+        });
 }
+
+function clearSensorSelection() {
+    selectedSensors.clear();
+    updateBulkBar();
+    renderSensors(getFilteredSensors());
+}
+
+function setSensorSelected(eui, selected) {
+    if (selected) selectedSensors.add(eui);
+    else selectedSensors.delete(eui);
+}
+
+async function runBulkAction(actionName, actionFn) {
+    const targets = [...selectedSensors];
+    if (targets.length === 0) {
+        showAlert('warning', 'Select at least one sensor first.');
+        return;
+    }
+    if (!confirm(`${actionName} ${targets.length} selected sensor(s)?`)) return;
+
+    let success = 0;
+    const failures = [];
+
+    for (const eui of targets) {
+        try {
+            await actionFn(eui);
+            success += 1;
+        } catch (error) {
+            failures.push(`${eui}: ${error.message}`);
+        }
+    }
+
+    if (failures.length === 0) {
+        showAlert('success', `${actionName} completed for ${success} sensor(s).`);
+    } else {
+        showAlert('warning', `${actionName} completed with issues (${success}/${targets.length} success).<br><small>${escapeHtml(failures.join(' | '))}</small>`);
+    }
+    loadSensors(true);
+}
+
+function bulkAttachSelected() {
+    runBulkAction('Attach', eui => apiRequest(`/api/sensors/${eui}/attach`, 'POST'));
+}
+
+function bulkDetachSelected() {
+    runBulkAction('Detach', eui => apiRequest(`/api/sensors/${eui}/detach`, 'POST'));
+}
+
+function bulkDeleteSelected() {
+    runBulkAction('Delete', eui => apiRequest(`/api/sensors/${eui}`, 'DELETE').then(() => selectedSensors.delete(eui)));
+}
+
+document.getElementById('sensorSearch').addEventListener('input', () => {
+    renderSensors(getFilteredSensors());
+});
+
+document.getElementById('sensorQuickFilters').addEventListener('click', event => {
+    const button = event.target.closest('[data-filter]');
+    if (!button) return;
+    activeQuickFilter = button.getAttribute('data-filter') || 'all';
+    refreshSensorView();
+});
+
+document.getElementById('sensors-table').addEventListener('change', event => {
+    if (!event.target.classList.contains('sensor-select')) return;
+    const eui = event.target.getAttribute('data-eui');
+    setSensorSelected(eui, event.target.checked);
+    updateBulkBar();
+});
+
+document.getElementById('sensorSelectAll').addEventListener('change', event => {
+    const visible = getFilteredSensors();
+    visible.forEach(sensor => setSensorSelected(sensor.eui, event.target.checked));
+    renderSensors(visible);
+});
+
+document.getElementById('autoRefreshToggle').addEventListener('change', event => {
+    setAutoRefresh(event.target.checked);
+    showAlert('info', event.target.checked ? 'Auto-refresh enabled.' : 'Auto-refresh paused.');
+});
+
+document.getElementById('viewShowSummary').addEventListener('change', event => {
+    sensorViewPrefs.showSummary = event.target.checked;
+    saveSensorViewPrefs();
+    applySensorViewPrefs();
+});
+
+document.getElementById('viewShowQuickFilters').addEventListener('change', event => {
+    sensorViewPrefs.showQuickFilters = event.target.checked;
+    saveSensorViewPrefs();
+    applySensorViewPrefs();
+});
+
+document.getElementById('viewCompactMode').addEventListener('change', event => {
+    sensorViewPrefs.compact = event.target.checked;
+    saveSensorViewPrefs();
+    applySensorViewPrefs();
+});
+
+loadSensorViewPrefs();
+applySensorViewPrefs();
+setAutoRefresh(true);
+loadSensors();
 
 function showSensorDetails(eui) {
     const modal = new bootstrap.Modal(document.getElementById('sensorDetailsModal'));
@@ -737,7 +1411,6 @@ function getScoreColor(score) {
     return '#dc3545';
 }
 
-// Load sensors on page load
-loadSensors();
 </script>
 {% endblock %}
+
