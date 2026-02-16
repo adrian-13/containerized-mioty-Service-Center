@@ -94,7 +94,7 @@
     border-radius: 0.88rem;
     background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .sensor-toolbar {
@@ -199,10 +199,59 @@
 
 .sensor-table-wrap {
     padding: 0.62rem 0.72rem 0.78rem;
+    overflow: visible;
 }
 
 .sensor-table-wrap table {
     margin-bottom: 0;
+}
+
+.sensor-table-wrap .table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.sensor-pagination-bar {
+    margin-top: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.sensor-pagination-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    font-size: 0.74rem;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.sensor-pagination-left .form-select {
+    min-width: 78px;
+    padding-top: 0.18rem;
+    padding-bottom: 0.18rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.sensor-pagination-info {
+    font-size: 0.74rem;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.sensor-pagination-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.sensor-pagination-actions .btn {
+    padding-top: 0.26rem;
+    padding-bottom: 0.26rem;
 }
 
 .sensor-table-wrap td,
@@ -216,7 +265,66 @@
 
 .sensor-id-cell {
     display: grid;
-    gap: 0.15rem;
+    gap: 0.22rem;
+}
+
+.sensor-sn-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    flex-wrap: wrap;
+}
+
+.sensor-sn-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.45rem;
+    height: 1.28rem;
+    border-radius: 999px;
+    background: #dcecff;
+    color: #1f5b91;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.sensor-sn-code {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.16rem 0.42rem;
+    border-radius: 0.44rem;
+    background: #eef4fd;
+    border: 1px solid #cbdbf0;
+    color: #1f3550;
+    text-decoration: none;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 0.83rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.sensor-sn-code:hover,
+.sensor-sn-code:focus {
+    color: #123b63;
+    background: #e5f0ff;
+    border-color: #a9c9ee;
+}
+
+.sensor-sn-copy {
+    border: 1px solid #cbdbf0;
+    background: #f6faff;
+    color: #486584;
+    border-radius: 0.42rem;
+    padding: 0.14rem 0.34rem;
+    line-height: 1;
+    font-size: 0.7rem;
+}
+
+.sensor-sn-copy:hover,
+.sensor-sn-copy:focus {
+    background: #eaf3ff;
+    color: #1f4f7f;
 }
 
 .sensor-subline {
@@ -224,10 +332,53 @@
     color: #5f7088;
 }
 
+.sensor-name {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #1f3550;
+}
+
+.sensor-tag-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    flex-wrap: wrap;
+    margin-top: 0.1rem;
+}
+
+.sensor-tag-chip {
+    font-size: 0.66rem;
+    font-weight: 700;
+    border: 1px solid #c9d9ed;
+    color: #2f5278;
+    background: #eff5fd;
+    border-radius: 999px;
+    padding: 0.1rem 0.38rem;
+    line-height: 1.2;
+}
+
 .sensor-badge-stack {
     display: inline-flex;
     gap: 0.3rem;
     flex-wrap: wrap;
+}
+
+.sensor-reg-state {
+    border: 1px solid transparent;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.sensor-reg-state--on {
+    background: #e6f7ef;
+    color: #0f5c36;
+    border-color: #9fdabf;
+}
+
+.sensor-reg-state--off {
+    background: #eef3f9;
+    color: #4a5f78;
+    border-color: #d3dfec;
 }
 
 .sensor-path-note {
@@ -237,6 +388,11 @@
 
 .sensor-actions-menu .dropdown-toggle::after {
     margin-left: 0.38rem;
+}
+
+.sensor-actions-menu .dropdown-menu {
+    z-index: 1080;
+    min-width: 11.4rem;
 }
 
 .sensor-view-menu {
@@ -399,7 +555,7 @@
     <div class="sensor-table-panel">
         <div class="sensor-toolbar">
             <div class="sensor-toolbar-left">
-                <input type="text" id="sensorSearch" class="form-control form-control-sm sensor-search" placeholder="Search by EUI, short addr, base station or status...">
+                <input type="text" id="sensorSearch" class="form-control form-control-sm sensor-search" placeholder="Search by EUI, name, tag, short addr, base station or status...">
                 <small id="sensorTableMeta" class="sensor-meta-note">Live configuration overview</small>
             </div>
             <div class="sensor-toolbar-right">
@@ -436,7 +592,7 @@
                     <thead>
                         <tr>
                             <th style="width: 36px;"><input type="checkbox" id="sensorSelectAll" class="form-check-input"></th>
-                            <th>Sensor</th>
+                            <th>Sensor (SN)</th>
                             <th>Status</th>
                             <th>Last Seen</th>
                             <th>Primary Path</th>
@@ -450,6 +606,26 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="sensor-pagination-bar">
+                <div class="sensor-pagination-left">
+                    <span>Rows per page</span>
+                    <select id="sensorPageSize" class="form-select form-select-sm">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div id="sensorPaginationInfo" class="sensor-pagination-info">Page 1/1</div>
+                <div class="sensor-pagination-actions">
+                    <button type="button" id="sensorPrevPage" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button type="button" id="sensorNextPage" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -476,6 +652,15 @@
                     <div class="mb-3">
                         <label for="shortAddr" class="form-label">Short Address (4 hex characters)</label>
                         <input type="text" class="form-control" id="shortAddr" required maxlength="4">
+                    </div>
+                    <div class="mb-3">
+                        <label for="sensorName" class="form-label">Name / Label (optional)</label>
+                        <input type="text" class="form-control" id="sensorName" maxlength="80" placeholder="e.g. Water meter - Hall A">
+                    </div>
+                    <div class="mb-3">
+                        <label for="sensorTags" class="form-label">Tags (optional)</label>
+                        <input type="text" class="form-control" id="sensorTags" maxlength="240" placeholder="e.g. water, hall-a, critical">
+                        <div class="form-text">Comma-separated tags.</div>
                     </div>
                     <div class="mb-3">
                         <div class="form-check">
@@ -522,6 +707,9 @@ let sensorCache = [];
 let activeQuickFilter = 'all';
 let selectedSensors = new Set();
 let sensorRefreshTimer = null;
+let sensorCurrentPage = 1;
+let sensorPageSize = 20;
+let currentPageSensors = [];
 const SENSOR_AUTO_REFRESH_MS = 10000;
 const SENSOR_VIEW_PREFS_KEY = 'sensors_view_prefs_v1';
 const defaultSensorViewPrefs = {
@@ -562,6 +750,24 @@ function escapeHtml(value) {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
+}
+
+function parseSensorTags(rawValue) {
+    const seen = new Set();
+    return String(rawValue || '')
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean)
+        .filter(item => {
+            const key = item.toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+}
+
+function tagsToInput(tags) {
+    return Array.isArray(tags) ? tags.join(', ') : '';
 }
 
 function isRegistered(sensor) {
@@ -733,6 +939,8 @@ function getFilteredSensors() {
         const path = getPrimaryPath(sensor);
         const tags = [
             sensor.eui,
+            sensor.name || '',
+            Array.isArray(sensor.tags) ? sensor.tags.join(' ') : '',
             sensor.shortAddr,
             sensor.activity_status,
             isRegistered(sensor) ? 'registered' : 'unregistered',
@@ -751,22 +959,81 @@ function updateBulkBar() {
     bulkBar.classList.toggle('is-hidden', selectedCount === 0);
 
     const allBox = document.getElementById('sensorSelectAll');
-    const visibleSensors = getFilteredSensors();
-    const visibleSelected = visibleSensors.filter(sensor => selectedSensors.has(sensor.eui)).length;
-    allBox.checked = visibleSensors.length > 0 && visibleSelected === visibleSensors.length;
-    allBox.indeterminate = visibleSelected > 0 && visibleSelected < visibleSensors.length;
+    const pageSelected = currentPageSensors.filter(sensor => selectedSensors.has(sensor.eui)).length;
+    allBox.checked = currentPageSensors.length > 0 && pageSelected === currentPageSensors.length;
+    allBox.indeterminate = pageSelected > 0 && pageSelected < currentPageSensors.length;
 }
 
-function renderSensors(sensors) {
+function getPaginationState(filteredSensors) {
+    const total = filteredSensors.length;
+    const totalPages = Math.max(1, Math.ceil(total / sensorPageSize));
+    sensorCurrentPage = Math.min(Math.max(sensorCurrentPage, 1), totalPages);
+    const startIndex = (sensorCurrentPage - 1) * sensorPageSize;
+    const endIndex = Math.min(startIndex + sensorPageSize, total);
+    return {
+        total,
+        totalPages,
+        startIndex,
+        endIndex,
+        pageSensors: filteredSensors.slice(startIndex, endIndex)
+    };
+}
+
+function updatePaginationUi(pageInfo) {
+    const info = document.getElementById('sensorPaginationInfo');
+    const prevBtn = document.getElementById('sensorPrevPage');
+    const nextBtn = document.getElementById('sensorNextPage');
+    if (pageInfo.total === 0) {
+        info.textContent = 'Page 0/0';
+    } else {
+        info.textContent = `Page ${sensorCurrentPage}/${pageInfo.totalPages}`;
+    }
+    prevBtn.disabled = sensorCurrentPage <= 1 || pageInfo.total === 0;
+    nextBtn.disabled = sensorCurrentPage >= pageInfo.totalPages || pageInfo.total === 0;
+}
+
+function initSensorActionDropdowns() {
+    document.querySelectorAll('.sensor-actions-toggle').forEach(toggle => {
+        const existing = bootstrap.Dropdown.getInstance(toggle);
+        if (existing) existing.dispose();
+        new bootstrap.Dropdown(toggle, {
+            boundary: 'viewport',
+            popperConfig(defaultConfig) {
+                return {
+                    ...defaultConfig,
+                    strategy: 'fixed',
+                    modifiers: [
+                        ...((defaultConfig && defaultConfig.modifiers) || []).filter(mod => mod.name !== 'preventOverflow' && mod.name !== 'flip'),
+                        {
+                            name: 'preventOverflow',
+                            options: { boundary: document.body, padding: 8 }
+                        },
+                        {
+                            name: 'flip',
+                            options: { fallbackPlacements: ['bottom-end', 'top-end', 'bottom-start', 'top-start'] }
+                        }
+                    ]
+                };
+            }
+        });
+    });
+}
+
+function renderSensors(filteredSensors) {
     const tbody = document.getElementById('sensors-table');
-    if (sensors.length === 0) {
+    if (filteredSensors.length === 0) {
+        currentPageSensors = [];
         tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No sensors match current filters.</td></tr>';
         document.getElementById('sensorTableMeta').textContent = `Showing 0 of ${sensorCache.length} sensors`;
+        updatePaginationUi({ total: 0, totalPages: 0 });
         updateBulkBar();
         return;
     }
 
-    tbody.innerHTML = sensors.map(sensor => {
+    const pageInfo = getPaginationState(filteredSensors);
+    currentPageSensors = pageInfo.pageSensors;
+
+    tbody.innerHTML = pageInfo.pageSensors.map(sensor => {
         const status = getSensorStatusLabel(sensor);
         const primaryPath = getPrimaryPath(sensor);
         const lastSeen = formatHoursAgo(sensor.hours_since_last_seen);
@@ -774,6 +1041,11 @@ function renderSensors(sensors) {
         const totalAvailable = sensor.total_available_bases || 0;
         const totalRegistrations = sensor.total_registrations || (Array.isArray(sensor.base_stations) ? sensor.base_stations.length : 0);
         const bidiLabel = sensor.bidi ? 'Bi-directional' : 'Uplink only';
+        const sensorName = (sensor.name || '').trim();
+        const sensorTags = Array.isArray(sensor.tags) ? sensor.tags : [];
+        const tagsHtml = sensorTags.length > 0
+            ? `<div class="sensor-tag-row">${sensorTags.map(tag => `<span class="sensor-tag-chip">${escapeHtml(tag)}</span>`).join('')}</div>`
+            : '';
         const baseInfo = Array.isArray(sensor.base_stations) && sensor.base_stations.length > 0
             ? escapeHtml(sensor.base_stations.join(', '))
             : 'none';
@@ -785,16 +1057,24 @@ function renderSensors(sensors) {
                 </td>
                 <td>
                     <div class="sensor-id-cell">
-                        <a href="#" onclick="showSensorDetails('${escapeHtml(sensor.eui)}'); return false;" class="text-decoration-none">
-                            <code>${escapeHtml(sensor.eui)}</code>
-                        </a>
+                        <div class="sensor-sn-line">
+                            <span class="sensor-sn-label">SN</span>
+                            <a href="#" onclick="showSensorDetails('${escapeHtml(sensor.eui)}'); return false;" class="sensor-sn-code">
+                                ${escapeHtml(sensor.eui)}
+                            </a>
+                            <button type="button" class="sensor-sn-copy" onclick="copySensorEui('${escapeHtml(sensor.eui)}')" title="Copy sensor SN">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        ${sensorName ? `<div class="sensor-name">${escapeHtml(sensorName)}</div>` : ''}
                         <span class="sensor-subline">Addr ${escapeHtml(sensor.shortAddr)} | ${bidiLabel}</span>
+                        ${tagsHtml}
                     </div>
                 </td>
                 <td>
                     <div class="sensor-badge-stack">
                         <span class="badge ${status.klass}">${status.text}</span>
-                        ${isRegistered(sensor) ? '<span class="badge bg-success-subtle text-success-emphasis">Registered</span>' : '<span class="badge bg-secondary-subtle text-secondary-emphasis">Not registered</span>'}
+                        ${isRegistered(sensor) ? '<span class="badge sensor-reg-state sensor-reg-state--on">Registered</span>' : '<span class="badge sensor-reg-state sensor-reg-state--off">Not registered</span>'}
                     </div>
                     <div class="sensor-subline mt-1">BS: ${baseInfo}</div>
                 </td>
@@ -814,7 +1094,7 @@ function renderSensors(sensors) {
                 </td>
                 <td>
                     <div class="dropdown sensor-actions-menu">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle sensor-actions-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">Actions</button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><button class="dropdown-item" onclick="showSensorDetails('${escapeHtml(sensor.eui)}')"><i class="fas fa-chart-line me-2"></i>Details</button></li>
                             <li><button class="dropdown-item" onclick="attachSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-link me-2"></i>Attach</button></li>
@@ -829,7 +1109,9 @@ function renderSensors(sensors) {
         `;
     }).join('');
 
-    document.getElementById('sensorTableMeta').textContent = `Showing ${sensors.length} of ${sensorCache.length} sensor${sensorCache.length === 1 ? '' : 's'}`;
+    document.getElementById('sensorTableMeta').textContent = `Showing ${pageInfo.startIndex + 1}-${pageInfo.endIndex} of ${filteredSensors.length} sensor${filteredSensors.length === 1 ? '' : 's'}`;
+    updatePaginationUi(pageInfo);
+    initSensorActionDropdowns();
     updateBulkBar();
 }
 
@@ -891,10 +1173,14 @@ function openSensorModal(sensor = null) {
         document.getElementById('eui').value = sensor.eui;
         document.getElementById('nwKey').value = sensor.nwKey;
         document.getElementById('shortAddr').value = sensor.shortAddr;
+        document.getElementById('sensorName').value = sensor.name || '';
+        document.getElementById('sensorTags').value = tagsToInput(sensor.tags);
         document.getElementById('bidi').checked = sensor.bidi;
         document.getElementById('eui').readOnly = true;
     } else {
         document.getElementById('sensorForm').reset();
+        document.getElementById('sensorName').value = '';
+        document.getElementById('sensorTags').value = '';
         document.getElementById('eui').readOnly = false;
     }
 }
@@ -915,6 +1201,8 @@ function saveSensor() {
         eui: document.getElementById('eui').value.toUpperCase().trim(),
         nwKey: document.getElementById('nwKey').value.toUpperCase().trim(),
         shortAddr: document.getElementById('shortAddr').value.toUpperCase().trim(),
+        name: document.getElementById('sensorName').value.trim(),
+        tags: parseSensorTags(document.getElementById('sensorTags').value),
         bidi: document.getElementById('bidi').checked
     };
 
@@ -1038,6 +1326,16 @@ function setSensorSelected(eui, selected) {
     else selectedSensors.delete(eui);
 }
 
+function copySensorEui(eui) {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        showAlert('warning', 'Clipboard API is not available in this browser context.');
+        return;
+    }
+    navigator.clipboard.writeText(eui)
+        .then(() => showAlert('info', `SN copied: <code>${escapeHtml(eui)}</code>`))
+        .catch(() => showAlert('warning', 'Could not copy SN to clipboard.'));
+}
+
 async function runBulkAction(actionName, actionFn) {
     const targets = [...selectedSensors];
     if (targets.length === 0) {
@@ -1079,6 +1377,7 @@ function bulkDeleteSelected() {
 }
 
 document.getElementById('sensorSearch').addEventListener('input', () => {
+    sensorCurrentPage = 1;
     renderSensors(getFilteredSensors());
 });
 
@@ -1086,6 +1385,7 @@ document.getElementById('sensorQuickFilters').addEventListener('click', event =>
     const button = event.target.closest('[data-filter]');
     if (!button) return;
     activeQuickFilter = button.getAttribute('data-filter') || 'all';
+    sensorCurrentPage = 1;
     refreshSensorView();
 });
 
@@ -1097,9 +1397,25 @@ document.getElementById('sensors-table').addEventListener('change', event => {
 });
 
 document.getElementById('sensorSelectAll').addEventListener('change', event => {
-    const visible = getFilteredSensors();
-    visible.forEach(sensor => setSensorSelected(sensor.eui, event.target.checked));
-    renderSensors(visible);
+    currentPageSensors.forEach(sensor => setSensorSelected(sensor.eui, event.target.checked));
+    renderSensors(getFilteredSensors());
+});
+
+document.getElementById('sensorPageSize').addEventListener('change', event => {
+    sensorPageSize = Math.max(1, Number(event.target.value) || 20);
+    sensorCurrentPage = 1;
+    renderSensors(getFilteredSensors());
+});
+
+document.getElementById('sensorPrevPage').addEventListener('click', () => {
+    if (sensorCurrentPage <= 1) return;
+    sensorCurrentPage -= 1;
+    renderSensors(getFilteredSensors());
+});
+
+document.getElementById('sensorNextPage').addEventListener('click', () => {
+    sensorCurrentPage += 1;
+    renderSensors(getFilteredSensors());
 });
 
 document.getElementById('autoRefreshToggle').addEventListener('change', event => {
@@ -1127,6 +1443,7 @@ document.getElementById('viewCompactMode').addEventListener('change', event => {
 
 loadSensorViewPrefs();
 applySensorViewPrefs();
+sensorPageSize = Math.max(1, Number(document.getElementById('sensorPageSize').value) || 20);
 setAutoRefresh(true);
 loadSensors();
 
@@ -1152,6 +1469,8 @@ function showSensorDetails(eui) {
                 `;
                 return;
             }
+            const detailsName = data.config && data.config.name ? ` - ${data.config.name}` : '';
+            document.getElementById('sensorDetailsTitle').textContent = `Sensor ${eui}${detailsName}`;
             
             const firstSeen = data.first_seen ? new Date(data.first_seen * 1000).toLocaleDateString() : 'N/A';
             const lastSeen = data.last_seen ? formatTimeAgo(data.last_seen * 1000) : 'N/A';

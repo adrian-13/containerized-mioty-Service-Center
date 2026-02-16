@@ -100,7 +100,7 @@
     border-radius: 0.98rem;
     background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-    overflow: hidden;
+    overflow: visible;
     margin-bottom: 0.85rem;
 }
 
@@ -138,8 +138,577 @@
     font-size: 0.74rem;
 }
 
+.bs-inventory-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    margin-bottom: 0.62rem;
+    flex-wrap: wrap;
+}
+
+.bs-search {
+    min-width: 310px;
+}
+
+.bs-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.42rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.62rem;
+}
+
+.bs-filter-chip {
+    border: 1px solid #c7d5e7;
+    background: #fff;
+    color: #324a67;
+    border-radius: 999px;
+    padding: 0.24rem 0.62rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    line-height: 1.1;
+}
+
+.bs-filter-chip .count {
+    font-size: 0.68rem;
+    color: #5f7088;
+    background: #f0f5fd;
+    border-radius: 999px;
+    padding: 0.12rem 0.42rem;
+}
+
+.bs-filter-chip.is-active {
+    border-color: #2f6cab;
+    color: #17497d;
+    background: #e9f3ff;
+}
+
+.bs-id-cell {
+    display: grid;
+    gap: 0.22rem;
+    min-width: 210px;
+}
+
+.bs-eui-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.34rem;
+    flex-wrap: wrap;
+}
+
+.bs-eui-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.45rem;
+    height: 1.28rem;
+    border-radius: 999px;
+    background: #dcecff;
+    color: #1f5b91;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.bs-eui-code {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.16rem 0.42rem;
+    border-radius: 0.44rem;
+    background: #eef4fd;
+    border: 1px solid #cbdbf0;
+    color: #1f3550;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 0.83rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.bs-eui-copy {
+    border: 1px solid #cbdbf0;
+    background: #f6faff;
+    color: #486584;
+    border-radius: 0.42rem;
+    padding: 0.14rem 0.34rem;
+    line-height: 1;
+    font-size: 0.7rem;
+}
+
+.bs-eui-copy:hover,
+.bs-eui-copy:focus {
+    background: #eaf3ff;
+    color: #1f4f7f;
+}
+
+.bs-subline {
+    font-size: 0.72rem;
+    color: #5f7088;
+}
+
+.bs-tag-stack {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.28rem;
+}
+
+.bs-tag {
+    border: 1px solid #cfe0f3;
+    background: #edf4ff;
+    color: #35506f;
+    border-radius: 999px;
+    padding: 0.1rem 0.42rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+}
+
+.bs-health-grid {
+    display: grid;
+    gap: 0.14rem;
+    min-width: 118px;
+}
+
+.bs-health-item {
+    font-size: 0.73rem;
+    color: #425a78;
+}
+
+.bs-score-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.65rem;
+    border-radius: 999px;
+    padding: 0.18rem 0.48rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.bs-score-good {
+    background: #dff6ec;
+    color: #0f6b3c;
+}
+
+.bs-score-fair {
+    background: #e7f1ff;
+    color: #1e5f98;
+}
+
+.bs-score-warn {
+    background: #fff1dc;
+    color: #9b5f07;
+}
+
+.bs-score-critical {
+    background: #ffe0e3;
+    color: #9f1c30;
+}
+
+.bs-actions-menu .dropdown-menu {
+    z-index: 1080;
+    min-width: 12rem;
+}
+
+.bs-panel-body .table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.bs-pagination-bar {
+    margin-top: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.bs-pagination-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    font-size: 0.74rem;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.bs-pagination-left .form-select {
+    min-width: 78px;
+    padding-top: 0.18rem;
+    padding-bottom: 0.18rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.bs-pagination-info {
+    font-size: 0.74rem;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.bs-pagination-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.bs-pagination-actions .btn {
+    padding-top: 0.26rem;
+    padding-bottom: 0.26rem;
+}
+
+.bs-uptime-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 0.75rem;
+    align-items: stretch;
+}
+
+.bs-uptime-chart-card,
+.bs-uptime-metrics {
+    border: 1px solid #d8e2f0;
+    border-radius: 0.85rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+}
+
+.bs-uptime-chart-card {
+    padding: 0.55rem 0.65rem;
+    height: 176px;
+}
+
+.bs-uptime-metrics {
+    padding: 0.62rem;
+    display: grid;
+    gap: 0.42rem;
+}
+
+.bs-uptime-metric {
+    border: 1px solid #dbe7f5;
+    border-radius: 0.65rem;
+    background: #fafdff;
+    padding: 0.42rem 0.5rem;
+}
+
+.bs-uptime-metric-label {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #607089;
+    font-weight: 800;
+}
+
+.bs-uptime-metric-value {
+    margin-top: 0.2rem;
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.bs-uptime-meta {
+    margin-top: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.bs-uptime-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    flex-wrap: wrap;
+}
+
+.bs-uptime-static {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #485b76;
+}
+
+.bs-uptime-controls .form-select {
+    min-width: 118px;
+    padding-top: 0.14rem;
+    padding-bottom: 0.14rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.bs-uptime-details {
+    margin-top: 0.65rem;
+    border: 1px solid #dbe7f5;
+    border-radius: 0.78rem;
+    background: #fbfdff;
+    padding: 0.58rem;
+}
+
+.bs-uptime-details .table-responsive {
+    max-height: 230px;
+    overflow-y: auto;
+}
+
+.cert-overview-grid {
+    display: grid;
+    grid-template-columns: 1.25fr repeat(4, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 0.8rem;
+}
+
+.cert-overview-card {
+    border: 1px solid #d6e2f0;
+    border-radius: 0.86rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    padding: 0.62rem 0.7rem;
+}
+
+.cert-overview-card--ca {
+    background: linear-gradient(155deg, #1f3354 0%, #2a4a76 100%);
+    color: #f3f8ff;
+    border-color: #1f3c63;
+}
+
+.cert-overview-label {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-weight: 800;
+    color: #607089;
+}
+
+.cert-overview-card--ca .cert-overview-label {
+    color: rgba(231, 241, 255, 0.84);
+}
+
+.cert-overview-value {
+    margin-top: 0.24rem;
+    font-size: 1.08rem;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.cert-overview-card--ca .cert-overview-value {
+    color: #f8fbff;
+}
+
+.cert-overview-note {
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    color: #5f7088;
+    font-weight: 600;
+}
+
+.cert-overview-card--ca .cert-overview-note {
+    color: rgba(222, 236, 255, 0.82);
+}
+
+.cert-ca-status-stack {
+    display: inline-flex;
+    gap: 0.34rem;
+    flex-wrap: wrap;
+    margin-top: 0.36rem;
+}
+
+.cert-ca-status-pill {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    padding: 0.14rem 0.44rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: #f8fbff;
+}
+
+.cert-ca-status-pill.is-ok {
+    background: rgba(19, 179, 117, 0.25);
+}
+
+.cert-ca-status-pill.is-missing {
+    background: rgba(226, 77, 89, 0.25);
+}
+
+.cert-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    margin-bottom: 0.62rem;
+    flex-wrap: wrap;
+}
+
+.cert-search {
+    min-width: 320px;
+}
+
+.cert-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.42rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.62rem;
+}
+
+.cert-filter-chip {
+    border: 1px solid #c7d5e7;
+    background: #fff;
+    color: #324a67;
+    border-radius: 999px;
+    padding: 0.24rem 0.62rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    line-height: 1.1;
+}
+
+.cert-filter-chip .count {
+    font-size: 0.68rem;
+    color: #5f7088;
+    background: #f0f5fd;
+    border-radius: 999px;
+    padding: 0.12rem 0.42rem;
+}
+
+.cert-filter-chip.is-active {
+    border-color: #2f6cab;
+    color: #17497d;
+    background: #e9f3ff;
+}
+
+.cert-id-cell {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.cert-eui-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.34rem;
+}
+
+.cert-eui-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.45rem;
+    height: 1.28rem;
+    border-radius: 999px;
+    background: #dcecff;
+    color: #1f5b91;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.cert-eui-code {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.16rem 0.42rem;
+    border-radius: 0.44rem;
+    background: #eef4fd;
+    border: 1px solid #cbdbf0;
+    color: #1f3550;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 0.83rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.cert-subline {
+    font-size: 0.72rem;
+    color: #5f7088;
+}
+
+.cert-actions-menu .dropdown-menu {
+    z-index: 1080;
+    min-width: 11.8rem;
+}
+
+.cert-pagination-bar {
+    margin-top: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.cert-pagination-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    font-size: 0.74rem;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.cert-pagination-left .form-select {
+    min-width: 78px;
+    padding-top: 0.18rem;
+    padding-bottom: 0.18rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.cert-pagination-info {
+    font-size: 0.74rem;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.cert-pagination-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.cert-maint-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.cert-maint-card {
+    border: 1px solid #d6e2f0;
+    border-radius: 0.82rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    padding: 0.68rem;
+}
+
+.cert-maint-title {
+    margin: 0 0 0.32rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #1f334b;
+}
+
+.cert-maint-note {
+    margin: 0 0 0.52rem;
+    font-size: 0.73rem;
+    color: #5f7088;
+}
+
+.is-hidden {
+    display: none !important;
+}
+
 @media (max-width: 1200px) {
     .bs-metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bs-uptime-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .cert-overview-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -153,7 +722,25 @@
         justify-content: flex-start;
     }
 
+    .bs-search {
+        min-width: 0;
+        width: 100%;
+    }
+
     .bs-metric-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cert-search {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .cert-overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cert-maint-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -214,18 +801,26 @@
                 <h5><i class="fas fa-table me-2"></i>Gateway Inventory</h5>
             </div>
             <div class="bs-panel-body">
+                <div class="bs-inventory-tools">
+                    <input id="bsSearch" type="text" class="form-control form-control-sm bs-search" placeholder="Search by EUI, name, IP, tag...">
+                    <small id="bsTableMeta" class="text-muted fw-semibold">Live gateway inventory</small>
+                </div>
+                <div id="bsFilterRow" class="bs-filter-row">
+                    <button type="button" class="bs-filter-chip is-active" data-filter="all">All <span class="count" id="bs-filter-count-all">0</span></button>
+                    <button type="button" class="bs-filter-chip" data-filter="connected">Connected <span class="count" id="bs-filter-count-connected">0</span></button>
+                    <button type="button" class="bs-filter-chip" data-filter="connecting">Connecting <span class="count" id="bs-filter-count-connecting">0</span></button>
+                    <button type="button" class="bs-filter-chip" data-filter="offline">Offline <span class="count" id="bs-filter-count-offline">0</span></button>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Status</th>
-                                <th>EUI</th>
-                                <th>Name</th>
-                                <th>Tags</th>
-                                <th>IP Address</th>
-                                <th>CPU</th>
-                                <th>Memory</th>
-                                <th>Temp</th>
+                                <th>Base Station (EUI)</th>
+                                <th>Network</th>
+                                <th>Health</th>
+                                <th>Last Update</th>
+                                <th>Score</th>
                                 <th>VM</th>
                                 <th>Sensors</th>
                                 <th>Certificate</th>
@@ -235,16 +830,82 @@
                         <tbody id="bs-table"></tbody>
                     </table>
                 </div>
+                <div class="bs-pagination-bar">
+                    <div class="bs-pagination-left">
+                        <span>Rows per page</span>
+                        <select id="bsPageSize" class="form-select form-select-sm">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div id="bsPaginationInfo" class="bs-pagination-info">Page 1/1</div>
+                    <div class="bs-pagination-actions">
+                        <button type="button" id="bsPrevPage" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
+                        <button type="button" id="bsNextPage" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="bs-panel">
             <div class="bs-panel-head">
-                <h5><i class="fas fa-chart-bar me-2"></i>Uptime Trend (Last 24 Hours)</h5>
+                <h5><i class="fas fa-chart-bar me-2"></i>Fleet Uptime Trend (Last 24 Hours)</h5>
             </div>
             <div class="bs-panel-body">
-                <div id="uptimeChartContainer">
-                    <canvas id="uptimeChart" height="200"></canvas>
+                <div id="uptimeChartContainer" class="bs-uptime-shell">
+                    <div class="bs-uptime-chart-card">
+                        <canvas id="uptimeChart" height="120"></canvas>
+                    </div>
+                    <div class="bs-uptime-metrics">
+                        <div class="bs-uptime-metric">
+                            <div class="bs-uptime-metric-label">Connected Now</div>
+                            <div class="bs-uptime-metric-value" id="uptimeConnectedNow">0</div>
+                        </div>
+                        <div class="bs-uptime-metric">
+                            <div class="bs-uptime-metric-label">Peak Connected</div>
+                            <div class="bs-uptime-metric-value" id="uptimeConnectedPeak">0</div>
+                        </div>
+                        <div class="bs-uptime-metric">
+                            <div class="bs-uptime-metric-label">Fleet Availability</div>
+                            <div class="bs-uptime-metric-value" id="uptimeFleetAvailability">0%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bs-uptime-meta">
+                    <small id="uptimeInfoText" class="text-muted fw-semibold">Calculating fleet uptime...</small>
+                    <div class="bs-uptime-controls" id="uptimeSourceControls">
+                        <label for="uptimeSourceSelect" class="text-muted fw-semibold mb-0">Source</label>
+                        <select id="uptimeSourceSelect" class="form-select form-select-sm">
+                            <option value="auto" selected>Auto</option>
+                            <option value="runtime">Runtime</option>
+                            <option value="influx">InfluxDB</option>
+                        </select>
+                        <span id="uptimeSourceLocked" class="bs-uptime-static" style="display:none;">
+                            <i class="fas fa-lock"></i><span id="uptimeSourceLockedText"></span>
+                            <a href="/config" class="ms-1">settings</a>
+                        </span>
+                        <small id="uptimeSourceLabel" class="text-muted fw-semibold">runtime memory events</small>
+                        <button type="button" id="toggleUptimeDetails" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-table me-1"></i> Show base station breakdown
+                        </button>
+                    </div>
+                </div>
+                <div id="uptimeDetails" class="bs-uptime-details is-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Base Station</th>
+                                    <th>Availability</th>
+                                    <th>Online Hours</th>
+                                    <th>Last Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="uptimeDetailTable"></tbody>
+                        </table>
+                    </div>
                 </div>
                 <div id="uptimeNoData" class="text-center text-muted py-4" style="display:none;">
                     <i class="fas fa-clock fa-2x mb-2"></i>
@@ -257,16 +918,45 @@
     <div class="tab-pane fade" id="certificates" role="tabpanel">
         <div class="bs-panel">
             <div class="bs-panel-head">
-                <h5><i class="fas fa-certificate me-2"></i>Global Certificate Authority</h5>
+                <h5><i class="fas fa-certificate me-2"></i>Certificate Overview</h5>
             </div>
             <div class="bs-panel-body">
-                <div id="ca-status"></div>
-                <div class="mt-3 d-flex flex-wrap gap-2">
+                <div class="cert-overview-grid">
+                    <div class="cert-overview-card cert-overview-card--ca" id="ca-status"></div>
+                    <div class="cert-overview-card">
+                        <div class="cert-overview-label">Managed BS Certs</div>
+                        <div class="cert-overview-value" id="certMetricManaged">0</div>
+                        <div class="cert-overview-note">Base stations in certificate inventory</div>
+                    </div>
+                    <div class="cert-overview-card">
+                        <div class="cert-overview-label">Valid</div>
+                        <div class="cert-overview-value text-success" id="certMetricValid">0</div>
+                        <div class="cert-overview-note">Healthy certificates</div>
+                    </div>
+                    <div class="cert-overview-card">
+                        <div class="cert-overview-label">Expiring Soon</div>
+                        <div class="cert-overview-value text-warning" id="certMetricExpiring">0</div>
+                        <div class="cert-overview-note">Needs proactive rotation</div>
+                    </div>
+                    <div class="cert-overview-card">
+                        <div class="cert-overview-label">Missing/Expired</div>
+                        <div class="cert-overview-value text-danger" id="certMetricMissing">0</div>
+                        <div class="cert-overview-note">Immediate attention</div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
                     <button class="btn btn-primary btn-sm" onclick="downloadCertificate('ca_cert.pem')">
                         <i class="fas fa-download"></i> Download CA Cert
                     </button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="downloadCertificate('service_center_cert.pem')">
+                        <i class="fas fa-download"></i> Download Service Cert
+                    </button>
                     <button class="btn btn-outline-warning btn-sm" onclick="generateNewCA()">
                         <i class="fas fa-redo"></i> Generate New CA
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" onclick="backupCertificates()">
+                        <i class="fas fa-archive"></i> Backup ZIP
                     </button>
                 </div>
             </div>
@@ -277,13 +967,23 @@
                 <h5><i class="fas fa-shield-alt me-2"></i>Per-Base Station Certificates</h5>
             </div>
             <div class="bs-panel-body">
+                <div class="cert-toolbar">
+                    <input id="certSearch" type="text" class="form-control form-control-sm cert-search" placeholder="Search by EUI, name, status...">
+                    <small id="certTableMeta" class="text-muted fw-semibold">Certificate registry</small>
+                </div>
+                <div id="certFilterRow" class="cert-filter-row">
+                    <button type="button" class="cert-filter-chip is-active" data-filter="all">All <span class="count" id="cert-filter-count-all">0</span></button>
+                    <button type="button" class="cert-filter-chip" data-filter="valid">Valid <span class="count" id="cert-filter-count-valid">0</span></button>
+                    <button type="button" class="cert-filter-chip" data-filter="expiring_soon">Expiring <span class="count" id="cert-filter-count-expiring_soon">0</span></button>
+                    <button type="button" class="cert-filter-chip" data-filter="expired">Expired <span class="count" id="cert-filter-count-expired">0</span></button>
+                    <button type="button" class="cert-filter-chip" data-filter="missing">Missing <span class="count" id="cert-filter-count-missing">0</span></button>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Base Station EUI</th>
-                                <th>Name</th>
-                                <th>Certificate Status</th>
+                                <th>Base Station</th>
+                                <th>Status</th>
                                 <th>Generated</th>
                                 <th>Expires</th>
                                 <th>Actions</th>
@@ -292,54 +992,62 @@
                         <tbody id="cert-table"></tbody>
                     </table>
                 </div>
+                <div class="cert-pagination-bar">
+                    <div class="cert-pagination-left">
+                        <span>Rows per page</span>
+                        <select id="certPageSize" class="form-select form-select-sm">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div id="certPaginationInfo" class="cert-pagination-info">Page 1/1</div>
+                    <div class="cert-pagination-actions">
+                        <button type="button" id="certPrevPage" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
+                        <button type="button" id="certNextPage" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="bs-panel">
             <div class="bs-panel-head">
-                <h5><i class="fas fa-upload me-2"></i>Upload Certificate Files</h5>
+                <h5><i class="fas fa-tools me-2"></i>Certificate Maintenance</h5>
             </div>
             <div class="bs-panel-body">
                 <div class="alert alert-warning mb-3">
-                    <strong>Warning:</strong> Uploading new certificates requires service restart to take effect.
+                    <strong>Notice:</strong> Uploading or restoring certificates may require service restart to take full effect.
                 </div>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label for="caCertFile" class="form-label">CA Certificate</label>
-                        <input type="file" class="form-control" id="caCertFile" accept=".pem,.crt,.cer">
+                <div class="cert-maint-grid">
+                    <div class="cert-maint-card">
+                        <h6 class="cert-maint-title">Upload CA Certificate</h6>
+                        <p class="cert-maint-note">Replace global CA used for signing and trust.</p>
+                        <input type="file" class="form-control form-control-sm" id="caCertFile" accept=".pem,.crt,.cer">
                         <button class="btn btn-secondary btn-sm mt-2" onclick="uploadCertificate('ca', 'caCertFile')">Upload CA Cert</button>
                     </div>
-                    <div class="col-md-4">
-                        <label for="serviceCertFile" class="form-label">Service Certificate</label>
-                        <input type="file" class="form-control" id="serviceCertFile" accept=".pem,.crt,.cer">
+
+                    <div class="cert-maint-card">
+                        <h6 class="cert-maint-title">Upload Service Certificate</h6>
+                        <p class="cert-maint-note">Update TLS certificate used by service center.</p>
+                        <input type="file" class="form-control form-control-sm" id="serviceCertFile" accept=".pem,.crt,.cer">
                         <button class="btn btn-secondary btn-sm mt-2" onclick="uploadCertificate('service', 'serviceCertFile')">Upload Service Cert</button>
                     </div>
-                    <div class="col-md-4">
-                        <label for="privateKeyFile" class="form-label">Private Key</label>
-                        <input type="file" class="form-control" id="privateKeyFile" accept=".pem,.key">
+
+                    <div class="cert-maint-card">
+                        <h6 class="cert-maint-title">Upload Private Key</h6>
+                        <p class="cert-maint-note">Pair with uploaded service certificate.</p>
+                        <input type="file" class="form-control form-control-sm" id="privateKeyFile" accept=".pem,.key">
                         <button class="btn btn-warning btn-sm mt-2" onclick="uploadCertificate('key', 'privateKeyFile')">Upload Private Key</button>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="bs-panel">
-            <div class="bs-panel-head">
-                <h5><i class="fas fa-archive me-2"></i>Backup and Restore</h5>
-            </div>
-            <div class="bs-panel-body">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <h6>Backup All Certificates</h6>
-                        <p class="text-muted">Download all certificates as a ZIP archive.</p>
+                    <div class="cert-maint-card">
+                        <h6 class="cert-maint-title">Backup and Restore</h6>
+                        <p class="cert-maint-note">Export all certs to ZIP or restore from backup.</p>
                         <button class="btn btn-info" onclick="backupCertificates()">
                             <i class="fas fa-download"></i> Download Backup ZIP
                         </button>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Restore from Backup</h6>
-                        <p class="text-muted">Upload and restore certificates from ZIP backup.</p>
-                        <input type="file" class="form-control mb-2" id="backupFile" accept=".zip">
+                        <input type="file" class="form-control form-control-sm my-2" id="backupFile" accept=".zip">
                         <button class="btn btn-success" onclick="restoreFromBackup()">
                             <i class="fas fa-upload"></i> Restore from ZIP
                         </button>
@@ -406,6 +1114,19 @@ let editingEui = null;
 let refreshInterval;
 let uptimeChart = null;
 let certStatusCache = {};
+let baseStationCache = [];
+let bsActiveFilter = 'all';
+let bsCurrentPage = 1;
+let bsPageSize = 20;
+const BS_TELEMETRY_SOURCE = '{{ telemetry_source|default("auto") }}';
+const BS_INFLUX_CONFIGURED = {{ 'true' if influx_configured else 'false' }};
+let bsUptimeSource = BS_TELEMETRY_SOURCE === 'auto' ? 'auto' : BS_TELEMETRY_SOURCE;
+let certCache = [];
+let certActiveFilter = 'all';
+let certCurrentPage = 1;
+let certPageSize = 20;
+const BS_VIEW_PREFS_KEY = 'base_stations_view_prefs_v1';
+const CERT_VIEW_PREFS_KEY = 'base_station_certs_view_prefs_v1';
 
 function showToast(message) {
     document.getElementById('toastMessage').textContent = message;
@@ -413,14 +1134,369 @@ function showToast(message) {
     toast.show();
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function clampNumber(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+
+function applyUptimeSourceMode() {
+    const select = document.getElementById('uptimeSourceSelect');
+    const lockedHint = document.getElementById('uptimeSourceLocked');
+    const lockedText = document.getElementById('uptimeSourceLockedText');
+    const sourceLabel = document.getElementById('uptimeSourceLabel');
+
+    if (!select || !lockedHint || !lockedText) return;
+
+    if (BS_TELEMETRY_SOURCE === 'auto') {
+        select.style.display = '';
+        select.disabled = false;
+        lockedHint.style.display = 'none';
+        return;
+    }
+
+    bsUptimeSource = BS_TELEMETRY_SOURCE;
+    select.value = bsUptimeSource;
+    select.style.display = 'none';
+    select.disabled = true;
+    lockedHint.style.display = 'inline-flex';
+
+    const name = bsUptimeSource === 'influx' ? 'InfluxDB' : 'Runtime memory';
+    const suffix = bsUptimeSource === 'influx' && !BS_INFLUX_CONFIGURED ? ' (not fully configured)' : '';
+    lockedText.textContent = `${name}${suffix}`;
+    if (sourceLabel) {
+        sourceLabel.textContent = bsUptimeSource === 'influx'
+            ? 'influxdb'
+            : 'runtime memory events';
+    }
+}
+
+function saveBsViewPrefs() {
+    const payload = {
+        search: document.getElementById('bsSearch').value || '',
+        filter: bsActiveFilter,
+        pageSize: bsPageSize,
+        uptimeSource: bsUptimeSource
+    };
+    localStorage.setItem(BS_VIEW_PREFS_KEY, JSON.stringify(payload));
+}
+
+function loadBsViewPrefs() {
+    try {
+        const raw = localStorage.getItem(BS_VIEW_PREFS_KEY);
+        if (!raw) return;
+        const prefs = JSON.parse(raw);
+        bsActiveFilter = prefs.filter || 'all';
+        bsPageSize = clampNumber(Number(prefs.pageSize) || 20, 1, 200);
+        if (BS_TELEMETRY_SOURCE === 'auto') {
+            bsUptimeSource = (prefs.uptimeSource || 'auto').toLowerCase();
+            if (!['auto', 'runtime', 'influx'].includes(bsUptimeSource)) {
+                bsUptimeSource = 'auto';
+            }
+        } else {
+            bsUptimeSource = BS_TELEMETRY_SOURCE;
+        }
+        document.getElementById('bsSearch').value = prefs.search || '';
+        document.getElementById('bsPageSize').value = String(bsPageSize);
+        document.getElementById('uptimeSourceSelect').value = bsUptimeSource;
+    } catch (error) {
+        bsActiveFilter = 'all';
+        bsUptimeSource = BS_TELEMETRY_SOURCE === 'auto' ? 'auto' : BS_TELEMETRY_SOURCE;
+    }
+}
+
+function saveCertViewPrefs() {
+    const payload = {
+        search: document.getElementById('certSearch').value || '',
+        filter: certActiveFilter,
+        pageSize: certPageSize
+    };
+    localStorage.setItem(CERT_VIEW_PREFS_KEY, JSON.stringify(payload));
+}
+
+function loadCertViewPrefs() {
+    try {
+        const raw = localStorage.getItem(CERT_VIEW_PREFS_KEY);
+        if (!raw) return;
+        const prefs = JSON.parse(raw);
+        certActiveFilter = prefs.filter || 'all';
+        certPageSize = clampNumber(Number(prefs.pageSize) || 20, 1, 200);
+        document.getElementById('certSearch').value = prefs.search || '';
+        document.getElementById('certPageSize').value = String(certPageSize);
+    } catch (error) {
+        certActiveFilter = 'all';
+    }
+}
+
+function getBsStatusKey(bs) {
+    if (bs.status === 'connected') return 'connected';
+    if (bs.status === 'connecting') return 'connecting';
+    return 'offline';
+}
+
+function getBsStatusBadge(statusKey) {
+    if (statusKey === 'connected') return '<span class="badge bg-success">Connected</span>';
+    if (statusKey === 'connecting') return '<span class="badge bg-warning text-dark">Connecting</span>';
+    return '<span class="badge bg-secondary">Offline</span>';
+}
+
+function formatStatusAge(seconds) {
+    if (seconds === null || seconds === undefined || Number.isNaN(Number(seconds))) return 'Unknown';
+    const s = Number(seconds);
+    if (s < 60) return `${Math.max(1, Math.round(s))}s ago`;
+    if (s < 3600) return `${Math.round(s / 60)}m ago`;
+    if (s < 86400) return `${(s / 3600).toFixed(1)}h ago`;
+    return `${(s / 86400).toFixed(1)}d ago`;
+}
+
+function getHealthScore(bs) {
+    let score = 100;
+    const statusKey = getBsStatusKey(bs);
+    const health = bs.health || {};
+    const cpu = Number(health.cpu);
+    const mem = Number(health.memory);
+    const temp = Number(health.temperature);
+
+    if (statusKey === 'offline') score -= 60;
+    else if (statusKey === 'connecting') score -= 20;
+
+    if (Number.isFinite(cpu)) {
+        if (cpu >= 95) score -= 25;
+        else if (cpu >= 85) score -= 16;
+        else if (cpu >= 70) score -= 8;
+    }
+
+    if (Number.isFinite(mem)) {
+        if (mem >= 95) score -= 25;
+        else if (mem >= 85) score -= 16;
+        else if (mem >= 70) score -= 8;
+    }
+
+    if (Number.isFinite(temp)) {
+        if (temp >= 80) score -= 20;
+        else if (temp >= 70) score -= 12;
+        else if (temp >= 60) score -= 6;
+    }
+
+    score = clampNumber(Math.round(score), 0, 100);
+    if (score >= 85) return { score, label: 'Good', klass: 'bs-score-good' };
+    if (score >= 70) return { score, label: 'Fair', klass: 'bs-score-fair' };
+    if (score >= 50) return { score, label: 'Warn', klass: 'bs-score-warn' };
+    return { score, label: 'Risk', klass: 'bs-score-critical' };
+}
+
+function getBsCertBadge(cert) {
+    if (!cert || !cert.cert_exists) {
+        return '<span class="badge text-dark" style="background-color: #ffd9ad;">Missing</span>';
+    }
+    if (cert.cert_status === 'valid') return '<span class="badge bg-success">Valid</span>';
+    if (cert.cert_status === 'expired') return '<span class="badge bg-danger">Expired</span>';
+    if (cert.cert_status === 'expiring_soon') return '<span class="badge bg-warning text-dark">Expiring</span>';
+    return '<span class="badge bg-secondary">Unknown</span>';
+}
+
+function copyBaseStationEui(eui) {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        showToast('Clipboard is not available in this browser context.');
+        return;
+    }
+    navigator.clipboard.writeText(eui)
+        .then(() => showToast(`Base station EUI copied: ${eui}`))
+        .catch(() => showToast('Could not copy EUI.'));
+}
+
+function getBaseStationCounts(baseStations) {
+    const counts = { all: baseStations.length, connected: 0, connecting: 0, offline: 0 };
+    baseStations.forEach(bs => { counts[getBsStatusKey(bs)] += 1; });
+    return counts;
+}
+
+function refreshBsFilterChips() {
+    const counts = getBaseStationCounts(baseStationCache);
+    Object.entries(counts).forEach(([key, value]) => {
+        const el = document.getElementById(`bs-filter-count-${key}`);
+        if (el) el.textContent = value;
+    });
+    document.querySelectorAll('#bsFilterRow [data-filter]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-filter') === bsActiveFilter);
+    });
+}
+
+function getFilteredBaseStations() {
+    const needle = (document.getElementById('bsSearch').value || '').trim().toLowerCase();
+    return baseStationCache.filter(bs => {
+        const statusKey = getBsStatusKey(bs);
+        if (bsActiveFilter !== 'all' && statusKey !== bsActiveFilter) return false;
+        if (!needle) return true;
+        const tags = (bs.tags || []).join(' ');
+        const haystack = [
+            bs.eui,
+            bs.name,
+            bs.configured_ip,
+            bs.status,
+            bs.last_status_event,
+            bs.last_status_change,
+            tags
+        ].join(' ').toLowerCase();
+        return haystack.includes(needle);
+    });
+}
+
+function getBsPaginationState(filtered) {
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / bsPageSize));
+    bsCurrentPage = Math.min(Math.max(bsCurrentPage, 1), totalPages);
+    const start = (bsCurrentPage - 1) * bsPageSize;
+    const end = Math.min(start + bsPageSize, total);
+    return {
+        total,
+        totalPages,
+        start,
+        end,
+        rows: filtered.slice(start, end)
+    };
+}
+
+function updateBsPaginationUi(state) {
+    const info = document.getElementById('bsPaginationInfo');
+    const prevBtn = document.getElementById('bsPrevPage');
+    const nextBtn = document.getElementById('bsNextPage');
+    if (state.total === 0) info.textContent = 'Page 0/0';
+    else info.textContent = `Page ${bsCurrentPage}/${state.totalPages}`;
+    prevBtn.disabled = bsCurrentPage <= 1 || state.total === 0;
+    nextBtn.disabled = bsCurrentPage >= state.totalPages || state.total === 0;
+}
+
+function initBsActionDropdowns() {
+    document.querySelectorAll('.bs-actions-toggle').forEach(toggle => {
+        const existing = bootstrap.Dropdown.getInstance(toggle);
+        if (existing) existing.dispose();
+        new bootstrap.Dropdown(toggle, {
+            boundary: 'viewport',
+            popperConfig(defaultConfig) {
+                return {
+                    ...defaultConfig,
+                    strategy: 'fixed',
+                    modifiers: [
+                        ...((defaultConfig && defaultConfig.modifiers) || []).filter(mod => mod.name !== 'preventOverflow' && mod.name !== 'flip'),
+                        { name: 'preventOverflow', options: { boundary: document.body, padding: 8 } },
+                        { name: 'flip', options: { fallbackPlacements: ['bottom-end', 'top-end', 'bottom-start', 'top-start'] } }
+                    ]
+                };
+            }
+        });
+    });
+}
+
+function renderBaseStationTable() {
+    const table = document.getElementById('bs-table');
+    const filtered = getFilteredBaseStations();
+    if (filtered.length === 0) {
+        table.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-3 fw-semibold">No base stations match current filters.</td></tr>';
+        document.getElementById('bsTableMeta').textContent = `Showing 0 of ${baseStationCache.length} base stations`;
+        updateBsPaginationUi({ total: 0, totalPages: 0 });
+        return;
+    }
+
+    const page = getBsPaginationState(filtered);
+    table.innerHTML = page.rows.map(bs => {
+        const statusKey = getBsStatusKey(bs);
+        const statusBadge = getBsStatusBadge(statusKey);
+        const cert = bs.cert || null;
+        const certBadge = getBsCertBadge(cert);
+        const cpuDisplay = bs.health?.cpu !== undefined ? `${Number(bs.health.cpu).toFixed(1)}%` : '-';
+        const memDisplay = bs.health?.memory !== undefined ? `${Number(bs.health.memory).toFixed(1)}%` : '-';
+        const tempDisplay = bs.health?.temperature !== undefined && bs.health?.temperature !== null
+            ? `${Number(bs.health.temperature).toFixed(1)}&deg;C`
+            : 'N/A';
+        const ipDisplay = bs.configured_ip || '-';
+        const vmBadge = bs.health?.vm_capable
+            ? '<span class="badge bg-primary">VM-capable</span>'
+            : '<span class="text-muted">-</span>';
+        const tags = (bs.tags || []).map(tag => `<span class="bs-tag">${escapeHtml(tag)}</span>`).join('');
+        const certNote = cert && cert.cert_expires ? `<div class="bs-subline">Expires: ${escapeHtml(cert.cert_expires)}</div>` : '<div class="bs-subline">No cert metadata</div>';
+        const score = getHealthScore(bs);
+        const lastUpdateText = formatStatusAge(bs.status_age_seconds);
+        const lastUpdateDetail = bs.last_status_event
+            ? `Last event: ${escapeHtml(bs.last_status_event)}`
+            : 'No status events yet';
+
+        return `
+            <tr>
+                <td>${statusBadge}</td>
+                <td>
+                    <div class="bs-id-cell">
+                        <div class="bs-eui-line">
+                            <span class="bs-eui-label">BS</span>
+                            <code class="bs-eui-code">${escapeHtml(bs.eui)}</code>
+                            <button type="button" class="bs-eui-copy" onclick="copyBaseStationEui('${escapeHtml(bs.eui)}')" title="Copy EUI">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="bs-subline">${escapeHtml(bs.name || 'Unnamed base station')}</div>
+                        <div class="bs-tag-stack">${tags || '<span class="bs-subline">No tags</span>'}</div>
+                    </div>
+                </td>
+                <td>
+                    <div>${escapeHtml(ipDisplay)}</div>
+                    <div class="bs-subline">${statusKey === 'connected' ? 'Session active' : statusKey === 'connecting' ? 'Handshake in progress' : 'No active session'}</div>
+                </td>
+                <td>
+                    <div class="bs-health-grid">
+                        <div class="bs-health-item">CPU: <strong>${cpuDisplay}</strong></div>
+                        <div class="bs-health-item">MEM: <strong>${memDisplay}</strong></div>
+                        <div class="bs-health-item">TEMP: <strong>${tempDisplay}</strong></div>
+                    </div>
+                </td>
+                <td>
+                    <div><strong>${lastUpdateText}</strong></div>
+                    <div class="bs-subline">${lastUpdateDetail}</div>
+                </td>
+                <td>
+                    <span class="bs-score-badge ${score.klass}">${score.score}</span>
+                    <div class="bs-subline">${score.label}</div>
+                </td>
+                <td>${vmBadge}</td>
+                <td>
+                    <div><strong>${bs.connected_sensors || 0}</strong></div>
+                    <div class="bs-subline">linked sensors</div>
+                </td>
+                <td>
+                    ${certBadge}
+                    ${certNote}
+                </td>
+                <td>
+                    <div class="dropdown bs-actions-menu">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle bs-actions-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">Actions</button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><button class="dropdown-item" onclick="editBaseStation('${bs.eui}')"><i class="fas fa-pen me-2"></i>Edit</button></li>
+                            <li><button class="dropdown-item text-danger" onclick="deleteBaseStation('${bs.eui}')"><i class="fas fa-trash me-2"></i>Delete</button></li>
+                            ${cert && cert.cert_exists ? `<li><button class="dropdown-item" onclick="downloadBsCert('${bs.eui}')"><i class="fas fa-download me-2"></i>Download cert</button></li>` : ''}
+                            <li><button class="dropdown-item text-warning" onclick="regenerateCert('${bs.eui}')"><i class="fas fa-redo me-2"></i>Regenerate cert</button></li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    document.getElementById('bsTableMeta').textContent = `Showing ${page.start + 1}-${page.end} of ${filtered.length} base station${filtered.length === 1 ? '' : 's'}`;
+    updateBsPaginationUi(page);
+    initBsActionDropdowns();
+}
+
 function loadBaseStations() {
     Promise.all([
         fetch('/api/base-stations').then(r => r.json()),
         fetch('/api/base-stations/certificates/status').then(r => r.json()).catch(() => ({success: false, certificates: []}))
     ]).then(([data, certData]) => {
-        const table = document.getElementById('bs-table');
-        table.innerHTML = '';
-
         let connected = 0, connecting = 0, offline = 0;
         const allBs = data.base_stations || [];
 
@@ -431,182 +1507,214 @@ function loadBaseStations() {
         certStatusCache = certMap;
 
         allBs.forEach(bs => {
-            if (bs.status === 'connected') connected++;
-            else if (bs.status === 'connecting') connecting++;
+            const key = getBsStatusKey(bs);
+            if (key === 'connected') connected++;
+            else if (key === 'connecting') connecting++;
             else offline++;
-
-            const statusBadge = bs.status === 'connected'
-                ? '<span class="badge bg-success">Connected</span>'
-                : bs.status === 'connecting'
-                ? '<span class="badge bg-warning">Connecting</span>'
-                : '<span class="badge bg-secondary">Offline</span>';
-
-            const cpuDisplay = bs.health?.cpu !== undefined
-                ? `${bs.health.cpu.toFixed(1)}%`
-                : '-';
-            const memDisplay = bs.health?.memory !== undefined
-                ? `${bs.health.memory.toFixed(1)}%`
-                : '-';
-            const tempDisplay = bs.health?.temperature !== undefined && bs.health?.temperature !== null
-                ? `${bs.health.temperature.toFixed(1)}Ă‚°C`
-                : 'N/A';
-            const ipDisplay = bs.configured_ip || '-';
-            const tagsHtml = (bs.tags || []).map(t =>
-                `<span class="badge bg-info me-1">${t}</span>`
-            ).join('') || '-';
-
-            const vmBadge = bs.health?.vm_capable
-                ? '<span class="badge bg-primary">VM</span>'
-                : '<span class="text-muted">-</span>';
-
-            const cert = certMap[bs.eui];
-            let certBadge = '<span class="badge" style="background-color: #ff8c00;">Missing</span>';
-            if (cert) {
-                if (cert.cert_status === 'valid') certBadge = '<span class="badge bg-success">Valid</span>';
-                else if (cert.cert_status === 'expired') certBadge = '<span class="badge bg-danger">Expired</span>';
-                else if (cert.cert_status === 'expiring_soon') certBadge = '<span class="badge bg-warning text-dark">Expiring</span>';
-            }
-
-            let actionsHtml = `
-                <button class="btn btn-sm btn-outline-primary me-1" onclick="editBaseStation('${bs.eui}')" title="Edit"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-sm btn-outline-danger me-1" onclick="deleteBaseStation('${bs.eui}')" title="Delete"><i class="fas fa-trash"></i></button>`;
-            if (cert && cert.cert_exists) {
-                actionsHtml += `<button class="btn btn-sm btn-outline-success me-1" onclick="downloadBsCert('${bs.eui}')" title="Download Cert"><i class="fas fa-download"></i></button>`;
-            }
-            actionsHtml += `<button class="btn btn-sm btn-outline-warning" onclick="regenerateCert('${bs.eui}')" title="Regenerate Cert"><i class="fas fa-redo"></i></button>`;
-
-            table.innerHTML += `
-                <tr>
-                    <td>${statusBadge}</td>
-                    <td><code>${bs.eui}</code></td>
-                    <td>${bs.name || '-'}</td>
-                    <td>${tagsHtml}</td>
-                    <td>${ipDisplay}</td>
-                    <td>${cpuDisplay}</td>
-                    <td>${memDisplay}</td>
-                    <td>${tempDisplay}</td>
-                    <td>${vmBadge}</td>
-                    <td>${bs.connected_sensors || 0}</td>
-                    <td>${certBadge}</td>
-                    <td>${actionsHtml}</td>
-                </tr>
-            `;
         });
+
+        baseStationCache = allBs
+            .map(bs => ({ ...bs, cert: certMap[bs.eui] || null }))
+            .sort((a, b) => String(a.eui).localeCompare(String(b.eui)));
 
         document.getElementById('totalConfigured').textContent = allBs.length;
         document.getElementById('totalConnected').textContent = connected;
         document.getElementById('totalConnecting').textContent = connecting;
         document.getElementById('totalOffline').textContent = offline;
+
+        refreshBsFilterChips();
+        renderBaseStationTable();
     }).catch(err => {
         console.error('Failed to load base stations:', err);
+        document.getElementById('bs-table').innerHTML = '<tr><td colspan="10" class="text-center text-danger py-3 fw-semibold">Failed to load base station data.</td></tr>';
     });
 }
 
+function isConnectedUptimeEvent(eventType) {
+    const value = String(eventType || '').toLowerCase();
+    return value === 'connected' || value === 'connect' || value === 'up';
+}
+
+function formatUptimeLastChange(timestampMs) {
+    if (!timestampMs) return 'No events';
+    return new Date(timestampMs).toLocaleString();
+}
+
+function renderUptimeDetailTable(rows) {
+    const tbody = document.getElementById('uptimeDetailTable');
+    if (!rows || rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3 fw-semibold">No uptime events available.</td></tr>';
+        return;
+    }
+
+    const sortedRows = [...rows].sort((a, b) => a.availability - b.availability);
+    tbody.innerHTML = sortedRows.map(item => `
+        <tr>
+            <td><code>${escapeHtml(item.eui)}</code></td>
+            <td>${item.availability.toFixed(1)}%</td>
+            <td>${item.onlineHours.toFixed(2)} h</td>
+            <td>${escapeHtml(formatUptimeLastChange(item.lastChangeMs))}</td>
+        </tr>
+    `).join('');
+}
+
 function loadUptimeChart() {
-    fetch('/api/base-stations/uptime')
+    const sourceQuery = encodeURIComponent(bsUptimeSource || 'auto');
+    fetch(`/api/base-stations/uptime?source=${sourceQuery}`)
         .then(r => r.json())
         .then(data => {
-            if (!data.success) return;
-            const events = data.uptime_events || {};
-            const euis = Object.keys(events);
+            const sourceLabel = document.getElementById('uptimeSourceLabel');
+            const sourceText = data && data.source ? String(data.source).replaceAll('_', ' ') : 'runtime memory events';
+            if (sourceLabel) {
+                sourceLabel.textContent = data && data.fallback_reason
+                    ? `${sourceText} (fallback)`
+                    : sourceText;
+            }
 
-            if (euis.length === 0 || euis.every(e => events[e].length === 0)) {
+            if (!data.success) {
                 document.getElementById('uptimeChartContainer').style.display = 'none';
                 document.getElementById('uptimeNoData').style.display = 'block';
+                document.getElementById('uptimeInfoText').textContent = 'Uptime data is currently unavailable.';
                 return;
             }
-            document.getElementById('uptimeChartContainer').style.display = 'block';
+
+            const uptimeEvents = data.uptime_events || {};
+            const euis = Object.keys(uptimeEvents);
+
+            if (euis.length === 0 || euis.every(eui => (uptimeEvents[eui] || []).length === 0)) {
+                document.getElementById('uptimeChartContainer').style.display = 'none';
+                document.getElementById('uptimeNoData').style.display = 'block';
+                document.getElementById('uptimeInfoText').textContent = 'No uptime telemetry events in the last window.';
+                document.getElementById('uptimeConnectedNow').textContent = '0';
+                document.getElementById('uptimeConnectedPeak').textContent = '0';
+                document.getElementById('uptimeFleetAvailability').textContent = '0%';
+                renderUptimeDetailTable([]);
+                if (uptimeChart) {
+                    uptimeChart.destroy();
+                    uptimeChart = null;
+                }
+                return;
+            }
+
+            document.getElementById('uptimeChartContainer').style.display = 'grid';
             document.getElementById('uptimeNoData').style.display = 'none';
 
-            const now = new Date();
-            const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-            const labels = [];
-            const datasets = [];
+            const endMs = Date.now();
+            const startMs = endMs - (24 * 60 * 60 * 1000);
+            const periodMs = endMs - startMs;
+            const stateDeltas = [];
+            const details = [];
+            let initialConnected = 0;
 
-            euis.forEach((eui, idx) => {
-                const evts = events[eui].filter(e => new Date(e.timestamp) >= dayAgo);
-                const segments = [];
-                let lastState = null;
-                let lastTime = dayAgo;
+            euis.forEach(eui => {
+                const events = (uptimeEvents[eui] || [])
+                    .map(event => ({
+                        ts: new Date(event.timestamp).getTime(),
+                        connected: isConnectedUptimeEvent(event.event)
+                    }))
+                    .filter(event => Number.isFinite(event.ts) && event.ts <= endMs)
+                    .sort((a, b) => a.ts - b.ts);
 
-                evts.forEach(evt => {
-                    const t = new Date(evt.timestamp);
-                    if (t < dayAgo) return;
-                    if (lastState !== null) {
-                        segments.push({
-                            x: [lastTime.toISOString(), t.toISOString()],
-                            y: eui.substring(0, 12) + '...',
-                            state: lastState
-                        });
-                    }
-                    lastState = evt.event;
-                    lastTime = t;
-                });
-                if (lastState !== null) {
-                    segments.push({
-                        x: [lastTime.toISOString(), now.toISOString()],
-                        y: eui.substring(0, 12) + '...',
-                        state: lastState
-                    });
-                }
+                let state = false;
+                let onlineMs = 0;
+                let segmentStart = startMs;
+                let lastChangeMs = null;
 
-                labels.push(eui.substring(0, 12) + '...');
-
-                const onlineData = [];
-                const offlineData = [];
-                segments.forEach(seg => {
-                    const start = new Date(seg.x[0]);
-                    const end = new Date(seg.x[1]);
-                    const duration = (end - start) / (1000 * 60 * 60);
-                    if (seg.state === 'connected') {
-                        onlineData.push(duration);
-                        offlineData.push(0);
-                    } else {
-                        onlineData.push(0);
-                        offlineData.push(duration);
+                events.forEach(event => {
+                    if (event.ts <= startMs) {
+                        state = event.connected;
+                        lastChangeMs = event.ts;
                     }
                 });
 
-                const totalOnline = onlineData.reduce((a, b) => a + b, 0);
-                const totalOffline = offlineData.reduce((a, b) => a + b, 0);
+                if (state) initialConnected += 1;
 
-                if (idx === 0) {
-                    datasets.push({
-                        label: 'Online',
-                        data: [totalOnline],
-                        backgroundColor: '#28a745',
-                        barPercentage: 0.6
-                    });
-                    datasets.push({
-                        label: 'Offline',
-                        data: [totalOffline],
-                        backgroundColor: '#adb5bd',
-                        barPercentage: 0.6
-                    });
-                } else {
-                    datasets[0].data.push(totalOnline);
-                    datasets[1].data.push(totalOffline);
-                }
+                events.forEach(event => {
+                    if (event.ts <= startMs || event.ts > endMs) return;
+
+                    if (state) onlineMs += event.ts - segmentStart;
+                    if (event.connected !== state) {
+                        stateDeltas.push({ ts: event.ts, delta: event.connected ? 1 : -1 });
+                        state = event.connected;
+                    }
+                    segmentStart = event.ts;
+                    lastChangeMs = event.ts;
+                });
+
+                if (state) onlineMs += endMs - segmentStart;
+
+                details.push({
+                    eui,
+                    availability: periodMs > 0 ? (onlineMs / periodMs) * 100 : 0,
+                    onlineHours: onlineMs / (1000 * 60 * 60),
+                    lastChangeMs
+                });
             });
+
+            stateDeltas.sort((a, b) => a.ts - b.ts);
+
+            let connectedCount = initialConnected;
+            let peakConnected = connectedCount;
+            const points = [{ x: startMs, y: connectedCount }];
+
+            stateDeltas.forEach(event => {
+                connectedCount += event.delta;
+                peakConnected = Math.max(peakConnected, connectedCount);
+                points.push({ x: event.ts, y: connectedCount });
+            });
+            points.push({ x: endMs, y: connectedCount });
+
+            const fleetAvailability = details.length > 0
+                ? details.reduce((sum, item) => sum + item.availability, 0) / details.length
+                : 0;
+
+            document.getElementById('uptimeConnectedNow').textContent = `${connectedCount}/${euis.length}`;
+            document.getElementById('uptimeConnectedPeak').textContent = `${peakConnected}/${euis.length}`;
+            document.getElementById('uptimeFleetAvailability').textContent = `${fleetAvailability.toFixed(1)}%`;
+            document.getElementById('uptimeInfoText').textContent = data && data.fallback_reason
+                ? `Tracking ${euis.length} base station(s), ${stateDeltas.length} state changes. Fallback: ${data.fallback_reason}`
+                : `Tracking ${euis.length} base station(s), ${stateDeltas.length} state changes in the last 24h.`;
+            renderUptimeDetailTable(details);
 
             const ctx = document.getElementById('uptimeChart').getContext('2d');
             if (uptimeChart) uptimeChart.destroy();
             uptimeChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: labels, datasets: datasets },
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Connected base stations',
+                        data: points,
+                        borderColor: '#1e6bb8',
+                        backgroundColor: 'rgba(30, 107, 184, 0.14)',
+                        stepped: true,
+                        fill: true,
+                        tension: 0,
+                        pointRadius: 0
+                    }]
+                },
                 options: {
-                    indexAxis: 'y',
                     responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
                     scales: {
                         x: {
-                            stacked: true,
-                            title: { display: true, text: 'Hours' },
-                            max: 24
+                            type: 'linear',
+                            min: startMs,
+                            max: endMs,
+                            ticks: {
+                                maxTicksLimit: 8,
+                                callback: value => new Date(Number(value)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            },
+                            grid: { color: 'rgba(145, 162, 186, 0.2)' }
                         },
-                        y: { stacked: true }
-                    },
-                    plugins: {
-                        legend: { position: 'top' }
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: Math.max(euis.length, peakConnected, connectedCount),
+                            ticks: { precision: 0, stepSize: 1 },
+                            grid: { color: 'rgba(145, 162, 186, 0.2)' }
+                        }
                     }
                 }
             });
@@ -617,78 +1725,212 @@ function loadUptimeChart() {
         });
 }
 
-function loadCertificatesTab() {
-    fetch('/api/certificates/status')
-        .then(r => r.json())
-        .then(data => {
-            const caDiv = document.getElementById('ca-status');
-            if (data.success) {
-                const certs = data.certificates;
-                caDiv.innerHTML = `
-                    <div class="row">
-                        <div class="col-md-4">
-                            <strong>CA Certificate:</strong><br>
-                            <span class="badge ${certs.ca ? 'bg-success' : 'bg-danger'}">
-                                ${certs.ca ? 'Present' : 'Missing'}
-                            </span>
-                            ${certs.ca && certs.ca_expires ? `<br><small>Expires: ${certs.ca_expires}</small>` : ''}
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Service Certificate:</strong><br>
-                            <span class="badge ${certs.service ? 'bg-success' : 'bg-danger'}">
-                                ${certs.service ? 'Present' : 'Missing'}
-                            </span>
-                            ${certs.service && certs.service_expires ? `<br><small>Expires: ${certs.service_expires}</small>` : ''}
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Private Key:</strong><br>
-                            <span class="badge ${certs.key ? 'bg-success' : 'bg-danger'}">
-                                ${certs.key ? 'Present' : 'Missing'}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            } else {
-                caDiv.innerHTML = '<div class="alert alert-danger">Error loading CA status</div>';
-            }
-        }).catch(() => {
-            document.getElementById('ca-status').innerHTML = '<div class="alert alert-danger">Error loading CA status</div>';
-        });
+function normalizeCertStatus(cert) {
+    if (!cert || !cert.cert_exists) return 'missing';
+    if (cert.cert_status === 'valid') return 'valid';
+    if (cert.cert_status === 'expired') return 'expired';
+    if (cert.cert_status === 'expiring_soon') return 'expiring_soon';
+    return 'missing';
+}
 
-    fetch('/api/base-stations/certificates/status')
-        .then(r => r.json())
-        .then(data => {
-            const table = document.getElementById('cert-table');
-            table.innerHTML = '';
-            if (!data.success) return;
-            (data.certificates || []).forEach(cert => {
-                let statusBadge;
-                switch(cert.cert_status) {
-                    case 'valid': statusBadge = '<span class="badge bg-success">Valid</span>'; break;
-                    case 'expired': statusBadge = '<span class="badge bg-danger">Expired</span>'; break;
-                    case 'expiring_soon': statusBadge = '<span class="badge bg-warning text-dark">Expiring Soon</span>'; break;
-                    default: statusBadge = '<span class="badge" style="background-color: #ff8c00;">Missing</span>';
-                }
-                let actions = '';
-                if (cert.cert_exists) {
-                    actions += `<button class="btn btn-sm btn-outline-success me-1" onclick="downloadBsCert('${cert.eui}')" title="Download ZIP"><i class="fas fa-download"></i></button>`;
-                }
-                actions += `<button class="btn btn-sm btn-outline-warning me-1" onclick="regenerateCert('${cert.eui}')" title="Regenerate"><i class="fas fa-redo"></i></button>`;
-                if (cert.cert_exists) {
-                    actions += `<button class="btn btn-sm btn-outline-info" onclick="viewCertDetails('${cert.eui}', '${cert.cert_generated}', '${cert.cert_expires}')" title="View Details"><i class="fas fa-info-circle"></i></button>`;
-                }
-                table.innerHTML += `
-                    <tr>
-                        <td><code>${cert.eui}</code></td>
-                        <td>${cert.name || '-'}</td>
-                        <td>${statusBadge}</td>
-                        <td>${cert.cert_generated || '-'}</td>
-                        <td>${cert.cert_expires || '-'}</td>
-                        <td>${actions}</td>
-                    </tr>
-                `;
-            });
+function getCertStatusBadge(statusKey) {
+    if (statusKey === 'valid') return '<span class="badge bg-success">Valid</span>';
+    if (statusKey === 'expired') return '<span class="badge bg-danger">Expired</span>';
+    if (statusKey === 'expiring_soon') return '<span class="badge bg-warning text-dark">Expiring Soon</span>';
+    return '<span class="badge text-dark" style="background-color: #ffd9ad;">Missing</span>';
+}
+
+function getCertCounts(certificates) {
+    const counts = {
+        all: certificates.length,
+        valid: 0,
+        expiring_soon: 0,
+        expired: 0,
+        missing: 0
+    };
+
+    certificates.forEach(cert => {
+        const key = normalizeCertStatus(cert);
+        counts[key] += 1;
+    });
+
+    return counts;
+}
+
+function refreshCertFilterChips() {
+    const counts = getCertCounts(certCache);
+    Object.entries(counts).forEach(([key, value]) => {
+        const node = document.getElementById(`cert-filter-count-${key}`);
+        if (node) node.textContent = value;
+    });
+
+    document.querySelectorAll('#certFilterRow [data-filter]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-filter') === certActiveFilter);
+    });
+}
+
+function getFilteredCertificates() {
+    const needle = (document.getElementById('certSearch').value || '').trim().toLowerCase();
+    return certCache.filter(cert => {
+        const statusKey = normalizeCertStatus(cert);
+        if (certActiveFilter !== 'all' && statusKey !== certActiveFilter) return false;
+        if (!needle) return true;
+        const haystack = [cert.eui, cert.name, cert.cert_status, cert.cert_generated, cert.cert_expires].join(' ').toLowerCase();
+        return haystack.includes(needle);
+    });
+}
+
+function getCertPaginationState(filtered) {
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / certPageSize));
+    certCurrentPage = Math.min(Math.max(certCurrentPage, 1), totalPages);
+    const start = (certCurrentPage - 1) * certPageSize;
+    const end = Math.min(start + certPageSize, total);
+    return {
+        total,
+        totalPages,
+        start,
+        end,
+        rows: filtered.slice(start, end)
+    };
+}
+
+function updateCertPaginationUi(page) {
+    const info = document.getElementById('certPaginationInfo');
+    const prevBtn = document.getElementById('certPrevPage');
+    const nextBtn = document.getElementById('certNextPage');
+
+    if (page.total === 0) info.textContent = 'Page 0/0';
+    else info.textContent = `Page ${certCurrentPage}/${page.totalPages}`;
+
+    prevBtn.disabled = certCurrentPage <= 1 || page.total === 0;
+    nextBtn.disabled = certCurrentPage >= page.totalPages || page.total === 0;
+}
+
+function initCertActionDropdowns() {
+    document.querySelectorAll('.cert-actions-toggle').forEach(toggle => {
+        const existing = bootstrap.Dropdown.getInstance(toggle);
+        if (existing) existing.dispose();
+        new bootstrap.Dropdown(toggle, {
+            boundary: 'viewport',
+            popperConfig(defaultConfig) {
+                return {
+                    ...defaultConfig,
+                    strategy: 'fixed',
+                    modifiers: [
+                        ...((defaultConfig && defaultConfig.modifiers) || []).filter(mod => mod.name !== 'preventOverflow' && mod.name !== 'flip'),
+                        { name: 'preventOverflow', options: { boundary: document.body, padding: 8 } },
+                        { name: 'flip', options: { fallbackPlacements: ['bottom-end', 'top-end', 'bottom-start', 'top-start'] } }
+                    ]
+                };
+            }
         });
+    });
+}
+
+function renderCertificateOverview(certsInfo, certStatuses) {
+    const certs = certsInfo || {};
+    const caOk = Boolean(certs.ca);
+    const serviceOk = Boolean(certs.service);
+    const keyOk = Boolean(certs.key);
+
+    document.getElementById('ca-status').innerHTML = `
+        <div class="cert-overview-label">Global Trust Chain</div>
+        <div class="cert-overview-value">${caOk ? 'CA Ready' : 'CA Missing'}</div>
+        <div class="cert-overview-note">${caOk && certs.ca_expires ? `CA expiry: ${escapeHtml(certs.ca_expires)}` : 'CA certificate not detected.'}</div>
+        <div class="cert-ca-status-stack">
+            <span class="cert-ca-status-pill ${caOk ? 'is-ok' : 'is-missing'}">CA ${caOk ? 'OK' : 'Missing'}</span>
+            <span class="cert-ca-status-pill ${serviceOk ? 'is-ok' : 'is-missing'}">Service ${serviceOk ? 'OK' : 'Missing'}</span>
+            <span class="cert-ca-status-pill ${keyOk ? 'is-ok' : 'is-missing'}">Key ${keyOk ? 'OK' : 'Missing'}</span>
+        </div>
+    `;
+
+    const counts = getCertCounts(certStatuses);
+    document.getElementById('certMetricManaged').textContent = counts.all;
+    document.getElementById('certMetricValid').textContent = counts.valid;
+    document.getElementById('certMetricExpiring').textContent = counts.expiring_soon;
+    document.getElementById('certMetricMissing').textContent = counts.missing + counts.expired;
+}
+
+function renderCertificateTable() {
+    const table = document.getElementById('cert-table');
+    const filtered = getFilteredCertificates();
+
+    if (filtered.length === 0) {
+        table.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3 fw-semibold">No certificates match current filters.</td></tr>';
+        document.getElementById('certTableMeta').textContent = `Showing 0 of ${certCache.length} certificates`;
+        updateCertPaginationUi({ total: 0, totalPages: 0 });
+        return;
+    }
+
+    const page = getCertPaginationState(filtered);
+    table.innerHTML = page.rows.map(cert => {
+        const statusKey = normalizeCertStatus(cert);
+        const statusBadge = getCertStatusBadge(statusKey);
+
+        let actions = '';
+        if (cert.cert_exists) {
+            actions += `<li><button class="dropdown-item" onclick="downloadBsCert('${cert.eui}')"><i class="fas fa-download me-2"></i>Download cert</button></li>`;
+        }
+        actions += `<li><button class="dropdown-item text-warning" onclick="regenerateCert('${cert.eui}')"><i class="fas fa-redo me-2"></i>Regenerate</button></li>`;
+        if (cert.cert_exists) {
+            actions += `<li><button class="dropdown-item" onclick="viewCertDetails('${cert.eui}', '${cert.cert_generated || ''}', '${cert.cert_expires || ''}')"><i class="fas fa-info-circle me-2"></i>Details</button></li>`;
+        }
+
+        return `
+            <tr>
+                <td>
+                    <div class="cert-id-cell">
+                        <div class="cert-eui-line">
+                            <span class="cert-eui-label">BS</span>
+                            <code class="cert-eui-code">${escapeHtml(cert.eui)}</code>
+                        </div>
+                        <div class="cert-subline">${escapeHtml(cert.name || 'Unnamed base station')}</div>
+                    </div>
+                </td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div>${escapeHtml(cert.cert_generated || '-')}</div>
+                    <div class="cert-subline">Issued timestamp</div>
+                </td>
+                <td>
+                    <div>${escapeHtml(cert.cert_expires || '-')}</div>
+                    <div class="cert-subline">Expiration timestamp</div>
+                </td>
+                <td>
+                    <div class="dropdown cert-actions-menu">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle cert-actions-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">Actions</button>
+                        <ul class="dropdown-menu dropdown-menu-end">${actions}</ul>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    document.getElementById('certTableMeta').textContent = `Showing ${page.start + 1}-${page.end} of ${filtered.length} certificate record${filtered.length === 1 ? '' : 's'}`;
+    updateCertPaginationUi(page);
+    initCertActionDropdowns();
+}
+
+function loadCertificatesTab() {
+    Promise.all([
+        fetch('/api/certificates/status').then(r => r.json()).catch(() => ({ success: false, certificates: {} })),
+        fetch('/api/base-stations/certificates/status').then(r => r.json()).catch(() => ({ success: false, certificates: [] }))
+    ]).then(([caData, certData]) => {
+        const certStatuses = certData.success ? (certData.certificates || []) : [];
+        certCache = certStatuses
+            .map(cert => ({ ...cert, cert_status: normalizeCertStatus(cert) }))
+            .sort((a, b) => String(a.eui).localeCompare(String(b.eui)));
+
+        if (caData.success) {
+            renderCertificateOverview(caData.certificates, certCache);
+        } else {
+            renderCertificateOverview({}, certCache);
+        }
+
+        refreshCertFilterChips();
+        renderCertificateTable();
+    });
 }
 
 function downloadCertificate(filename) {
@@ -863,13 +2105,104 @@ function refreshAll() {
     loadCertificatesTab();
 }
 
+document.getElementById('bsSearch').addEventListener('input', () => {
+    bsCurrentPage = 1;
+    saveBsViewPrefs();
+    renderBaseStationTable();
+});
+
+document.getElementById('bsFilterRow').addEventListener('click', event => {
+    const button = event.target.closest('[data-filter]');
+    if (!button) return;
+    bsActiveFilter = button.getAttribute('data-filter') || 'all';
+    bsCurrentPage = 1;
+    saveBsViewPrefs();
+    refreshBsFilterChips();
+    renderBaseStationTable();
+});
+
+document.getElementById('bsPageSize').addEventListener('change', event => {
+    bsPageSize = Math.max(1, Number(event.target.value) || 20);
+    bsCurrentPage = 1;
+    saveBsViewPrefs();
+    renderBaseStationTable();
+});
+
+document.getElementById('bsPrevPage').addEventListener('click', () => {
+    if (bsCurrentPage <= 1) return;
+    bsCurrentPage -= 1;
+    renderBaseStationTable();
+});
+
+document.getElementById('bsNextPage').addEventListener('click', () => {
+    bsCurrentPage += 1;
+    renderBaseStationTable();
+});
+
+document.getElementById('uptimeSourceSelect').addEventListener('change', event => {
+    if (BS_TELEMETRY_SOURCE !== 'auto') return;
+    bsUptimeSource = (event.target.value || 'auto').toLowerCase();
+    saveBsViewPrefs();
+    loadUptimeChart();
+});
+
+document.getElementById('certSearch').addEventListener('input', () => {
+    certCurrentPage = 1;
+    saveCertViewPrefs();
+    renderCertificateTable();
+});
+
+document.getElementById('certFilterRow').addEventListener('click', event => {
+    const button = event.target.closest('[data-filter]');
+    if (!button) return;
+    certActiveFilter = button.getAttribute('data-filter') || 'all';
+    certCurrentPage = 1;
+    saveCertViewPrefs();
+    refreshCertFilterChips();
+    renderCertificateTable();
+});
+
+document.getElementById('certPageSize').addEventListener('change', event => {
+    certPageSize = Math.max(1, Number(event.target.value) || 20);
+    certCurrentPage = 1;
+    saveCertViewPrefs();
+    renderCertificateTable();
+});
+
+document.getElementById('certPrevPage').addEventListener('click', () => {
+    if (certCurrentPage <= 1) return;
+    certCurrentPage -= 1;
+    renderCertificateTable();
+});
+
+document.getElementById('certNextPage').addEventListener('click', () => {
+    certCurrentPage += 1;
+    renderCertificateTable();
+});
+
+document.getElementById('toggleUptimeDetails').addEventListener('click', () => {
+    const panel = document.getElementById('uptimeDetails');
+    const button = document.getElementById('toggleUptimeDetails');
+    const hidden = panel.classList.toggle('is-hidden');
+    button.innerHTML = hidden
+        ? '<i class="fas fa-table me-1"></i> Show base station breakdown'
+        : '<i class="fas fa-eye-slash me-1"></i> Hide base station breakdown';
+});
+
 document.getElementById('certificates-tab').addEventListener('shown.bs.tab', function() {
     loadCertificatesTab();
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    loadBsViewPrefs();
+    loadCertViewPrefs();
+    applyUptimeSourceMode();
+    document.getElementById('uptimeSourceSelect').value = bsUptimeSource;
+    bsPageSize = Math.max(1, Number(document.getElementById('bsPageSize').value) || 20);
+    certPageSize = Math.max(1, Number(document.getElementById('certPageSize').value) || 20);
     loadBaseStations();
     loadUptimeChart();
+    loadCertificatesTab();
     refreshInterval = setInterval(() => {
         loadBaseStations();
         loadUptimeChart();
@@ -877,5 +2210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 {% endblock %}
+
+
 
 

@@ -2,15 +2,87 @@
 {% block title %}Configuration{% endblock %}
 
 {% block content %}
-<h1>Configuration</h1>
+<style>
+.config-shell { display: grid; gap: 0.9rem; }
+.config-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.8rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid #d5deeb;
+    border-radius: 0.95rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+.config-kicker {
+    margin: 0;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #5f7088;
+    font-weight: 800;
+}
+.config-title {
+    margin: 0.18rem 0 0;
+    font-family: "Sora", "Manrope", sans-serif;
+    font-size: 1.24rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+.config-subtitle {
+    margin: 0.26rem 0 0;
+    font-size: 0.79rem;
+    color: #5f7088;
+}
+.config-tabbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0.62rem 0.72rem;
+    border-bottom: 1px solid #dce5f2;
+    background: #f8fbff;
+}
+.config-tabbar .btn {
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.34rem 0.7rem;
+}
+.config-tabbar .btn.active {
+    color: #fff;
+    border-color: #1f3b63;
+    background: linear-gradient(145deg, #1f3b63 0%, #2f5a92 100%);
+    box-shadow: 0 8px 14px rgba(31, 59, 99, 0.26);
+}
+@media (max-width: 991.98px) {
+    .config-head { flex-direction: column; }
+}
+</style>
+
+<div class="config-shell">
+<div class="config-head">
+    <div>
+        <p class="config-kicker">System Setup</p>
+        <h2 class="config-title">Configuration</h2>
+        <p class="config-subtitle">Nastavenia su rozdelene do zaloziek pre rychlu orientaciu.</p>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="saveConfig()"><i class="fas fa-save"></i> Save Configuration</button>
+</div>
 
 <div class="card">
     <div class="card-header">
-        <h5>MQTT and Server Settings</h5>
+        <h5 class="mb-0">Service Center Settings</h5>
     </div>
     <div class="card-body">
+        <div class="config-tabbar" id="configTabbar">
+            <button type="button" class="btn btn-outline-secondary active" data-config-tab-btn="general"><i class="fas fa-server me-1"></i>General</button>
+            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="policy"><i class="fas fa-unlink me-1"></i>Auto-Detach</button>
+            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="influx"><i class="fas fa-database me-1"></i>InfluxDB</button>
+            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="maintenance"><i class="fas fa-tools me-1"></i>Maintenance</button>
+        </div>
         <form id="configForm">
-            <div class="row">
+            <div class="row mt-3" id="configSectionGeneral">
                 <div class="col-md-6">
                     <h6>Server Configuration</h6>
                     <div class="mb-3">
@@ -72,8 +144,8 @@
                 </div>
             </div>
 
-            <div class="row mt-4">
-                <div class="col-md-6">
+            <div class="row mt-4 d-none" id="configSectionRowTwo">
+                <div class="col-md-6" id="configSectionPolicy">
                     <h5>Auto-Detach Configuration</h5>
                     <div class="mb-3">
                         <div class="form-check">
@@ -104,7 +176,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6" id="configSectionUpdates">
                     <h5>System Updates</h5>
                     <div class="card">
                         <div class="card-body">
@@ -113,7 +185,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <button type="button" class="btn btn-info btn-sm" onclick="checkForUpdates()">
+                                <button type="button" class="btn btn-info btn-sm" onclick="checkForUpdates(this)">
                                     <i class="fas fa-sync-alt"></i> Check for Updates
                                 </button>
                                 <button type="button" class="btn btn-success btn-sm ms-2" id="updateBtn" onclick="performUpdate()" disabled>
@@ -139,16 +211,111 @@
                 </div>
             </div>
 
-            <div class="mt-3">
+            <div class="row mt-4 d-none" id="configSectionInflux">
+                <div class="col-12">
+                    <h5>InfluxDB Telemetry</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="TELEMETRY_SOURCE" class="form-label">Telemetry Source</label>
+                                    <select class="form-control" id="TELEMETRY_SOURCE">
+                                        <option value="auto" {% if config.TELEMETRY_SOURCE == 'auto' %}selected{% endif %}>Auto</option>
+                                        <option value="runtime" {% if config.TELEMETRY_SOURCE == 'runtime' %}selected{% endif %}>Runtime</option>
+                                        <option value="influx" {% if config.TELEMETRY_SOURCE == 'influx' %}selected{% endif %}>InfluxDB</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="INFLUXDB_URL" class="form-label">Influx URL</label>
+                                    <input type="text" class="form-control" id="INFLUXDB_URL" value="{{ config.INFLUXDB_URL }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="INFLUXDB_ORG" class="form-label">Org</label>
+                                    <input type="text" class="form-control" id="INFLUXDB_ORG" value="{{ config.INFLUXDB_ORG }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="INFLUXDB_BUCKET" class="form-label">Bucket</label>
+                                    <input type="text" class="form-control" id="INFLUXDB_BUCKET" value="{{ config.INFLUXDB_BUCKET }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="INFLUXDB_VERIFY_SSL" class="form-label">TLS Verify</label>
+                                    <select class="form-control" id="INFLUXDB_VERIFY_SSL">
+                                        <option value="true" {% if config.INFLUXDB_VERIFY_SSL %}selected{% endif %}>true</option>
+                                        <option value="false" {% if not config.INFLUXDB_VERIFY_SSL %}selected{% endif %}>false</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-8">
+                                    <label for="INFLUXDB_TOKEN" class="form-label">Token</label>
+                                    <input type="password" class="form-control" id="INFLUXDB_TOKEN" value="{{ config.INFLUXDB_TOKEN }}">
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-primary w-100" onclick="syncInfluxNow()">
+                                        <i class="fas fa-upload"></i> Sync Inventory to Influx Now
+                                    </button>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="INFLUX_INVENTORY_MEASUREMENT" class="form-label">Inventory Events Measurement</label>
+                                    <input type="text" class="form-control" id="INFLUX_INVENTORY_MEASUREMENT" value="{{ config.INFLUX_INVENTORY_MEASUREMENT }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="INFLUX_INVENTORY_WRITE_ENABLED" class="form-label">CRUD Events</label>
+                                    <select class="form-control" id="INFLUX_INVENTORY_WRITE_ENABLED">
+                                        <option value="true" {% if config.INFLUX_INVENTORY_WRITE_ENABLED %}selected{% endif %}>enabled</option>
+                                        <option value="false" {% if not config.INFLUX_INVENTORY_WRITE_ENABLED %}selected{% endif %}>disabled</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="INFLUX_SNAPSHOT_MEASUREMENT" class="form-label">Snapshot Measurement</label>
+                                    <input type="text" class="form-control" id="INFLUX_SNAPSHOT_MEASUREMENT" value="{{ config.INFLUX_SNAPSHOT_MEASUREMENT }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="INFLUX_SNAPSHOT_ENABLED" class="form-label">Snapshot</label>
+                                    <select class="form-control" id="INFLUX_SNAPSHOT_ENABLED">
+                                        <option value="true" {% if config.INFLUX_SNAPSHOT_ENABLED %}selected{% endif %}>enabled</option>
+                                        <option value="false" {% if not config.INFLUX_SNAPSHOT_ENABLED %}selected{% endif %}>disabled</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="INFLUX_SNAPSHOT_INTERVAL_SECONDS" class="form-label">Snapshot Interval (sec)</label>
+                                    <input type="number" min="15" class="form-control" id="INFLUX_SNAPSHOT_INTERVAL_SECONDS" value="{{ config.INFLUX_SNAPSHOT_INTERVAL_SECONDS }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="INFLUX_UPTIME_MEASUREMENT" class="form-label">Uptime Measurement</label>
+                                    <input type="text" class="form-control" id="INFLUX_UPTIME_MEASUREMENT" value="{{ config.INFLUX_UPTIME_MEASUREMENT }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="INFLUX_UPTIME_FIELD" class="form-label">Uptime Field</label>
+                                    <input type="text" class="form-control" id="INFLUX_UPTIME_FIELD" value="{{ config.INFLUX_UPTIME_FIELD }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="INFLUX_UPTIME_EUI_TAG" class="form-label">Uptime EUI Tag</label>
+                                    <input type="text" class="form-control" id="INFLUX_UPTIME_EUI_TAG" value="{{ config.INFLUX_UPTIME_EUI_TAG }}">
+                                </div>
+                                <div class="col-12">
+                                    <label for="INFLUX_UPTIME_QUERY" class="form-label">Custom Uptime Flux Query (optional)</label>
+                                    <textarea class="form-control" id="INFLUX_UPTIME_QUERY" rows="3">{{ config.INFLUX_UPTIME_QUERY }}</textarea>
+                                    <div class="form-text">If empty, default uptime query is generated automatically.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3 d-none" id="configSectionActions">
                 <button type="button" class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
-                <button type="button" class="btn btn-warning ms-2" onclick="restartService()">Restart Service</button>
-                <button type="button" class="btn btn-danger ms-2" onclick="restartContainer()">Restart Container</button>
+                <button type="button" class="btn btn-warning ms-2" onclick="restartService(event)">Restart Service</button>
+                <button type="button" class="btn btn-danger ms-2" onclick="restartContainer(event)">Restart Container</button>
                 <div class="alert alert-warning mt-3">
                     <small><strong>Note:</strong> Configuration changes require a restart to take effect. Use "Restart Service" for quick process restart, or "Restart Container" for full environment reload (recommended after changing MQTT credentials or other .env variables).</small>
                 </div>
-            </div></div>
+            </div>
         </form>
     </div>
+</div>
 </div>
 {% endblock %}
 
@@ -169,7 +336,22 @@ function saveConfig() {
         AUTO_DETACH_TIMEOUT: parseInt(document.getElementById('AUTO_DETACH_TIMEOUT').value) * 3600,
         AUTO_DETACH_WARNING_TIMEOUT: parseInt(document.getElementById('AUTO_DETACH_WARNING_TIMEOUT').value) * 3600,
         AUTO_DETACH_CHECK_INTERVAL: parseInt(document.getElementById('AUTO_DETACH_CHECK_INTERVAL').value) * 3600,
-        TIMEZONE: document.getElementById('TIMEZONE').value
+        TIMEZONE: document.getElementById('TIMEZONE').value,
+        TELEMETRY_SOURCE: document.getElementById('TELEMETRY_SOURCE').value,
+        INFLUXDB_URL: document.getElementById('INFLUXDB_URL').value,
+        INFLUXDB_ORG: document.getElementById('INFLUXDB_ORG').value,
+        INFLUXDB_BUCKET: document.getElementById('INFLUXDB_BUCKET').value,
+        INFLUXDB_TOKEN: document.getElementById('INFLUXDB_TOKEN').value,
+        INFLUXDB_VERIFY_SSL: document.getElementById('INFLUXDB_VERIFY_SSL').value === 'true',
+        INFLUX_UPTIME_MEASUREMENT: document.getElementById('INFLUX_UPTIME_MEASUREMENT').value,
+        INFLUX_UPTIME_FIELD: document.getElementById('INFLUX_UPTIME_FIELD').value,
+        INFLUX_UPTIME_EUI_TAG: document.getElementById('INFLUX_UPTIME_EUI_TAG').value,
+        INFLUX_UPTIME_QUERY: document.getElementById('INFLUX_UPTIME_QUERY').value,
+        INFLUX_INVENTORY_WRITE_ENABLED: document.getElementById('INFLUX_INVENTORY_WRITE_ENABLED').value === 'true',
+        INFLUX_INVENTORY_MEASUREMENT: document.getElementById('INFLUX_INVENTORY_MEASUREMENT').value,
+        INFLUX_SNAPSHOT_ENABLED: document.getElementById('INFLUX_SNAPSHOT_ENABLED').value === 'true',
+        INFLUX_SNAPSHOT_INTERVAL_SECONDS: parseInt(document.getElementById('INFLUX_SNAPSHOT_INTERVAL_SECONDS').value),
+        INFLUX_SNAPSHOT_MEASUREMENT: document.getElementById('INFLUX_SNAPSHOT_MEASUREMENT').value
     };
 
     fetch('/api/config', {
@@ -192,9 +374,32 @@ function saveConfig() {
     });
 }
 
-function restartService() {
+function syncInfluxNow() {
+    fetch('/api/influx/sync-inventory', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert(`Influx sync OK: ${result.line_count} points written (${result.sensor_points} sensors, ${result.base_station_points} base stations).`);
+        } else {
+            alert('Influx sync failed: ' + (result.message || result.error || 'unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Influx sync error: ' + error);
+    });
+}
+
+function restartService(evt) {
     if (confirm('Are you sure you want to restart the BSSCI service? This will briefly interrupt connections.')) {
-        const button = event.target;
+        const button = (evt && (evt.currentTarget || evt.target)) || null;
+        if (!button) {
+            return;
+        }
         const originalText = button.textContent;
         button.disabled = true;
         button.textContent = 'Restarting...';
@@ -223,9 +428,12 @@ function restartService() {
     }
 }
 
-function restartContainer() {
+function restartContainer(evt) {
     if (confirm('Are you sure you want to restart the entire container? This will fully restart the application and reload all environment variables. The service will be unavailable for about 10-15 seconds.')) {
-        const button = event.target;
+        const button = (evt && (evt.currentTarget || evt.target)) || null;
+        if (!button) {
+            return;
+        }
         const originalText = button.textContent;
         button.disabled = true;
         button.textContent = 'Restarting Container...';
@@ -330,8 +538,10 @@ function displayVersionInfo(data) {
     }
 }
 
-function checkForUpdates() {
-    const button = event.target;
+function checkForUpdates(button) {
+    if (!button) {
+        return;
+    }
     const originalText = button.innerHTML;
     button.disabled = true;
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
@@ -436,9 +646,108 @@ function restartSystemAfterUpdate() {
     });
 }
 
+function applyConfigTab(tabName) {
+    const configTab = tabName || 'general';
+    const sectionGeneral = document.getElementById('configSectionGeneral');
+    const sectionRowTwo = document.getElementById('configSectionRowTwo');
+    const sectionPolicy = document.getElementById('configSectionPolicy');
+    const sectionUpdates = document.getElementById('configSectionUpdates');
+    const sectionInflux = document.getElementById('configSectionInflux');
+    const sectionActions = document.getElementById('configSectionActions');
+
+    [sectionGeneral, sectionRowTwo, sectionPolicy, sectionUpdates, sectionInflux, sectionActions]
+        .filter(Boolean)
+        .forEach(el => el.classList.add('d-none'));
+
+    if (sectionPolicy) {
+        sectionPolicy.classList.remove('col-12');
+        sectionPolicy.classList.add('col-md-6');
+    }
+    if (sectionUpdates) {
+        sectionUpdates.classList.remove('col-12');
+        sectionUpdates.classList.add('col-md-6');
+    }
+
+    if (configTab === 'general') {
+        if (sectionGeneral) {
+            sectionGeneral.classList.remove('d-none');
+        }
+        return;
+    }
+
+    if (configTab === 'policy') {
+        if (sectionRowTwo) {
+            sectionRowTwo.classList.remove('d-none');
+        }
+        if (sectionPolicy) {
+            sectionPolicy.classList.remove('d-none');
+        }
+        if (sectionPolicy) {
+            sectionPolicy.classList.remove('col-md-6');
+            sectionPolicy.classList.add('col-12');
+        }
+        return;
+    }
+
+    if (configTab === 'influx') {
+        if (sectionInflux) {
+            sectionInflux.classList.remove('d-none');
+        }
+        return;
+    }
+
+    if (configTab === 'maintenance') {
+        if (sectionRowTwo) {
+            sectionRowTwo.classList.remove('d-none');
+        }
+        if (sectionUpdates) {
+            sectionUpdates.classList.remove('d-none');
+        }
+        if (sectionActions) {
+            sectionActions.classList.remove('d-none');
+        }
+        if (sectionUpdates) {
+            sectionUpdates.classList.remove('col-md-6');
+            sectionUpdates.classList.add('col-12');
+        }
+        return;
+    }
+}
+
+function switchConfigTab(tabName) {
+    const allowedTabs = ['general', 'policy', 'influx', 'maintenance'];
+    const nextTab = allowedTabs.includes(tabName) ? tabName : 'general';
+    document.querySelectorAll('[data-config-tab-btn]').forEach(btn => {
+        const isActive = btn.getAttribute('data-config-tab-btn') === nextTab;
+        btn.classList.toggle('active', isActive);
+    });
+    applyConfigTab(nextTab);
+    try {
+        localStorage.setItem('config_active_tab_v1', nextTab);
+    } catch (err) {
+        console.debug('Unable to persist config tab:', err);
+    }
+}
+
+function initConfigTabs() {
+    document.querySelectorAll('[data-config-tab-btn]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchConfigTab(btn.getAttribute('data-config-tab-btn'));
+        });
+    });
+    let savedTab = 'general';
+    try {
+        savedTab = localStorage.getItem('config_active_tab_v1') || 'general';
+    } catch (err) {
+        console.debug('Unable to load persisted config tab:', err);
+    }
+    switchConfigTab(savedTab);
+}
+
 // Load version info when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadVersionInfo();
+    initConfigTabs();
 });
 </script>
 {% endblock %}

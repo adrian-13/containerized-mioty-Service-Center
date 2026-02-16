@@ -3,6 +3,10 @@
         "eui": "00124B001CBCE171",
         "nwKey": "08596059015260490152709608136098",
         "shortAddr": "A171",
-        "bidi": false
+        "bidi": false,
+        "name": "Testovac\u00ed senzor",
+        "tags": [
+            "test"
+        ]
     }
 ]

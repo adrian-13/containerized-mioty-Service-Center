@@ -2,6 +2,7 @@ import csv
 import io
 import json
 import logging
+import math
 import os
 import re
 import subprocess
@@ -10,8 +11,11 @@ import threading
 import time
 import tempfile
 import zipfile
+import urllib.parse
+import urllib.request
+import ssl
 from datetime import datetime, timezone, timedelta
-from flask import Flask, render_template, request, jsonify, redirect, url_for, Response, session, send_file
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Response, session, send_file, has_request_context
 from functools import wraps
 from typing import List, Dict, Any
 import bssci_config
@@ -22,6 +26,8 @@ tls_server_instance = None
 # Uptime tracking
 bs_uptime_events = {}
 _last_known_bs_status = {}
+_influx_snapshot_thread = None
+_influx_snapshot_stop = threading.Event()
 
 def record_bs_event(eui, event_type):
     eui = eui.lower()
@@ -45,8 +51,565 @@ def _track_bs_status_changes(current_statuses):
                 record_bs_event(eui, "disconnected")
     _last_known_bs_status = dict(current_statuses)
 
+def _normalize_uptime_event(value):
+    """Normalize various event/status payloads to connected/disconnected."""
+    raw = str(value or "").strip().lower()
+    if raw in {"connected", "connect", "up", "online", "true", "1"}:
+        return "connected"
+    if raw in {"disconnected", "disconnect", "down", "offline", "false", "0"}:
+        return "disconnected"
+    return raw
+
+def _extract_influx_uptime_events(csv_text):
+    """
+    Parse Influx CSV output into {eui: [{event, timestamp}, ...]}.
+    Accepts common column names:
+      - time: _time|time|timestamp
+      - eui: eui|bs_eui|base_station|base_station_eui|gateway|host
+      - event: event|status|_value|value
+    """
+    lines = []
+    for line in csv_text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#'):
+            continue
+        lines.append(line)
+    if not lines:
+        return {}
+
+    reader = csv.DictReader(io.StringIO("\n".join(lines)))
+    result = {}
+
+    for row in reader:
+        time_value = (
+            row.get("_time")
+            or row.get("time")
+            or row.get("timestamp")
+            or ""
+        ).strip()
+        eui_value = (
+            row.get("eui")
+            or row.get("bs_eui")
+            or row.get("base_station")
+            or row.get("base_station_eui")
+            or row.get("gateway")
+            or row.get("host")
+            or ""
+        ).strip().lower()
+        event_value = (
+            row.get("event")
+            or row.get("status")
+            or row.get("_value")
+            or row.get("value")
+            or ""
+        ).strip()
+
+        if not eui_value or not time_value or not event_value:
+            continue
+
+        normalized = _normalize_uptime_event(event_value)
+        if normalized not in {"connected", "disconnected"}:
+            continue
+
+        result.setdefault(eui_value, []).append({
+            "event": normalized,
+            "timestamp": time_value
+        })
+
+    for eui in list(result.keys()):
+        result[eui].sort(key=lambda item: item.get("timestamp", ""))
+    return result
+
+def _build_default_influx_uptime_query():
+    bucket = bssci_config.INFLUXDB_BUCKET
+    measurement = bssci_config.INFLUX_UPTIME_MEASUREMENT
+    field = bssci_config.INFLUX_UPTIME_FIELD
+    eui_tag = bssci_config.INFLUX_UPTIME_EUI_TAG
+    if not bucket:
+        return ""
+
+    # Query expects event/status value in _value and eui in tag column.
+    return (
+        f'from(bucket: "{bucket}")\n'
+        f'  |> range(start: -24h)\n'
+        f'  |> filter(fn: (r) => r._measurement == "{measurement}")\n'
+        f'  |> filter(fn: (r) => r._field == "{field}")\n'
+        f'  |> keep(columns: ["_time", "_value", "{eui_tag}"])\n'
+        f'  |> rename(columns: {{"{eui_tag}": "eui"}})\n'
+        f'  |> sort(columns: ["_time"])'
+    )
+
+def _get_influx_uptime_events():
+    """
+    Returns dict:
+      {
+        success: bool,
+        uptime_events: {...},
+        source: str,
+        error?: str
+      }
+    """
+    influx_url = bssci_config.INFLUXDB_URL.rstrip("/")
+    influx_org = bssci_config.INFLUXDB_ORG
+    influx_token = bssci_config.INFLUXDB_TOKEN
+
+    if not influx_url or not influx_org or not influx_token:
+        return {
+            "success": False,
+            "source": "influxdb",
+            "error": "InfluxDB configuration is incomplete (URL/ORG/TOKEN)."
+        }
+
+    flux_query = bssci_config.INFLUX_UPTIME_QUERY or _build_default_influx_uptime_query()
+    if not flux_query:
+        return {
+            "success": False,
+            "source": "influxdb",
+            "error": "No Influx uptime query configured (bucket/query missing)."
+        }
+
+    query_url = f"{influx_url}/api/v2/query?org={urllib.parse.quote(influx_org)}"
+    req = urllib.request.Request(
+        query_url,
+        method="POST",
+        data=flux_query.encode("utf-8"),
+        headers={
+            "Authorization": f"Token {influx_token}",
+            "Content-Type": "application/vnd.flux",
+            "Accept": "application/csv",
+        }
+    )
+
+    ssl_ctx = None
+    if not bssci_config.INFLUXDB_VERIFY_SSL:
+        ssl_ctx = ssl._create_unverified_context()
+
+    try:
+        with urllib.request.urlopen(req, context=ssl_ctx, timeout=8) as response:
+            payload = response.read().decode("utf-8", errors="ignore")
+        events = _extract_influx_uptime_events(payload)
+        return {
+            "success": True,
+            "source": "influxdb",
+            "uptime_events": events
+        }
+    except Exception as exc:
+        return {
+            "success": False,
+            "source": "influxdb",
+            "error": str(exc)
+        }
+
+def _influx_write_is_ready():
+    return bool(
+        bssci_config.INFLUXDB_URL
+        and bssci_config.INFLUXDB_ORG
+        and bssci_config.INFLUXDB_BUCKET
+        and bssci_config.INFLUXDB_TOKEN
+    )
+
+def _lp_escape_measurement(value):
+    return str(value).replace("\\", "\\\\").replace(",", "\\,").replace(" ", "\\ ")
+
+def _lp_escape_tag(value):
+    return (
+        str(value)
+        .replace("\\", "\\\\")
+        .replace(",", "\\,")
+        .replace(" ", "\\ ")
+        .replace("=", "\\=")
+    )
+
+def _lp_escape_field_key(value):
+    return str(value).replace("\\", "\\\\").replace(",", "\\,").replace(" ", "\\ ").replace("=", "\\=")
+
+def _lp_encode_field_value(value):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return f"{value}i"
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            return None
+        return repr(value)
+    if value is None:
+        return None
+    escaped = str(value).replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+def _build_influx_line(measurement, tags, fields, timestamp_ns=None):
+    line = _lp_escape_measurement(measurement)
+
+    tag_parts = []
+    for key, value in (tags or {}).items():
+        if value is None:
+            continue
+        tag_parts.append(f"{_lp_escape_tag(key)}={_lp_escape_tag(value)}")
+    if tag_parts:
+        line += "," + ",".join(tag_parts)
+
+    field_parts = []
+    for key, value in (fields or {}).items():
+        encoded = _lp_encode_field_value(value)
+        if encoded is None:
+            continue
+        field_parts.append(f"{_lp_escape_field_key(key)}={encoded}")
+    if not field_parts:
+        return None
+
+    line += " " + ",".join(field_parts)
+    if timestamp_ns is not None:
+        line += f" {int(timestamp_ns)}"
+    return line
+
+def _write_influx_lines(lines):
+    if not _influx_write_is_ready():
+        return False, "InfluxDB write config missing (URL/ORG/BUCKET/TOKEN)."
+    if not lines:
+        return False, "No line protocol payload to write."
+
+    influx_url = bssci_config.INFLUXDB_URL.rstrip("/")
+    write_url = (
+        f"{influx_url}/api/v2/write"
+        f"?org={urllib.parse.quote(bssci_config.INFLUXDB_ORG)}"
+        f"&bucket={urllib.parse.quote(bssci_config.INFLUXDB_BUCKET)}"
+        "&precision=ns"
+    )
+    payload = "\n".join(lines).encode("utf-8")
+    req = urllib.request.Request(
+        write_url,
+        method="POST",
+        data=payload,
+        headers={
+            "Authorization": f"Token {bssci_config.INFLUXDB_TOKEN}",
+            "Content-Type": "text/plain; charset=utf-8",
+            "Accept": "application/json",
+        }
+    )
+
+    ssl_ctx = None
+    if not bssci_config.INFLUXDB_VERIFY_SSL:
+        ssl_ctx = ssl._create_unverified_context()
+
+    try:
+        with urllib.request.urlopen(req, context=ssl_ctx, timeout=5):
+            pass
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+
+def _sanitize_inventory_field_key(key):
+    sanitized = re.sub(r"[^a-zA-Z0-9_]", "_", str(key or "").strip())
+    sanitized = re.sub(r"_+", "_", sanitized).strip("_").lower()
+    return sanitized
+
+def _normalize_inventory_fields(data):
+    normalized = {}
+    for key, value in (data or {}).items():
+        field_key = _sanitize_inventory_field_key(key)
+        if not field_key:
+            continue
+        if isinstance(value, (dict, list)):
+            normalized[field_key] = json.dumps(value, separators=(",", ":"), ensure_ascii=True)
+        elif isinstance(value, (str, int, float, bool)) or value is None:
+            normalized[field_key] = value
+        else:
+            normalized[field_key] = str(value)
+    return normalized
+
+def _record_inventory_event(entity, action, eui, data=None):
+    if not bssci_config.INFLUX_INVENTORY_WRITE_ENABLED:
+        return False, "Inventory writes disabled."
+
+    measurement = bssci_config.INFLUX_INVENTORY_MEASUREMENT or "bssci_inventory_events"
+    event_time_ns = int(time.time() * 1_000_000_000)
+    actor = session.get("username", "system") if has_request_context() else "system"
+
+    tags = {
+        "entity": str(entity or "").lower(),
+        "action": str(action or "").lower(),
+        "eui": str(eui or "").lower(),
+        "actor": actor,
+        "source": "service_center_ui",
+    }
+    fields = {
+        "event": f"{entity}_{action}",
+        "has_payload": bool(data),
+        "payload_size": len(json.dumps(data, ensure_ascii=True)) if data is not None else 0,
+    }
+    fields.update(_normalize_inventory_fields(data))
+
+    line = _build_influx_line(measurement, tags, fields, event_time_ns)
+    if not line:
+        return False, "Failed to construct line protocol payload."
+    return _write_influx_lines([line])
+
+def _try_record_inventory_event(entity, action, eui, data=None):
+    ok, err = _record_inventory_event(entity, action, eui, data=data)
+    if not ok and err:
+        err_lower = err.lower()
+        if "disabled" in err_lower or "config missing" in err_lower:
+            return ok, err
+        logger.warning("Influx inventory write failed for %s %s %s: %s", entity, action, eui, err)
+    return ok, err
+
+def _sensor_runtime_snapshot_by_eui():
+    """Build lightweight runtime map for sensors from TLS server structures."""
+    snapshot = {}
+    global tls_server_instance
+    tls_server = tls_server_instance
+    if not tls_server:
+        return snapshot
+
+    try:
+        packet_stats = getattr(tls_server, "sensor_packet_stats", {}) or {}
+        for eui_upper, stats in packet_stats.items():
+            eui = str(eui_upper or "").strip().upper()
+            if not eui:
+                continue
+            snr_count = int(stats.get("snr_count", 0) or 0)
+            rssi_count = int(stats.get("rssi_count", 0) or 0)
+            avg_snr = (stats.get("snr_sum", 0.0) / snr_count) if snr_count > 0 else None
+            avg_rssi = (stats.get("rssi_sum", 0.0) / rssi_count) if rssi_count > 0 else None
+            snapshot[eui] = {
+                "packets_received": int(stats.get("packets_received", 0) or 0),
+                "packets_lost": int(stats.get("packets_lost", 0) or 0),
+                "last_seen": float(stats.get("last_seen", 0) or 0),
+                "avg_snr": avg_snr,
+                "avg_rssi": avg_rssi,
+            }
+    except Exception:
+        pass
+
+    return snapshot
+
+def _base_station_runtime_snapshot_by_eui():
+    """Build runtime map for base station states."""
+    result = {}
+    global tls_server_instance
+    tls_server = tls_server_instance
+    if not tls_server:
+        return result
+
+    try:
+        connected_map = getattr(tls_server, "connected_base_stations", {}) or {}
+        for _, bs_eui in list(connected_map.items()):
+            eui = str(bs_eui or "").strip().lower()
+            if eui:
+                result[eui] = {"status": "connected"}
+    except Exception:
+        pass
+
+    try:
+        connecting_map = getattr(tls_server, "connecting_base_stations", {}) or {}
+        for _, bs_eui in list(connecting_map.items()):
+            eui = str(bs_eui or "").strip().lower()
+            if not eui:
+                continue
+            if eui not in result:
+                result[eui] = {"status": "connecting"}
+    except Exception:
+        pass
+
+    try:
+        health = getattr(tls_server, "base_station_health", {}) or {}
+        for eui, metrics in health.items():
+            key = str(eui or "").strip().lower()
+            if not key:
+                continue
+            result.setdefault(key, {})
+            result[key].update({
+                "cpu_load": metrics.get("cpuLoad"),
+                "mem_load": metrics.get("memLoad"),
+                "duty_cycle": metrics.get("dutyCycle"),
+                "uptime": metrics.get("uptime"),
+            })
+    except Exception:
+        pass
+
+    return result
+
+def _build_inventory_snapshot_lines(trigger):
+    """Create line protocol rows for all configured sensors and base stations."""
+    measurement = bssci_config.INFLUX_SNAPSHOT_MEASUREMENT or "bssci_inventory_snapshot"
+    timestamp_ns = int(time.time() * 1_000_000_000)
+    lines = []
+
+    # Sensors from config
+    sensors = []
+    try:
+        with open(bssci_config.SENSOR_CONFIG_FILE, "r") as f:
+            sensors = json.load(f) or []
+    except Exception:
+        sensors = []
+
+    runtime_sensor_map = _sensor_runtime_snapshot_by_eui()
+    runtime_registered = set()
+    try:
+        global tls_server_instance
+        tls_server = tls_server_instance
+        if tls_server and hasattr(tls_server, "registered_sensors"):
+            runtime_registered = {str(k).upper() for k in tls_server.registered_sensors.keys()}
+    except Exception:
+        runtime_registered = set()
+
+    for sensor in sensors:
+        eui = str(sensor.get("eui", "")).strip().upper()
+        if not eui:
+            continue
+        runtime = runtime_sensor_map.get(eui, {})
+        packets_received = int(runtime.get("packets_received", 0) or 0)
+        packets_lost = int(runtime.get("packets_lost", 0) or 0)
+        line = _build_influx_line(
+            measurement,
+            {
+                "entity": "sensor",
+                "eui": eui.lower(),
+                "trigger": trigger,
+            },
+            {
+                "configured": True,
+                "registered": eui in runtime_registered,
+                "bidi": bool(sensor.get("bidi", False)),
+                "name": str(sensor.get("name", "") or ""),
+                "short_addr": str(sensor.get("shortAddr", "") or ""),
+                "tags_json": json.dumps(_normalize_sensor_tags(sensor.get("tags", [])), separators=(",", ":"), ensure_ascii=True),
+                "tags_count": len(_normalize_sensor_tags(sensor.get("tags", []))),
+                "packets_received": packets_received,
+                "packets_lost": packets_lost,
+                "packet_loss_pct": (packets_lost / (packets_received + packets_lost) * 100.0) if (packets_received + packets_lost) > 0 else 0.0,
+                "avg_snr": runtime.get("avg_snr"),
+                "avg_rssi": runtime.get("avg_rssi"),
+                "last_seen_ts": int(runtime.get("last_seen", 0) or 0),
+            },
+            timestamp_ns
+        )
+        if line:
+            lines.append(line)
+
+    # Base stations from config
+    bs_config = load_base_station_config().get("base_stations", {})
+    bs_runtime_map = _base_station_runtime_snapshot_by_eui()
+
+    # Count sensors per base station from registration table
+    connected_sensors_per_bs = {}
+    try:
+        tls_server = tls_server_instance
+        if tls_server and hasattr(tls_server, "registered_sensors"):
+            for _, reg_data in (tls_server.registered_sensors or {}).items():
+                for reg in reg_data.get("registrations", []) or []:
+                    bs_eui = str(reg.get("bsEui", "")).strip().lower()
+                    if bs_eui:
+                        connected_sensors_per_bs[bs_eui] = connected_sensors_per_bs.get(bs_eui, 0) + 1
+    except Exception:
+        connected_sensors_per_bs = {}
+
+    for eui, bs_data in (bs_config or {}).items():
+        eui_lower = str(eui or "").strip().lower()
+        if not eui_lower:
+            continue
+        runtime = bs_runtime_map.get(eui_lower, {})
+        status = runtime.get("status", "disconnected")
+
+        line = _build_influx_line(
+            measurement,
+            {
+                "entity": "base_station",
+                "eui": eui_lower,
+                "trigger": trigger,
+                "status": status,
+            },
+            {
+                "configured": True,
+                "name": str(bs_data.get("name", "") or ""),
+                "ip": str(bs_data.get("ip", "") or ""),
+                "tags_json": json.dumps(bs_data.get("tags", []), separators=(",", ":"), ensure_ascii=True),
+                "connected": status == "connected",
+                "connecting": status == "connecting",
+                "connected_sensors": int(connected_sensors_per_bs.get(eui_lower, 0)),
+                "cpu_load": runtime.get("cpu_load"),
+                "mem_load": runtime.get("mem_load"),
+                "duty_cycle": runtime.get("duty_cycle"),
+                "uptime": int(runtime.get("uptime", 0) or 0),
+            },
+            timestamp_ns
+        )
+        if line:
+            lines.append(line)
+
+    return lines
+
+def _sync_inventory_snapshot_to_influx(trigger="manual"):
+    lines = _build_inventory_snapshot_lines(trigger=trigger)
+    sensor_count = sum(1 for line in lines if ",entity=sensor," in line)
+    bs_count = sum(1 for line in lines if ",entity=base_station," in line)
+    ok, err = _write_influx_lines(lines)
+    return {
+        "success": ok,
+        "error": err,
+        "trigger": trigger,
+        "line_count": len(lines),
+        "sensor_points": sensor_count,
+        "base_station_points": bs_count,
+    }
+
+def _influx_snapshot_worker():
+    logger.info("Influx snapshot worker started")
+    # Initial snapshot shortly after startup
+    time.sleep(3)
+    while not _influx_snapshot_stop.is_set():
+        interval = max(15, int(getattr(bssci_config, "INFLUX_SNAPSHOT_INTERVAL_SECONDS", 60)))
+        enabled = bool(getattr(bssci_config, "INFLUX_SNAPSHOT_ENABLED", True))
+        if enabled:
+            result = _sync_inventory_snapshot_to_influx(trigger="interval")
+            if not result.get("success") and result.get("error"):
+                err = str(result.get("error", "")).lower()
+                if "config missing" not in err:
+                    logger.warning("Periodic Influx snapshot failed: %s", result.get("error"))
+        _influx_snapshot_stop.wait(interval)
+    logger.info("Influx snapshot worker stopped")
+
+def _ensure_influx_snapshot_worker_started():
+    global _influx_snapshot_thread
+    if _influx_snapshot_thread and _influx_snapshot_thread.is_alive():
+        return
+    _influx_snapshot_stop.clear()
+    _influx_snapshot_thread = threading.Thread(target=_influx_snapshot_worker, daemon=True)
+    _influx_snapshot_thread.start()
+
 def _validate_eui(eui):
     return bool(re.match(r'^[0-9a-f]{16}$', eui.lower()))
+
+def _normalize_sensor_tags(value):
+    if isinstance(value, list):
+        raw_items = value
+    elif isinstance(value, str):
+        raw_items = re.split(r"[,\|;]", value)
+    else:
+        raw_items = []
+
+    result = []
+    seen = set()
+    for item in raw_items:
+        tag = str(item or "").strip()
+        if not tag:
+            continue
+        tag_key = tag.lower()
+        if tag_key in seen:
+            continue
+        seen.add(tag_key)
+        result.append(tag)
+    return result
+
+def _normalize_sensor_payload(data):
+    payload = dict(data or {})
+    payload["eui"] = str(payload.get("eui", "")).strip().upper()
+    payload["nwKey"] = str(payload.get("nwKey", "")).strip().upper()
+    payload["shortAddr"] = str(payload.get("shortAddr", "0000")).strip().upper() or "0000"
+    payload["bidi"] = bool(payload.get("bidi", False))
+    payload["name"] = str(payload.get("name", "") or "").strip()
+    payload["tags"] = _normalize_sensor_tags(payload.get("tags", []))
+    return payload
 
 def _ensure_ca_exists():
     if os.path.exists('certs/ca_cert.pem') and os.path.exists('certs/ca_key.pem'):
@@ -429,12 +992,16 @@ def get_sensors():
                 
                 # Initialize sensor status from config file
                 for sensor in sensors:
-                    eui = sensor['eui'].upper()
+                    eui = str(sensor.get('eui', '')).upper()
+                    if not eui:
+                        continue
                     sensor_status[eui] = {
-                        'eui': sensor['eui'].upper(),
-                        'nwKey': sensor['nwKey'],
-                        'shortAddr': sensor['shortAddr'],
-                        'bidi': sensor['bidi'],
+                        'eui': eui,
+                        'nwKey': sensor.get('nwKey', ''),
+                        'shortAddr': sensor.get('shortAddr', '0000'),
+                        'bidi': bool(sensor.get('bidi', False)),
+                        'name': sensor.get('name', ''),
+                        'tags': _normalize_sensor_tags(sensor.get('tags', [])),
                         'registered': False,
                         'registration_info': {},
                         'base_stations': [],
@@ -517,11 +1084,11 @@ def get_sensors():
 @login_required
 @permission_required('can_edit_sensors')
 def add_sensor():
-    data = request.json
+    data = _normalize_sensor_payload(request.json or {})
     
     try:
-        # Ensure EUI is uppercase
-        data['eui'] = data['eui'].upper()
+        if not data.get('eui'):
+            return jsonify({'success': False, 'message': 'EUI is required'})
         
         # Step 1: Save directly to endpoints.json
         try:
@@ -546,6 +1113,19 @@ def add_sensor():
         # Save to file
         with open(bssci_config.SENSOR_CONFIG_FILE, 'w') as f:
             json.dump(sensors, f, indent=4)
+
+        _try_record_inventory_event(
+            "sensor",
+            "updated" if sensor_updated else "created",
+            data.get("eui", ""),
+            {
+                "short_addr": data.get("shortAddr", ""),
+                "bidi": bool(data.get("bidi", False)),
+                "nwkey_present": bool(data.get("nwKey")),
+                "name": data.get("name", ""),
+                "tags_count": len(data.get("tags", [])),
+            }
+        )
         
         # Step 2: Notify TLS server to reload config and send attach requests
         global tls_server_instance
@@ -594,11 +1174,24 @@ def delete_sensor(eui):
     except:
         sensors = []
 
+    deleted_sensor = next((s for s in sensors if s.get('eui', '').upper() == eui.upper()), None)
     sensors = [s for s in sensors if s['eui'].upper() != eui.upper()]
 
     try:
         with open(bssci_config.SENSOR_CONFIG_FILE, 'w') as f:
             json.dump(sensors, f, indent=4)
+        _try_record_inventory_event(
+            "sensor",
+            "deleted",
+            eui,
+            {
+                "short_addr": (deleted_sensor or {}).get("shortAddr", ""),
+                "bidi": bool((deleted_sensor or {}).get("bidi", False)),
+                "nwkey_present": bool((deleted_sensor or {}).get("nwKey")),
+                "name": (deleted_sensor or {}).get("name", ""),
+                "tags_count": len(_normalize_sensor_tags((deleted_sensor or {}).get("tags", []))),
+            }
+        )
         return jsonify({'success': True, 'message': 'Sensor deleted successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -872,6 +1465,13 @@ def clear_all_sensors():
         if tls_server and hasattr(tls_server, 'detach_all_sensors_sync'):
             detached_count = tls_server.detach_all_sensors_sync()
 
+        # Get count before clear for telemetry record
+        try:
+            with open(bssci_config.SENSOR_CONFIG_FILE, 'r') as f:
+                existing_sensors = json.load(f)
+        except:
+            existing_sensors = []
+
         # Clear the file
         with open(bssci_config.SENSOR_CONFIG_FILE, 'w') as f:
             json.dump([], f, indent=4)
@@ -879,6 +1479,16 @@ def clear_all_sensors():
         # Also clear from TLS server if available
         if tls_server and hasattr(tls_server, 'clear_all_sensors'):
             tls_server.clear_all_sensors()
+
+        _try_record_inventory_event(
+            "sensor",
+            "cleared",
+            "all",
+            {
+                "count": len(existing_sensors),
+                "detached_count": detached_count
+            }
+        )
 
         message = f'All sensors cleared successfully. Detached {detached_count} sensors from base stations.'
         return jsonify({'success': True, 'message': message})
@@ -921,7 +1531,7 @@ def export_sensors():
         writer = csv.writer(output)
         
         # Write header
-        writer.writerow(['eui', 'nwKey', 'shortAddr', 'bidi'])
+        writer.writerow(['eui', 'nwKey', 'shortAddr', 'bidi', 'name', 'tags'])
         
         # Write sensor data
         for sensor in sensors:
@@ -929,7 +1539,9 @@ def export_sensors():
                 sensor.get('eui', ''),
                 sensor.get('nwKey', ''),
                 sensor.get('shortAddr', ''),
-                'true' if sensor.get('bidi', False) else 'false'
+                'true' if sensor.get('bidi', False) else 'false',
+                sensor.get('name', ''),
+                '|'.join(_normalize_sensor_tags(sensor.get('tags', [])))
             ])
         
         # Create response with CSV file
@@ -980,7 +1592,7 @@ def import_sensors():
         
         # Check if first row is header
         header = rows[0]
-        has_header = any(h.lower() in ['eui', 'nwkey', 'shortaddr', 'bidi', 'network_key', 'short_addr'] for h in header)
+        has_header = any(h.lower() in ['eui', 'nwkey', 'shortaddr', 'bidi', 'network_key', 'short_addr', 'name', 'tags', 'label'] for h in header)
         
         if has_header:
             # Map header columns
@@ -989,10 +1601,13 @@ def import_sensors():
             nwkey_idx = next((i for i, h in enumerate(header_lower) if h in ['nwkey', 'network_key', 'key', 'networkkey']), 1)
             shortaddr_idx = next((i for i, h in enumerate(header_lower) if h in ['shortaddr', 'short_addr', 'shortaddress', 'addr']), 2)
             bidi_idx = next((i for i, h in enumerate(header_lower) if h in ['bidi', 'bidirectional', 'bidir']), 3)
+            name_idx = next((i for i, h in enumerate(header_lower) if h in ['name', 'label', 'title']), None)
+            tags_idx = next((i for i, h in enumerate(header_lower) if h in ['tags', 'tag', 'labels']), None)
             data_rows = rows[1:]
         else:
-            # Assume order: eui, nwKey, shortAddr, bidi
+            # Assume order: eui, nwKey, shortAddr, bidi, name, tags
             eui_idx, nwkey_idx, shortaddr_idx, bidi_idx = 0, 1, 2, 3
+            name_idx, tags_idx = 4, 5
             data_rows = rows
         
         # Load existing sensors
@@ -1019,6 +1634,9 @@ def import_sensors():
                 shortaddr = row[shortaddr_idx].strip() if shortaddr_idx < len(row) else '0000'
                 bidi_val = row[bidi_idx].strip().lower() if bidi_idx < len(row) else 'false'
                 bidi = bidi_val in ['true', '1', 'yes', 'on']
+                name = row[name_idx].strip() if (name_idx is not None and name_idx < len(row)) else ''
+                tags_raw = row[tags_idx].strip() if (tags_idx is not None and tags_idx < len(row)) else ''
+                tags = _normalize_sensor_tags(tags_raw)
                 
                 # Validate EUI
                 if not eui or len(eui) < 8:
@@ -1034,7 +1652,9 @@ def import_sensors():
                     'eui': eui,
                     'nwKey': nwkey,
                     'shortAddr': shortaddr if shortaddr else '0000',
-                    'bidi': bidi
+                    'bidi': bidi,
+                    'name': name,
+                    'tags': tags
                 }
                 
                 if eui in existing_euis:
@@ -1056,6 +1676,21 @@ def import_sensors():
         # Save to file
         with open(bssci_config.SENSOR_CONFIG_FILE, 'w') as f:
             json.dump(existing_sensors, f, indent=4)
+
+        _try_record_inventory_event(
+            "sensor",
+            "imported",
+            "batch",
+            {
+                "imported_count": imported_count,
+                "updated_count": updated_count,
+                "error_count": len(errors),
+                "total_after": len(existing_sensors),
+                "named_count": sum(1 for s in existing_sensors if str(s.get("name", "")).strip()),
+                "tagged_count": sum(1 for s in existing_sensors if len(_normalize_sensor_tags(s.get("tags", []))) > 0),
+                "filename": file.filename or "unknown"
+            }
+        )
         
         # Reload TLS server config
         global tls_server_instance
@@ -1104,7 +1739,22 @@ def config():
             'AUTO_DETACH_TIMEOUT': getattr(bssci_config, 'AUTO_DETACH_TIMEOUT', 259200),
             'AUTO_DETACH_WARNING_TIMEOUT': getattr(bssci_config, 'AUTO_DETACH_WARNING_TIMEOUT', 129600),
             'AUTO_DETACH_CHECK_INTERVAL': getattr(bssci_config, 'AUTO_DETACH_CHECK_INTERVAL', 3600),
-            'TIMEZONE': getattr(bssci_config, 'TIMEZONE', 'Europe/Berlin')
+            'TIMEZONE': getattr(bssci_config, 'TIMEZONE', 'Europe/Berlin'),
+            'TELEMETRY_SOURCE': getattr(bssci_config, 'TELEMETRY_SOURCE', 'auto'),
+            'INFLUXDB_URL': getattr(bssci_config, 'INFLUXDB_URL', ''),
+            'INFLUXDB_ORG': getattr(bssci_config, 'INFLUXDB_ORG', ''),
+            'INFLUXDB_BUCKET': getattr(bssci_config, 'INFLUXDB_BUCKET', ''),
+            'INFLUXDB_TOKEN': getattr(bssci_config, 'INFLUXDB_TOKEN', ''),
+            'INFLUXDB_VERIFY_SSL': getattr(bssci_config, 'INFLUXDB_VERIFY_SSL', True),
+            'INFLUX_UPTIME_MEASUREMENT': getattr(bssci_config, 'INFLUX_UPTIME_MEASUREMENT', 'bssci_bs_uptime'),
+            'INFLUX_UPTIME_FIELD': getattr(bssci_config, 'INFLUX_UPTIME_FIELD', 'status'),
+            'INFLUX_UPTIME_EUI_TAG': getattr(bssci_config, 'INFLUX_UPTIME_EUI_TAG', 'eui'),
+            'INFLUX_UPTIME_QUERY': getattr(bssci_config, 'INFLUX_UPTIME_QUERY', ''),
+            'INFLUX_INVENTORY_WRITE_ENABLED': getattr(bssci_config, 'INFLUX_INVENTORY_WRITE_ENABLED', True),
+            'INFLUX_INVENTORY_MEASUREMENT': getattr(bssci_config, 'INFLUX_INVENTORY_MEASUREMENT', 'bssci_inventory_events'),
+            'INFLUX_SNAPSHOT_ENABLED': getattr(bssci_config, 'INFLUX_SNAPSHOT_ENABLED', True),
+            'INFLUX_SNAPSHOT_INTERVAL_SECONDS': getattr(bssci_config, 'INFLUX_SNAPSHOT_INTERVAL_SECONDS', 60),
+            'INFLUX_SNAPSHOT_MEASUREMENT': getattr(bssci_config, 'INFLUX_SNAPSHOT_MEASUREMENT', 'bssci_inventory_snapshot')
         }
         return render_template('config.html', config=config_data)
     except Exception as e:
@@ -1124,7 +1774,22 @@ def config():
             'AUTO_DETACH_TIMEOUT': 259200,
             'AUTO_DETACH_WARNING_TIMEOUT': 129600,
             'AUTO_DETACH_CHECK_INTERVAL': 3600,
-            'TIMEZONE': 'Europe/Berlin'
+            'TIMEZONE': 'Europe/Berlin',
+            'TELEMETRY_SOURCE': 'auto',
+            'INFLUXDB_URL': '',
+            'INFLUXDB_ORG': '',
+            'INFLUXDB_BUCKET': '',
+            'INFLUXDB_TOKEN': '',
+            'INFLUXDB_VERIFY_SSL': True,
+            'INFLUX_UPTIME_MEASUREMENT': 'bssci_bs_uptime',
+            'INFLUX_UPTIME_FIELD': 'status',
+            'INFLUX_UPTIME_EUI_TAG': 'eui',
+            'INFLUX_UPTIME_QUERY': '',
+            'INFLUX_INVENTORY_WRITE_ENABLED': True,
+            'INFLUX_INVENTORY_MEASUREMENT': 'bssci_inventory_events',
+            'INFLUX_SNAPSHOT_ENABLED': True,
+            'INFLUX_SNAPSHOT_INTERVAL_SECONDS': 60,
+            'INFLUX_SNAPSHOT_MEASUREMENT': 'bssci_inventory_snapshot'
         }
         return render_template('config.html', config=default_config)
 
@@ -1139,20 +1804,53 @@ def update_config():
         if data is None:
             return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
         
+        def _to_bool(value, default=False):
+            if isinstance(value, bool):
+                return value
+            if value is None:
+                return default
+            return str(value).strip().lower() in {'1', 'true', 'yes', 'on'}
+
         # Values are already in seconds from HTML form (no conversion needed)
         auto_detach_timeout = int(data.get('AUTO_DETACH_TIMEOUT', 259200))
         auto_detach_warning_timeout = int(data.get('AUTO_DETACH_WARNING_TIMEOUT', 129600))
         auto_detach_check_interval = int(data.get('AUTO_DETACH_CHECK_INTERVAL', 3600))
-        
-        # Update the .env file - this is the primary configuration source (with type safety)
+        influx_snapshot_interval = max(15, int(data.get('INFLUX_SNAPSHOT_INTERVAL_SECONDS', 60)))
+        influx_uptime_query = str(data.get('INFLUX_UPTIME_QUERY', '')).replace('\r', ' ').replace('\n', ' ').strip()
+        telemetry_source = str(data.get('TELEMETRY_SOURCE', 'auto')).strip().lower()
+        if telemetry_source not in {'auto', 'runtime', 'influx'}:
+            telemetry_source = 'auto'
+
+        # Preserve selected sensitive/legacy values if present
+        existing_env = {}
+        try:
+            if os.path.exists('.env'):
+                with open('.env', 'r') as f:
+                    for raw_line in f:
+                        line = raw_line.strip()
+                        if not line or line.startswith('#') or '=' not in line:
+                            continue
+                        key, value = line.split('=', 1)
+                        existing_env[key.strip()] = value.strip()
+        except Exception:
+            existing_env = {}
+
+        secret_key = existing_env.get('SECRET_KEY', os.getenv('SECRET_KEY', 'your-secret-key-here'))
+        tls_client_cert_mode = existing_env.get('TLS_CLIENT_CERT_MODE', os.getenv('TLS_CLIENT_CERT_MODE', 'required'))
+        cert_file = existing_env.get('CERT_FILE', 'certs/service_center_cert.pem')
+        key_file = existing_env.get('KEY_FILE', 'certs/service_center_key.pem')
+        ca_file = existing_env.get('CA_FILE', 'certs/ca_cert.pem')
+
+        # Update the .env file - this is the primary configuration source
         env_content = f"""# TLS Server Configuration
 LISTEN_HOST={data.get('LISTEN_HOST', '0.0.0.0')}
 LISTEN_PORT={data.get('LISTEN_PORT', 16018)}
 
 # SSL/TLS Certificate Configuration
-CERT_FILE=certs/service_center_cert.pem
-KEY_FILE=certs/service_center_key.pem
-CA_FILE=certs/ca_cert.pem
+CERT_FILE={cert_file}
+KEY_FILE={key_file}
+CA_FILE={ca_file}
+TLS_CLIENT_CERT_MODE={tls_client_cert_mode}
 
 # MQTT Configuration
 MQTT_BROKER={data.get('MQTT_BROKER', 'localhost')}
@@ -1186,8 +1884,28 @@ TIMEZONE={data.get('TIMEZONE', 'Europe/Berlin')}
 LOG_LEVEL=INFO
 LOG_FILE=logs/bssci_service.log
 
+# Telemetry Source
+# auto | runtime | influx
+TELEMETRY_SOURCE={telemetry_source}
+
+# InfluxDB (optional - needed if TELEMETRY_SOURCE=influx/auto)
+INFLUXDB_URL={data.get('INFLUXDB_URL', '')}
+INFLUXDB_ORG={data.get('INFLUXDB_ORG', '')}
+INFLUXDB_BUCKET={data.get('INFLUXDB_BUCKET', '')}
+INFLUXDB_TOKEN={data.get('INFLUXDB_TOKEN', '')}
+INFLUXDB_VERIFY_SSL={str(_to_bool(data.get('INFLUXDB_VERIFY_SSL', True), True)).lower()}
+INFLUX_UPTIME_MEASUREMENT={data.get('INFLUX_UPTIME_MEASUREMENT', 'bssci_bs_uptime')}
+INFLUX_UPTIME_FIELD={data.get('INFLUX_UPTIME_FIELD', 'status')}
+INFLUX_UPTIME_EUI_TAG={data.get('INFLUX_UPTIME_EUI_TAG', 'eui')}
+INFLUX_UPTIME_QUERY={influx_uptime_query}
+INFLUX_INVENTORY_WRITE_ENABLED={str(_to_bool(data.get('INFLUX_INVENTORY_WRITE_ENABLED', True), True)).lower()}
+INFLUX_INVENTORY_MEASUREMENT={data.get('INFLUX_INVENTORY_MEASUREMENT', 'bssci_inventory_events')}
+INFLUX_SNAPSHOT_ENABLED={str(_to_bool(data.get('INFLUX_SNAPSHOT_ENABLED', True), True)).lower()}
+INFLUX_SNAPSHOT_INTERVAL_SECONDS={influx_snapshot_interval}
+INFLUX_SNAPSHOT_MEASUREMENT={data.get('INFLUX_SNAPSHOT_MEASUREMENT', 'bssci_inventory_snapshot')}
+
 # Security
-SECRET_KEY=your-secret-key-here"""
+SECRET_KEY={secret_key}"""
         
         # Write to .env file with error handling for Docker environments
         try:
@@ -1225,7 +1943,7 @@ SECRET_KEY=your-secret-key-here"""
 @login_required
 @permission_required('can_manage_certificates')
 def certificates():
-    return redirect(url_for('base_stations'))
+    return render_template('certificates.html')
 
 @app.route('/logs')
 @login_required
@@ -1376,7 +2094,20 @@ def get_health_stats():
 @app.route('/base-stations')
 @login_required
 def base_stations():
-    return render_template('base_stations.html')
+    telemetry_source = (getattr(bssci_config, 'TELEMETRY_SOURCE', 'auto') or 'auto').strip().lower()
+    if telemetry_source not in {'auto', 'runtime', 'influx'}:
+        telemetry_source = 'auto'
+    influx_configured = bool(
+        getattr(bssci_config, 'INFLUXDB_URL', '')
+        and getattr(bssci_config, 'INFLUXDB_ORG', '')
+        and getattr(bssci_config, 'INFLUXDB_BUCKET', '')
+        and getattr(bssci_config, 'INFLUXDB_TOKEN', '')
+    )
+    return render_template(
+        'base_stations.html',
+        telemetry_source=telemetry_source,
+        influx_configured=influx_configured
+    )
 
 @app.route('/network')
 @login_required
@@ -1634,6 +2365,21 @@ def get_base_stations():
                 status = "offline"
             
             health = bs_health.get(eui_lower, {})
+            last_status_change = ""
+            last_status_event = ""
+            status_age_seconds = None
+            bs_events = bs_uptime_events.get(eui_lower, [])
+            if bs_events:
+                last = bs_events[-1]
+                last_status_change = last.get("timestamp", "")
+                last_status_event = last.get("event", "")
+                try:
+                    ts = datetime.fromisoformat(last_status_change)
+                    if ts.tzinfo is None:
+                        ts = ts.replace(tzinfo=timezone.utc)
+                    status_age_seconds = max(0, int((datetime.now(timezone.utc) - ts).total_seconds()))
+                except:
+                    status_age_seconds = None
             
             result.append({
                 "eui": eui_lower,
@@ -1642,7 +2388,10 @@ def get_base_stations():
                 "status": status,
                 "configured_ip": bs_data.get("ip", ""),
                 "health": health,
-                "connected_sensors": bs_sensors.get(eui_lower, 0)
+                "connected_sensors": bs_sensors.get(eui_lower, 0),
+                "last_status_event": last_status_event,
+                "last_status_change": last_status_change,
+                "status_age_seconds": status_age_seconds
             })
         
         result.sort(key=lambda x: (x["status"] != "connected", x["status"] != "connecting", x["eui"]))
@@ -1702,7 +2451,63 @@ def get_bs_certificates_status():
 def get_bs_uptime():
     """Get uptime data for all base stations"""
     try:
-        return jsonify({"success": True, "uptime_events": bs_uptime_events})
+        requested_source = (request.args.get("source") or bssci_config.TELEMETRY_SOURCE or "auto").strip().lower()
+        if requested_source not in {"auto", "runtime", "influx"}:
+            requested_source = "auto"
+
+        runtime_payload = {
+            "success": True,
+            "source": "runtime_events_memory",
+            "requested_source": requested_source,
+            "uptime_events": bs_uptime_events
+        }
+
+        if requested_source == "runtime":
+            return jsonify(runtime_payload)
+
+        if requested_source in {"auto", "influx"}:
+            influx_result = _get_influx_uptime_events()
+            if influx_result.get("success"):
+                return jsonify({
+                    "success": True,
+                    "source": influx_result.get("source", "influxdb"),
+                    "requested_source": requested_source,
+                    "uptime_events": influx_result.get("uptime_events", {})
+                })
+
+            if requested_source == "influx":
+                # Explicit influx requested - return runtime fallback with reason to keep UI alive.
+                runtime_payload["fallback_reason"] = influx_result.get("error", "Influx query failed")
+                runtime_payload["source"] = "runtime_events_memory_fallback"
+                return jsonify(runtime_payload)
+
+            # auto mode fallback
+            runtime_payload["fallback_reason"] = influx_result.get("error", "Influx query failed")
+            return jsonify(runtime_payload)
+
+        return jsonify(runtime_payload)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/influx/sync-inventory', methods=['POST'])
+@login_required
+@permission_required('can_edit_config')
+def sync_inventory_to_influx():
+    """Force one-time snapshot sync of sensors/base stations to InfluxDB."""
+    try:
+        trigger = (request.args.get("trigger") or "manual").strip().lower()
+        result = _sync_inventory_snapshot_to_influx(trigger=trigger)
+        if result.get("success"):
+            return jsonify({
+                "success": True,
+                "message": f'Snapshot written: {result.get("line_count", 0)} points',
+                **result
+            })
+        return jsonify({
+            "success": False,
+            "message": f'Influx sync failed: {result.get("error", "unknown error")}',
+            **result
+        }), 500
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -1739,6 +2544,17 @@ def add_base_station():
             "ip": data.get("ip", "")
         }
         save_base_station_config(config)
+
+        _try_record_inventory_event(
+            "base_station",
+            "created",
+            eui,
+            {
+                "name": data.get("name", ""),
+                "ip": data.get("ip", ""),
+                "tags": data.get("tags", []),
+            }
+        )
         
         generate_cert = data.get("generate_cert", True)
         cert_download_url = None
@@ -1767,12 +2583,26 @@ def update_base_station(eui):
         if "base_stations" not in config:
             config["base_stations"] = {}
         
+        previous_data = dict(config["base_stations"].get(eui, {}))
         config["base_stations"][eui] = {
             "name": data.get("name", ""),
             "tags": data.get("tags", []),
             "ip": data.get("ip", "")
         }
         save_base_station_config(config)
+
+        _try_record_inventory_event(
+            "base_station",
+            "updated",
+            eui,
+            {
+                "name": data.get("name", ""),
+                "ip": data.get("ip", ""),
+                "tags": data.get("tags", []),
+                "previous_name": previous_data.get("name", ""),
+                "previous_ip": previous_data.get("ip", ""),
+            }
+        )
         
         return jsonify({"success": True})
     except Exception as e:
@@ -1787,9 +2617,21 @@ def delete_base_station(eui):
         config = load_base_station_config()
         eui = eui.lower()
         
+        removed = config.get("base_stations", {}).get(eui, {})
         if eui in config.get("base_stations", {}):
             del config["base_stations"][eui]
             save_base_station_config(config)
+
+        _try_record_inventory_event(
+            "base_station",
+            "deleted",
+            eui,
+            {
+                "name": removed.get("name", ""),
+                "ip": removed.get("ip", ""),
+                "tags": removed.get("tags", []),
+            }
+        )
         
         return jsonify({"success": True})
     except Exception as e:
@@ -2372,6 +3214,7 @@ def set_tls_server(server):
     """Set the TLS server instance"""
     global tls_server_instance
     tls_server_instance = server
+    _ensure_influx_snapshot_worker_started()
 
 def get_bssci_service_status():
     """Get the status of the BSSCI service - thread-safe version"""

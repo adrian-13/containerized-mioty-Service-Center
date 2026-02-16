@@ -46,6 +46,53 @@ UID=1000          # User ID for file permissions
 GID=1000          # Group ID for file permissions
 ```
 
+### Optional: InfluxDB Integration (Inventory + Uptime)
+
+If InfluxDB is running, Service Center can:
+- read base-station uptime events from Influx
+- write inventory CRUD events when sensors/base stations are created, updated, deleted, imported, or cleared
+
+Add to `.env`:
+
+```bash
+TELEMETRY_SOURCE=auto
+INFLUXDB_URL=http://influxdb2:8086
+INFLUXDB_ORG=<your-org>
+INFLUXDB_BUCKET=<your-bucket>
+INFLUXDB_TOKEN=<your-token>
+INFLUXDB_VERIFY_SSL=true
+
+INFLUX_INVENTORY_WRITE_ENABLED=true
+INFLUX_INVENTORY_MEASUREMENT=bssci_inventory_events
+INFLUX_SNAPSHOT_ENABLED=true
+INFLUX_SNAPSHOT_INTERVAL_SECONDS=60
+INFLUX_SNAPSHOT_MEASUREMENT=bssci_inventory_snapshot
+```
+
+Quick Flux check in Influx UI:
+
+```flux
+from(bucket: "<your-bucket>")
+  |> range(start: -24h)
+  |> filter(fn: (r) => r._measurement == "bssci_inventory_events")
+  |> sort(columns: ["_time"], desc: true)
+```
+
+For periodic value snapshots (sensor/base-station current state):
+
+```flux
+from(bucket: "<your-bucket>")
+  |> range(start: -24h)
+  |> filter(fn: (r) => r._measurement == "bssci_inventory_snapshot")
+  |> sort(columns: ["_time"], desc: true)
+```
+
+Manual one-time sync trigger:
+
+```bash
+curl -X POST http://localhost:5056/api/influx/sync-inventory
+```
+
 ### Volumes
 
 The following directories are mounted as volumes:

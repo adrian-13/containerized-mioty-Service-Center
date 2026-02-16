@@ -32,3 +32,28 @@ AUTO_DETACH_CHECK_INTERVAL = int(os.getenv("AUTO_DETACH_CHECK_INTERVAL", "3600")
 
 # Timezone Configuration
 TIMEZONE = os.getenv("TIMEZONE", "Europe/Berlin")  # Default to Europe/Berlin (CET/CEST)
+
+# Telemetry source configuration (runtime memory vs InfluxDB)
+TELEMETRY_SOURCE = os.getenv("TELEMETRY_SOURCE", "auto").strip().lower()
+
+# InfluxDB configuration (optional)
+INFLUXDB_URL = os.getenv("INFLUXDB_URL", "").strip()
+INFLUXDB_ORG = os.getenv("INFLUXDB_ORG", "").strip()
+INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET", "").strip()
+INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN", "").strip()
+INFLUXDB_VERIFY_SSL = os.getenv("INFLUXDB_VERIFY_SSL", "true").strip().lower() == "true"
+
+# Influx uptime query settings
+INFLUX_UPTIME_MEASUREMENT = os.getenv("INFLUX_UPTIME_MEASUREMENT", "bssci_bs_uptime").strip()
+INFLUX_UPTIME_FIELD = os.getenv("INFLUX_UPTIME_FIELD", "status").strip()
+INFLUX_UPTIME_EUI_TAG = os.getenv("INFLUX_UPTIME_EUI_TAG", "eui").strip()
+INFLUX_UPTIME_QUERY = os.getenv("INFLUX_UPTIME_QUERY", "").strip()
+
+# Influx inventory event writes (sensor/base station CRUD)
+INFLUX_INVENTORY_WRITE_ENABLED = os.getenv("INFLUX_INVENTORY_WRITE_ENABLED", "true").strip().lower() == "true"
+INFLUX_INVENTORY_MEASUREMENT = os.getenv("INFLUX_INVENTORY_MEASUREMENT", "bssci_inventory_events").strip()
+
+# Influx periodic snapshot writes (current inventory/runtime values)
+INFLUX_SNAPSHOT_ENABLED = os.getenv("INFLUX_SNAPSHOT_ENABLED", "true").strip().lower() == "true"
+INFLUX_SNAPSHOT_INTERVAL_SECONDS = int(os.getenv("INFLUX_SNAPSHOT_INTERVAL_SECONDS", "60"))
+INFLUX_SNAPSHOT_MEASUREMENT = os.getenv("INFLUX_SNAPSHOT_MEASUREMENT", "bssci_inventory_snapshot").strip()
