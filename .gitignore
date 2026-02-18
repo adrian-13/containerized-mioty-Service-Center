@@ -1,5 +1,10 @@
 certs/*
-_pycache_
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+web_ui.syntaxcheck.pyc.*
 attached_assets/*
 .env
 logs/
