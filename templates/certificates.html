@@ -3,138 +3,393 @@
 {% block title %}Certificates{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Certificate Management</h1>
-    <div>
-        <button class="btn btn-success" onclick="generateCertificates()" title="Generate new certificates">
-            Generate New Certificates
-        </button>
-    </div>
-</div>
+<style>
+.cert-shell {
+    display: grid;
+    gap: 0.9rem;
+}
 
-<div class="alert alert-info">
-    <strong>Note:</strong> These are the SSL/TLS certificates used by the BSSCI TLS server. Handle with care and ensure proper backup before making changes.
-</div>
+.cert-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.82rem 0.94rem;
+    border: 1px solid #d5deeb;
+    border-radius: 0.95rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
 
-<!-- Certificate Status -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5>Certificate Status</h5>
-    </div>
-    <div class="card-body">
-        <div id="cert-status">
-            <!-- Status will be loaded here -->
+.cert-kicker {
+    margin: 0;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #5f7088;
+    font-weight: 800;
+}
+
+.cert-title {
+    margin: 0.18rem 0 0;
+    font-family: "Sora", "Manrope", sans-serif;
+    font-size: 1.24rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.cert-subtitle {
+    margin: 0.24rem 0 0;
+    font-size: 0.79rem;
+    color: #5f7088;
+}
+
+.cert-head-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    justify-content: flex-end;
+}
+
+.cert-last-refresh {
+    font-size: 0.72rem;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.cert-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.cert-kpi {
+    border: 1px solid #d5deeb;
+    border-radius: 0.92rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    padding: 0.72rem 0.8rem;
+}
+
+.cert-kpi-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #607089;
+    font-weight: 800;
+}
+
+.cert-kpi-value {
+    margin-top: 0.32rem;
+    font-size: 1.22rem;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.cert-kpi-note {
+    margin-top: 0.14rem;
+    color: #63758d;
+    font-size: 0.72rem;
+}
+
+.cert-panel {
+    border: 1px solid #d5deeb;
+    border-radius: 0.98rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.cert-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    padding: 0.76rem 0.9rem;
+    border-bottom: 1px solid #dce5f2;
+    background: linear-gradient(150deg, #1b2840 0%, #2a3f60 100%);
+    color: #f8fbff;
+}
+
+.cert-panel-head h5 {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.cert-panel-sub {
+    font-size: 0.72rem;
+    color: rgba(238, 245, 255, 0.78);
+    font-weight: 600;
+}
+
+.cert-panel-body {
+    padding: 0.85rem;
+}
+
+.cert-file-grid,
+.cert-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.cert-file-card,
+.cert-upload-card,
+.cert-maint-card {
+    border: 1px solid #d7e2f1;
+    border-radius: 0.84rem;
+    background: #f8fbff;
+    padding: 0.7rem;
+}
+
+.cert-file-title,
+.cert-upload-title,
+.cert-maint-title {
+    margin: 0;
+    font-size: 0.83rem;
+    font-weight: 800;
+    color: #172a45;
+}
+
+.cert-file-note,
+.cert-upload-note,
+.cert-maint-note {
+    margin: 0.24rem 0 0.56rem;
+    color: #5f7088;
+    font-size: 0.73rem;
+}
+
+.cert-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-bottom: 0.62rem;
+}
+
+.cert-search {
+    min-width: 280px;
+}
+
+.cert-meta {
+    font-size: 0.75rem;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.cert-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.34rem;
+    border-radius: 999px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.cert-status-valid { background: #dff6ec; color: #0f6b3c; }
+.cert-status-expiring_soon { background: #fff1dc; color: #9b5f07; }
+.cert-status-expired { background: #ffe0e3; color: #9f1c30; }
+.cert-status-missing { background: #e7edf7; color: #5f7088; }
+
+.cert-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-top: 0.7rem;
+}
+
+.cert-maint-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+@media (max-width: 1399.98px) {
+    .cert-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 991.98px) {
+    .cert-head { flex-direction: column; }
+    .cert-head-actions { justify-content: flex-start; }
+    .cert-file-grid, .cert-upload-grid, .cert-maint-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 575.98px) {
+    .cert-kpi-grid { grid-template-columns: 1fr; }
+    .cert-search { min-width: 100%; }
+}
+</style>
+
+<div class="cert-shell workspace-shell">
+    <div class="cert-head workspace-head">
+        <div>
+            <p class="cert-kicker workspace-kicker">Trust and Security</p>
+            <h2 class="cert-title workspace-title">Certificates</h2>
+            <p class="cert-subtitle workspace-subtitle">Manage TLS assets for service-center and review per-base-station certificate lifecycle in one place.</p>
+        </div>
+        <div class="cert-head-actions workspace-actions">
+            <button class="btn btn-outline-secondary" onclick="backupCertificates()"><i class="fas fa-file-archive me-1"></i>Backup ZIP</button>
+            <button class="btn btn-warning" onclick="generateCertificates()"><i class="fas fa-redo me-1"></i>Generate New</button>
+            <button class="btn btn-primary" onclick="refreshAll()"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
+            <span class="cert-last-refresh">Updated <span id="certLastRefresh">never</span></span>
         </div>
     </div>
-</div>
 
-<!-- Download Certificates -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5>Download Certificates</h5>
+    <div id="alert-container"></div>
+
+    <div class="cert-kpi-grid workspace-kpi-grid">
+        <div class="cert-kpi workspace-kpi">
+            <div class="cert-kpi-label workspace-kpi-label">CA Certificate</div>
+            <div class="cert-kpi-value workspace-kpi-value" id="caStatusValue">Unknown</div>
+            <div class="cert-kpi-note workspace-kpi-note" id="caStatusNote">Checking...</div>
+        </div>
+        <div class="cert-kpi workspace-kpi">
+            <div class="cert-kpi-label workspace-kpi-label">Service Certificate</div>
+            <div class="cert-kpi-value workspace-kpi-value" id="serviceStatusValue">Unknown</div>
+            <div class="cert-kpi-note workspace-kpi-note" id="serviceStatusNote">Checking...</div>
+        </div>
+        <div class="cert-kpi workspace-kpi">
+            <div class="cert-kpi-label workspace-kpi-label">Private Key</div>
+            <div class="cert-kpi-value workspace-kpi-value" id="keyStatusValue">Unknown</div>
+            <div class="cert-kpi-note workspace-kpi-note" id="keyStatusNote">Checking...</div>
+        </div>
+        <div class="cert-kpi workspace-kpi">
+            <div class="cert-kpi-label workspace-kpi-label">Managed BS Certs</div>
+            <div class="cert-kpi-value workspace-kpi-value" id="bsManagedValue">0</div>
+            <div class="cert-kpi-note workspace-kpi-note">Base stations in certificate inventory</div>
+        </div>
+        <div class="cert-kpi workspace-kpi">
+            <div class="cert-kpi-label workspace-kpi-label">Needs Attention</div>
+            <div class="cert-kpi-value workspace-kpi-value" id="bsAttentionValue">0</div>
+            <div class="cert-kpi-note workspace-kpi-note">Missing, expired or expiring soon</div>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h6>CA Certificate</h6>
-                        <p class="text-muted">Certificate Authority root certificate</p>
-                        <button class="btn btn-primary btn-sm" onclick="downloadCertificate('ca_cert.pem')">
-                            Download CA Cert
-                        </button>
-                    </div>
+
+    <div class="cert-panel workspace-panel">
+        <div class="cert-panel-head workspace-panel-head">
+            <h5><i class="fas fa-download me-2"></i>Download Certificates</h5>
+            <span class="cert-panel-sub workspace-panel-sub">Export active trust assets</span>
+        </div>
+        <div class="cert-panel-body workspace-panel-body">
+            <div class="cert-file-grid">
+                <div class="cert-file-card">
+                    <p class="cert-file-title">CA Certificate</p>
+                    <p class="cert-file-note">Root certificate authority for signed service and BS certs.</p>
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadCertificate('ca_cert.pem')"><i class="fas fa-download me-1"></i>Download CA</button>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h6>Service Certificate</h6>
-                        <p class="text-muted">Server certificate for TLS connections</p>
-                        <button class="btn btn-primary btn-sm" onclick="downloadCertificate('service_center_cert.pem')">
-                            Download Service Cert
-                        </button>
-                    </div>
+                <div class="cert-file-card">
+                    <p class="cert-file-title">Service Certificate</p>
+                    <p class="cert-file-note">Server certificate for TLS connections to service center.</p>
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadCertificate('service_center_cert.pem')"><i class="fas fa-download me-1"></i>Download Service Cert</button>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h6>Private Key</h6>
-                        <p class="text-muted">Private key for the service certificate</p>
-                        <button class="btn btn-warning btn-sm" onclick="downloadCertificate('service_center_key.pem')">
-                            Download Private Key
-                        </button>
-                    </div>
+                <div class="cert-file-card">
+                    <p class="cert-file-title">Service Private Key</p>
+                    <p class="cert-file-note">Private key paired with the service certificate.</p>
+                    <button class="btn btn-sm btn-outline-warning" onclick="downloadCertificate('service_center_key.pem')"><i class="fas fa-key me-1"></i>Download Key</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Upload Certificates -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5>Upload New Certificates</h5>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-warning">
-            <strong>Warning:</strong> Uploading new certificates will require a service restart to take effect.
+    <div class="cert-panel workspace-panel">
+        <div class="cert-panel-head workspace-panel-head">
+            <h5><i class="fas fa-upload me-2"></i>Upload Certificates</h5>
+            <span class="cert-panel-sub workspace-panel-sub">Replace selected certs without leaving UI</span>
         </div>
-        
-        <div class="row">
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="caCertFile" class="form-label">CA Certificate</label>
-                    <input type="file" class="form-control" id="caCertFile" accept=".pem,.crt,.cer">
-                    <button class="btn btn-secondary btn-sm mt-2" onclick="uploadCertificate('ca', 'caCertFile')">
-                        Upload CA Cert
-                    </button>
+        <div class="cert-panel-body workspace-panel-body">
+            <div class="alert alert-warning py-2 mb-3"><strong>Note:</strong> After upload, restart service/container to fully apply TLS changes.</div>
+            <div class="cert-upload-grid">
+                <div class="cert-upload-card">
+                    <p class="cert-upload-title">CA Certificate</p>
+                    <p class="cert-upload-note">Accepts .pem/.crt/.cer</p>
+                    <input type="file" class="form-control form-control-sm" id="caCertFile" accept=".pem,.crt,.cer">
+                    <button class="btn btn-sm btn-secondary mt-2" onclick="uploadCertificate('ca', 'caCertFile')">Upload CA</button>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="serviceCertFile" class="form-label">Service Certificate</label>
-                    <input type="file" class="form-control" id="serviceCertFile" accept=".pem,.crt,.cer">
-                    <button class="btn btn-secondary btn-sm mt-2" onclick="uploadCertificate('service', 'serviceCertFile')">
-                        Upload Service Cert
-                    </button>
+                <div class="cert-upload-card">
+                    <p class="cert-upload-title">Service Certificate</p>
+                    <p class="cert-upload-note">Accepts .pem/.crt/.cer</p>
+                    <input type="file" class="form-control form-control-sm" id="serviceCertFile" accept=".pem,.crt,.cer">
+                    <button class="btn btn-sm btn-secondary mt-2" onclick="uploadCertificate('service', 'serviceCertFile')">Upload Service Cert</button>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="privateKeyFile" class="form-label">Private Key</label>
-                    <input type="file" class="form-control" id="privateKeyFile" accept=".pem,.key">
-                    <button class="btn btn-warning btn-sm mt-2" onclick="uploadCertificate('key', 'privateKeyFile')">
-                        Upload Private Key
-                    </button>
+                <div class="cert-upload-card">
+                    <p class="cert-upload-title">Private Key</p>
+                    <p class="cert-upload-note">Accepts .pem/.key</p>
+                    <input type="file" class="form-control form-control-sm" id="privateKeyFile" accept=".pem,.key">
+                    <button class="btn btn-sm btn-warning mt-2" onclick="uploadCertificate('key', 'privateKeyFile')">Upload Key</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Certificate Backup -->
-<div class="card">
-    <div class="card-header">
-        <h5>Backup & Restore</h5>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <h6>Backup All Certificates</h6>
-                <p class="text-muted">Download all certificates as a ZIP file</p>
-                <button class="btn btn-info" onclick="backupCertificates()">
-                    Download Backup ZIP
-                </button>
+    <div class="cert-panel workspace-panel">
+        <div class="cert-panel-head workspace-panel-head">
+            <h5><i class="fas fa-shield-alt me-2"></i>Per-Base Station Certificates</h5>
+            <span class="cert-panel-sub workspace-panel-sub">Operational certificate registry</span>
+        </div>
+        <div class="cert-panel-body workspace-panel-body">
+            <div class="cert-toolbar">
+                <input id="bsCertSearch" type="text" class="form-control form-control-sm cert-search" placeholder="Search by EUI, name, status...">
+                <div class="d-flex align-items-center gap-2">
+                    <span id="bsCertMeta" class="cert-meta">Waiting for data...</span>
+                    <label for="bsCertPageSize" class="small text-muted fw-semibold mb-0">Rows</label>
+                    <select id="bsCertPageSize" class="form-select form-select-sm" style="width: 88px;">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
             </div>
-            <div class="col-md-6">
-                <h6>Restore from Backup</h6>
-                <p class="text-muted">Upload and restore certificates from ZIP backup</p>
-                <input type="file" class="form-control mb-2" id="backupFile" accept=".zip">
-                <button class="btn btn-success" onclick="restoreFromBackup()">
-                    Restore from ZIP
-                </button>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Base Station</th>
+                            <th>Status</th>
+                            <th>Generated</th>
+                            <th>Expires</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bsCertTable"></tbody>
+                </table>
+            </div>
+
+            <div class="cert-pagination">
+                <small id="bsCertPageInfo" class="text-muted fw-semibold">Page 1/1</small>
+                <div class="d-flex gap-2">
+                    <button type="button" id="bsCertPrev" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
+                    <button type="button" id="bsCertNext" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cert-panel workspace-panel">
+        <div class="cert-panel-head workspace-panel-head">
+            <h5><i class="fas fa-toolbox me-2"></i>Backup and Restore</h5>
+            <span class="cert-panel-sub workspace-panel-sub">Recovery workflow</span>
+        </div>
+        <div class="cert-panel-body workspace-panel-body">
+            <div class="cert-maint-grid">
+                <div class="cert-maint-card">
+                    <p class="cert-maint-title">Backup All Certificates</p>
+                    <p class="cert-maint-note">Create one ZIP archive with CA, service cert and service key.</p>
+                    <button class="btn btn-info" onclick="backupCertificates()"><i class="fas fa-file-archive me-1"></i>Download Backup ZIP</button>
+                </div>
+                <div class="cert-maint-card">
+                    <p class="cert-maint-title">Restore from ZIP</p>
+                    <p class="cert-maint-note">Upload previous backup package and replace current files.</p>
+                    <input type="file" class="form-control form-control-sm mb-2" id="backupFile" accept=".zip">
+                    <button class="btn btn-success" onclick="restoreFromBackup()"><i class="fas fa-upload me-1"></i>Restore Backup</button>
+                </div>
             </div>
         </div>
     </div>
@@ -143,43 +398,191 @@
 
 {% block scripts %}
 <script>
-function loadCertificateStatus() {
-    fetch('/api/certificates/status')
-        .then(response => response.json())
-        .then(data => {
-            const statusDiv = document.getElementById('cert-status');
-            if (data.success) {
-                statusDiv.innerHTML = `
-                    <div class="row">
-                        <div class="col-md-4">
-                            <strong>CA Certificate:</strong><br>
-                            <span class="badge ${data.certificates.ca ? 'bg-success' : 'bg-danger'}">
-                                ${data.certificates.ca ? 'Present' : 'Missing'}
-                            </span>
-                            ${data.certificates.ca ? `<br><small>Expires: ${data.certificates.ca_expires || 'Unknown'}</small>` : ''}
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Service Certificate:</strong><br>
-                            <span class="badge ${data.certificates.service ? 'bg-success' : 'bg-danger'}">
-                                ${data.certificates.service ? 'Present' : 'Missing'}
-                            </span>
-                            ${data.certificates.service ? `<br><small>Expires: ${data.certificates.service_expires || 'Unknown'}</small>` : ''}
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Private Key:</strong><br>
-                            <span class="badge ${data.certificates.key ? 'bg-success' : 'bg-danger'}">
-                                ${data.certificates.key ? 'Present' : 'Missing'}
-                            </span>
-                        </div>
+let bsCertCache = [];
+let bsCertSearch = '';
+let bsCertPage = 1;
+let bsCertPageSize = 20;
+
+function showAlert(message, type = 'info') {
+    const container = document.getElementById('alert-container');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    container.appendChild(alert);
+    setTimeout(() => alert.remove(), 5000);
+}
+
+function safeText(value, fallback = 'n/a') {
+    if (value === null || value === undefined || value === '') return fallback;
+    return String(value);
+}
+
+function normalizeDate(dateString) {
+    if (!dateString) return null;
+    const normalized = dateString.includes('T') ? dateString : dateString.replace(' ', 'T');
+    const parsed = new Date(normalized + (normalized.endsWith('Z') ? '' : 'Z'));
+    if (Number.isNaN(parsed.getTime())) {
+        const localParsed = new Date(dateString);
+        return Number.isNaN(localParsed.getTime()) ? null : localParsed;
+    }
+    return parsed;
+}
+
+function formatDateDisplay(dateString) {
+    const parsed = normalizeDate(dateString);
+    if (!parsed) return 'n/a';
+    return parsed.toLocaleString();
+}
+
+function getDaysToExpiry(dateString) {
+    const parsed = normalizeDate(dateString);
+    if (!parsed) return null;
+    const now = Date.now();
+    const diffMs = parsed.getTime() - now;
+    return Math.floor(diffMs / 86400000);
+}
+
+function renderTopStatus(certificates) {
+    const caPresent = !!certificates.ca;
+    const servicePresent = !!certificates.service;
+    const keyPresent = !!certificates.key;
+
+    const caDays = certificates.ca_expires ? getDaysToExpiry(certificates.ca_expires) : null;
+    const serviceDays = certificates.service_expires ? getDaysToExpiry(certificates.service_expires) : null;
+
+    document.getElementById('caStatusValue').textContent = caPresent ? 'Present' : 'Missing';
+    document.getElementById('caStatusValue').className = `cert-kpi-value ${caPresent ? 'text-success' : 'text-danger'}`;
+    document.getElementById('caStatusNote').textContent = caPresent
+        ? `Expires: ${safeText(certificates.ca_expires, 'unknown')} ${caDays !== null ? `(${caDays}d)` : ''}`
+        : 'CA certificate file missing';
+
+    document.getElementById('serviceStatusValue').textContent = servicePresent ? 'Present' : 'Missing';
+    document.getElementById('serviceStatusValue').className = `cert-kpi-value ${servicePresent ? 'text-success' : 'text-danger'}`;
+    document.getElementById('serviceStatusNote').textContent = servicePresent
+        ? `Expires: ${safeText(certificates.service_expires, 'unknown')} ${serviceDays !== null ? `(${serviceDays}d)` : ''}`
+        : 'Service certificate file missing';
+
+    document.getElementById('keyStatusValue').textContent = keyPresent ? 'Present' : 'Missing';
+    document.getElementById('keyStatusValue').className = `cert-kpi-value ${keyPresent ? 'text-success' : 'text-danger'}`;
+    document.getElementById('keyStatusNote').textContent = keyPresent ? 'Service private key is available' : 'Private key file missing';
+}
+
+function getStatusBadge(status) {
+    const value = String(status || 'missing').toLowerCase();
+    const labels = {
+        valid: 'Valid',
+        expiring_soon: 'Expiring Soon',
+        expired: 'Expired',
+        missing: 'Missing'
+    };
+    const label = labels[value] || 'Unknown';
+    return `<span class="cert-status-badge cert-status-${value}">${label}</span>`;
+}
+
+function getFilteredBsCertificates() {
+    if (!bsCertSearch) return bsCertCache;
+    const q = bsCertSearch.toLowerCase();
+    return bsCertCache.filter(item => {
+        const values = [item.eui, item.name, item.cert_status, item.cert_expires, item.cert_generated]
+            .map(v => String(v || '').toLowerCase());
+        return values.some(v => v.includes(q));
+    });
+}
+function renderBsCertificateTable() {
+    const tbody = document.getElementById('bsCertTable');
+    const meta = document.getElementById('bsCertMeta');
+    const pageInfo = document.getElementById('bsCertPageInfo');
+    const prevBtn = document.getElementById('bsCertPrev');
+    const nextBtn = document.getElementById('bsCertNext');
+
+    const filtered = getFilteredBsCertificates();
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / bsCertPageSize));
+    if (bsCertPage > totalPages) bsCertPage = totalPages;
+
+    if (total === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No certificate records found.</td></tr>';
+        meta.textContent = `Showing 0 of ${bsCertCache.length}`;
+        pageInfo.textContent = 'Page 1/1';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+    }
+
+    const start = (bsCertPage - 1) * bsCertPageSize;
+    const end = Math.min(start + bsCertPageSize, total);
+    const pageItems = filtered.slice(start, end);
+
+    tbody.innerHTML = pageItems.map(item => {
+        const nameBlock = item.name
+            ? `<div><strong>${item.name}</strong></div><small class="text-muted"><code>${item.eui}</code></small>`
+            : `<code>${item.eui}</code>`;
+        const generated = item.cert_generated ? formatDateDisplay(item.cert_generated) : 'n/a';
+        const expires = item.cert_expires ? formatDateDisplay(item.cert_expires) : 'n/a';
+
+        return `
+            <tr>
+                <td>${nameBlock}</td>
+                <td>${getStatusBadge(item.cert_status)}</td>
+                <td>${generated}</td>
+                <td>${expires}</td>
+                <td>
+                    <div class="d-flex flex-wrap gap-1">
+                        ${item.cert_exists ? `<button class="btn btn-sm btn-outline-primary" onclick="downloadBsCertificate('${item.eui}')"><i class="fas fa-download"></i></button>` : ''}
+                        <button class="btn btn-sm btn-outline-warning" onclick="regenerateBsCertificate('${item.eui}')"><i class="fas fa-redo"></i></button>
                     </div>
-                `;
-            } else {
-                statusDiv.innerHTML = `<div class="alert alert-danger">Error loading certificate status: ${data.message}</div>`;
-            }
-        })
-        .catch(error => {
-            document.getElementById('cert-status').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-        });
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    meta.textContent = `Showing ${start + 1}-${end} of ${total} (total ${bsCertCache.length})`;
+    pageInfo.textContent = `Page ${bsCertPage}/${totalPages}`;
+    prevBtn.disabled = bsCertPage <= 1;
+    nextBtn.disabled = bsCertPage >= totalPages;
+}
+
+function updateBsKpis() {
+    const total = bsCertCache.length;
+    const attention = bsCertCache.filter(item => ['missing', 'expired', 'expiring_soon'].includes(String(item.cert_status || '').toLowerCase())).length;
+    document.getElementById('bsManagedValue').textContent = total.toLocaleString();
+    document.getElementById('bsAttentionValue').textContent = attention.toLocaleString();
+    document.getElementById('bsAttentionValue').className = `cert-kpi-value ${attention > 0 ? 'text-warning' : 'text-success'}`;
+}
+
+function setLastRefresh() {
+    document.getElementById('certLastRefresh').textContent = new Date().toLocaleTimeString();
+}
+
+function loadCertificateStatus() {
+    return Promise.all([
+        fetch('/api/certificates/status').then(response => response.json()),
+        fetch('/api/base-stations/certificates/status').then(response => response.json()).catch(() => ({ success: false, certificates: [] }))
+    ]).then(([globalData, bsData]) => {
+        if (!globalData.success) {
+            showAlert('Failed to load global certificate status.', 'danger');
+        } else {
+            renderTopStatus(globalData.certificates || {});
+        }
+
+        if (!bsData.success) {
+            bsCertCache = [];
+            showAlert('Failed to load base station certificate inventory.', 'warning');
+        } else {
+            bsCertCache = Array.isArray(bsData.certificates) ? bsData.certificates : [];
+            bsCertCache.sort((a, b) => String(a.eui || '').localeCompare(String(b.eui || '')));
+        }
+
+        updateBsKpis();
+        renderBsCertificateTable();
+        setLastRefresh();
+    }).catch(error => {
+        showAlert('Error loading certificate status: ' + error.message, 'danger');
+    });
+}
+
+function refreshAll() {
+    loadCertificateStatus();
 }
 
 function downloadCertificate(filename) {
@@ -189,54 +592,54 @@ function downloadCertificate(filename) {
 function uploadCertificate(type, fileInputId) {
     const fileInput = document.getElementById(fileInputId);
     const file = fileInput.files[0];
-    
+
     if (!file) {
-        alert('Please select a file to upload.');
+        showAlert('Please select a file to upload.', 'warning');
         return;
     }
-    
+
     const formData = new FormData();
     formData.append('certificate', file);
-    
+
     fetch(`/api/certificates/upload/${type}`, {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            loadCertificateStatus();
-            fileInput.value = '';
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        alert('Error uploading certificate: ' + error.message);
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message, 'success');
+                fileInput.value = '';
+                refreshAll();
+            } else {
+                showAlert('Upload failed: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error uploading certificate: ' + error.message, 'danger');
+        });
 }
 
 function generateCertificates() {
     if (!confirm('This will generate new certificates and overwrite existing ones. Continue?')) {
         return;
     }
-    
+
     fetch('/api/certificates/generate', {
         method: 'POST'
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message + ' Please restart the service for changes to take effect.');
-            loadCertificateStatus();
-        } else {
-            alert('Error generating certificates: ' + data.message);
-        }
-    })
-    .catch(error => {
-        alert('Error: ' + error.message);
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message + ' Please restart the service for changes to take effect.', 'success');
+                refreshAll();
+            } else {
+                showAlert('Error generating certificates: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error generating certificates: ' + error.message, 'danger');
+        });
 }
 
 function backupCertificates() {
@@ -246,41 +649,93 @@ function backupCertificates() {
 function restoreFromBackup() {
     const fileInput = document.getElementById('backupFile');
     const file = fileInput.files[0];
-    
+
     if (!file) {
-        alert('Please select a backup ZIP file.');
+        showAlert('Please select a backup ZIP file.', 'warning');
         return;
     }
-    
+
     if (!confirm('This will replace all existing certificates. Continue?')) {
         return;
     }
-    
+
     const formData = new FormData();
     formData.append('backup', file);
-    
+
     fetch('/api/certificates/restore', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message + ' Please restart the service for changes to take effect.');
-            loadCertificateStatus();
-            fileInput.value = '';
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        alert('Error restoring certificates: ' + error.message);
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message + ' Please restart the service for changes to take effect.', 'success');
+                fileInput.value = '';
+                refreshAll();
+            } else {
+                showAlert('Error restoring certificates: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error restoring certificates: ' + error.message, 'danger');
+        });
+}
+
+function downloadBsCertificate(eui) {
+    window.location.href = `/api/base-stations/${eui}/certificate/download`;
+}
+
+function regenerateBsCertificate(eui) {
+    if (!confirm(`Regenerate certificate for base station ${eui}? This will overwrite the existing certificate.`)) {
+        return;
+    }
+
+    fetch(`/api/base-stations/${eui}/certificate/generate`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message, 'success');
+                refreshAll();
+            } else {
+                showAlert('Error regenerating certificate: ' + (data.message || 'unknown error'), 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error regenerating certificate: ' + error.message, 'danger');
+        });
+}
+
+function initBsCertControls() {
+    document.getElementById('bsCertSearch').addEventListener('input', (event) => {
+        bsCertSearch = event.target.value.trim();
+        bsCertPage = 1;
+        renderBsCertificateTable();
+    });
+
+    document.getElementById('bsCertPageSize').addEventListener('change', (event) => {
+        bsCertPageSize = Math.max(1, parseInt(event.target.value, 10) || 20);
+        bsCertPage = 1;
+        renderBsCertificateTable();
+    });
+
+    document.getElementById('bsCertPrev').addEventListener('click', () => {
+        if (bsCertPage <= 1) return;
+        bsCertPage -= 1;
+        renderBsCertificateTable();
+    });
+
+    document.getElementById('bsCertNext').addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(getFilteredBsCertificates().length / bsCertPageSize));
+        if (bsCertPage >= totalPages) return;
+        bsCertPage += 1;
+        renderBsCertificateTable();
     });
 }
 
-// Load certificate status when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadCertificateStatus();
+document.addEventListener('DOMContentLoaded', () => {
+    initBsCertControls();
+    refreshAll();
 });
 </script>
 {% endblock %}
+

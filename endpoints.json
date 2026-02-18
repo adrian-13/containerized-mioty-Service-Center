@@ -7,6 +7,18 @@
         "name": "Testovac\u00ed senzor",
         "tags": [
             "test"
-        ]
+        ],
+        "gps_lat": 48.769244,
+        "gps_lng": 18.636525
+    },
+    {
+        "eui": "00124B001CBCE175",
+        "nwKey": "08596059015260490152709608156098",
+        "shortAddr": "A171",
+        "name": "Testovac\u00ed senzor 2",
+        "tags": [
+            "test"
+        ],
+        "bidi": true
     }
 ]

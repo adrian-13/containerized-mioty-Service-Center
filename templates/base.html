@@ -29,6 +29,21 @@
             --danger-500: #cb3a42;
             --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.08);
             --shadow-strong: 0 20px 45px rgba(15, 23, 42, 0.16);
+            --ui-base-font: clamp(13px, 0.2vw + 11.6px, 17px);
+            --ui-font-scale: 1;
+            --ui-sidebar-width: clamp(236px, 15.5vw, 282px);
+            --ui-topbar-pad-y: clamp(0.68rem, 0.7vw, 0.96rem);
+            --ui-topbar-pad-x: clamp(0.9rem, 1.2vw, 1.4rem);
+            --ui-content-pad-x: clamp(0.9rem, 1.2vw, 1.4rem);
+            --ui-content-pad-y: clamp(1rem, 1.3vw, 1.8rem);
+            --ui-sidebar-pad-y: clamp(0.8rem, 0.95vw, 1rem);
+            --ui-sidebar-pad-x: clamp(0.64rem, 0.8vw, 0.9rem);
+        }
+
+        html {
+            font-size: calc(var(--ui-base-font) * var(--ui-font-scale));
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
         }
 
         * {
@@ -44,6 +59,7 @@
                 var(--surface-0);
             color: var(--text-900);
             font-family: "Manrope", "Segoe UI", sans-serif;
+            line-height: 1.45;
         }
 
         .app-shell {
@@ -52,12 +68,12 @@
         }
 
         .app-sidebar {
-            width: 270px;
+            width: var(--ui-sidebar-width);
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
             gap: 1.1rem;
-            padding: 1rem 0.85rem;
+            padding: var(--ui-sidebar-pad-y) var(--ui-sidebar-pad-x);
             background:
                 linear-gradient(185deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%),
                 linear-gradient(160deg, var(--sidebar-900) 0%, var(--sidebar-800) 48%, var(--sidebar-700) 100%);
@@ -206,7 +222,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0.9rem 1.35rem;
+            padding: var(--ui-topbar-pad-y) var(--ui-topbar-pad-x);
             border-bottom: 1px solid rgba(134, 153, 175, 0.25);
             background: rgba(245, 249, 255, 0.86);
             backdrop-filter: blur(8px);
@@ -243,6 +259,62 @@
             box-shadow: var(--shadow-soft);
         }
 
+        .topbar-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.48rem;
+        }
+
+        .topbar-tool {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.1rem;
+            height: 2.1rem;
+            border: 1px solid #c8d3e3;
+            border-radius: 0.62rem;
+            background: #fff;
+            color: #274261;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.18s ease;
+        }
+
+        .topbar-tool:hover,
+        .topbar-tool:focus {
+            border-color: #99aecb;
+            background: #f5f9ff;
+            color: #1e3654;
+            transform: translateY(-1px);
+        }
+
+        .display-setting-card {
+            border: 1px solid #dbe5f2;
+            border-radius: 0.82rem;
+            background: #fbfdff;
+            padding: 0.72rem;
+            display: grid;
+            gap: 0.44rem;
+        }
+
+        .display-setting-title {
+            margin: 0;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #2e3f55;
+        }
+
+        .display-setting-note {
+            margin: 0;
+            color: #607189;
+            font-size: 0.72rem;
+        }
+
+        .display-zoom-value {
+            font-size: 0.76rem;
+            color: #4f647f;
+            font-weight: 700;
+        }
+
         .sidebar-toggle {
             display: none;
             align-items: center;
@@ -256,7 +328,125 @@
         }
 
         .app-content {
-            padding: 1.25rem 1.35rem 1.8rem;
+            padding: var(--ui-content-pad-y) var(--ui-content-pad-x) calc(var(--ui-content-pad-y) + 0.45rem);
+        }
+
+        .workspace-shell {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .workspace-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.85rem;
+            padding: 0.82rem 0.94rem;
+            border: 1px solid #d5deeb;
+            border-radius: 0.95rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .workspace-kicker {
+            margin: 0;
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #5f7088;
+            font-weight: 800;
+        }
+
+        .workspace-title {
+            margin: 0.18rem 0 0;
+            font-family: "Sora", "Manrope", sans-serif;
+            font-size: 1.24rem;
+            font-weight: 700;
+            color: var(--text-900);
+        }
+
+        .workspace-subtitle {
+            margin: 0.24rem 0 0;
+            font-size: 0.79rem;
+            color: #5f7088;
+        }
+
+        .workspace-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+        }
+
+        .workspace-kpi-grid {
+            display: grid;
+            gap: 0.7rem;
+        }
+
+        .workspace-kpi {
+            border: 1px solid #d5deeb;
+            border-radius: 0.92rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: var(--shadow-soft);
+            padding: 0.72rem 0.8rem;
+        }
+
+        .workspace-kpi-label {
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #607089;
+            font-weight: 800;
+        }
+
+        .workspace-kpi-value {
+            margin-top: 0.32rem;
+            font-size: 1.22rem;
+            line-height: 1.1;
+            font-weight: 800;
+            color: var(--text-900);
+        }
+
+        .workspace-kpi-note {
+            margin-top: 0.14rem;
+            color: #63758d;
+            font-size: 0.72rem;
+        }
+
+        .workspace-panel {
+            border: 1px solid #d5deeb;
+            border-radius: 0.98rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+        }
+
+        .workspace-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.7rem;
+            padding: 0.76rem 0.9rem;
+            border-bottom: 1px solid #dce5f2;
+            background: linear-gradient(150deg, #1b2840 0%, #2a3f60 100%);
+            color: #f8fbff;
+        }
+
+        .workspace-panel-head h5 {
+            margin: 0;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .workspace-panel-sub {
+            font-size: 0.72rem;
+            color: rgba(238, 245, 255, 0.78);
+            font-weight: 600;
+        }
+
+        .workspace-panel-body {
+            padding: 0.85rem;
         }
 
         .card {
@@ -394,6 +584,52 @@
             background: linear-gradient(180deg, #fafcff 0%, #f3f8fd 100%);
         }
 
+        html.ui-compact {
+            --ui-sidebar-width: clamp(214px, 13.8vw, 246px);
+            --ui-content-pad-x: clamp(0.74rem, 0.95vw, 1.1rem);
+            --ui-content-pad-y: clamp(0.82rem, 1vw, 1.2rem);
+            --ui-topbar-pad-x: clamp(0.76rem, 1vw, 1.14rem);
+            --ui-topbar-pad-y: clamp(0.56rem, 0.62vw, 0.8rem);
+        }
+
+        html.ui-compact .workspace-head {
+            padding: 0.68rem 0.78rem;
+        }
+
+        html.ui-compact .workspace-panel-head {
+            padding: 0.66rem 0.8rem;
+        }
+
+        html.ui-compact .workspace-panel-body {
+            padding: 0.72rem;
+        }
+
+        html.ui-compact .card-header {
+            padding: 0.74rem 0.86rem;
+        }
+
+        html.ui-compact .btn {
+            padding: 0.42rem 0.74rem;
+        }
+
+        html.ui-condensed {
+            --ui-base-font: clamp(12px, 0.16vw + 10.9px, 14px);
+            --ui-sidebar-width: clamp(198px, 12.5vw, 226px);
+        }
+
+        html.ui-condensed .side-nav-link {
+            padding: 0.44rem 0.54rem;
+            font-size: 0.78rem;
+        }
+
+        html.ui-condensed .brand {
+            padding: 0.72rem 0.7rem;
+        }
+
+        html.ui-condensed .workspace-panel-body {
+            padding: 0.62rem;
+        }
+
         .text-muted {
             color: var(--text-500) !important;
         }
@@ -486,9 +722,22 @@
                 padding-right: 0.95rem;
             }
 
+            .topbar-user span {
+                display: none;
+            }
+
             .app-content {
                 padding-left: 0.9rem;
                 padding-right: 0.9rem;
+            }
+
+            .workspace-head {
+                flex-direction: column;
+            }
+
+            .workspace-actions {
+                width: 100%;
+                justify-content: flex-start;
             }
         }
 
@@ -560,12 +809,6 @@
                     <span>System Health</span>
                 </a>
                 {% endif %}
-                {% if 'traffic' in visible_tabs %}
-                <a class="side-nav-link {% if endpoint == 'traffic' %}active{% endif %}" href="{{ url_for('traffic') }}">
-                    <i class="fas fa-wave-square"></i>
-                    <span>Traffic Metrics</span>
-                </a>
-                {% endif %}
                 {% if 'network' in visible_tabs %}
                 <a class="side-nav-link {% if endpoint == 'network' %}active{% endif %}" href="{{ url_for('network') }}">
                     <i class="fas fa-project-diagram"></i>
@@ -627,12 +870,17 @@
                         <p class="topbar-sub">BSSCI service workspace</p>
                     </div>
                 </div>
-                {% if current_user %}
-                <div class="topbar-user">
-                    <i class="fas fa-user-circle"></i>
-                    <span>{{ current_user.role }}</span>
+                <div class="topbar-actions">
+                    <button class="topbar-tool" type="button" data-bs-toggle="modal" data-bs-target="#displaySettingsModal" title="Display settings" aria-label="Display settings">
+                        <i class="fas fa-sliders-h"></i>
+                    </button>
+                    {% if current_user %}
+                    <div class="topbar-user">
+                        <i class="fas fa-user-circle"></i>
+                        <span>{{ current_user.role }}</span>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </header>
 
             <div class="app-content">
@@ -641,7 +889,149 @@
         </main>
     </div>
 
+    <div class="modal fade" id="displaySettingsModal" tabindex="-1" aria-labelledby="displaySettingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="displaySettingsModalLabel">Display Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body d-grid gap-2">
+                    <section class="display-setting-card">
+                        <div class="d-flex align-items-center justify-content-between gap-2">
+                            <p class="display-setting-title">UI zoom</p>
+                            <span class="display-zoom-value" id="display-zoom-value">100%</span>
+                        </div>
+                        <input id="display-zoom-range" type="range" class="form-range" min="85" max="130" step="5" value="100">
+                        <p class="display-setting-note">Scales text and spacing for high-DPI or smaller screens.</p>
+                    </section>
+                    <section class="display-setting-card">
+                        <label class="display-setting-title" for="display-density-select">Layout density</label>
+                        <select id="display-density-select" class="form-select form-select-sm">
+                            <option value="auto">Auto (recommended)</option>
+                            <option value="comfortable">Comfortable</option>
+                            <option value="compact">Compact</option>
+                            <option value="condensed">Condensed</option>
+                        </select>
+                        <p class="display-setting-note">Controls how tightly panels and navigation are packed.</p>
+                    </section>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="display-settings-reset">Reset</button>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const DISPLAY_PREFS_KEY = 'service-center.display.v1';
+        const DISPLAY_DEFAULTS = { scale: 100, density: 'auto' };
+
+        function clamp(value, min, max, fallback) {
+            const num = Number(value);
+            if (!Number.isFinite(num)) return fallback;
+            return Math.min(max, Math.max(min, num));
+        }
+
+        function loadDisplayPrefs() {
+            const prefs = { ...DISPLAY_DEFAULTS };
+            try {
+                const raw = localStorage.getItem(DISPLAY_PREFS_KEY);
+                if (!raw) return prefs;
+                const parsed = JSON.parse(raw);
+                prefs.scale = clamp(parsed.scale, 85, 130, DISPLAY_DEFAULTS.scale);
+                if (['auto', 'comfortable', 'compact', 'condensed'].includes(parsed.density)) {
+                    prefs.density = parsed.density;
+                }
+            } catch (error) {
+                return prefs;
+            }
+            return prefs;
+        }
+
+        function saveDisplayPrefs(prefs) {
+            try {
+                localStorage.setItem(DISPLAY_PREFS_KEY, JSON.stringify(prefs));
+            } catch (error) {
+                // ignore localStorage limitations
+            }
+        }
+
+        const displayPrefs = loadDisplayPrefs();
+
+        function applyViewportDensity() {
+            const root = document.documentElement;
+            const width = window.innerWidth || document.documentElement.clientWidth || 0;
+            const density = displayPrefs.density || 'auto';
+
+            root.classList.remove('ui-compact', 'ui-condensed');
+
+            if (density === 'auto') {
+                root.classList.toggle('ui-compact', width > 0 && width < 1680);
+                root.classList.toggle('ui-condensed', width > 0 && width < 1360);
+                return;
+            }
+
+            if (density === 'compact') {
+                root.classList.add('ui-compact');
+                return;
+            }
+
+            if (density === 'condensed') {
+                root.classList.add('ui-compact', 'ui-condensed');
+            }
+        }
+
+        function syncDisplayControls() {
+            const zoomRange = document.getElementById('display-zoom-range');
+            const zoomValue = document.getElementById('display-zoom-value');
+            const densitySelect = document.getElementById('display-density-select');
+            if (zoomRange) zoomRange.value = String(displayPrefs.scale);
+            if (zoomValue) zoomValue.textContent = `${displayPrefs.scale}%`;
+            if (densitySelect) densitySelect.value = displayPrefs.density;
+        }
+
+        function applyDisplayPrefs() {
+            document.documentElement.style.setProperty('--ui-font-scale', (displayPrefs.scale / 100).toFixed(2));
+            applyViewportDensity();
+            syncDisplayControls();
+        }
+
+        function initDisplaySettings() {
+            const zoomRange = document.getElementById('display-zoom-range');
+            const densitySelect = document.getElementById('display-density-select');
+            const resetBtn = document.getElementById('display-settings-reset');
+
+            if (zoomRange) {
+                zoomRange.addEventListener('input', (event) => {
+                    displayPrefs.scale = clamp(event.target.value, 85, 130, DISPLAY_DEFAULTS.scale);
+                    applyDisplayPrefs();
+                    saveDisplayPrefs(displayPrefs);
+                });
+            }
+
+            if (densitySelect) {
+                densitySelect.addEventListener('change', (event) => {
+                    const mode = event.target.value;
+                    displayPrefs.density = ['auto', 'comfortable', 'compact', 'condensed'].includes(mode) ? mode : 'auto';
+                    applyDisplayPrefs();
+                    saveDisplayPrefs(displayPrefs);
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    displayPrefs.scale = DISPLAY_DEFAULTS.scale;
+                    displayPrefs.density = DISPLAY_DEFAULTS.density;
+                    applyDisplayPrefs();
+                    saveDisplayPrefs(displayPrefs);
+                });
+            }
+
+            syncDisplayControls();
+        }
+
         function toggleSidebar(forceOpen) {
             if (typeof forceOpen === 'boolean') {
                 document.body.classList.toggle('sidebar-open', forceOpen);
@@ -651,10 +1041,18 @@
         }
 
         window.addEventListener('resize', function() {
+            applyViewportDensity();
             if (window.innerWidth > 1024) {
                 document.body.classList.remove('sidebar-open');
             }
         });
+
+        if (window.visualViewport && window.visualViewport.addEventListener) {
+            window.visualViewport.addEventListener('resize', applyViewportDensity);
+        }
+
+        applyDisplayPrefs();
+        initDisplaySettings();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}

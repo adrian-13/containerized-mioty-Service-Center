@@ -1,269 +1,651 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}Logs{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <!-- BSSCI Service Status -->
-        <div class="col-12 mb-3">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0">BSSCI Service Status</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="service-status">
-                        <div class="text-center">
-                            <div class="spinner-border spinner-border-sm" role="status"></div>
-                            <span class="ml-2">Checking service status...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<style>
+.logs-shell {
+    display: grid;
+    gap: 0.85rem;
+}
 
-        <!-- Log Filters -->
-        <div class="col-12 mb-3">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">Log Filters</h6>
-                    <div>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="refreshLogs()">Refresh</button>
-                        <button class="btn btn-outline-danger btn-sm ml-2" onclick="clearLogs()">Clear Logs</button>
-                    </div>
-                </div>
-                <div class="card-body p-3">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label for="levelFilter">Log Level:</label>
-                            <select id="levelFilter" class="form-control form-control-sm" onchange="refreshLogs()">
-                                <option value="all">All Levels</option>
-                                <option value="ERROR">ERROR</option>
-                                <option value="WARNING">WARNING</option>
-                                <option value="INFO">INFO</option>
-                                <option value="DEBUG">DEBUG</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="loggerFilter">Logger:</label>
-                            <select id="loggerFilter" class="form-control form-control-sm" onchange="refreshLogs()">
-                                <option value="all">All Loggers</option>
-                                <option value="TLSServer">TLS Server</option>
-                                <option value="main">Main</option>
-                                <option value="werkzeug">Web UI</option>
-                                <option value="mqtt">MQTT</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="limitFilter">Limit:</label>
-                            <select id="limitFilter" class="form-control form-control-sm" onchange="refreshLogs()">
-                                <option value="50">50 entries</option>
-                                <option value="100" selected>100 entries</option>
-                                <option value="200">200 entries</option>
-                                <option value="500">500 entries</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
-                                <label class="form-check-label" for="autoRefresh">
-                                    Auto-refresh (3s)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+.logs-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.72rem 0.84rem;
+    border: 1px solid #d5deeb;
+    border-radius: 0.94rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+}
 
-        <!-- Logs Display -->
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">System Logs</h5>
-                    <div id="log-stats" class="text-muted small">
-                        <!-- Stats will be populated by JavaScript -->
-                    </div>
+.logs-head-title {
+    margin: 0;
+    font-family: "Sora", "Manrope", sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.logs-head-sub {
+    margin: 0.14rem 0 0;
+    color: #5f7088;
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
+.logs-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    flex-wrap: wrap;
+}
+
+.logs-control-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.58rem;
+}
+
+.logs-control-item {
+    grid-column: span 3;
+}
+
+.logs-control-item.wide {
+    grid-column: span 4;
+}
+
+.logs-control-item.narrow {
+    grid-column: span 2;
+}
+
+.logs-inline-toggles {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.logs-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.log-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.26rem;
+    padding: 0.18rem 0.46rem;
+    border-radius: 999px;
+    border: 1px solid #cfdaea;
+    background: #f7fbff;
+    color: #364f6e;
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+
+.log-chip.critical {
+    background: #fff3f4;
+    border-color: #f2c7cb;
+    color: #a52831;
+}
+
+.log-chip.warning {
+    background: #fff8ec;
+    border-color: #f6d8a6;
+    color: #9d6500;
+}
+
+.logs-console {
+    border: 1px solid #2f3f57;
+    border-radius: 0.84rem;
+    background: #111827;
+    min-height: 56vh;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 0.45rem;
+    font-family: "JetBrains Mono", "Consolas", "Courier New", monospace;
+}
+
+.log-line {
+    border: 1px solid #2a3b53;
+    border-radius: 0.62rem;
+    background: #162133;
+    margin-bottom: 0.42rem;
+    padding: 0.46rem 0.52rem;
+}
+
+.log-line:last-child {
+    margin-bottom: 0;
+}
+
+.log-line.level-ERROR {
+    border-left: 4px solid #dc3545;
+}
+
+.log-line.level-WARNING {
+    border-left: 4px solid #e4a313;
+}
+
+.log-line.level-INFO {
+    border-left: 4px solid #17a2b8;
+}
+
+.log-line.level-DEBUG {
+    border-left: 4px solid #6b7a91;
+}
+
+.log-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.42rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.28rem;
+}
+
+.log-time {
+    color: #9db0c8;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.log-level {
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    border-radius: 999px;
+    padding: 0.13rem 0.38rem;
+    border: 1px solid transparent;
+}
+
+.log-level.ERROR {
+    color: #ffd6d9;
+    background: #6f1a24;
+    border-color: #a9303f;
+}
+
+.log-level.WARNING {
+    color: #ffeac4;
+    background: #6d4a10;
+    border-color: #9a6a0b;
+}
+
+.log-level.INFO {
+    color: #d5f8ff;
+    background: #135264;
+    border-color: #1c7994;
+}
+
+.log-level.DEBUG {
+    color: #d7deea;
+    background: #3d4a5f;
+    border-color: #657590;
+}
+
+.log-logger {
+    color: #84b7ff;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.log-source {
+    color: #90a3bb;
+    font-size: 0.64rem;
+}
+
+.log-msg {
+    margin: 0;
+    color: #e2eaf5;
+    font-size: 0.73rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.log-empty {
+    min-height: 220px;
+    display: grid;
+    place-items: center;
+    color: #9fb2c9;
+    font-weight: 700;
+}
+
+.log-msg mark {
+    background: #ffe27a;
+    color: #1f2f46;
+    padding: 0 0.1rem;
+    border-radius: 0.2rem;
+}
+
+@media (max-width: 1100px) {
+    .logs-control-item,
+    .logs-control-item.wide,
+    .logs-control-item.narrow {
+        grid-column: span 6;
+    }
+}
+
+@media (max-width: 680px) {
+    .logs-control-item,
+    .logs-control-item.wide,
+    .logs-control-item.narrow {
+        grid-column: span 12;
+    }
+}
+</style>
+
+<div class="logs-shell">
+    <section class="logs-head">
+        <div>
+            <h2 class="logs-head-title">System Logs</h2>
+            <p class="logs-head-sub">Live memory stream with search, filtering, and export.</p>
+        </div>
+        <div class="logs-head-actions">
+            <button class="btn btn-outline-secondary btn-sm" id="btnRefreshLogs" type="button"><i class="fas fa-sync me-1"></i>Refresh</button>
+            <button class="btn btn-outline-secondary btn-sm" id="btnExportJson" type="button"><i class="fas fa-file-download me-1"></i>JSON</button>
+            <button class="btn btn-outline-secondary btn-sm" id="btnExportCsv" type="button"><i class="fas fa-file-csv me-1"></i>CSV</button>
+            <button class="btn btn-outline-danger btn-sm" id="btnClearLogs" type="button"><i class="fas fa-trash-alt me-1"></i>Clear</button>
+        </div>
+    </section>
+
+    <section class="workspace-panel">
+        <div class="workspace-panel-head">
+            <h5><i class="fas fa-heartbeat me-2"></i>BSSCI Service Status</h5>
+            <small id="serviceUpdated">Updated --:--:--</small>
+        </div>
+        <div class="workspace-panel-body" id="serviceStatusBody">
+            <div class="text-muted small">Loading service status...</div>
+        </div>
+    </section>
+
+    <section class="workspace-panel">
+        <div class="workspace-panel-head">
+            <h5><i class="fas fa-filter me-2"></i>Filters</h5>
+            <small id="logsUpdated">Updated --:--:--</small>
+        </div>
+        <div class="workspace-panel-body">
+            <div class="logs-control-grid">
+                <div class="logs-control-item wide">
+                    <label class="form-label" for="searchFilter">Search</label>
+                    <input id="searchFilter" class="form-control form-control-sm" type="text" placeholder="Search message, logger, source...">
                 </div>
-                <div class="card-body p-0">
-                    <div id="logs-container" style="height: 60vh; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; background-color: #1e1e1e; color: #d4d4d4;">
-                        <div class="text-center p-4">
-                            <div class="spinner-border text-light" role="status">
-                                <span class="sr-only">Loading...</span>
-                            </div>
-                            <p class="mt-2 text-light">Loading logs...</p>
+                <div class="logs-control-item">
+                    <label class="form-label" for="levelFilter">Level</label>
+                    <select id="levelFilter" class="form-select form-select-sm">
+                        <option value="all">All levels</option>
+                        <option value="ERROR">ERROR</option>
+                        <option value="WARNING">WARNING</option>
+                        <option value="INFO">INFO</option>
+                        <option value="DEBUG">DEBUG</option>
+                    </select>
+                </div>
+                <div class="logs-control-item">
+                    <label class="form-label" for="loggerFilter">Logger</label>
+                    <select id="loggerFilter" class="form-select form-select-sm">
+                        <option value="all">All loggers</option>
+                    </select>
+                </div>
+                <div class="logs-control-item narrow">
+                    <label class="form-label" for="limitFilter">Limit</label>
+                    <select id="limitFilter" class="form-select form-select-sm">
+                        <option value="50">50</option>
+                        <option value="100" selected>100</option>
+                        <option value="200">200</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                    </select>
+                </div>
+                <div class="logs-control-item narrow">
+                    <label class="form-label" for="intervalFilter">Refresh</label>
+                    <select id="intervalFilter" class="form-select form-select-sm">
+                        <option value="2">2s</option>
+                        <option value="3" selected>3s</option>
+                        <option value="5">5s</option>
+                        <option value="10">10s</option>
+                    </select>
+                </div>
+                <div class="logs-control-item wide d-flex align-items-end">
+                    <div class="logs-inline-toggles">
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                            <label class="form-check-label" for="autoRefresh">Auto-refresh</label>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" id="followTail" checked>
+                            <label class="form-check-label" for="followTail">Follow tail</label>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="workspace-panel">
+        <div class="workspace-panel-head">
+            <h5><i class="fas fa-terminal me-2"></i>Log Stream</h5>
+            <small id="logStatsText">Waiting for data...</small>
+        </div>
+        <div class="workspace-panel-body">
+            <div class="logs-stats-row" id="logStatsChips"></div>
+            <div class="logs-console mt-2" id="logsContainer">
+                <div class="log-empty">Loading logs...</div>
+            </div>
+        </div>
+    </section>
 </div>
 
 <script>
-let autoRefreshInterval;
-
-function refreshServiceStatus() {
-    fetch('/api/bssci/status')
-        .then(response => response.json())
-        .then(data => {
-            const container = document.getElementById('service-status');
-            let html = '';
-
-            if (data.running) {
-                html = `
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <span class="badge badge-success">RUNNING</span>
-                                <div class="small text-muted">Service Status</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <strong>${data.base_stations ? data.base_stations.total_connected : 0}</strong>
-                                <div class="small text-muted">Base Stations</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <strong>${data.tls_server ? data.tls_server.registered_sensors : 0}/${data.tls_server ? data.tls_server.total_sensors : 0}</strong>
-                                <div class="small text-muted">Registered Sensors</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <strong>${data.tls_server ? data.tls_server.pending_requests : 0}</strong>
-                                <div class="small text-muted">Pending Requests</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                html = `
-                    <div class="text-center">
-                        <span class="badge badge-danger">NOT RUNNING</span>
-                        <div class="small text-muted mt-1">Error: ${data.error}</div>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = html;
-        })
-        .catch(error => {
-            console.error('Error fetching service status:', error);
-            document.getElementById('service-status').innerHTML = 
-                '<div class="text-center text-danger">Error loading service status</div>';
-        });
-}
-
-function refreshLogs() {
-    const level = document.getElementById('levelFilter').value;
-    const logger = document.getElementById('loggerFilter').value;
-    const limit = document.getElementById('limitFilter').value;
-
-    const params = new URLSearchParams({
-        level: level,
-        logger: logger,
-        limit: limit
-    });
-
-    fetch(`/api/logs?${params}`)
-        .then(response => response.json())
-        .then(data => {
-            const container = document.getElementById('logs-container');
-            const statsContainer = document.getElementById('log-stats');
-
-            // Update stats
-            const totalLogs = data.total_logs || 0;
-            const filteredLogs = data.filtered_logs || data.logs.length;
-            const currentLogs = data.logs.length;
-            
-            statsContainer.innerHTML = `
-                Showing ${currentLogs} of ${filteredLogs} filtered logs 
-                (${totalLogs} total) - Source: ${data.source || 'unknown'}
-            `;
-
-            if (data.logs.length === 0) {
-                container.innerHTML = '<div class="text-center p-4" style="color: #d4d4d4;">No logs available</div>';
-                return;
-            }
-
-            let html = '';
-            data.logs.forEach(log => {
-                const timestamp = log.timestamp || 'No timestamp';
-                const level = log.level || 'INFO';
-                const logger = log.logger || 'unknown';
-                const message = log.message || 'No message';
-                const source = log.source || '';
-                
-                const levelColor = getLevelColor(level);
-                html += `<div class="log-entry p-2" style="border-bottom: 1px solid #333;">
-                    <span style="color: #888;">${timestamp}</span>
-                    <span style="background-color: ${levelColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 8px;">${level}</span>
-                    <span style="color: #569cd6; margin-left: 8px;">${logger}</span>
-                    ${source ? `<span style="color: #666; margin-left: 8px; font-size: 10px;">[${source}]</span>` : ''}
-                    <div style="margin-left: 16px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(message)}</div>
-                </div>`;
-            });
-
-            container.innerHTML = html;
-            // Auto-scroll to bottom
-            container.scrollTop = container.scrollHeight;
-        })
-        .catch(error => {
-            console.error('Error fetching logs:', error);
-            document.getElementById('logs-container').innerHTML = 
-                '<div class="text-center p-4" style="color: #ff6b6b;">Error loading logs</div>';
-        });
-}
-
-function clearLogs() {
-    if (confirm('Are you sure you want to clear all logs?')) {
-        fetch('/api/logs/clear', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    refreshLogs();
-                }
-            });
-    }
-}
-
-function getLevelColor(level) {
-    switch(level) {
-        case 'ERROR': return '#dc3545';
-        case 'WARNING': return '#ffc107';
-        case 'INFO': return '#17a2b8';
-        case 'DEBUG': return '#6c757d';
-        default: return '#6c757d';
-    }
-}
+let autoRefreshTimer = null;
+let latestLogsPayload = null;
+let latestFilteredLogs = [];
+let refreshInFlight = false;
+let searchDebounceTimer = null;
 
 function escapeHtml(text) {
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = text == null ? '' : String(text);
     return div.innerHTML;
 }
 
-function toggleAutoRefresh() {
-    const checkbox = document.getElementById('autoRefresh');
-    if (checkbox.checked && !autoRefreshInterval) {
-        autoRefreshInterval = setInterval(() => {
-            refreshLogs();
-            refreshServiceStatus();
-        }, 3000);
-    } else if (!checkbox.checked && autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-        autoRefreshInterval = null;
+function escapeRegExp(text) {
+    return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightMatch(text, query) {
+    const raw = text == null ? '' : String(text);
+    const q = String(query || '').trim();
+    if (!q) return escapeHtml(raw);
+
+    const regex = new RegExp(escapeRegExp(q), 'ig');
+    let out = '';
+    let last = 0;
+    let match;
+
+    while ((match = regex.exec(raw)) !== null) {
+        const start = match.index;
+        const end = start + match[0].length;
+        out += escapeHtml(raw.slice(last, start));
+        out += `<mark>${escapeHtml(raw.slice(start, end))}</mark>`;
+        last = end;
+    }
+
+    if (last < raw.length) {
+        out += escapeHtml(raw.slice(last));
+    }
+
+    return out || escapeHtml(raw);
+}
+
+function getNowStamp() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function getLevelClass(level) {
+    const normalized = String(level || 'INFO').toUpperCase();
+    if (['ERROR', 'WARNING', 'INFO', 'DEBUG'].includes(normalized)) return normalized;
+    return 'DEBUG';
+}
+
+function renderServiceStatus(data) {
+    const container = document.getElementById('serviceStatusBody');
+    const updated = document.getElementById('serviceUpdated');
+    updated.textContent = `Updated ${getNowStamp()}`;
+
+    if (!data || !data.running) {
+        container.innerHTML = `
+            <div class="alert alert-danger mb-0">
+                <strong>Service not running.</strong> ${escapeHtml((data && data.error) || 'Unknown error')}
+            </div>
+        `;
+        return;
+    }
+
+    const connectedBs = Number((data.base_stations && data.base_stations.total_connected) || 0);
+    const connectingBs = Number((data.base_stations && data.base_stations.total_connecting) || 0);
+    const regSensors = Number((data.tls_server && data.tls_server.registered_sensors) || 0);
+    const totalSensors = Number((data.tls_server && data.tls_server.total_sensors) || 0);
+    const pendingReq = Number((data.tls_server && data.tls_server.pending_requests) || 0);
+
+    container.innerHTML = `
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="log-chip"><i class="fas fa-circle text-success"></i>Running</span>
+            <span class="log-chip"><i class="fas fa-broadcast-tower"></i>${connectedBs} connected BS</span>
+            <span class="log-chip"><i class="fas fa-spinner"></i>${connectingBs} connecting BS</span>
+            <span class="log-chip"><i class="fas fa-microchip"></i>${regSensors}/${totalSensors} sensors</span>
+            <span class="log-chip"><i class="fas fa-hourglass-half"></i>${pendingReq} pending</span>
+        </div>
+    `;
+}
+
+function buildLogStats(payload) {
+    const statsText = document.getElementById('logStatsText');
+    const chips = document.getElementById('logStatsChips');
+
+    const total = Number((payload && payload.total_logs) || 0);
+    const filtered = Number((payload && payload.filtered_logs) || 0);
+    const shown = Array.isArray(payload && payload.logs) ? payload.logs.length : 0;
+    const counts = (payload && payload.level_counts) || {};
+
+    statsText.textContent = `Updated ${getNowStamp()} | Source: ${escapeHtml((payload && payload.source) || 'unknown')}`;
+
+    chips.innerHTML = `
+        <span class="log-chip">Total ${total}</span>
+        <span class="log-chip">Filtered ${filtered}</span>
+        <span class="log-chip">Shown ${shown}</span>
+        <span class="log-chip critical">ERROR ${Number(counts.ERROR || 0)}</span>
+        <span class="log-chip warning">WARN ${Number(counts.WARNING || 0)}</span>
+        <span class="log-chip">INFO ${Number(counts.INFO || 0)}</span>
+        <span class="log-chip">DEBUG ${Number(counts.DEBUG || 0)}</span>
+    `;
+}
+
+function renderLoggerOptions(payload) {
+    const select = document.getElementById('loggerFilter');
+    const names = Array.isArray(payload && payload.logger_names) ? payload.logger_names : [];
+    const current = select.value || 'all';
+
+    const options = ['<option value="all">All loggers</option>'];
+    names.forEach(name => {
+        options.push(`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`);
+    });
+
+    select.innerHTML = options.join('');
+    if ([ 'all', ...names ].includes(current)) {
+        select.value = current;
+    } else {
+        select.value = 'all';
     }
 }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    refreshLogs();
-    refreshServiceStatus();
-    document.getElementById('autoRefresh').addEventListener('change', toggleAutoRefresh);
-    toggleAutoRefresh(); // Start auto-refresh if checked
+function renderLogs(logs, query) {
+    const container = document.getElementById('logsContainer');
+    const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 24;
+    const previousScrollTop = container.scrollTop;
+    const followTail = document.getElementById('followTail').checked;
+
+    if (!Array.isArray(logs) || logs.length === 0) {
+        container.innerHTML = '<div class="log-empty">No logs for current filter.</div>';
+        return;
+    }
+
+    const html = logs.map(log => {
+        const level = getLevelClass(log.level);
+        const timestamp = escapeHtml(log.timestamp || 'No timestamp');
+        const loggerName = escapeHtml(log.logger || 'unknown');
+        const source = log.source ? `<span class="log-source">[${escapeHtml(log.source)}]</span>` : '';
+        const msg = highlightMatch(log.message || '', query);
+
+        return `
+            <article class="log-line level-${level}">
+                <div class="log-meta">
+                    <span class="log-time">${timestamp}</span>
+                    <span class="log-level ${level}">${level}</span>
+                    <span class="log-logger">${loggerName}</span>
+                    ${source}
+                </div>
+                <pre class="log-msg">${msg}</pre>
+            </article>
+        `;
+    }).join('');
+
+    container.innerHTML = html;
+
+    if (followTail || nearBottom) {
+        container.scrollTop = container.scrollHeight;
+    } else {
+        container.scrollTop = previousScrollTop;
+    }
+}
+
+function collectFilters() {
+    return {
+        level: document.getElementById('levelFilter').value,
+        logger: document.getElementById('loggerFilter').value,
+        limit: document.getElementById('limitFilter').value,
+        q: document.getElementById('searchFilter').value.trim(),
+    };
+}
+
+async function refreshLogs() {
+    if (refreshInFlight) return;
+    refreshInFlight = true;
+
+    try {
+        const params = new URLSearchParams(collectFilters());
+        const response = await fetch(`/api/logs?${params.toString()}`);
+        const payload = await response.json();
+
+        latestLogsPayload = payload;
+        latestFilteredLogs = Array.isArray(payload.logs) ? payload.logs : [];
+
+        renderLoggerOptions(payload);
+        buildLogStats(payload);
+        renderLogs(latestFilteredLogs, collectFilters().q);
+        document.getElementById('logsUpdated').textContent = `Updated ${getNowStamp()}`;
+    } catch (error) {
+        document.getElementById('logsContainer').innerHTML = '<div class="log-empty" style="color:#ffb8bf;">Failed to load logs.</div>';
+    } finally {
+        refreshInFlight = false;
+    }
+}
+
+async function refreshServiceStatus() {
+    try {
+        const response = await fetch('/api/bssci/status');
+        const payload = await response.json();
+        renderServiceStatus(payload);
+    } catch (error) {
+        renderServiceStatus({ running: false, error: 'Failed to load service status' });
+    }
+}
+
+function updateAutoRefreshTimer() {
+    if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+    }
+
+    const enabled = document.getElementById('autoRefresh').checked;
+    if (!enabled) return;
+
+    const seconds = Number(document.getElementById('intervalFilter').value || '3');
+    const intervalMs = Math.max(1000, seconds * 1000);
+
+    autoRefreshTimer = setInterval(() => {
+        refreshLogs();
+        refreshServiceStatus();
+    }, intervalMs);
+}
+
+async function clearLogs() {
+    if (!confirm('Clear all in-memory logs?')) return;
+
+    try {
+        const response = await fetch('/api/logs/clear', { method: 'POST' });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            alert(payload.message || payload.error || 'Unable to clear logs.');
+            return;
+        }
+        await refreshLogs();
+    } catch (error) {
+        alert('Unable to clear logs.');
+    }
+}
+
+function downloadBlob(filename, mimeType, text) {
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+function exportLogsJson() {
+    if (!latestFilteredLogs.length) return;
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    downloadBlob(`logs-${stamp}.json`, 'application/json', JSON.stringify(latestFilteredLogs, null, 2));
+}
+
+function csvEscape(value) {
+    const text = String(value == null ? '' : value);
+    if (/[",\n]/.test(text)) {
+        return '"' + text.replace(/"/g, '""') + '"';
+    }
+    return text;
+}
+
+function exportLogsCsv() {
+    if (!latestFilteredLogs.length) return;
+    const rows = [
+        ['timestamp', 'level', 'logger', 'source', 'message'].join(','),
+        ...latestFilteredLogs.map(log => [
+            csvEscape(log.timestamp),
+            csvEscape(log.level),
+            csvEscape(log.logger),
+            csvEscape(log.source),
+            csvEscape(log.message),
+        ].join(','))
+    ];
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    downloadBlob(`logs-${stamp}.csv`, 'text/csv;charset=utf-8', rows.join('\n'));
+}
+
+function bindEvents() {
+    document.getElementById('btnRefreshLogs').addEventListener('click', () => {
+        refreshLogs();
+        refreshServiceStatus();
+    });
+    document.getElementById('btnClearLogs').addEventListener('click', clearLogs);
+    document.getElementById('btnExportJson').addEventListener('click', exportLogsJson);
+    document.getElementById('btnExportCsv').addEventListener('click', exportLogsCsv);
+
+    ['levelFilter', 'loggerFilter', 'limitFilter'].forEach(id => {
+        document.getElementById(id).addEventListener('change', refreshLogs);
+    });
+
+    document.getElementById('searchFilter').addEventListener('input', () => {
+        if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(refreshLogs, 260);
+    });
+
+    document.getElementById('autoRefresh').addEventListener('change', updateAutoRefreshTimer);
+    document.getElementById('intervalFilter').addEventListener('change', updateAutoRefreshTimer);
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    bindEvents();
+    await refreshServiceStatus();
+    await refreshLogs();
+    updateAutoRefreshTimer();
 });
 </script>
 {% endblock %}

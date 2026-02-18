@@ -475,6 +475,8 @@ def _build_inventory_snapshot_lines(trigger):
                 "short_addr": str(sensor.get("shortAddr", "") or ""),
                 "tags_json": json.dumps(_normalize_sensor_tags(sensor.get("tags", [])), separators=(",", ":"), ensure_ascii=True),
                 "tags_count": len(_normalize_sensor_tags(sensor.get("tags", []))),
+                "gps_lat": sensor.get("gps_lat"),
+                "gps_lng": sensor.get("gps_lng"),
                 "packets_received": packets_received,
                 "packets_lost": packets_lost,
                 "packet_loss_pct": (packets_lost / (packets_received + packets_lost) * 100.0) if (packets_received + packets_lost) > 0 else 0.0,
@@ -524,6 +526,8 @@ def _build_inventory_snapshot_lines(trigger):
                 "name": str(bs_data.get("name", "") or ""),
                 "ip": str(bs_data.get("ip", "") or ""),
                 "tags_json": json.dumps(bs_data.get("tags", []), separators=(",", ":"), ensure_ascii=True),
+                "gps_lat": bs_data.get("gps_lat"),
+                "gps_lng": bs_data.get("gps_lng"),
                 "connected": status == "connected",
                 "connecting": status == "connecting",
                 "connected_sensors": int(connected_sensors_per_bs.get(eui_lower, 0)),
@@ -601,6 +605,211 @@ def _normalize_sensor_tags(value):
         result.append(tag)
     return result
 
+def _normalize_optional_coordinate(value, label):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        raw = value.strip()
+        if raw == "":
+            return None
+        value = raw
+    try:
+        num = float(value)
+    except Exception:
+        raise ValueError(f"Invalid {label} value")
+    if not math.isfinite(num):
+        raise ValueError(f"Invalid {label} value")
+    return num
+
+def _normalize_gps_coordinates(lat_value, lng_value):
+    lat = _normalize_optional_coordinate(lat_value, "latitude")
+    lng = _normalize_optional_coordinate(lng_value, "longitude")
+    if lat is None and lng is None:
+        return None, None
+    if lat is None or lng is None:
+        raise ValueError("Both latitude and longitude are required")
+    if lat < -90 or lat > 90:
+        raise ValueError("Latitude must be in range -90..90")
+    if lng < -180 or lng > 180:
+        raise ValueError("Longitude must be in range -180..180")
+    return round(lat, 6), round(lng, 6)
+
+def _coverage_positions_file():
+    return "coverage_positions.json"
+
+def _load_coverage_positions_state():
+    positions_file = _coverage_positions_file()
+    try:
+        if os.path.exists(positions_file):
+            with open(positions_file, "r") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    data.setdefault("positions", {})
+                    return data
+    except Exception:
+        pass
+    return {"positions": {}}
+
+def _save_coverage_positions_state(data):
+    positions_file = _coverage_positions_file()
+    with open(positions_file, "w") as f:
+        json.dump(data, f, indent=2)
+
+def _coverage_position_key(device_type, eui):
+    eui_upper = str(eui or "").strip().upper()
+    prefix = "bs" if str(device_type or "").lower() == "bs" else "sensor"
+    return f"{prefix}_{eui_upper}", eui_upper
+
+def _upsert_device_gps_position(device_type, eui, gps_lat, gps_lng):
+    key, eui_upper = _coverage_position_key(device_type, eui)
+    state = _load_coverage_positions_state()
+    positions = state.setdefault("positions", {})
+
+    if gps_lat is None or gps_lng is None:
+        existing = positions.get(key)
+        if isinstance(existing, dict) and existing.get("type") == "osm":
+            positions.pop(key, None)
+    else:
+        positions[key] = {
+            "type": "osm",
+            "lat": float(gps_lat),
+            "lng": float(gps_lng),
+            "deviceType": "bs" if str(device_type).lower() == "bs" else "sensor",
+            "eui": eui_upper
+        }
+
+    _save_coverage_positions_state(state)
+
+def _remove_device_position(device_type, eui):
+    key, _ = _coverage_position_key(device_type, eui)
+    state = _load_coverage_positions_state()
+    positions = state.setdefault("positions", {})
+    if key in positions:
+        positions.pop(key, None)
+        _save_coverage_positions_state(state)
+
+def _sync_inventory_gps_to_coverage_positions():
+    state = _load_coverage_positions_state()
+    positions = state.setdefault("positions", {})
+    if not isinstance(positions, dict):
+        positions = {}
+        state["positions"] = positions
+
+    desired = {}
+
+    # Base stations
+    bs_config = load_base_station_config().get("base_stations", {}) or {}
+    for bs_eui, bs_data in bs_config.items():
+        try:
+            gps_lat, gps_lng = _normalize_gps_coordinates((bs_data or {}).get("gps_lat"), (bs_data or {}).get("gps_lng"))
+        except ValueError:
+            gps_lat, gps_lng = None, None
+        key, eui_upper = _coverage_position_key("bs", bs_eui)
+        if gps_lat is not None and gps_lng is not None:
+            desired[key] = {
+                "type": "osm",
+                "lat": gps_lat,
+                "lng": gps_lng,
+                "deviceType": "bs",
+                "eui": eui_upper
+            }
+
+    # Sensors
+    try:
+        with open(bssci_config.SENSOR_CONFIG_FILE, "r") as f:
+            sensors = json.load(f) or []
+    except Exception:
+        sensors = []
+
+    for sensor in sensors:
+        sensor_eui = str((sensor or {}).get("eui", "")).strip()
+        if not sensor_eui:
+            continue
+        try:
+            gps_lat, gps_lng = _normalize_gps_coordinates((sensor or {}).get("gps_lat"), (sensor or {}).get("gps_lng"))
+        except ValueError:
+            gps_lat, gps_lng = None, None
+        key, eui_upper = _coverage_position_key("sensor", sensor_eui)
+        if gps_lat is not None and gps_lng is not None:
+            desired[key] = {
+                "type": "osm",
+                "lat": gps_lat,
+                "lng": gps_lng,
+                "deviceType": "sensor",
+                "eui": eui_upper
+            }
+
+    changed = False
+
+    # Upsert desired osm positions
+    for key, payload in desired.items():
+        existing = positions.get(key)
+        if not isinstance(existing, dict) or existing.get("type") == "osm":
+            if existing != payload:
+                positions[key] = payload
+                changed = True
+
+    if changed:
+        _save_coverage_positions_state(state)
+    return state
+
+def _update_sensor_gps_by_eui(eui: str, gps_lat: float, gps_lng: float) -> None:
+    sensor_eui = _normalize_eui_upper(eui)
+    if not sensor_eui:
+        raise ValueError("Sensor EUI is required")
+
+    try:
+        with open(bssci_config.SENSOR_CONFIG_FILE, "r") as f:
+            sensors = json.load(f) or []
+    except FileNotFoundError:
+        sensors = []
+    except json.JSONDecodeError:
+        sensors = []
+
+    if not isinstance(sensors, list):
+        raise ValueError("Sensor configuration is invalid")
+
+    found = False
+    for sensor in sensors:
+        if not isinstance(sensor, dict):
+            continue
+        if _normalize_eui_upper(sensor.get("eui", "")) == sensor_eui:
+            sensor["gps_lat"] = gps_lat
+            sensor["gps_lng"] = gps_lng
+            found = True
+            break
+
+    if not found:
+        raise ValueError(f"Sensor {sensor_eui} not found")
+
+    with open(bssci_config.SENSOR_CONFIG_FILE, "w") as f:
+        json.dump(sensors, f, indent=4)
+
+def _update_base_station_gps_by_eui(eui: str, gps_lat: float, gps_lng: float) -> None:
+    bs_eui = _normalize_eui_upper(eui)
+    if not bs_eui:
+        raise ValueError("Base station EUI is required")
+
+    config = load_base_station_config()
+    base_stations = config.setdefault("base_stations", {})
+    if not isinstance(base_stations, dict):
+        raise ValueError("Base station configuration is invalid")
+
+    target_key = None
+    for key in base_stations.keys():
+        if _normalize_eui_upper(key) == bs_eui:
+            target_key = key
+            break
+
+    if target_key is None:
+        raise ValueError(f"Base station {bs_eui} not found")
+
+    bs_data = dict(base_stations.get(target_key, {}) or {})
+    bs_data["gps_lat"] = gps_lat
+    bs_data["gps_lng"] = gps_lng
+    base_stations[target_key] = bs_data
+    save_base_station_config(config)
+
 def _normalize_sensor_payload(data):
     payload = dict(data or {})
     payload["eui"] = str(payload.get("eui", "")).strip().upper()
@@ -609,6 +818,9 @@ def _normalize_sensor_payload(data):
     payload["bidi"] = bool(payload.get("bidi", False))
     payload["name"] = str(payload.get("name", "") or "").strip()
     payload["tags"] = _normalize_sensor_tags(payload.get("tags", []))
+    gps_lat, gps_lng = _normalize_gps_coordinates(payload.get("gps_lat"), payload.get("gps_lng"))
+    payload["gps_lat"] = gps_lat
+    payload["gps_lng"] = gps_lng
     return payload
 
 def _ensure_ca_exists():
@@ -1002,6 +1214,8 @@ def get_sensors():
                         'bidi': bool(sensor.get('bidi', False)),
                         'name': sensor.get('name', ''),
                         'tags': _normalize_sensor_tags(sensor.get('tags', [])),
+                        'gps_lat': sensor.get('gps_lat'),
+                        'gps_lng': sensor.get('gps_lng'),
                         'registered': False,
                         'registration_info': {},
                         'base_stations': [],
@@ -1084,7 +1298,10 @@ def get_sensors():
 @login_required
 @permission_required('can_edit_sensors')
 def add_sensor():
-    data = _normalize_sensor_payload(request.json or {})
+    try:
+        data = _normalize_sensor_payload(request.json or {})
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
     
     try:
         if not data.get('eui'):
@@ -1124,8 +1341,12 @@ def add_sensor():
                 "nwkey_present": bool(data.get("nwKey")),
                 "name": data.get("name", ""),
                 "tags_count": len(data.get("tags", [])),
+                "gps_lat": data.get("gps_lat"),
+                "gps_lng": data.get("gps_lng"),
             }
         )
+
+        _upsert_device_gps_position("sensor", data.get("eui", ""), data.get("gps_lat"), data.get("gps_lng"))
         
         # Step 2: Notify TLS server to reload config and send attach requests
         global tls_server_instance
@@ -1190,8 +1411,11 @@ def delete_sensor(eui):
                 "nwkey_present": bool((deleted_sensor or {}).get("nwKey")),
                 "name": (deleted_sensor or {}).get("name", ""),
                 "tags_count": len(_normalize_sensor_tags((deleted_sensor or {}).get("tags", []))),
+                "gps_lat": (deleted_sensor or {}).get("gps_lat"),
+                "gps_lng": (deleted_sensor or {}).get("gps_lng"),
             }
         )
+        _remove_device_position("sensor", eui)
         return jsonify({'success': True, 'message': 'Sensor deleted successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -1476,6 +1700,16 @@ def clear_all_sensors():
         with open(bssci_config.SENSOR_CONFIG_FILE, 'w') as f:
             json.dump([], f, indent=4)
 
+        # Remove sensor placements from coverage positions (keep base stations)
+        state = _load_coverage_positions_state()
+        positions = state.get("positions", {})
+        if isinstance(positions, dict):
+            keys_to_remove = [key for key in positions.keys() if str(key).startswith("sensor_")]
+            for key in keys_to_remove:
+                positions.pop(key, None)
+            if keys_to_remove:
+                _save_coverage_positions_state(state)
+
         # Also clear from TLS server if available
         if tls_server and hasattr(tls_server, 'clear_all_sensors'):
             tls_server.clear_all_sensors()
@@ -1531,7 +1765,7 @@ def export_sensors():
         writer = csv.writer(output)
         
         # Write header
-        writer.writerow(['eui', 'nwKey', 'shortAddr', 'bidi', 'name', 'tags'])
+        writer.writerow(['eui', 'nwKey', 'shortAddr', 'bidi', 'name', 'tags', 'gps_lat', 'gps_lng'])
         
         # Write sensor data
         for sensor in sensors:
@@ -1541,7 +1775,9 @@ def export_sensors():
                 sensor.get('shortAddr', ''),
                 'true' if sensor.get('bidi', False) else 'false',
                 sensor.get('name', ''),
-                '|'.join(_normalize_sensor_tags(sensor.get('tags', [])))
+                '|'.join(_normalize_sensor_tags(sensor.get('tags', []))),
+                sensor.get('gps_lat', ''),
+                sensor.get('gps_lng', '')
             ])
         
         # Create response with CSV file
@@ -1592,7 +1828,7 @@ def import_sensors():
         
         # Check if first row is header
         header = rows[0]
-        has_header = any(h.lower() in ['eui', 'nwkey', 'shortaddr', 'bidi', 'network_key', 'short_addr', 'name', 'tags', 'label'] for h in header)
+        has_header = any(h.lower() in ['eui', 'nwkey', 'shortaddr', 'bidi', 'network_key', 'short_addr', 'name', 'tags', 'label', 'gps_lat', 'gps_lng', 'latitude', 'longitude', 'lat', 'lng'] for h in header)
         
         if has_header:
             # Map header columns
@@ -1603,11 +1839,14 @@ def import_sensors():
             bidi_idx = next((i for i, h in enumerate(header_lower) if h in ['bidi', 'bidirectional', 'bidir']), 3)
             name_idx = next((i for i, h in enumerate(header_lower) if h in ['name', 'label', 'title']), None)
             tags_idx = next((i for i, h in enumerate(header_lower) if h in ['tags', 'tag', 'labels']), None)
+            lat_idx = next((i for i, h in enumerate(header_lower) if h in ['gps_lat', 'latitude', 'lat']), None)
+            lng_idx = next((i for i, h in enumerate(header_lower) if h in ['gps_lng', 'longitude', 'lng', 'lon']), None)
             data_rows = rows[1:]
         else:
-            # Assume order: eui, nwKey, shortAddr, bidi, name, tags
+            # Assume order: eui, nwKey, shortAddr, bidi, name, tags, gps_lat, gps_lng
             eui_idx, nwkey_idx, shortaddr_idx, bidi_idx = 0, 1, 2, 3
             name_idx, tags_idx = 4, 5
+            lat_idx, lng_idx = 6, 7
             data_rows = rows
         
         # Load existing sensors
@@ -1637,6 +1876,9 @@ def import_sensors():
                 name = row[name_idx].strip() if (name_idx is not None and name_idx < len(row)) else ''
                 tags_raw = row[tags_idx].strip() if (tags_idx is not None and tags_idx < len(row)) else ''
                 tags = _normalize_sensor_tags(tags_raw)
+                lat_raw = row[lat_idx].strip() if (lat_idx is not None and lat_idx < len(row)) else ''
+                lng_raw = row[lng_idx].strip() if (lng_idx is not None and lng_idx < len(row)) else ''
+                gps_lat, gps_lng = _normalize_gps_coordinates(lat_raw, lng_raw)
                 
                 # Validate EUI
                 if not eui or len(eui) < 8:
@@ -1654,7 +1896,9 @@ def import_sensors():
                     'shortAddr': shortaddr if shortaddr else '0000',
                     'bidi': bidi,
                     'name': name,
-                    'tags': tags
+                    'tags': tags,
+                    'gps_lat': gps_lat,
+                    'gps_lng': gps_lng
                 }
                 
                 if eui in existing_euis:
@@ -1676,6 +1920,17 @@ def import_sensors():
         # Save to file
         with open(bssci_config.SENSOR_CONFIG_FILE, 'w') as f:
             json.dump(existing_sensors, f, indent=4)
+
+        # Keep coverage map positions in sync with imported sensor coordinates
+        for sensor in existing_sensors:
+            eui_value = str(sensor.get("eui", "")).strip().upper()
+            if not eui_value:
+                continue
+            try:
+                gps_lat, gps_lng = _normalize_gps_coordinates(sensor.get("gps_lat"), sensor.get("gps_lng"))
+            except ValueError:
+                gps_lat, gps_lng = None, None
+            _upsert_device_gps_position("sensor", eui_value, gps_lat, gps_lng)
 
         _try_record_inventory_event(
             "sensor",
@@ -2119,53 +2374,242 @@ def network():
 def coverage():
     return redirect(url_for('network'))
 
+def _normalize_eui_upper(value: Any) -> str:
+    return str(value or "").strip().upper()
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+def _build_sensor_name_index(sensor_config: List[Dict[str, Any]]) -> Dict[str, str]:
+    index = {}
+    for sensor in sensor_config or []:
+        if not isinstance(sensor, dict):
+            continue
+        sensor_eui = _normalize_eui_upper(sensor.get("eui", ""))
+        if not sensor_eui:
+            continue
+        sensor_name = str(sensor.get("name", "") or "").strip()
+        index[sensor_eui] = sensor_name if sensor_name else f"{sensor_eui[:8]}..."
+    return index
+
+def _load_configured_sensors_index() -> Dict[str, Dict[str, Any]]:
+    """
+    Load configured sensors from endpoints.json (or configured sensor file).
+    Returns mapping:
+      EUI_UPPER -> {"name": str, "tags": list[str], "bidi": bool}
+    """
+    result: Dict[str, Dict[str, Any]] = {}
+    try:
+        sensor_file = getattr(bssci_config, "SENSOR_CONFIG_FILE", "endpoints.json")
+        with open(sensor_file, "r") as f:
+            sensors = json.load(f) or []
+    except Exception:
+        sensors = []
+
+    for sensor in sensors:
+        if not isinstance(sensor, dict):
+            continue
+        sensor_eui = _normalize_eui_upper(sensor.get("eui", ""))
+        if not sensor_eui:
+            continue
+        sensor_name = str(sensor.get("name", "") or "").strip()
+        result[sensor_eui] = {
+            "name": sensor_name if sensor_name else f"{sensor_eui[:8]}...",
+            "tags": _normalize_sensor_tags(sensor.get("tags", [])),
+            "bidi": bool(sensor.get("bidi", False)),
+        }
+    return result
+
+def _collect_network_snapshot() -> Dict[str, Any]:
+    """
+    Build one normalized snapshot used by both:
+      - /api/coverage/topology
+      - /api/network
+    """
+    global tls_server_instance
+
+    bs_config_raw = load_base_station_config().get("base_stations", {}) or {}
+    bs_config = {}
+    for eui_key, bs_data in bs_config_raw.items():
+        bs_eui = _normalize_eui_upper(eui_key)
+        if not bs_eui:
+            continue
+        bs_config[bs_eui] = bs_data if isinstance(bs_data, dict) else {}
+
+    connected_bs = set()
+    bs_health = {}
+    sensor_topology = {}
+    sensor_name_index = {}
+    configured_sensors = _load_configured_sensors_index()
+    runtime_registered_sensors = set()
+
+    if tls_server_instance:
+        connected_map = getattr(tls_server_instance, "connected_base_stations", {}) or {}
+        connected_bs = {
+            _normalize_eui_upper(bs_eui)
+            for bs_eui in connected_map.values()
+            if _normalize_eui_upper(bs_eui)
+        }
+        bs_health = getattr(tls_server_instance, "base_station_health", {}) or {}
+        sensor_topology = getattr(tls_server_instance, "sensor_topology", {}) or {}
+        sensor_name_index = _build_sensor_name_index(getattr(tls_server_instance, "sensor_config", []) or [])
+        registered_map = getattr(tls_server_instance, "registered_sensors", {}) or {}
+        runtime_registered_sensors = {
+            _normalize_eui_upper(sensor_eui)
+            for sensor_eui in registered_map.keys()
+            if _normalize_eui_upper(sensor_eui)
+        }
+
+    # Merge runtime-loaded sensor names over file-loaded names.
+    for sensor_eui, sensor_name in sensor_name_index.items():
+        configured_sensors.setdefault(sensor_eui, {
+            "name": sensor_name,
+            "tags": [],
+            "bidi": False
+        })
+        configured_sensors[sensor_eui]["name"] = sensor_name
+
+    all_bs = set(bs_config.keys()) | connected_bs
+    coverage_sensors = {}
+    sensor_nodes = []
+    edges = []
+    edge_ids = set()
+
+    for sensor_eui_raw, topo_raw in sensor_topology.items():
+        sensor_eui = _normalize_eui_upper(sensor_eui_raw)
+        if not sensor_eui:
+            continue
+
+        topo = topo_raw if isinstance(topo_raw, dict) else {}
+        receiving_raw = topo.get("receiving_bases", {})
+        receiving = receiving_raw if isinstance(receiving_raw, dict) else {}
+        primary_bs = _normalize_eui_upper(topo.get("primary_bs", ""))
+
+        coverage_receiving = {}
+        for bs_eui_raw, bs_stats_raw in receiving.items():
+            bs_eui = _normalize_eui_upper(bs_eui_raw)
+            if not bs_eui:
+                continue
+
+            all_bs.add(bs_eui)
+            bs_stats = bs_stats_raw if isinstance(bs_stats_raw, dict) else {}
+            snr = round(_safe_float(bs_stats.get("snr", 0.0), 0.0), 2)
+            rssi = round(_safe_float(bs_stats.get("rssi", -100.0), -100.0), 2)
+            count = int(_safe_float(bs_stats.get("count", 0), 0))
+            last_seen = _safe_float(bs_stats.get("last_seen", 0), 0.0)
+
+            coverage_receiving[bs_eui] = {
+                "snr": snr,
+                "rssi": rssi,
+                "count": count
+            }
+
+            edge_id = f"edge_{sensor_eui}_{bs_eui}"
+            if edge_id not in edge_ids:
+                edge_ids.add(edge_id)
+                edges.append({
+                    "id": edge_id,
+                    "source": f"sensor_{sensor_eui}",
+                    "target": f"bs_{bs_eui}",
+                    "primary": bs_eui == primary_bs,
+                    "snr": snr,
+                    "rssi": rssi,
+                    "last_seen": last_seen,
+                    "count": count
+                })
+
+        if coverage_receiving:
+            coverage_sensors[sensor_eui] = {
+                "base_stations": coverage_receiving
+            }
+
+        sensor_nodes.append({
+            "id": f"sensor_{sensor_eui}",
+            "type": "sensor",
+            "eui": sensor_eui,
+            "label": configured_sensors.get(sensor_eui, {}).get("name", sensor_name_index.get(sensor_eui, f"{sensor_eui[:8]}...")),
+            "primary_bs": primary_bs,
+            "receiver_count": len(coverage_receiving),
+            "configured": sensor_eui in configured_sensors,
+            "registered": sensor_eui in runtime_registered_sensors
+        })
+
+    # Include configured sensors even when there is currently no live topology.
+    existing_sensor_euis = {str(node.get("eui", "")).upper() for node in sensor_nodes}
+    for sensor_eui, sensor_meta in configured_sensors.items():
+        if sensor_eui in existing_sensor_euis:
+            continue
+        sensor_nodes.append({
+            "id": f"sensor_{sensor_eui}",
+            "type": "sensor",
+            "eui": sensor_eui,
+            "label": str(sensor_meta.get("name", f"{sensor_eui[:8]}...")),
+            "primary_bs": "",
+            "receiver_count": 0,
+            "configured": True,
+            "registered": sensor_eui in runtime_registered_sensors
+        })
+
+    base_station_nodes = []
+    for bs_eui in sorted(all_bs):
+        bs_cfg = bs_config.get(bs_eui, {})
+        health = bs_health.get(bs_eui.lower(), {}) or bs_health.get(bs_eui, {}) or {}
+        bs_name = str(bs_cfg.get("name", "") or "").strip()
+
+        base_station_nodes.append({
+            "id": f"bs_{bs_eui}",
+            "type": "base_station",
+            "eui": bs_eui,
+            "label": bs_name if bs_name else f"{bs_eui[:8]}...",
+            "connected": bs_eui in connected_bs,
+            "cpu": round(_safe_float(health.get("cpu", 0.0), 0.0), 1),
+            "memory": round(_safe_float(health.get("memory", 0.0), 0.0), 1),
+            "duty_cycle": round(_safe_float(health.get("duty_cycle", 0.0), 0.0), 1)
+        })
+
+    sensor_nodes.sort(key=lambda item: (item.get("label", ""), item.get("eui", "")))
+    edges.sort(key=lambda item: item.get("id", ""))
+
+    return {
+        "coverage": {
+            "sensors": coverage_sensors,
+            "base_stations": sorted(all_bs)
+        },
+        "topology": {
+            "nodes": base_station_nodes + sensor_nodes,
+            "edges": edges
+        },
+        "meta": {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "base_station_count": len(base_station_nodes),
+            "connected_base_station_count": len(connected_bs),
+            "sensor_count": len(sensor_nodes),
+            "edge_count": len(edges)
+        }
+    }
+
 @app.route('/api/coverage/topology')
 @login_required
 def api_coverage_topology():
     """Get sensor topology with SNR/RSSI per base station for coverage heatmap"""
     try:
-        global tls_server_instance
-        result = {
-            'sensors': {},
-            'base_stations': []
-        }
-        
-        if tls_server_instance and hasattr(tls_server_instance, 'sensor_topology'):
-            for sensor_eui, topo in tls_server_instance.sensor_topology.items():
-                receiving = topo.get('receiving_bases', {})
-                if receiving:
-                    result['sensors'][sensor_eui] = {
-                        'base_stations': {}
-                    }
-                    for bs_eui, bs_data in receiving.items():
-                        result['sensors'][sensor_eui]['base_stations'][bs_eui] = {
-                            'snr': bs_data.get('snr', 0),
-                            'rssi': bs_data.get('rssi', -100),
-                            'count': bs_data.get('count', 0)
-                        }
-        
-        # Get base station list
-        bs_config = load_base_station_config().get("base_stations", {})
-        connected_euis = set()
-        if tls_server_instance and hasattr(tls_server_instance, 'connected_base_stations'):
-            for writer, bs_eui in tls_server_instance.connected_base_stations.items():
-                connected_euis.add(bs_eui.upper())
-        
-        all_bs = set(bs_config.keys())
-        all_bs.update(connected_euis)
-        
-        for bs_eui in all_bs:
-            result['base_stations'].append(bs_eui.upper())
-        
-        return jsonify(result)
+        snapshot = _collect_network_snapshot()
+        return jsonify({
+            **snapshot["coverage"],
+            "meta": snapshot["meta"]
+        })
     except Exception as e:
+        logger.exception("Failed to build coverage topology snapshot")
         return jsonify({'sensors': {}, 'base_stations': [], 'error': str(e)})
 
 @app.route('/api/coverage/positions', methods=['GET', 'POST'])
 @login_required
 def api_coverage_positions():
     """Get or save coverage map device positions"""
-    positions_file = 'coverage_positions.json'
+    positions_file = _coverage_positions_file()
     
     if request.method == 'POST':
         perms = get_user_permissions()
@@ -2180,12 +2624,66 @@ def api_coverage_positions():
             return jsonify({'success': False, 'error': str(e)}), 500
     else:
         try:
+            state = _sync_inventory_gps_to_coverage_positions()
+            if state:
+                return jsonify(state)
             if os.path.exists(positions_file):
                 with open(positions_file, 'r') as f:
                     return jsonify(json.load(f))
             return jsonify({})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+@app.route('/api/coverage/device-gps', methods=['POST'])
+@login_required
+@permission_required('can_edit_sensors')
+def api_coverage_device_gps():
+    """Update device GPS from coverage map and sync into device settings."""
+    try:
+        payload = request.get_json() or {}
+        raw_type = str(payload.get("device_type", "") or "").strip().lower()
+        device_type = "sensor" if raw_type == "sensor" else ("bs" if raw_type in {"bs", "base_station"} else "")
+        if not device_type:
+            return jsonify({"success": False, "error": "Invalid device_type"}), 400
+
+        eui = _normalize_eui_upper(payload.get("eui", ""))
+        if not eui:
+            return jsonify({"success": False, "error": "EUI is required"}), 400
+
+        gps_lat, gps_lng = _normalize_gps_coordinates(payload.get("gps_lat"), payload.get("gps_lng"))
+        if gps_lat is None or gps_lng is None:
+            return jsonify({"success": False, "error": "Both latitude and longitude are required"}), 400
+
+        if device_type == "sensor":
+            _update_sensor_gps_by_eui(eui, gps_lat, gps_lng)
+            _try_record_inventory_event(
+                "sensor",
+                "updated",
+                eui,
+                {"gps_lat": gps_lat, "gps_lng": gps_lng, "source": "coverage_map"}
+            )
+        else:
+            _update_base_station_gps_by_eui(eui, gps_lat, gps_lng)
+            _try_record_inventory_event(
+                "base_station",
+                "updated",
+                eui.lower(),
+                {"gps_lat": gps_lat, "gps_lng": gps_lng, "source": "coverage_map"}
+            )
+
+        _upsert_device_gps_position(device_type, eui, gps_lat, gps_lng)
+        return jsonify({
+            "success": True,
+            "device_type": device_type,
+            "eui": eui,
+            "gps_lat": gps_lat,
+            "gps_lng": gps_lng
+        })
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception as e:
+        logger.exception("Failed to update GPS from coverage map")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/coverage/floorplan', methods=['GET', 'POST'])
 @login_required
@@ -2219,81 +2717,15 @@ def api_coverage_floorplan():
 def api_network():
     """Get network topology data for visualization"""
     try:
-        global tls_server_instance
-        nodes = []
-        edges = []
-        
-        if tls_server_instance:
-            bs_config = load_base_station_config().get("base_stations", {})
-            
-            # Add base station nodes
-            connected_bs = set()
-            for writer, bs_eui in tls_server_instance.connected_base_stations.items():
-                connected_bs.add(bs_eui.upper())
-            
-            # Get all base stations from topology and connected list
-            all_bs = set(connected_bs)
-            for sensor_data in tls_server_instance.sensor_topology.values():
-                for bs_eui in sensor_data.get('receiving_bases', {}).keys():
-                    all_bs.add(bs_eui.upper())
-            
-            for bs_eui in all_bs:
-                bs_lower = bs_eui.lower()
-                config = bs_config.get(bs_lower, {})
-                health = tls_server_instance.base_station_health.get(bs_eui, {})
-                
-                nodes.append({
-                    'id': f'bs_{bs_eui}',
-                    'type': 'base_station',
-                    'eui': bs_eui,
-                    'label': config.get('name', bs_eui[:8] + '...'),
-                    'connected': bs_eui in connected_bs,
-                    'cpu': health.get('cpu', 0),
-                    'memory': health.get('memory', 0),
-                    'duty_cycle': health.get('duty_cycle', 0)
-                })
-            
-            # Add sensor nodes and edges
-            for sensor_eui, topo in tls_server_instance.sensor_topology.items():
-                primary_bs = topo.get('primary_bs', '').upper()
-                receiving = topo.get('receiving_bases', {})
-                
-                # Get sensor name from config if available
-                sensor_name = sensor_eui[:8] + '...'
-                for sensor in tls_server_instance.sensor_config:
-                    if sensor.get('eui', '').upper() == sensor_eui:
-                        sensor_name = sensor.get('name', sensor_name)
-                        break
-                
-                nodes.append({
-                    'id': f'sensor_{sensor_eui}',
-                    'type': 'sensor',
-                    'eui': sensor_eui,
-                    'label': sensor_name,
-                    'primary_bs': primary_bs,
-                    'receiver_count': len(receiving)
-                })
-                
-                # Add edges to all receiving base stations
-                for bs_eui, stats in receiving.items():
-                    bs_upper = bs_eui.upper()
-                    edges.append({
-                        'id': f'edge_{sensor_eui}_{bs_upper}',
-                        'source': f'sensor_{sensor_eui}',
-                        'target': f'bs_{bs_upper}',
-                        'primary': bs_upper == primary_bs,
-                        'snr': round(stats.get('snr', 0), 2),
-                        'rssi': round(stats.get('rssi', 0), 2),
-                        'last_seen': stats.get('last_seen', 0),
-                        'count': stats.get('count', 0)
-                    })
-        
+        snapshot = _collect_network_snapshot()
         return jsonify({
             'success': True,
-            'nodes': nodes,
-            'edges': edges
+            'nodes': snapshot["topology"]["nodes"],
+            'edges': snapshot["topology"]["edges"],
+            'meta': snapshot["meta"]
         })
     except Exception as e:
+        logger.exception("Failed to build network topology snapshot")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 def load_base_station_config():
@@ -2387,6 +2819,8 @@ def get_base_stations():
                 "tags": bs_data.get("tags", []),
                 "status": status,
                 "configured_ip": bs_data.get("ip", ""),
+                "gps_lat": bs_data.get("gps_lat"),
+                "gps_lng": bs_data.get("gps_lng"),
                 "health": health,
                 "connected_sensors": bs_sensors.get(eui_lower, 0),
                 "last_status_event": last_status_event,
@@ -2528,8 +2962,9 @@ def get_base_station(eui):
 def add_base_station():
     """Add new base station"""
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         eui = data.get("eui", "").lower()
+        gps_lat, gps_lng = _normalize_gps_coordinates(data.get("gps_lat"), data.get("gps_lng"))
         
         if not eui or not _validate_eui(eui):
             return jsonify({"success": False, "error": "Invalid EUI (must be 16 hex characters)"}), 400
@@ -2541,7 +2976,9 @@ def add_base_station():
         config["base_stations"][eui] = {
             "name": data.get("name", ""),
             "tags": data.get("tags", []),
-            "ip": data.get("ip", "")
+            "ip": data.get("ip", ""),
+            "gps_lat": gps_lat,
+            "gps_lng": gps_lng
         }
         save_base_station_config(config)
 
@@ -2553,8 +2990,12 @@ def add_base_station():
                 "name": data.get("name", ""),
                 "ip": data.get("ip", ""),
                 "tags": data.get("tags", []),
+                "gps_lat": gps_lat,
+                "gps_lng": gps_lng,
             }
         )
+
+        _upsert_device_gps_position("bs", eui, gps_lat, gps_lng)
         
         generate_cert = data.get("generate_cert", True)
         cert_download_url = None
@@ -2567,6 +3008,8 @@ def add_base_station():
         if cert_download_url:
             result["cert_download_url"] = cert_download_url
         return jsonify(result)
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -2576,8 +3019,9 @@ def add_base_station():
 def update_base_station(eui):
     """Update base station"""
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         eui = eui.lower()
+        gps_lat, gps_lng = _normalize_gps_coordinates(data.get("gps_lat"), data.get("gps_lng"))
         
         config = load_base_station_config()
         if "base_stations" not in config:
@@ -2587,7 +3031,9 @@ def update_base_station(eui):
         config["base_stations"][eui] = {
             "name": data.get("name", ""),
             "tags": data.get("tags", []),
-            "ip": data.get("ip", "")
+            "ip": data.get("ip", ""),
+            "gps_lat": gps_lat,
+            "gps_lng": gps_lng
         }
         save_base_station_config(config)
 
@@ -2599,12 +3045,18 @@ def update_base_station(eui):
                 "name": data.get("name", ""),
                 "ip": data.get("ip", ""),
                 "tags": data.get("tags", []),
+                "gps_lat": gps_lat,
+                "gps_lng": gps_lng,
                 "previous_name": previous_data.get("name", ""),
                 "previous_ip": previous_data.get("ip", ""),
             }
         )
+
+        _upsert_device_gps_position("bs", eui, gps_lat, gps_lng)
         
         return jsonify({"success": True})
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -2630,8 +3082,12 @@ def delete_base_station(eui):
                 "name": removed.get("name", ""),
                 "ip": removed.get("ip", ""),
                 "tags": removed.get("tags", []),
+                "gps_lat": removed.get("gps_lat"),
+                "gps_lng": removed.get("gps_lng"),
             }
         )
+
+        _remove_device_position("bs", eui)
         
         return jsonify({"success": True})
     except Exception as e:
@@ -2714,27 +3170,58 @@ def get_logs():
     ensure_web_log_handler()
 
     # Get query parameters for filtering
-    level_filter = request.args.get('level', 'all').upper()
-    logger_filter = request.args.get('logger', 'all')
-    limit = int(request.args.get('limit', 100))
+    level_filter = str(request.args.get('level', 'all') or 'all').strip().upper()
+    logger_filter = str(request.args.get('logger', 'all') or 'all').strip()
+    text_filter = str(request.args.get('q', '') or '').strip().lower()
+    try:
+        limit = int(request.args.get('limit', 100))
+    except (TypeError, ValueError):
+        limit = 100
+    limit = max(10, min(limit, 1000))
 
     # Filter logs based on parameters
-    filtered_logs = log_entries
+    filtered_logs = list(log_entries)
 
     if level_filter != 'ALL':
-        filtered_logs = [log for log in filtered_logs if log['level'] == level_filter]
+        filtered_logs = [log for log in filtered_logs if str(log.get('level', '')).upper() == level_filter]
 
-    if logger_filter != 'all':
-        filtered_logs = [log for log in filtered_logs if logger_filter.lower() in log['logger'].lower()]
+    if logger_filter.lower() != 'all':
+        needle = logger_filter.lower()
+        filtered_logs = [log for log in filtered_logs if needle in str(log.get('logger', '')).lower()]
+
+    if text_filter:
+        def _log_matches_text(entry):
+            message = str(entry.get('message', '')).lower()
+            logger_name = str(entry.get('logger', '')).lower()
+            level_name = str(entry.get('level', '')).lower()
+            timestamp = str(entry.get('timestamp', '')).lower()
+            source = str(entry.get('source', '')).lower()
+            return (
+                text_filter in message
+                or text_filter in logger_name
+                or text_filter in level_name
+                or text_filter in timestamp
+                or text_filter in source
+            )
+        filtered_logs = [log for log in filtered_logs if _log_matches_text(log)]
 
     # Return the most recent logs (up to limit)
     recent_logs = filtered_logs[-limit:] if len(filtered_logs) > limit else filtered_logs
+
+    level_counts = {'ERROR': 0, 'WARNING': 0, 'INFO': 0, 'DEBUG': 0}
+    for log in filtered_logs:
+        level = str(log.get('level', '')).upper()
+        if level in level_counts:
+            level_counts[level] += 1
+    logger_names = sorted({str(log.get('logger', '')).strip() for log in log_entries if str(log.get('logger', '')).strip()})
 
     return jsonify({
         'logs': recent_logs,
         'total_logs': len(log_entries),
         'filtered_logs': len(filtered_logs),
-        'source': 'memory'
+        'source': 'memory',
+        'level_counts': level_counts,
+        'logger_names': logger_names
     })
 
 # =========================
@@ -3181,12 +3668,11 @@ def api_check_updates():
 @login_required
 @role_required('admin')
 def api_perform_update():
-    """Perform system update"""
-    try:
-        result = perform_update()
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+    """System update is disabled in customized deployments."""
+    return jsonify({
+        'success': False,
+        'error': 'Auto-update is disabled for this customized deployment. Use Git workflow and container rebuild.'
+    }), 403
 
 @app.route('/api/system/restart', methods=['POST'])
 @login_required
@@ -3376,7 +3862,9 @@ def api_base_stations():
                 'eui': eui.upper(),
                 'EUI': eui.upper(),
                 'name': config.get('name', eui[:8]),
-                'connected': eui.upper() in connected_euis
+                'connected': eui.upper() in connected_euis,
+                'gps_lat': config.get('gps_lat'),
+                'gps_lng': config.get('gps_lng')
             })
         
         # Add connected but not configured
@@ -3386,7 +3874,9 @@ def api_base_stations():
                     'eui': eui,
                     'EUI': eui,
                     'name': eui[:8],
-                    'connected': True
+                    'connected': True,
+                    'gps_lat': None,
+                    'gps_lng': None
                 })
         
         return jsonify({'base_stations': base_stations})

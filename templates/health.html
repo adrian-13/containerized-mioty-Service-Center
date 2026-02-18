@@ -1,266 +1,572 @@
+
 {% extends "base.html" %}
-{% block title %}Traffic{% endblock %}
+{% block title %}System Health{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Traffic</h1>
-    <div>
-        <button class="btn btn-outline-secondary me-2" onclick="resetMetrics()" title="Reset traffic metrics">Reset Metrics</button>
-        <button class="btn btn-primary" onclick="refreshAll()" style="background-color: #ff8c00; border-color: #ff8c00;">Refresh</button>
-    </div>
-</div>
+<style>
+.health-shell {
+    display: grid;
+    gap: 0.9rem;
+}
 
-<div id="alert-container"></div>
+.health-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.84rem 0.94rem;
+    border: 1px solid #d5deeb;
+    border-radius: 0.95rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
 
-<div class="row mb-4">
-    <div class="col-md-2">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">System Uptime</h6>
-                <h3 class="text-primary" id="systemUptime">-</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">Messages In</h6>
-                <h3 class="text-success" id="messages-in">0</h3>
-                <small class="text-muted" id="messages-in-rate">0/min</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">Messages Out</h6>
-                <h3 class="text-primary" id="messages-out">0</h3>
-                <small class="text-muted" id="messages-out-rate">0/min</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">Dropped (Dedup)</h6>
-                <h3 class="text-warning" id="messages-dropped">0</h3>
-                <small class="text-muted" id="dedup-rate">0%</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">Packet Loss</h6>
-                <h3 id="overallLossRate">0%</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">Base Stations</h6>
-                <h3 class="text-info" id="connections">0</h3>
-            </div>
-        </div>
-    </div>
-</div>
+.health-kicker {
+    margin: 0;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #5f7088;
+    font-weight: 800;
+}
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Message Traffic</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="messageChart" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Sensors & Base Stations (12h)</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="connectionsChart" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
+.health-title {
+    margin: 0.18rem 0 0;
+    font-family: "Sora", "Manrope", sans-serif;
+    font-size: 1.24rem;
+    font-weight: 700;
+    color: #0f172a;
+}
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">SNR / RSSI History (24 Hours)</h5>
+.health-subtitle {
+    margin: 0.24rem 0 0;
+    color: #5f7088;
+    font-size: 0.79rem;
+}
+
+.health-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.44rem;
+}
+
+.health-autorefresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid #cfdaea;
+    background: #f6faff;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #38506b;
+}
+
+.health-autorefresh .form-check-input {
+    margin-top: 0;
+}
+
+.health-autorefresh select {
+    width: 88px;
+}
+
+.health-last-refresh {
+    font-size: 0.72rem;
+    color: #5f7088;
+    font-weight: 700;
+}
+
+.health-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.health-kpi {
+    border: 1px solid #d5deeb;
+    border-radius: 0.92rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    padding: 0.76rem 0.82rem;
+}
+
+.health-kpi-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #607089;
+    font-weight: 800;
+}
+
+.health-kpi-value {
+    margin-top: 0.32rem;
+    font-size: 1.28rem;
+    line-height: 1.08;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.health-kpi-note {
+    margin-top: 0.14rem;
+    color: #63758d;
+    font-size: 0.72rem;
+}
+
+.health-kpi-rate {
+    margin-top: 0.16rem;
+    font-size: 0.72rem;
+    color: #607089;
+    font-weight: 700;
+}
+
+.health-panel {
+    border: 1px solid #d5deeb;
+    border-radius: 0.98rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.health-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    padding: 0.76rem 0.9rem;
+    border-bottom: 1px solid #dce5f2;
+    background: linear-gradient(150deg, #1b2840 0%, #2a3f60 100%);
+    color: #f8fbff;
+}
+
+.health-panel-head h5 {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.health-panel-sub {
+    font-size: 0.72rem;
+    color: rgba(238, 245, 255, 0.78);
+    font-weight: 600;
+}
+
+.health-panel-body {
+    padding: 0.84rem;
+}
+
+.health-stack {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.health-section-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.health-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    padding: 0.34rem 0.62rem;
+    border-radius: 999px;
+    border: 1px solid #d0dcec;
+    background: #f8fbff;
+    color: #334b67;
+    text-decoration: none;
+    font-size: 0.72rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.health-nav-link:hover {
+    border-color: #9cb7de;
+    background: #edf4ff;
+    color: #163356;
+}
+
+.health-table-scroll {
+    overflow: auto;
+    border: 1px solid #dbe4f2;
+    border-radius: 0.78rem;
+    background: #ffffff;
+}
+
+.health-table-scroll--medium {
+    max-height: 236px;
+}
+
+.health-table-scroll--tall {
+    max-height: 320px;
+}
+
+.health-table-scroll table {
+    margin-bottom: 0;
+}
+
+.health-table-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f7fbff;
+    box-shadow: inset 0 -1px 0 #dce5f2;
+}
+
+.health-metric-table td {
+    font-size: 0.82rem;
+}
+
+.health-metric-table td:first-child {
+    color: #51637c;
+    font-weight: 700;
+}
+
+.health-metric-table td:last-child {
+    font-weight: 800;
+    color: #12253f;
+}
+
+.health-protocol-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.6rem;
+}
+
+.health-protocol-card {
+    border: 1px solid #d9e3f1;
+    border-radius: 0.8rem;
+    background: #f8fbff;
+    padding: 0.6rem;
+    text-align: center;
+}
+
+.health-protocol-value {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #142742;
+}
+
+.health-protocol-label {
+    margin: 0.2rem 0 0;
+    font-size: 0.7rem;
+    color: #5f7088;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 800;
+}
+
+#sensorTable code,
+#bsTable code {
+    font-size: 0.74rem;
+}
+
+.signal-legend {
+    margin-top: 0.7rem;
+    display: grid;
+    gap: 0.3rem;
+}
+
+.signal-legend-item {
+    font-size: 0.72rem;
+    color: #5f7088;
+}
+
+.signal-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-right: 0.34rem;
+}
+
+@media (max-width: 1399.98px) {
+    .health-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 991.98px) {
+    .health-head {
+        flex-direction: column;
+    }
+
+    .health-controls {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .health-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .health-kpi-grid,
+    .health-protocol-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .health-section-nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+</style>
+
+<div class="health-shell workspace-shell">
+    <div class="health-head workspace-head">
+        <div>
+            <p class="health-kicker workspace-kicker">Runtime Diagnostics</p>
+            <h2 class="health-title workspace-title">System Health</h2>
+            <p class="health-subtitle workspace-subtitle">Live telemetry quality, traffic performance, protocol load and base station health in one workspace.</p>
+        </div>
+        <div class="health-controls workspace-actions">
+            <div class="health-autorefresh">
+                <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked>
+                <label for="autoRefreshToggle" class="mb-0">Auto-refresh</label>
+                <select id="refreshIntervalSelect" class="form-select form-select-sm">
+                    <option value="5000">5s</option>
+                    <option value="10000" selected>10s</option>
+                    <option value="15000">15s</option>
+                    <option value="30000">30s</option>
+                </select>
             </div>
-            <div class="card-body">
-                <canvas id="snrRssiChart" height="120"></canvas>
+            <button class="btn btn-outline-secondary" onclick="resetMetrics()" title="Reset traffic metrics">
+                <i class="fas fa-eraser me-1"></i>Reset Metrics
+            </button>
+            <button class="btn btn-primary" onclick="refreshAll()">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+            <span class="health-last-refresh">Updated <span id="lastRefresh">never</span></span>
+        </div>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <div class="health-kpi-grid workspace-kpi-grid">
+        <div class="health-kpi workspace-kpi">
+            <div class="health-kpi-label workspace-kpi-label">System Uptime</div>
+            <div class="health-kpi-value text-primary" id="systemUptime">-</div>
+            <div class="health-kpi-note workspace-kpi-note">Service center runtime</div>
+        </div>
+        <div class="health-kpi workspace-kpi">
+            <div class="health-kpi-label workspace-kpi-label">Messages In</div>
+            <div class="health-kpi-value text-success" id="messages-in">0</div>
+            <div class="health-kpi-rate" id="messages-in-rate">0/min</div>
+        </div>
+        <div class="health-kpi workspace-kpi">
+            <div class="health-kpi-label workspace-kpi-label">Messages Out</div>
+            <div class="health-kpi-value text-info" id="messages-out">0</div>
+            <div class="health-kpi-rate" id="messages-out-rate">0/min</div>
+        </div>
+        <div class="health-kpi workspace-kpi">
+            <div class="health-kpi-label workspace-kpi-label">Dropped (Dedup)</div>
+            <div class="health-kpi-value text-warning" id="messages-dropped">0</div>
+            <div class="health-kpi-rate" id="dedup-rate">0% filtered</div>
+        </div>
+        <div class="health-kpi workspace-kpi">
+            <div class="health-kpi-label workspace-kpi-label">Packet Loss</div>
+            <div class="health-kpi-value workspace-kpi-value" id="overallLossRate">0%</div>
+            <div class="health-kpi-note workspace-kpi-note">Across all tracked sensors</div>
+        </div>
+        <div class="health-kpi workspace-kpi">
+            <div class="health-kpi-label workspace-kpi-label">Connected Base Stations</div>
+            <div class="health-kpi-value text-secondary" id="connections">0</div>
+            <div class="health-kpi-note workspace-kpi-note">Current infrastructure links</div>
+        </div>
+    </div>
+
+    <div class="health-section-nav">
+        <a class="health-nav-link" href="#health-overview"><i class="fas fa-wave-square"></i>Overview</a>
+        <a class="health-nav-link" href="#health-signals"><i class="fas fa-signal"></i>Signals</a>
+        <a class="health-nav-link" href="#health-infrastructure"><i class="fas fa-server"></i>Infrastructure</a>
+        <a class="health-nav-link" href="#health-operations"><i class="fas fa-chart-pie"></i>Operations</a>
+        <a class="health-nav-link" href="#health-packet-loss"><i class="fas fa-exclamation-triangle"></i>Packet Loss</a>
+    </div>
+
+    <div class="row g-3" id="health-overview">
+        <div class="col-xl-6">
+            <div class="health-panel h-100">
+                <div class="health-panel-head workspace-panel-head">
+                    <h5><i class="fas fa-wave-square me-2"></i>Message Throughput (per min)</h5>
+                    <span class="health-panel-sub workspace-panel-sub">In / out / deduplicated delta per sample</span>
+                </div>
+                <div class="health-panel-body workspace-panel-body">
+                    <canvas id="messageChart" height="190"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="health-panel h-100">
+                <div class="health-panel-head workspace-panel-head">
+                    <h5><i class="fas fa-link me-2"></i>Sensors & Base Stations (12h)</h5>
+                    <span class="health-panel-sub workspace-panel-sub">Registered, active and infrastructure count</span>
+                </div>
+                <div class="health-panel-body workspace-panel-body">
+                    <canvas id="connectionsChart" height="190"></canvas>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Signal Score Distribution</h5>
-                <small class="text-muted">Device breakdown by signal quality (SNR)</small>
-            </div>
-            <div class="card-body">
-                <canvas id="signalDistChart" height="200"></canvas>
-                <div class="row mt-3 text-center">
-                    <div class="col">
-                        <h4 class="text-success mb-0" id="strongSignalCount">0</h4>
-                        <small class="text-muted">Strong Signal</small>
+    <div class="health-panel workspace-panel" id="health-signals">
+        <div class="health-panel-head workspace-panel-head">
+            <h5><i class="fas fa-signal me-2"></i>SNR / RSSI History (24h)</h5>
+            <span class="health-panel-sub workspace-panel-sub">Signal trend across all active sensors</span>
+        </div>
+        <div class="health-panel-body workspace-panel-body">
+            <canvas id="snrRssiChart" height="105"></canvas>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-xl-5">
+            <div class="health-panel h-100">
+                <div class="health-panel-head workspace-panel-head">
+                    <h5><i class="fas fa-chart-bar me-2"></i>Signal Score Distribution</h5>
+                    <span class="health-panel-sub workspace-panel-sub">Quality buckets by average SNR</span>
+                </div>
+                <div class="health-panel-body workspace-panel-body">
+                    <canvas id="signalDistChart" height="230"></canvas>
+                    <div class="row mt-3 text-center">
+                        <div class="col">
+                            <h4 class="text-success mb-0" id="strongSignalCount">0</h4>
+                            <small class="text-muted">Strong</small>
+                        </div>
+                        <div class="col">
+                            <h4 class="text-warning mb-0" id="fairSignalCount">0</h4>
+                            <small class="text-muted">Fair</small>
+                        </div>
+                        <div class="col">
+                            <h4 class="text-danger mb-0" id="needAttentionCount">0</h4>
+                            <small class="text-muted">Needs Attention</small>
+                        </div>
                     </div>
-                    <div class="col">
-                        <h4 class="text-warning mb-0" id="fairSignalCount">0</h4>
-                        <small class="text-muted">Fair Signal</small>
-                    </div>
-                    <div class="col">
-                        <h4 class="text-danger mb-0" id="needAttentionCount">0</h4>
-                        <small class="text-muted">Need Attention</small>
+                    <div class="signal-legend">
+                        <div class="signal-legend-item"><span class="signal-dot" style="background:#198754"></span>Excellent >= 10 dB</div>
+                        <div class="signal-legend-item"><span class="signal-dot" style="background:#28a745"></span>Good 5 to 10 dB</div>
+                        <div class="signal-legend-item"><span class="signal-dot" style="background:#ffc107"></span>Fair 0 to 5 dB</div>
+                        <div class="signal-legend-item"><span class="signal-dot" style="background:#fd7e14"></span>Poor -5 to 0 dB</div>
+                        <div class="signal-legend-item"><span class="signal-dot" style="background:#dc3545"></span>Critical < -5 dB</div>
                     </div>
                 </div>
-                <hr class="mt-3 mb-2">
-                <div class="row" style="font-size: 0.75em; color: #6c757d;">
-                    <div class="col-6">
-                        <strong>SNR:</strong>
-                        <span class="text-success">Excellent</span> &ge;10 dB &middot;
-                        <span style="color:#28a745;">Good</span> 5–10 &middot;
-                        <span class="text-warning">Fair</span> 0–5 &middot;
-                        <span style="color:#fd7e14;">Poor</span> -5–0 &middot;
-                        <span class="text-danger">Critical</span> &lt;-5
-                    </div>
-                    <div class="col-6">
-                        <strong>RSSI:</strong>
-                        <span class="text-success">Excellent</span> &ge;-70 dBm &middot;
-                        <span style="color:#28a745;">Good</span> -70–-85 &middot;
-                        <span class="text-warning">Fair</span> -85–-100 &middot;
-                        <span style="color:#fd7e14;">Poor</span> -100–-110 &middot;
-                        <span class="text-danger">Critical</span> &lt;-110
-                    </div>
-                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Base Station Health</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="bsHealthChart" height="250"></canvas>
-                <hr class="mt-3 mb-2">
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Name/EUI</th>
-                                <th>CPU</th>
-                                <th>Memory</th>
-                                <th>Duty Cycle</th>
-                                <th>Uptime</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bsTable"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Operations</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="operationsChart" height="180"></canvas>
+        <div class="col-xl-7">
+            <div class="health-panel h-100" id="health-infrastructure">
+                <div class="health-panel-head workspace-panel-head">
+                    <h5><i class="fas fa-server me-2"></i>Base Station Health</h5>
+                    <span class="health-panel-sub workspace-panel-sub">CPU, memory, duty cycle and uptime</span>
+                </div>
+                <div class="health-panel-body workspace-panel-body">
+                    <canvas id="bsHealthChart" height="170"></canvas>
+                    <hr class="my-3">
+                    <div class="table-responsive health-table-scroll health-table-scroll--medium">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name/EUI</th>
+                                    <th>CPU</th>
+                                    <th>Memory</th>
+                                    <th>Duty Cycle</th>
+                                    <th>Uptime</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Data Transfer</h5>
+
+    <div class="row g-3">
+        <div class="col-xl-6">
+            <div class="health-stack">
+                <div class="health-panel workspace-panel">
+                    <div class="health-panel-head workspace-panel-head">
+                        <h5><i class="fas fa-exchange-alt me-2"></i>Data Transfer</h5>
+                        <span class="health-panel-sub workspace-panel-sub">I/O footprint</span>
+                    </div>
+                    <div class="health-panel-body workspace-panel-body">
+                        <table class="table table-sm mb-0 health-metric-table">
+                            <tr><td>Bytes Received</td><td class="text-end" id="bytes-in">0 B</td></tr>
+                            <tr><td>Bytes Sent (MQTT)</td><td class="text-end" id="bytes-out">0 B</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="health-panel workspace-panel">
+                    <div class="health-panel-head workspace-panel-head">
+                        <h5><i class="fas fa-clone me-2"></i>Deduplication</h5>
+                        <span class="health-panel-sub workspace-panel-sub">Filter efficiency</span>
+                    </div>
+                    <div class="health-panel-body workspace-panel-body">
+                        <table class="table table-sm mb-0 health-metric-table">
+                            <tr><td>Total Messages</td><td class="text-end" id="dedup-total">0</td></tr>
+                            <tr><td>Duplicates Filtered</td><td class="text-end" id="dedup-filtered">0</td></tr>
+                            <tr><td>Published</td><td class="text-end" id="dedup-published">0</td></tr>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <table class="table table-sm mb-0">
-                    <tr><td>Bytes Received</td><td class="text-end" id="bytes-in">0 B</td></tr>
-                    <tr><td>Bytes Sent (MQTT)</td><td class="text-end" id="bytes-out">0 B</td></tr>
+        </div>
+
+        <div class="col-xl-6">
+            <div class="health-panel h-100" id="health-operations">
+                <div class="health-panel-head workspace-panel-head">
+                    <h5><i class="fas fa-microchip me-2"></i>Protocol Operations</h5>
+                    <span class="health-panel-sub workspace-panel-sub">Command counters</span>
+                </div>
+                <div class="health-panel-body workspace-panel-body">
+                    <div class="health-protocol-grid">
+                        <div class="health-protocol-card">
+                            <p class="health-protocol-value" id="attach-requests">0</p>
+                            <p class="health-protocol-label">Attach</p>
+                        </div>
+                        <div class="health-protocol-card">
+                            <p class="health-protocol-value" id="detach-requests">0</p>
+                            <p class="health-protocol-label">Detach</p>
+                        </div>
+                        <div class="health-protocol-card">
+                            <p class="health-protocol-value" id="status-requests">0</p>
+                            <p class="health-protocol-label">Status</p>
+                        </div>
+                        <div class="health-protocol-card">
+                            <p class="health-protocol-value" id="vm-messages">0</p>
+                            <p class="health-protocol-label">VM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="health-panel workspace-panel" id="health-packet-loss">
+        <div class="health-panel-head workspace-panel-head">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>Top 10 Sensors by Packet Loss</h5>
+            <span class="health-panel-sub workspace-panel-sub">Worst links first</span>
+        </div>
+        <div class="health-panel-body workspace-panel-body">
+            <div class="table-responsive health-table-scroll health-table-scroll--tall">
+                <table class="table table-sm mb-0" style="table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">EUI</th>
+                            <th style="width: 13%;">Received</th>
+                            <th style="width: 13%;">Lost</th>
+                            <th style="width: 13%;">Loss</th>
+                            <th style="width: 13%;">SNR</th>
+                            <th style="width: 13%;">RSSI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sensorTable"></tbody>
                 </table>
-            </div>
-        </div>
-        <div class="card mt-3">
-            <div class="card-header">
-                <h5 class="mb-0">Deduplication</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-sm mb-0">
-                    <tr><td>Total Messages</td><td class="text-end" id="dedup-total">0</td></tr>
-                    <tr><td>Duplicates Filtered</td><td class="text-end" id="dedup-filtered">0</td></tr>
-                    <tr><td>Published</td><td class="text-end" id="dedup-published">0</td></tr>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Top 10 Sensors by Packet Loss</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0" style="table-layout: fixed;">
-                        <thead>
-                            <tr>
-                                <th style="width: 35%;">EUI</th>
-                                <th style="width: 13%;">Received</th>
-                                <th style="width: 13%;">Lost</th>
-                                <th style="width: 13%;">Loss</th>
-                                <th style="width: 13%;">SNR</th>
-                                <th style="width: 13%;">RSSI</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sensorTable"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Protocol Operations</h5>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3">
-                        <h5 class="mb-0" id="attach-requests">0</h5>
-                        <small class="text-muted">Attach Requests</small>
-                    </div>
-                    <div class="col-md-3">
-                        <h5 class="mb-0" id="detach-requests">0</h5>
-                        <small class="text-muted">Detach Requests</small>
-                    </div>
-                    <div class="col-md-3">
-                        <h5 class="mb-0" id="status-requests">0</h5>
-                        <small class="text-muted">Status Requests</small>
-                    </div>
-                    <div class="col-md-3">
-                        <h5 class="mb-0" id="vm-messages">0</h5>
-                        <small class="text-muted">VM Messages</small>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -275,38 +581,62 @@ let snrRssiChart = null;
 let signalDistChart = null;
 let messageChart = null;
 let connectionsChart = null;
-let operationsChart = null;
+let autoRefreshTimer = null;
 
 function formatUptime(seconds) {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    const s = Number(seconds || 0);
+    const days = Math.floor(s / 86400);
+    const hours = Math.floor((s % 86400) / 3600);
+    const minutes = Math.floor((s % 3600) / 60);
     if (days > 0) return `${days}d ${hours}h`;
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
 }
 
 function getLossColor(rate) {
-    if (rate < 1) return '#28a745';
-    if (rate < 5) return '#ffc107';
-    if (rate < 10) return '#fd7e14';
+    const r = Number(rate || 0);
+    if (r < 1) return '#198754';
+    if (r < 5) return '#ffc107';
+    if (r < 10) return '#fd7e14';
     return '#dc3545';
 }
 
 function formatTime(timestamp) {
+    if (!timestamp) return '-';
     const date = new Date(timestamp * 1000);
-    return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatBytes(bytes) {
-    if (bytes === 0) return '0 B';
+    const b = Number(bytes || 0);
+    if (b === 0) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    const i = Math.floor(Math.log(b) / Math.log(k));
+    return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function setLastRefresh() {
+    document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString();
+}
+
+function formatHistoryLabel(timestamp) {
+    if (!timestamp) return '-';
+    return new Date(Number(timestamp) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function buildDeltaSeries(history, key) {
+    return history.map((point, index) => {
+        if (index === 0) return 0;
+        const prev = Number(history[index - 1][key] || 0);
+        const current = Number(point[key] || 0);
+        return Math.max(0, current - prev);
+    });
 }
 
 function initTrafficCharts() {
+    const sharedLegend = { legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } } };
+
     const ctxMessage = document.getElementById('messageChart').getContext('2d');
     messageChart = new Chart(ctxMessage, {
         type: 'line',
@@ -315,46 +645,36 @@ function initTrafficCharts() {
             datasets: [{
                 label: 'Messages In',
                 data: [],
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                tension: 0.4,
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.14)',
+                tension: 0.35,
                 fill: true
             }, {
                 label: 'Messages Out',
                 data: [],
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                tension: 0.4,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.12)',
+                tension: 0.35,
                 fill: true
             }, {
                 label: 'Dropped',
                 data: [],
-                borderColor: '#ffc107',
-                backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                tension: 0.4,
+                borderColor: '#fd7e14',
+                backgroundColor: 'rgba(253, 126, 20, 0.1)',
+                tension: 0.35,
                 fill: true
             }]
         },
         options: {
             responsive: true,
-            scales: { y: { beginAtZero: true } },
-            plugins: { legend: { position: 'bottom' } }
-        }
-    });
-
-    const ctxOps = document.getElementById('operationsChart').getContext('2d');
-    operationsChart = new Chart(ctxOps, {
-        type: 'doughnut',
-        data: {
-            labels: ['Attach', 'Detach', 'Status', 'VM'],
-            datasets: [{
-                data: [0, 0, 0, 0],
-                backgroundColor: ['#28a745', '#dc3545', '#17a2b8', '#ff8c00']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom' } }
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Messages / sample' }
+                }
+            },
+            plugins: sharedLegend
         }
     });
 
@@ -366,133 +686,146 @@ function initTrafficCharts() {
             datasets: [{
                 label: 'Registered Sensors',
                 data: [],
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                tension: 0.4,
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                tension: 0.35,
                 fill: false,
                 yAxisID: 'y'
             }, {
-                label: 'Active Sensors (this hour)',
+                label: 'Active Sensors (hour)',
                 data: [],
-                borderColor: '#17a2b8',
-                backgroundColor: 'rgba(23, 162, 184, 0.1)',
-                tension: 0.4,
+                borderColor: '#0ea5e9',
+                backgroundColor: 'rgba(14, 165, 233, 0.12)',
+                tension: 0.35,
                 fill: false,
                 yAxisID: 'y'
             }, {
                 label: 'Base Stations',
                 data: [],
-                borderColor: '#ff8c00',
-                backgroundColor: 'rgba(255, 140, 0, 0.1)',
-                tension: 0.4,
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.12)',
+                tension: 0.35,
                 fill: false,
                 yAxisID: 'y1'
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: {
-                    type: 'linear', display: true, position: 'left', beginAtZero: true,
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
                     title: { display: true, text: 'Sensors' }
                 },
                 y1: {
-                    type: 'linear', display: true, position: 'right', beginAtZero: true,
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
                     title: { display: true, text: 'Base Stations' },
                     grid: { drawOnChartArea: false }
                 }
             },
-            plugins: { legend: { position: 'bottom' } }
+            plugins: sharedLegend
         }
     });
 }
 
 function loadHealth() {
-    fetch('/api/health')
+    return fetch('/api/health')
         .then(r => r.json())
         .then(data => {
             if (!data.success) return;
 
             document.getElementById('systemUptime').textContent = formatUptime(data.system.uptime);
 
-            const lossRate = data.system.overall_packet_loss_rate;
+            const lossRate = Number(data.system.overall_packet_loss_rate || 0);
             const lossEl = document.getElementById('overallLossRate');
-            lossEl.textContent = lossRate + '%';
-            lossEl.className = lossRate < 1 ? 'text-success' : lossRate < 5 ? 'text-warning' : 'text-danger';
+            lossEl.textContent = lossRate.toFixed(2) + '%';
+            lossEl.className = lossRate < 1 ? 'health-kpi-value text-success' : lossRate < 5 ? 'health-kpi-value text-warning' : 'health-kpi-value text-danger';
 
-            updateSnrRssiChart(data.snr_rssi_history);
-            updateSignalDistChart(data.signal_distribution);
-            updateBsHealthChart(data.base_stations);
-            updateBsTable(data.base_stations);
-            updateSensorTable(data.sensors.slice(0, 10));
+            updateSnrRssiChart(data.snr_rssi_history || []);
+            updateSignalDistChart(data.signal_distribution || {});
+            updateBsHealthChart(data.base_stations || []);
+            updateBsTable(data.base_stations || []);
+            updateSensorTable((data.sensors || []).slice(0, 10));
+        })
+        .catch(error => {
+            console.error('Error loading health:', error);
         });
 }
 
 function loadTraffic() {
-    fetch('/api/traffic/metrics')
+    return fetch('/api/traffic/metrics')
         .then(r => r.json())
         .then(data => {
             if (!data.success) return;
-            const m = data.metrics;
+            const m = data.metrics || {};
 
-            document.getElementById('messages-in').textContent = m.messages_in.toLocaleString();
-            document.getElementById('messages-out').textContent = m.messages_out.toLocaleString();
-            document.getElementById('messages-dropped').textContent = m.messages_dropped.toLocaleString();
-            document.getElementById('connections').textContent = data.connections || 0;
+            document.getElementById('messages-in').textContent = Number(m.messages_in || 0).toLocaleString();
+            document.getElementById('messages-out').textContent = Number(m.messages_out || 0).toLocaleString();
+            document.getElementById('messages-dropped').textContent = Number(m.messages_dropped || 0).toLocaleString();
+            document.getElementById('connections').textContent = Number(data.connections || 0).toLocaleString();
 
-            const uptime = Math.floor(Date.now() / 1000 - m.start_time);
+            const uptime = Math.floor(Date.now() / 1000 - Number(m.start_time || 0));
             const uptimeMinutes = uptime / 60;
             if (uptimeMinutes > 0) {
-                document.getElementById('messages-in-rate').textContent = (m.messages_in / uptimeMinutes).toFixed(1) + '/min';
-                document.getElementById('messages-out-rate').textContent = (m.messages_out / uptimeMinutes).toFixed(1) + '/min';
+                document.getElementById('messages-in-rate').textContent = (Number(m.messages_in || 0) / uptimeMinutes).toFixed(1) + '/min';
+                document.getElementById('messages-out-rate').textContent = (Number(m.messages_out || 0) / uptimeMinutes).toFixed(1) + '/min';
+            } else {
+                document.getElementById('messages-in-rate').textContent = '0/min';
+                document.getElementById('messages-out-rate').textContent = '0/min';
             }
 
-            if (m.messages_in > 0) {
-                document.getElementById('dedup-rate').textContent = ((m.messages_dropped / m.messages_in) * 100).toFixed(1) + '% filtered';
+            if (Number(m.messages_in || 0) > 0) {
+                document.getElementById('dedup-rate').textContent = ((Number(m.messages_dropped || 0) / Number(m.messages_in || 0)) * 100).toFixed(1) + '% filtered';
+            } else {
+                document.getElementById('dedup-rate').textContent = '0% filtered';
             }
 
             document.getElementById('bytes-in').textContent = formatBytes(m.bytes_in);
             document.getElementById('bytes-out').textContent = formatBytes(m.bytes_out);
-            document.getElementById('attach-requests').textContent = m.attach_requests.toLocaleString();
-            document.getElementById('detach-requests').textContent = m.detach_requests.toLocaleString();
-            document.getElementById('status-requests').textContent = m.status_requests.toLocaleString();
-            document.getElementById('vm-messages').textContent = m.vm_messages.toLocaleString();
+            document.getElementById('attach-requests').textContent = Number(m.attach_requests || 0).toLocaleString();
+            document.getElementById('detach-requests').textContent = Number(m.detach_requests || 0).toLocaleString();
+            document.getElementById('status-requests').textContent = Number(m.status_requests || 0).toLocaleString();
+            document.getElementById('vm-messages').textContent = Number(m.vm_messages || 0).toLocaleString();
 
             if (data.dedup_stats) {
-                document.getElementById('dedup-total').textContent = data.dedup_stats.total_messages.toLocaleString();
-                document.getElementById('dedup-filtered').textContent = data.dedup_stats.duplicate_messages.toLocaleString();
-                document.getElementById('dedup-published').textContent = data.dedup_stats.published_messages.toLocaleString();
+                document.getElementById('dedup-total').textContent = Number(data.dedup_stats.total_messages || 0).toLocaleString();
+                document.getElementById('dedup-filtered').textContent = Number(data.dedup_stats.duplicate_messages || 0).toLocaleString();
+                document.getElementById('dedup-published').textContent = Number(data.dedup_stats.published_messages || 0).toLocaleString();
             }
 
-            if (operationsChart) {
-                operationsChart.data.datasets[0].data = [
-                    m.attach_requests || 0, m.detach_requests || 0,
-                    m.status_requests || 0, m.vm_messages || 0
-                ];
-                operationsChart.update('none');
-            }
-
-            if (data.history && data.history.length > 0) {
+            if (Array.isArray(data.history) && data.history.length > 0) {
                 updateTrafficCharts(data.history);
             }
         })
-        .catch(error => console.error('Error fetching traffic:', error));
+        .catch(error => {
+            console.error('Error fetching traffic:', error);
+        });
 }
 
 function updateTrafficCharts(history) {
     if (!messageChart || !connectionsChart) return;
-    const labels = history.map((_, i) => `-${history.length - i}m`);
+    const points = history
+        .slice()
+        .sort((a, b) => Number(a.timestamp || 0) - Number(b.timestamp || 0))
+        .slice(-180);
+    const labels = points.map(h => formatHistoryLabel(h.timestamp));
 
     messageChart.data.labels = labels;
-    messageChart.data.datasets[0].data = history.map(h => h.messages_in || 0);
-    messageChart.data.datasets[1].data = history.map(h => h.messages_out || 0);
-    messageChart.data.datasets[2].data = history.map(h => h.messages_dropped || 0);
+    messageChart.data.datasets[0].data = buildDeltaSeries(points, 'messages_in');
+    messageChart.data.datasets[1].data = buildDeltaSeries(points, 'messages_out');
+    messageChart.data.datasets[2].data = buildDeltaSeries(points, 'messages_dropped');
     messageChart.update('none');
 
     connectionsChart.data.labels = labels;
-    connectionsChart.data.datasets[0].data = history.map(h => h.sensors_registered || h.sensors || 0);
-    connectionsChart.data.datasets[1].data = history.map(h => h.sensors_active || 0);
-    connectionsChart.data.datasets[2].data = history.map(h => h.base_stations || 0);
+    connectionsChart.data.datasets[0].data = points.map(h => Number(h.sensors_registered || h.sensors || 0));
+    connectionsChart.data.datasets[1].data = points.map(h => Number(h.sensors_active || 0));
+    connectionsChart.data.datasets[2].data = points.map(h => Number(h.base_stations || 0));
     connectionsChart.update('none');
 }
 
@@ -500,9 +833,15 @@ function updateSignalDistChart(dist) {
     const ctx = document.getElementById('signalDistChart').getContext('2d');
     if (signalDistChart) signalDistChart.destroy();
 
-    document.getElementById('strongSignalCount').textContent = (dist.excellent || 0) + (dist.good || 0);
-    document.getElementById('fairSignalCount').textContent = dist.fair || 0;
-    document.getElementById('needAttentionCount').textContent = (dist.poor || 0) + (dist.critical || 0);
+    const excellent = Number(dist.excellent || 0);
+    const good = Number(dist.good || 0);
+    const fair = Number(dist.fair || 0);
+    const poor = Number(dist.poor || 0);
+    const critical = Number(dist.critical || 0);
+
+    document.getElementById('strongSignalCount').textContent = (excellent + good).toLocaleString();
+    document.getElementById('fairSignalCount').textContent = fair.toLocaleString();
+    document.getElementById('needAttentionCount').textContent = (poor + critical).toLocaleString();
 
     signalDistChart = new Chart(ctx, {
         type: 'bar',
@@ -510,7 +849,7 @@ function updateSignalDistChart(dist) {
             labels: ['Excellent', 'Good', 'Fair', 'Poor', 'Critical'],
             datasets: [{
                 label: 'Devices',
-                data: [dist.excellent || 0, dist.good || 0, dist.fair || 0, dist.poor || 0, dist.critical || 0],
+                data: [excellent, good, fair, poor, critical],
                 backgroundColor: ['#198754', '#28a745', '#ffc107', '#fd7e14', '#dc3545']
             }]
         },
@@ -527,22 +866,30 @@ function updateSnrRssiChart(history) {
     const ctx = document.getElementById('snrRssiChart').getContext('2d');
     if (snrRssiChart) snrRssiChart.destroy();
 
+    const labels = (history || []).map(h => formatTime(h.timestamp));
+    const snrValues = (history || []).map(h => Number(h.avg_snr || 0));
+    const rssiValues = (history || []).map(h => Number(h.avg_rssi || 0));
+
     snrRssiChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: history.map(h => formatTime(h.timestamp)),
+            labels: labels,
             datasets: [{
                 label: 'Avg SNR (dB)',
-                data: history.map(h => h.avg_snr),
-                borderColor: '#17a2b8',
-                backgroundColor: 'rgba(23, 162, 184, 0.1)',
-                fill: true, tension: 0.3, yAxisID: 'y'
+                data: snrValues,
+                borderColor: '#0ea5e9',
+                backgroundColor: 'rgba(14, 165, 233, 0.12)',
+                fill: true,
+                tension: 0.3,
+                yAxisID: 'y'
             }, {
                 label: 'Avg RSSI (dBm)',
-                data: history.map(h => h.avg_rssi),
-                borderColor: '#6c757d',
-                backgroundColor: 'rgba(108, 117, 125, 0.1)',
-                fill: true, tension: 0.3, yAxisID: 'y1'
+                data: rssiValues,
+                borderColor: '#64748b',
+                backgroundColor: 'rgba(100, 116, 139, 0.12)',
+                fill: true,
+                tension: 0.3,
+                yAxisID: 'y1'
             }]
         },
         options: {
@@ -560,59 +907,72 @@ function updateBsHealthChart(baseStations) {
     const ctx = document.getElementById('bsHealthChart').getContext('2d');
     if (bsHealthChart) bsHealthChart.destroy();
 
+    const labels = (baseStations || []).map(bs => bs.name || (bs.eui || '').substring(0, 8));
+    const cpu = (baseStations || []).map(bs => Number(bs.cpu || 0));
+    const memory = (baseStations || []).map(bs => Number(bs.memory || 0));
+    const duty = (baseStations || []).map(bs => Number(bs.duty_cycle || 0));
+
     bsHealthChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: baseStations.map(bs => bs.name || bs.eui.substring(0, 8)),
+            labels: labels,
             datasets: [
-                { label: 'CPU %', data: baseStations.map(bs => bs.cpu), backgroundColor: '#ff8c00' },
-                { label: 'Memory %', data: baseStations.map(bs => bs.memory), backgroundColor: '#17a2b8' },
-                { label: 'Duty Cycle %', data: baseStations.map(bs => bs.duty_cycle), backgroundColor: '#6c757d' }
+                { label: 'CPU %', data: cpu, backgroundColor: '#f59e0b' },
+                { label: 'Memory %', data: memory, backgroundColor: '#0ea5e9' },
+                { label: 'Duty Cycle %', data: duty, backgroundColor: '#64748b' }
             ]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, max: 100 } },
+            plugins: { legend: { position: 'bottom' } }
+        }
     });
 }
 
 function updateBsTable(baseStations) {
-    document.getElementById('bsTable').innerHTML = baseStations.map(bs => `
+    const rows = (baseStations || []).map(bs => `
         <tr>
-            <td>${bs.name || bs.eui.substring(0, 12)}</td>
-            <td>${bs.cpu.toFixed(1)}%</td>
-            <td>${bs.memory.toFixed(1)}%</td>
-            <td>${bs.duty_cycle.toFixed(1)}%</td>
+            <td>${bs.name ? bs.name : `<code>${(bs.eui || '').substring(0, 12)}</code>`}</td>
+            <td>${Number(bs.cpu || 0).toFixed(1)}%</td>
+            <td>${Number(bs.memory || 0).toFixed(1)}%</td>
+            <td>${Number(bs.duty_cycle || 0).toFixed(1)}%</td>
             <td>${formatUptime(bs.uptime)}</td>
         </tr>
     `).join('');
+
+    document.getElementById('bsTable').innerHTML = rows || '<tr><td colspan="5" class="text-center text-muted py-3">No base station data available.</td></tr>';
 }
 
 function updateSensorTable(sensors) {
-    document.getElementById('sensorTable').innerHTML = sensors.map(s => `
+    const rows = (sensors || []).map(s => `
         <tr>
-            <td><code style="font-size: 0.85em;">${s.eui}</code></td>
-            <td>${s.packets_received}</td>
-            <td>${s.packets_lost}</td>
-            <td style="color: ${getLossColor(s.packet_loss_rate)}">${s.packet_loss_rate}%</td>
-            <td>${s.avg_snr} dB</td>
-            <td>${s.avg_rssi} dBm</td>
+            <td><code style="font-size: 0.82em;">${s.eui}</code></td>
+            <td>${Number(s.packets_received || 0).toLocaleString()}</td>
+            <td>${Number(s.packets_lost || 0).toLocaleString()}</td>
+            <td style="color: ${getLossColor(s.packet_loss_rate)}; font-weight: 700;">${Number(s.packet_loss_rate || 0).toFixed(2)}%</td>
+            <td>${Number(s.avg_snr || 0).toFixed(2)} dB</td>
+            <td>${Number(s.avg_rssi || 0).toFixed(2)} dBm</td>
         </tr>
     `).join('');
+
+    document.getElementById('sensorTable').innerHTML = rows || '<tr><td colspan="6" class="text-center text-muted py-3">No sensor packet statistics available.</td></tr>';
 }
 
 function resetMetrics() {
-    if (confirm('Are you sure you want to reset all traffic metrics?')) {
-        fetch('/api/traffic/reset', { method: 'POST' })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert('success', 'Traffic metrics reset successfully');
-                    refreshAll();
-                } else {
-                    showAlert('danger', data.message || 'Failed to reset metrics');
-                }
-            })
-            .catch(error => showAlert('danger', 'Error: ' + error.message));
-    }
+    if (!confirm('Are you sure you want to reset all traffic metrics?')) return;
+
+    fetch('/api/traffic/reset', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', 'Traffic metrics reset successfully.');
+                refreshAll();
+            } else {
+                showAlert('danger', data.message || 'Failed to reset metrics.');
+            }
+        })
+        .catch(error => showAlert('danger', 'Error: ' + error.message));
 }
 
 function showAlert(type, message) {
@@ -625,14 +985,64 @@ function showAlert(type, message) {
 }
 
 function refreshAll() {
-    loadHealth();
-    loadTraffic();
+    Promise.all([loadHealth(), loadTraffic()]).finally(() => {
+        setLastRefresh();
+    });
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+    }
+}
+
+function startAutoRefresh() {
+    stopAutoRefresh();
+    const enabled = document.getElementById('autoRefreshToggle').checked;
+    if (!enabled) return;
+
+    const interval = parseInt(document.getElementById('refreshIntervalSelect').value, 10) || 10000;
+    autoRefreshTimer = setInterval(refreshAll, interval);
+}
+
+function initRefreshControls() {
+    const toggle = document.getElementById('autoRefreshToggle');
+    const intervalSelect = document.getElementById('refreshIntervalSelect');
+
+    const savedEnabled = localStorage.getItem('health_auto_refresh_enabled');
+    const savedInterval = localStorage.getItem('health_auto_refresh_interval');
+
+    if (savedEnabled !== null) {
+        toggle.checked = savedEnabled === 'true';
+    }
+
+    if (savedInterval && ['5000', '10000', '15000', '30000'].includes(savedInterval)) {
+        intervalSelect.value = savedInterval;
+    }
+
+    toggle.addEventListener('change', () => {
+        localStorage.setItem('health_auto_refresh_enabled', String(toggle.checked));
+        startAutoRefresh();
+    });
+
+    intervalSelect.addEventListener('change', () => {
+        localStorage.setItem('health_auto_refresh_interval', intervalSelect.value);
+        startAutoRefresh();
+    });
+
+    startAutoRefresh();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initTrafficCharts();
+    initRefreshControls();
     refreshAll();
-    setInterval(refreshAll, 10000);
+});
+
+window.addEventListener('beforeunload', () => {
+    stopAutoRefresh();
 });
 </script>
 {% endblock %}
+

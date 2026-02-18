@@ -478,14 +478,14 @@
 }
 </style>
 
-<div class="sensor-page" id="sensorPage">
-    <div class="sensor-header">
+<div class="sensor-page workspace-shell" id="sensorPage">
+    <div class="sensor-header workspace-head">
         <div>
-            <p class="sensor-kicker">Device Registry</p>
-            <h2 class="sensor-title">Sensor Management</h2>
-            <p class="sensor-subtitle">Manage registration, monitor activity, and run safe bulk operations.</p>
+            <p class="sensor-kicker workspace-kicker">Device Registry</p>
+            <h2 class="sensor-title workspace-title">Sensor Management</h2>
+            <p class="sensor-subtitle workspace-subtitle">Manage registration, monitor activity, and run safe bulk operations.</p>
         </div>
-        <div class="sensor-actions">
+        <div class="sensor-actions workspace-actions">
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sensorModal" onclick="openSensorModal()">
                 <i class="fas fa-plus"></i> Add Sensor
             </button>
@@ -529,33 +529,33 @@
         </div>
     </div>
 
-    <div class="sensor-summary-grid" id="sensorSummaryGrid">
-        <div class="sensor-summary-card">
-            <div class="sensor-summary-label">Total Sensors</div>
-            <div class="sensor-summary-value" id="sensorTotalCount">0</div>
-            <div class="sensor-summary-note">Configured in registry</div>
+    <div class="sensor-summary-grid workspace-kpi-grid" id="sensorSummaryGrid">
+        <div class="sensor-summary-card workspace-kpi">
+            <div class="sensor-summary-label workspace-kpi-label">Total Sensors</div>
+            <div class="sensor-summary-value workspace-kpi-value" id="sensorTotalCount">0</div>
+            <div class="sensor-summary-note workspace-kpi-note">Configured in registry</div>
         </div>
-        <div class="sensor-summary-card">
-            <div class="sensor-summary-label">Registered</div>
+        <div class="sensor-summary-card workspace-kpi">
+            <div class="sensor-summary-label workspace-kpi-label">Registered</div>
             <div class="sensor-summary-value text-success" id="sensorRegisteredCount">0</div>
-            <div class="sensor-summary-note">Has active registration</div>
+            <div class="sensor-summary-note workspace-kpi-note">Has active registration</div>
         </div>
-        <div class="sensor-summary-card">
-            <div class="sensor-summary-label">Active</div>
+        <div class="sensor-summary-card workspace-kpi">
+            <div class="sensor-summary-label workspace-kpi-label">Active</div>
             <div class="sensor-summary-value text-info" id="sensorActiveCount">0</div>
-            <div class="sensor-summary-note">Recent traffic observed</div>
+            <div class="sensor-summary-note workspace-kpi-note">Recent traffic observed</div>
         </div>
-        <div class="sensor-summary-card">
-            <div class="sensor-summary-label">Warnings</div>
+        <div class="sensor-summary-card workspace-kpi">
+            <div class="sensor-summary-label workspace-kpi-label">Warnings</div>
             <div class="sensor-summary-value text-warning" id="sensorWarningCount">0</div>
-            <div class="sensor-summary-note">Warning or detached state</div>
+            <div class="sensor-summary-note workspace-kpi-note">Warning or detached state</div>
         </div>
     </div>
 
-    <div class="sensor-table-panel">
+    <div class="sensor-table-panel workspace-panel">
         <div class="sensor-toolbar">
             <div class="sensor-toolbar-left">
-                <input type="text" id="sensorSearch" class="form-control form-control-sm sensor-search" placeholder="Search by EUI, name, tag, short addr, base station or status...">
+                <input type="text" id="sensorSearch" class="form-control form-control-sm sensor-search" placeholder="Search by EUI, name, tag, short addr, GPS, base station or status...">
                 <small id="sensorTableMeta" class="sensor-meta-note">Live configuration overview</small>
             </div>
             <div class="sensor-toolbar-right">
@@ -663,6 +663,18 @@
                         <div class="form-text">Comma-separated tags.</div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">GPS Coordinates (optional)</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" class="form-control" id="sensorGpsLat" step="0.000001" placeholder="Latitude">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" class="form-control" id="sensorGpsLng" step="0.000001" placeholder="Longitude">
+                            </div>
+                        </div>
+                        <div class="form-text">Set both fields to place this sensor automatically in Coverage map.</div>
+                    </div>
+                    <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="bidi">
                             <label class="form-check-label" for="bidi">
@@ -768,6 +780,23 @@ function parseSensorTags(rawValue) {
 
 function tagsToInput(tags) {
     return Array.isArray(tags) ? tags.join(', ') : '';
+}
+
+function formatGps(lat, lng) {
+    const hasLat = lat !== null && lat !== undefined && lat !== '';
+    const hasLng = lng !== null && lng !== undefined && lng !== '';
+    if (!hasLat || !hasLng) return '';
+    const latNum = Number(lat);
+    const lngNum = Number(lng);
+    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return '';
+    return `${latNum.toFixed(6)}, ${lngNum.toFixed(6)}`;
+}
+
+function parseGpsInputValue(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return null;
+    const numeric = Number(raw);
+    return Number.isFinite(numeric) ? numeric : NaN;
 }
 
 function isRegistered(sensor) {
@@ -942,6 +971,7 @@ function getFilteredSensors() {
             sensor.name || '',
             Array.isArray(sensor.tags) ? sensor.tags.join(' ') : '',
             sensor.shortAddr,
+            formatGps(sensor.gps_lat, sensor.gps_lng),
             sensor.activity_status,
             isRegistered(sensor) ? 'registered' : 'unregistered',
             path.baseStation || '',
@@ -1043,6 +1073,7 @@ function renderSensors(filteredSensors) {
         const bidiLabel = sensor.bidi ? 'Bi-directional' : 'Uplink only';
         const sensorName = (sensor.name || '').trim();
         const sensorTags = Array.isArray(sensor.tags) ? sensor.tags : [];
+        const gpsText = formatGps(sensor.gps_lat, sensor.gps_lng);
         const tagsHtml = sensorTags.length > 0
             ? `<div class="sensor-tag-row">${sensorTags.map(tag => `<span class="sensor-tag-chip">${escapeHtml(tag)}</span>`).join('')}</div>`
             : '';
@@ -1068,6 +1099,7 @@ function renderSensors(filteredSensors) {
                         </div>
                         ${sensorName ? `<div class="sensor-name">${escapeHtml(sensorName)}</div>` : ''}
                         <span class="sensor-subline">Addr ${escapeHtml(sensor.shortAddr)} | ${bidiLabel}</span>
+                        ${gpsText ? `<span class="sensor-subline">GPS ${escapeHtml(gpsText)}</span>` : ''}
                         ${tagsHtml}
                     </div>
                 </td>
@@ -1175,12 +1207,16 @@ function openSensorModal(sensor = null) {
         document.getElementById('shortAddr').value = sensor.shortAddr;
         document.getElementById('sensorName').value = sensor.name || '';
         document.getElementById('sensorTags').value = tagsToInput(sensor.tags);
+        document.getElementById('sensorGpsLat').value = sensor.gps_lat ?? '';
+        document.getElementById('sensorGpsLng').value = sensor.gps_lng ?? '';
         document.getElementById('bidi').checked = sensor.bidi;
         document.getElementById('eui').readOnly = true;
     } else {
         document.getElementById('sensorForm').reset();
         document.getElementById('sensorName').value = '';
         document.getElementById('sensorTags').value = '';
+        document.getElementById('sensorGpsLat').value = '';
+        document.getElementById('sensorGpsLng').value = '';
         document.getElementById('eui').readOnly = false;
     }
 }
@@ -1197,13 +1233,30 @@ function editSensor(eui) {
 }
 
 function saveSensor() {
+    const gpsLat = parseGpsInputValue(document.getElementById('sensorGpsLat').value);
+    const gpsLng = parseGpsInputValue(document.getElementById('sensorGpsLng').value);
+    if ((gpsLat === null) !== (gpsLng === null)) {
+        showAlert('warning', 'Please provide both latitude and longitude, or leave both empty.');
+        return;
+    }
+    if (Number.isNaN(gpsLat) || Number.isNaN(gpsLng)) {
+        showAlert('warning', 'GPS coordinates must be valid numbers.');
+        return;
+    }
+    if (gpsLat !== null && (gpsLat < -90 || gpsLat > 90 || gpsLng < -180 || gpsLng > 180)) {
+        showAlert('warning', 'GPS out of range. Latitude -90..90, longitude -180..180.');
+        return;
+    }
+
     const formData = {
         eui: document.getElementById('eui').value.toUpperCase().trim(),
         nwKey: document.getElementById('nwKey').value.toUpperCase().trim(),
         shortAddr: document.getElementById('shortAddr').value.toUpperCase().trim(),
         name: document.getElementById('sensorName').value.trim(),
         tags: parseSensorTags(document.getElementById('sensorTags').value),
-        bidi: document.getElementById('bidi').checked
+        bidi: document.getElementById('bidi').checked,
+        gps_lat: gpsLat,
+        gps_lng: gpsLng
     };
 
     apiRequest('/api/sensors', 'POST', formData)
@@ -1732,4 +1785,5 @@ function getScoreColor(score) {
 
 </script>
 {% endblock %}
+
 

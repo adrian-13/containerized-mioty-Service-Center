@@ -60,12 +60,12 @@
 }
 </style>
 
-<div class="config-shell">
-<div class="config-head">
+<div class="config-shell workspace-shell">
+<div class="config-head workspace-head">
     <div>
-        <p class="config-kicker">System Setup</p>
-        <h2 class="config-title">Configuration</h2>
-        <p class="config-subtitle">Nastavenia su rozdelene do zaloziek pre rychlu orientaciu.</p>
+        <p class="config-kicker workspace-kicker">System Setup</p>
+        <h2 class="config-title workspace-title">Configuration</h2>
+        <p class="config-subtitle workspace-subtitle">Nastavenia su rozdelene do zaloziek pre rychlu orientaciu.</p>
     </div>
     <button type="button" class="btn btn-primary" onclick="saveConfig()"><i class="fas fa-save"></i> Save Configuration</button>
 </div>
@@ -176,39 +176,6 @@
                     </div>
                 </div>
 
-                <div class="col-md-6" id="configSectionUpdates">
-                    <h5>System Updates</h5>
-                    <div class="card">
-                        <div class="card-body">
-                            <div id="updateStatus" class="mb-3">
-                                <p class="text-muted">Loading version information...</p>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <button type="button" class="btn btn-info btn-sm" onclick="checkForUpdates(this)">
-                                    <i class="fas fa-sync-alt"></i> Check for Updates
-                                </button>
-                                <button type="button" class="btn btn-success btn-sm ms-2" id="updateBtn" onclick="performUpdate()" disabled>
-                                    <i class="fas fa-download"></i> Install Update
-                                </button>
-                            </div>
-                            
-                            <div id="updateDetails" class="d-none">
-                                <h6>Recent Changes:</h6>
-                                <ul id="commitList" class="list-unstyled small">
-                                    <!-- Commits will be loaded here -->
-                                </ul>
-                            </div>
-                            
-                            <div id="updateProgress" class="d-none">
-                                <div class="progress mb-2">
-                                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
-                                </div>
-                                <p class="text-info small">Update in progress...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div class="row mt-4 d-none" id="configSectionInflux">
@@ -309,6 +276,9 @@
                 <button type="button" class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
                 <button type="button" class="btn btn-warning ms-2" onclick="restartService(event)">Restart Service</button>
                 <button type="button" class="btn btn-danger ms-2" onclick="restartContainer(event)">Restart Container</button>
+                <div class="alert alert-info mt-3 mb-0">
+                    <small><strong>Note:</strong> Auto-update is disabled for this customized deployment. Apply updates through your Git workflow and rebuild container images.</small>
+                </div>
                 <div class="alert alert-warning mt-3">
                     <small><strong>Note:</strong> Configuration changes require a restart to take effect. Use "Restart Service" for quick process restart, or "Restart Container" for full environment reload (recommended after changing MQTT credentials or other .env variables).</small>
                 </div>
@@ -470,202 +440,21 @@ function restartContainer(evt) {
     }
 }
 
-// Update Management Functions
-let currentVersionInfo = null;
-
-function loadVersionInfo() {
-    fetch('/api/system/version')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            currentVersionInfo = data;
-            displayVersionInfo(data);
-        })
-        .catch(error => {
-            console.error('Version API Error:', error);
-            document.getElementById('updateStatus').innerHTML = 
-                '<p class="text-danger">⚠️ Cannot connect to update API<br>' +
-                '<small>Error: ' + error.message + '<br>' +
-                'This may be a network connectivity issue.</small></p>';
-            
-            // Disable update button
-            document.getElementById('updateBtn').disabled = true;
-        });
-}
-
-function displayVersionInfo(data) {
-    const statusDiv = document.getElementById('updateStatus');
-    
-    if (data.error) {
-        statusDiv.innerHTML = '<p class="text-danger">Error: ' + data.error + '</p>';
-        return;
-    }
-    
-    const statusClass = data.updates_available ? 'text-warning' : 'text-success';
-    const statusText = data.updates_available ? 'Update Available!' : 'Up to Date';
-    const updateIcon = data.updates_available ? '🔄' : '✅';
-    
-    statusDiv.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <strong class="${statusClass}">${updateIcon} ${statusText}</strong>
-        </div>
-        <div class="small text-muted">
-            <div><strong>Current:</strong> ${data.current_version}</div>
-            <div><strong>Latest:</strong> ${data.remote_version}</div>
-        </div>
-    `;
-    
-    // Enable/disable update button
-    const updateBtn = document.getElementById('updateBtn');
-    updateBtn.disabled = !data.updates_available;
-    
-    // Show recent commits if available
-    if (data.recent_commits && data.recent_commits.length > 0) {
-        const commitList = document.getElementById('commitList');
-        commitList.innerHTML = '';
-        
-        data.recent_commits.slice(0, 3).forEach(commit => {
-            const li = document.createElement('li');
-            li.innerHTML = `<code>${commit.hash}</code> ${commit.message}`;
-            commitList.appendChild(li);
-        });
-        
-        document.getElementById('updateDetails').classList.remove('d-none');
-    }
-}
-
-function checkForUpdates(button) {
-    if (!button) {
-        return;
-    }
-    const originalText = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
-    
-    fetch('/api/system/check-updates')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            currentVersionInfo = data;
-            displayVersionInfo(data);
-            
-            if (data.updates_available) {
-                alert('New update available! Current: ' + data.current_version + ', Latest: ' + data.remote_version);
-            } else {
-                alert('System is up to date! Current version: ' + data.current_version);
-            }
-        })
-        .catch(error => {
-            console.error('Update check error:', error);
-            alert('Error checking for updates: ' + error.message + 
-                  '\n\nThis may be a network connectivity issue. Please check if you can access the service API.');
-        })
-        .finally(() => {
-            button.disabled = false;
-            button.innerHTML = originalText;
-        });
-}
-
-function performUpdate() {
-    if (!currentVersionInfo || !currentVersionInfo.updates_available) {
-        alert('No updates available');
-        return;
-    }
-    
-    if (!confirm('Are you sure you want to update the system? This will:\n\n' +
-                 '1. Create a backup of your configuration\n' +
-                 '2. Download and install the latest version\n' +
-                 '3. Restart the service\n\n' +
-                 'The service will be unavailable for about 30-60 seconds.')) {
-        return;
-    }
-    
-    const button = document.getElementById('updateBtn');
-    const originalText = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-    
-    // Show progress
-    document.getElementById('updateProgress').classList.remove('d-none');
-    
-    fetch('/api/system/update', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then(response => response.json())
-    .then(result => {
-        document.getElementById('updateProgress').classList.add('d-none');
-        
-        if (result.success) {
-            alert('Update completed successfully!\\n\\nBackup created: ' + result.backup_dir + '\\n\\nThe service will restart automatically.');
-            
-            // Auto-restart after successful update
-            setTimeout(() => {
-                restartSystemAfterUpdate();
-            }, 2000);
-        } else {
-            alert('Update failed: ' + result.error + (result.backup_dir ? '\\n\\nBackup created: ' + result.backup_dir : ''));
-        }
-    })
-    .catch(error => {
-        document.getElementById('updateProgress').classList.add('d-none');
-        alert('Update error: ' + error);
-    })
-    .finally(() => {
-        button.disabled = false;
-        button.innerHTML = originalText;
-    });
-}
-
-function restartSystemAfterUpdate() {
-    fetch('/api/system/restart', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then(response => response.json())
-    .then(result => {
-        alert('System restart initiated. The page will reload automatically in 10 seconds.');
-        setTimeout(() => {
-            window.location.reload();
-        }, 10000);
-    })
-    .catch(error => {
-        alert('Update completed but restart failed. Please restart manually. Error: ' + error);
-    });
-}
-
 function applyConfigTab(tabName) {
     const configTab = tabName || 'general';
     const sectionGeneral = document.getElementById('configSectionGeneral');
     const sectionRowTwo = document.getElementById('configSectionRowTwo');
     const sectionPolicy = document.getElementById('configSectionPolicy');
-    const sectionUpdates = document.getElementById('configSectionUpdates');
     const sectionInflux = document.getElementById('configSectionInflux');
     const sectionActions = document.getElementById('configSectionActions');
 
-    [sectionGeneral, sectionRowTwo, sectionPolicy, sectionUpdates, sectionInflux, sectionActions]
+    [sectionGeneral, sectionRowTwo, sectionPolicy, sectionInflux, sectionActions]
         .filter(Boolean)
         .forEach(el => el.classList.add('d-none'));
 
     if (sectionPolicy) {
         sectionPolicy.classList.remove('col-12');
         sectionPolicy.classList.add('col-md-6');
-    }
-    if (sectionUpdates) {
-        sectionUpdates.classList.remove('col-12');
-        sectionUpdates.classList.add('col-md-6');
     }
 
     if (configTab === 'general') {
@@ -681,8 +470,6 @@ function applyConfigTab(tabName) {
         }
         if (sectionPolicy) {
             sectionPolicy.classList.remove('d-none');
-        }
-        if (sectionPolicy) {
             sectionPolicy.classList.remove('col-md-6');
             sectionPolicy.classList.add('col-12');
         }
@@ -697,20 +484,9 @@ function applyConfigTab(tabName) {
     }
 
     if (configTab === 'maintenance') {
-        if (sectionRowTwo) {
-            sectionRowTwo.classList.remove('d-none');
-        }
-        if (sectionUpdates) {
-            sectionUpdates.classList.remove('d-none');
-        }
         if (sectionActions) {
             sectionActions.classList.remove('d-none');
         }
-        if (sectionUpdates) {
-            sectionUpdates.classList.remove('col-md-6');
-            sectionUpdates.classList.add('col-12');
-        }
-        return;
     }
 }
 
@@ -744,10 +520,11 @@ function initConfigTabs() {
     switchConfigTab(savedTab);
 }
 
-// Load version info when page loads
+// Initialize tabs when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    loadVersionInfo();
     initConfigTabs();
 });
 </script>
 {% endblock %}
+
+

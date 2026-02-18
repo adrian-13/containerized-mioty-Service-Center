@@ -2,6 +2,7 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
 .dashboard-shell {
     display: grid;
@@ -19,116 +20,43 @@
     }
 }
 
-.hero-panel {
-    border: 1px solid #cfd9e8;
-    border-radius: 0.95rem;
-    background:
-        radial-gradient(800px 240px at 0% 0%, rgba(244, 162, 74, 0.24) 0%, transparent 65%),
-        radial-gradient(900px 300px at 100% -20%, rgba(42, 139, 183, 0.16) 0%, transparent 62%),
-        linear-gradient(155deg, #121d31 0%, #1e304a 42%, #274261 100%);
-    color: #f6fbff;
-    box-shadow: 0 12px 28px rgba(10, 20, 36, 0.3);
-    overflow: hidden;
-    animation: deck-enter 0.42s ease both;
-}
-
-.hero-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-    gap: 0.74rem;
-    padding: 0.72rem 0.78rem;
-}
-
-.hero-kicker {
-    margin: 0;
-    font-size: 0.66rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: rgba(219, 233, 248, 0.82);
-    font-weight: 800;
-}
-
-.hero-title {
-    margin: 0.2rem 0 0;
-    font-family: "Sora", "Manrope", sans-serif;
-    font-size: 1.34rem;
-    line-height: 1.16;
-    font-weight: 700;
-    color: #ffffff;
-}
-
-.hero-subtitle {
-    margin: 0.32rem 0 0;
-    max-width: 60ch;
-    color: rgba(221, 233, 247, 0.88);
-    font-size: 0.79rem;
-}
-
-.hero-pills {
-    margin-top: 0.56rem;
+.dashboard-utility {
+    border: 1px solid #d6dfec;
+    border-radius: 0.82rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    padding: 0.46rem 0.7rem;
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.52rem;
     flex-wrap: wrap;
-    gap: 0.36rem;
 }
 
-.hero-pill {
+.dashboard-utility-actions {
+    margin-top: 0;
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.09);
-    padding: 0.2rem 0.52rem;
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: rgba(243, 249, 255, 0.9);
-}
-
-.version-chip {
-    justify-self: end;
-    width: min(100%, 300px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.78rem;
-    background: rgba(255, 255, 255, 0.08);
-    padding: 0.58rem 0.66rem;
-    display: grid;
-    gap: 0.34rem;
-}
-
-.version-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.6rem;
-}
-
-.version-label {
-    font-size: 0.64rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(214, 231, 248, 0.8);
-    font-weight: 800;
-}
-
-.version-value {
-    font-size: 0.86rem;
-    font-weight: 800;
-    color: #fff;
-}
-
-.control-actions {
-    margin-top: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.42rem;
+    gap: 0.54rem;
     flex-wrap: wrap;
+}
+
+.dashboard-auto-label {
+    color: #5c6f89 !important;
+    font-size: 0.72rem;
+    font-weight: 700;
 }
 
 .control-meta {
-    font-size: 0.66rem;
-    color: rgba(216, 231, 248, 0.9);
+    font-size: 0.7rem;
+    color: #607089;
     font-weight: 700;
+    white-space: nowrap;
+}
+
+.dashboard-refresh-btn {
+    padding: 0.32rem 0.62rem;
+    border-radius: 999px;
 }
 
 .layout-controls {
@@ -554,13 +482,14 @@ body.resizing-widget {
 
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
     gap: 0.72rem;
 }
 
 .kpi-link {
     text-decoration: none;
     color: inherit;
+    min-width: 0;
 }
 
 .status-card {
@@ -570,6 +499,10 @@ body.resizing-widget {
     background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
     padding: 0.85rem;
     min-height: 122px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     transition: transform 0.18s ease, box-shadow 0.18s ease;
     animation: deck-enter 0.38s ease both;
 }
@@ -614,6 +547,7 @@ body.resizing-widget {
     justify-content: space-between;
     gap: 0.4rem;
     margin-bottom: 0.4rem;
+    min-width: 0;
 }
 
 .status-label {
@@ -622,6 +556,8 @@ body.resizing-widget {
     letter-spacing: 0.08em;
     font-weight: 800;
     opacity: 0.86;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .status-icon {
@@ -633,18 +569,30 @@ body.resizing-widget {
     align-items: center;
     justify-content: center;
     font-size: 1rem;
+    flex-shrink: 0;
 }
 
 .status-value {
-    font-size: 1.4rem;
+    font-size: clamp(0.95rem, 1vw, 1.22rem);
     font-weight: 800;
-    line-height: 1.1;
+    line-height: 1.12;
+    display: block;
+    width: 100%;
+    white-space: normal;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .status-detail {
     margin-top: 0.34rem;
-    font-size: 0.75rem;
+    font-size: clamp(0.68rem, 0.72vw, 0.75rem);
     opacity: 0.9;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .kpi-trend {
@@ -715,6 +663,89 @@ body.resizing-widget {
     font-weight: 600;
 }
 
+.topology-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.topology-mini-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.14rem;
+    border: 1px solid rgba(215, 227, 243, 0.35);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.topology-mini-btn {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.18rem 0.48rem;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: rgba(233, 243, 255, 0.86);
+    background: transparent;
+}
+
+.topology-mini-btn.is-active {
+    color: #123254;
+    background: #f2f7ff;
+}
+
+.topology-map-tools {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+}
+
+.topology-map-position {
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: rgba(225, 237, 252, 0.9);
+    border: 1px solid rgba(215, 227, 243, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    padding: 0.16rem 0.44rem;
+    white-space: nowrap;
+}
+
+.topology-mini-save {
+    border: 1px solid rgba(215, 227, 243, 0.45);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #eef5ff;
+    padding: 0.17rem 0.5rem;
+    font-size: 0.66rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.topology-mini-save:hover,
+.topology-mini-save:focus {
+    background: rgba(255, 255, 255, 0.24);
+    color: #ffffff;
+}
+
+.topology-mini-save-status {
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: rgba(220, 236, 252, 0.88);
+    white-space: nowrap;
+}
+
+.topology-mini-save-status.ok {
+    color: #bdf5d8;
+}
+
+.topology-mini-save-status.err {
+    color: #ffd2d7;
+}
+
 .deck-body {
     padding: 0.88rem;
 }
@@ -724,6 +755,18 @@ body.resizing-widget {
     border-radius: 0.72rem;
     background: #eef3fa;
     height: clamp(300px, 40vh, 520px);
+}
+
+.network-canvas.mini-view-hidden {
+    display: none;
+}
+
+#mini-osm {
+    background: #edf3fa;
+}
+
+#mini-osm .leaflet-control-attribution {
+    font-size: 0.6rem;
 }
 
 .topology-wrap {
@@ -1079,7 +1122,6 @@ body.resizing-widget {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hero-panel,
     .incident-strip,
     .status-card,
     .deck-panel {
@@ -1113,13 +1155,12 @@ body.resizing-widget {
     }
 
     .command-grid,
-    .analytics-grid,
-    .hero-grid {
+    .analytics-grid {
         grid-template-columns: 1fr;
     }
 
-    .version-chip {
-        justify-self: start;
+    .dashboard-utility {
+        padding: 0.44rem 0.62rem;
     }
 }
 
@@ -1170,37 +1211,27 @@ body.resizing-widget {
         left: 0;
         width: min(100%, 360px);
     }
+
+    .dashboard-utility-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .topology-map-position {
+        display: none;
+    }
 }
 </style>
 
 <div class="dashboard-shell">
-    <section class="hero-panel">
-        <div class="hero-grid">
-            <div>
-                <p class="hero-kicker">Mission Control</p>
-                <h2 class="hero-title">Service Center Command Deck</h2>
-                <p class="hero-subtitle">Unified overview of secure transport, gateway availability and sensor signal quality. Use this as your first stop for operational decisions.</p>
-                <div class="hero-pills">
-                    <span class="hero-pill"><i class="fas fa-shield-alt"></i> Secure Links</span>
-                    <span class="hero-pill"><i class="fas fa-broadcast-tower"></i> Gateway Fleet</span>
-                    <span class="hero-pill"><i class="fas fa-signal"></i> Radio Quality</span>
-                </div>
+    <section class="dashboard-utility">
+        <div class="dashboard-utility-actions">
+            <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" checked>
+                <label class="form-check-label dashboard-auto-label ms-1" for="auto-refresh-toggle">Auto-refresh</label>
             </div>
-            <div class="version-chip">
-                <div class="version-row">
-                    <span class="version-label">Platform Version</span>
-                    <span class="version-value" id="version-display">v--</span>
-                </div>
-                <a href="/config" id="update-badge" class="badge bg-success text-decoration-none" style="display: none; width: fit-content;">Update available</a>
-                <div class="control-actions">
-                    <div class="form-check form-switch m-0">
-                        <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" checked>
-                        <label class="form-check-label text-white-50 small ms-1" for="auto-refresh-toggle">Auto-refresh</label>
-                    </div>
-                    <button class="btn btn-sm btn-outline-light" id="refresh-now"><i class="fas fa-sync"></i> Refresh</button>
-                </div>
-                <div class="control-meta" id="last-updated">Waiting for first update...</div>
-            </div>
+            <button class="btn btn-sm btn-outline-secondary dashboard-refresh-btn" id="refresh-now"><i class="fas fa-sync"></i> Refresh</button>
+            <span class="control-meta" id="last-updated">Waiting for first update...</span>
         </div>
     </section>
 
@@ -1318,14 +1349,26 @@ body.resizing-widget {
         <div id="topology-panel" class="deck-panel clickable panel-size-normal layout-widget resizable-widget" data-widget-id="topology-panel" data-draggable-widget data-nav="/network">
             <div class="deck-head">
                 <h5><i class="fas fa-project-diagram me-2"></i>Live Topology Canvas</h5>
-                <small>Click for full network editor</small>
+                <div class="topology-head-actions" data-stop-panel-nav>
+                    <div class="topology-mini-switch">
+                        <button type="button" class="topology-mini-btn is-active" data-mini-view="map">Map</button>
+                        <button type="button" class="topology-mini-btn" data-mini-view="graph">Graph</button>
+                    </div>
+                    <div class="topology-map-tools">
+                        <span class="topology-map-position" id="mini-map-position">Lat --, Lng --, Z --</span>
+                        <button type="button" class="topology-mini-save" id="mini-map-save-btn">Save view</button>
+                        <span class="topology-mini-save-status" id="mini-map-save-status"></span>
+                    </div>
+                    <small>Click for full network editor</small>
+                </div>
             </div>
             <div class="deck-body topology-wrap">
-                <div id="cy-mini" class="network-canvas"></div>
+                <div id="mini-osm" class="network-canvas" data-stop-panel-nav></div>
+                <div id="cy-mini" class="network-canvas mini-view-hidden" data-stop-panel-nav></div>
                 <div id="topology-empty" class="topology-empty">
                     <div class="topology-empty-card">
-                        <p class="topology-empty-title">Topology needs more live nodes</p>
-                        <p class="topology-empty-note">When additional base stations or sensors connect, graph layout appears automatically.</p>
+                        <p class="topology-empty-title" id="topology-empty-title">No positioned devices yet</p>
+                        <p class="topology-empty-note" id="topology-empty-note">Add GPS in Base Stations or Sensors and markers will appear on the map.</p>
                     </div>
                 </div>
             </div>
@@ -1422,10 +1465,10 @@ body.resizing-widget {
             </div>
         </div>
 
-        <div id="traffic-panel" class="deck-panel clickable panel-size-normal layout-widget resizable-widget" data-widget-id="traffic-panel" data-draggable-widget data-nav="/traffic">
+        <div id="traffic-panel" class="deck-panel clickable panel-size-normal layout-widget resizable-widget" data-widget-id="traffic-panel" data-draggable-widget data-nav="/health">
             <div class="deck-head">
                 <h5><i class="fas fa-chart-line me-2"></i>Traffic and Capacity</h5>
-                <small>Open traffic dashboard</small>
+                <small>Open system health</small>
             </div>
             <div class="deck-body">
                 <div class="traffic-meta">
@@ -1473,11 +1516,22 @@ body.resizing-widget {
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 <script>
 let cyMini = null;
+let miniOsmMap = null;
+let miniCoverageLayer = null;
 let refreshTimer = null;
 let autoRefreshEnabled = true;
+let miniTopologyView = 'map';
+let latestTopologyData = null;
+let latestCoverageState = null;
+let latestSensorInventoryData = null;
+let miniCoverageViewInitialized = false;
+let miniMapSaveStatusTimer = null;
+let miniGraphInitialized = false;
+let miniGraphUserViewLocked = false;
 
 const previousSnapshot = {
     tlsActive: null,
@@ -1492,6 +1546,9 @@ const SIMPLE_LAYOUT_STORAGE_KEY = 'service-center.dashboard.simple.v1';
 const FIXED_WIDGET_ORDER = ['kpi-grid', 'topology-panel', 'signal-panel', 'traffic-panel', 'alert-panel', 'gateway-panel'];
 const SIMPLE_PRESETS = ['balanced', 'topology', 'analytics'];
 const SIMPLE_VISIBLE_IDS = ['incident-strip', ...FIXED_WIDGET_ORDER];
+const DASHBOARD_MINI_VIEW_KEY = 'service-center.dashboard.topology-mini-view.v1';
+const MINI_DEFAULT_CENTER = [48.76785085158725, 18.635382080096264];
+const MINI_DEFAULT_ZOOM = 15;
 
 function createDefaultSimpleLayout() {
     return {
@@ -1582,10 +1639,14 @@ function applySimpleLayout() {
 
     saveSimpleLayout();
 
-    if (cyMini && simpleLayout.visibility['topology-panel'] !== false) {
+    if (simpleLayout.visibility['topology-panel'] !== false) {
         requestAnimationFrame(() => {
-            cyMini.resize();
-            cyMini.fit(undefined, 30);
+            if (miniTopologyView === 'graph' && cyMini) {
+                cyMini.resize();
+            }
+            if (miniTopologyView === 'map' && miniOsmMap) {
+                miniOsmMap.invalidateSize();
+            }
         });
     }
 }
@@ -1637,7 +1698,8 @@ function bindSimpleLayoutControls() {
 
 function bindPanelNavigation() {
     document.querySelectorAll('[data-nav]').forEach(panel => {
-        panel.addEventListener('click', () => {
+        panel.addEventListener('click', (event) => {
+            if (event.target && event.target.closest('[data-stop-panel-nav]')) return;
             const url = panel.getAttribute('data-nav');
             if (url) window.location = url;
         });
@@ -1770,10 +1832,330 @@ function initMiniNetwork() {
         userPanningEnabled: true,
         boxSelectionEnabled: false
     });
+
+    const graphContainer = document.getElementById('cy-mini');
+    if (graphContainer) {
+        const lockView = () => {
+            if (miniTopologyView === 'graph') {
+                miniGraphUserViewLocked = true;
+            }
+        };
+        graphContainer.addEventListener('wheel', lockView, { passive: true });
+        graphContainer.addEventListener('pointerdown', lockView, { passive: true });
+    }
+}
+
+function initMiniCoverageMap() {
+    if (typeof L === 'undefined') return;
+    const mapContainer = document.getElementById('mini-osm');
+    if (!mapContainer) return;
+
+    miniOsmMap = L.map(mapContainer, {
+        zoomControl: true,
+        attributionControl: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        boxZoom: false,
+        keyboard: false,
+        tap: false
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(miniOsmMap);
+
+    miniCoverageLayer = L.layerGroup().addTo(miniOsmMap);
+    miniOsmMap.setView(MINI_DEFAULT_CENTER, MINI_DEFAULT_ZOOM);
+    updateMiniMapPositionLabel();
+    miniOsmMap.on('moveend zoomend', updateMiniMapPositionLabel);
+    bindMiniMapSaveControl();
+
+    mapContainer.addEventListener('click', (event) => event.stopPropagation());
+    mapContainer.addEventListener('mousedown', (event) => event.stopPropagation());
+    mapContainer.addEventListener('dblclick', (event) => event.stopPropagation());
+    mapContainer.addEventListener('wheel', (event) => event.stopPropagation());
+}
+
+function setMiniEmptyState(title, note, visible) {
+    const empty = document.getElementById('topology-empty');
+    const titleEl = document.getElementById('topology-empty-title');
+    const noteEl = document.getElementById('topology-empty-note');
+    if (titleEl) titleEl.textContent = title;
+    if (noteEl) noteEl.textContent = note;
+    if (empty) empty.style.display = visible ? 'flex' : 'none';
+}
+
+function parseMiniCoverageOsmView(coverageState) {
+    const osmView = coverageState && coverageState.osmView && typeof coverageState.osmView === 'object'
+        ? coverageState.osmView
+        : null;
+    if (!osmView || !Array.isArray(osmView.center) || osmView.center.length < 2) return null;
+
+    const lat = Number(osmView.center[0]);
+    const lng = Number(osmView.center[1]);
+    const zoom = Number(osmView.zoom);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(zoom)) return null;
+    return { center: [lat, lng], zoom };
+}
+
+function updateMiniMapPositionLabel() {
+    const label = document.getElementById('mini-map-position');
+    if (!label) return;
+    if (!miniOsmMap) {
+        label.textContent = 'Lat --, Lng --, Z --';
+        return;
+    }
+    const center = miniOsmMap.getCenter();
+    const zoom = miniOsmMap.getZoom();
+    label.textContent = `Lat ${center.lat.toFixed(5)}, Lng ${center.lng.toFixed(5)}, Z ${zoom}`;
+}
+
+function setMiniMapSaveStatus(kind, text) {
+    const node = document.getElementById('mini-map-save-status');
+    if (!node) return;
+    if (miniMapSaveStatusTimer) {
+        clearTimeout(miniMapSaveStatusTimer);
+        miniMapSaveStatusTimer = null;
+    }
+    node.classList.remove('ok', 'err');
+    if (!text) {
+        node.textContent = '';
+        return;
+    }
+    if (kind === 'ok') node.classList.add('ok');
+    if (kind === 'err') node.classList.add('err');
+    node.textContent = text;
+    miniMapSaveStatusTimer = setTimeout(() => {
+        node.textContent = '';
+        node.classList.remove('ok', 'err');
+    }, 2400);
+}
+
+async function saveMiniMapView() {
+    if (!miniOsmMap) return;
+    const center = miniOsmMap.getCenter();
+    const zoom = miniOsmMap.getZoom();
+
+    const base = latestCoverageState && typeof latestCoverageState === 'object' ? latestCoverageState : {};
+    const payload = {
+        ...base,
+        positions: base.positions && typeof base.positions === 'object' ? base.positions : {},
+        osmView: {
+            center: [Number(center.lat.toFixed(6)), Number(center.lng.toFixed(6))],
+            zoom: Number(zoom)
+        }
+    };
+
+    try {
+        const response = await fetch('/api/coverage/positions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            let errorText = `HTTP ${response.status}`;
+            try {
+                const err = await response.json();
+                if (err && err.error) errorText = err.error;
+            } catch (error) {
+                // ignore JSON parse issues
+            }
+            setMiniMapSaveStatus('err', `Save failed: ${errorText}`);
+            return;
+        }
+        latestCoverageState = payload;
+        miniCoverageViewInitialized = true;
+        setMiniMapSaveStatus('ok', 'View saved');
+    } catch (error) {
+        setMiniMapSaveStatus('err', 'Save failed');
+    }
+}
+
+function bindMiniMapSaveControl() {
+    const saveBtn = document.getElementById('mini-map-save-btn');
+    if (!saveBtn || saveBtn.dataset.bound === '1') return;
+    saveBtn.dataset.bound = '1';
+    saveBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        saveMiniMapView();
+    });
+}
+
+function setMiniTopologyView(view) {
+    miniTopologyView = view === 'graph' ? 'graph' : 'map';
+
+    const mapEl = document.getElementById('mini-osm');
+    const graphEl = document.getElementById('cy-mini');
+    const mapTools = document.querySelector('.topology-map-tools');
+    if (mapEl) mapEl.classList.toggle('mini-view-hidden', miniTopologyView !== 'map');
+    if (graphEl) graphEl.classList.toggle('mini-view-hidden', miniTopologyView !== 'graph');
+    if (mapTools) mapTools.style.display = miniTopologyView === 'map' ? 'inline-flex' : 'none';
+
+    document.querySelectorAll('[data-mini-view]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-mini-view') === miniTopologyView);
+    });
+
+    try {
+        localStorage.setItem(DASHBOARD_MINI_VIEW_KEY, miniTopologyView);
+    } catch (error) {
+        // ignore localStorage issues
+    }
+
+    if (miniTopologyView === 'graph' && cyMini) {
+        requestAnimationFrame(() => {
+            cyMini.resize();
+        });
+        if (latestTopologyData) {
+            updateTopologyPanel(latestTopologyData);
+        }
+    } else if (miniTopologyView === 'map' && miniOsmMap) {
+        requestAnimationFrame(() => miniOsmMap.invalidateSize());
+        if (latestTopologyData || latestCoverageState) {
+            updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
+        } else {
+            updateMiniMapPositionLabel();
+        }
+    }
+}
+
+function bindMiniViewControls() {
+    document.querySelectorAll('[data-mini-view]').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const view = btn.getAttribute('data-mini-view') || 'map';
+            setMiniTopologyView(view);
+        });
+    });
+}
+
+function resolveMiniMarkerPosition(positions, node) {
+    const type = node && node.type === 'base_station' ? 'bs' : (node && node.type === 'sensor' ? 'sensor' : null);
+    if (!type) return null;
+    const euiRaw = String(node.eui || '').trim();
+    if (!euiRaw) return null;
+
+    const euiUpper = euiRaw.toUpperCase();
+    const keyCandidates = [
+        `${type}_${euiUpper}`,
+        `${type}_${euiUpper.toLowerCase()}`,
+        `${type}_${euiRaw}`,
+        `${type}_${euiRaw.toLowerCase()}`
+    ];
+
+    for (const key of keyCandidates) {
+        const pos = positions[key];
+        if (!pos || pos.type !== 'osm') continue;
+        const lat = Number(pos.lat);
+        const lng = Number(pos.lng);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            return { lat, lng };
+        }
+    }
+
+    return null;
+}
+
+function buildMiniMapNodes(topologyData, sensorInventoryData) {
+    const nodes = Array.isArray(topologyData && topologyData.nodes) ? [...topologyData.nodes] : [];
+    const knownSensorEuis = new Set(
+        nodes
+            .filter(node => node && node.type === 'sensor')
+            .map(node => String(node.eui || '').trim().toUpperCase())
+            .filter(Boolean)
+    );
+
+    if (sensorInventoryData && typeof sensorInventoryData === 'object') {
+        Object.entries(sensorInventoryData).forEach(([euiKey, sensor]) => {
+            const eui = String((sensor && sensor.eui) || euiKey || '').trim().toUpperCase();
+            if (!eui || knownSensorEuis.has(eui)) return;
+            nodes.push({
+                id: `sensor_${eui}`,
+                type: 'sensor',
+                eui,
+                label: String((sensor && sensor.name) || eui.slice(0, 8) + '...'),
+                inventory_only: true
+            });
+            knownSensorEuis.add(eui);
+        });
+    }
+
+    return nodes;
+}
+
+function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData) {
+    if (!miniOsmMap || !miniCoverageLayer) return;
+
+    miniCoverageLayer.clearLayers();
+
+    const positions = coverageState && coverageState.positions && typeof coverageState.positions === 'object'
+        ? coverageState.positions
+        : {};
+    const nodes = buildMiniMapNodes(topologyData, sensorInventoryData);
+
+    const markerCoords = [];
+    nodes.forEach(node => {
+        const pos = resolveMiniMarkerPosition(positions, node);
+        if (!pos) return;
+
+        const isBs = node.type === 'base_station';
+        const marker = L.circleMarker([pos.lat, pos.lng], {
+            radius: isBs ? 8 : 6,
+            color: isBs ? '#b95d07' : '#005a6b',
+            weight: 2,
+            fillColor: isBs ? '#e97c13' : '#1ca8c9',
+            fillOpacity: 0.95
+        });
+
+        const label = node.label || shortId(node.eui || '', 10);
+        marker.bindTooltip(`${isBs ? 'Base Station' : 'Sensor'}: ${label}`, {
+            direction: 'top',
+            offset: [0, -6]
+        });
+        marker.addTo(miniCoverageLayer);
+        markerCoords.push([pos.lat, pos.lng]);
+    });
+
+    const savedView = parseMiniCoverageOsmView(coverageState);
+    if (!miniCoverageViewInitialized) {
+        if (savedView) {
+            miniOsmMap.setView(savedView.center, savedView.zoom);
+            miniCoverageViewInitialized = true;
+        } else if (markerCoords.length > 0) {
+            const initialBounds = L.latLngBounds(markerCoords);
+            miniOsmMap.fitBounds(initialBounds, { padding: [28, 28], maxZoom: 17 });
+            miniCoverageViewInitialized = true;
+        } else {
+            miniOsmMap.setView(MINI_DEFAULT_CENTER, MINI_DEFAULT_ZOOM);
+        }
+    }
+
+    if (markerCoords.length > 0) {
+        setMiniEmptyState('', '', false);
+    } else {
+        if (savedView && !miniCoverageViewInitialized) {
+            miniOsmMap.setView(savedView.center, savedView.zoom);
+            miniCoverageViewInitialized = true;
+        }
+        setMiniEmptyState(
+            'No positioned devices yet',
+            'Add GPS in Base Stations or Sensors and markers will appear on the map.',
+            true
+        );
+    }
+
+    updateMiniMapPositionLabel();
 }
 
 function updateTopologyPanel(data) {
-    if (!cyMini || !data || !data.success) return;
+    if (!data || !data.success) return;
+
+    document.getElementById('total-connections').textContent = (data.edges || []).length;
+    if (!cyMini) return;
+
+    const preserveUserView = miniGraphInitialized && miniGraphUserViewLocked;
+    const prevZoom = preserveUserView ? cyMini.zoom() : null;
+    const prevPan = preserveUserView ? { ...cyMini.pan() } : null;
 
     cyMini.elements().remove();
 
@@ -1788,7 +2170,7 @@ function updateTopologyPanel(data) {
             idealEdgeLength: 80,
             nodeOverlap: 20,
             refresh: 20,
-            fit: true,
+            fit: !preserveUserView,
             padding: 20,
             randomize: false,
             componentSpacing: 60,
@@ -1798,10 +2180,23 @@ function updateTopologyPanel(data) {
             numIter: 500,
             animate: false
         }).run();
+
+        if (preserveUserView && prevZoom !== null && prevPan) {
+            cyMini.zoom(prevZoom);
+            cyMini.pan(prevPan);
+        }
     }
 
-    document.getElementById('topology-empty').style.display = (data.nodes || []).length <= 1 ? 'flex' : 'none';
-    document.getElementById('total-connections').textContent = (data.edges || []).length;
+    miniGraphInitialized = true;
+
+    if (miniTopologyView === 'graph') {
+        const hasTopology = (data.nodes || []).length > 1;
+        setMiniEmptyState(
+            'Topology needs more live nodes',
+            'When additional base stations or sensors connect, graph layout appears automatically.',
+            !hasTopology
+        );
+    }
 }
 
 function updateStatusCards(data) {
@@ -1961,20 +2356,6 @@ function updateHealthMetrics(data) {
     return { packetLoss };
 }
 
-function updateVersion(data) {
-    if (!data) return;
-    const version = data.current_version || '--';
-    document.getElementById('version-display').textContent = version.startsWith('v') ? version : 'v' + version;
-
-    const badge = document.getElementById('update-badge');
-    if (data.update_available) {
-        badge.style.display = 'inline-block';
-        badge.textContent = 'Update: v' + data.remote_version;
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
 function updateGatewayActions(data) {
     const list = document.getElementById('gateway-action-list');
     if (!data || !data.success || !Array.isArray(data.base_stations) || data.base_stations.length === 0) {
@@ -2049,22 +2430,26 @@ function scheduleAutoRefresh() {
 }
 
 async function refreshNow(manualTrigger) {
-    const [statusData, vmData, trafficData, healthData, versionData, topologyData, gatewaysData] = await Promise.all([
+    const [statusData, vmData, trafficData, healthData, topologyData, gatewaysData, coverageState, sensorsData] = await Promise.all([
         fetchJson('/api/bssci/status'),
         fetchJson('/api/vm/status'),
         fetchJson('/api/traffic/metrics'),
         fetchJson('/api/health'),
-        fetchJson('/api/system/version'),
         fetchJson('/api/network'),
-        fetchJson('/api/base-stations')
+        fetchJson('/api/base-stations'),
+        fetchJson('/api/coverage/positions'),
+        fetchJson('/api/sensors')
     ]);
+    latestTopologyData = topologyData || null;
+    latestCoverageState = coverageState || null;
+    latestSensorInventoryData = sensorsData || null;
 
     if (statusData) updateStatusCards(statusData);
     if (topologyData) updateTopologyPanel(topologyData);
+    updateMiniCoverageMap(topologyData || {}, coverageState || {}, sensorsData || {});
     const vmCapable = updateVmMetrics(vmData || {});
     const trafficInfo = updateTrafficMetrics(trafficData || {});
     const healthInfo = updateHealthMetrics(healthData || {});
-    updateVersion(versionData || {});
     updateGatewayActions(gatewaysData || {});
     renderIncidents(buildIncidents(statusData || {}, healthInfo.packetLoss || 0, vmCapable, trafficInfo));
 
@@ -2086,7 +2471,17 @@ document.addEventListener('DOMContentLoaded', function() {
     bindPanelNavigation();
     simpleLayout = loadSimpleLayout();
     bindSimpleLayoutControls();
+    bindMiniViewControls();
+    initMiniCoverageMap();
     initMiniNetwork();
+    let savedView = 'map';
+    try {
+        const rawView = localStorage.getItem(DASHBOARD_MINI_VIEW_KEY);
+        if (rawView === 'graph' || rawView === 'map') savedView = rawView;
+    } catch (error) {
+        savedView = 'map';
+    }
+    setMiniTopologyView(savedView);
     applySimpleLayout();
     document.getElementById('refresh-now').addEventListener('click', () => refreshNow(true));
     document.getElementById('auto-refresh-toggle').addEventListener('change', function(e) {
