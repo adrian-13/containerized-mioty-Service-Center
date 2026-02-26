@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}Documentation{% endblock %}
+
+{% block content %}
+<style>
+.docs-layout{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);gap:1rem;align-items:start}
+.docs-sidebar{position:sticky;top:1rem;border:1px solid var(--line);border-radius:1rem;background:linear-gradient(180deg,#fff,#f7fbff);box-shadow:var(--shadow-soft);padding:.85rem;display:grid;gap:.65rem}
+.docs-label{margin:0;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-500)}
+.docs-search{border-radius:.6rem}
+.docs-toc{list-style:none;margin:0;padding:0;display:grid;gap:.32rem}
+.docs-toc a{display:block;text-decoration:none;font-size:.79rem;font-weight:700;color:#1f3f66;border:1px solid #d7e2f1;border-radius:.58rem;padding:.36rem .5rem;background:#fbfdff}
+.docs-toc a:hover,.docs-toc a.active{border-color:#95afd0;background:#edf5ff;color:#15385e}
+.docs-main{display:grid;gap:.85rem}
+.docs-hero,.docs-section{border:1px solid #d8e2f0;border-radius:1rem;background:#fff;box-shadow:var(--shadow-soft)}
+.docs-hero{padding:.95rem}
+.docs-hero h2{margin:0;font-family:"Sora","Manrope",sans-serif;font-size:1.18rem;color:#102948}
+.docs-hero p{margin:.35rem 0 0;color:#566f8f;font-size:.84rem}
+.docs-section{padding:.9rem .95rem;scroll-margin-top:1rem}
+.docs-section h3{margin:0 0 .3rem;font-family:"Sora","Manrope",sans-serif;font-size:1.01rem;color:#102846}
+.docs-sub{margin:0;color:#5f738e;font-size:.8rem}
+.docs-grid{margin-top:.68rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.6rem}
+.docs-card{border:1px solid #dce7f3;border-radius:.72rem;background:#f9fbff;padding:.6rem}
+.docs-card h4{margin:0 0 .3rem;color:#1a395d;font-size:.85rem}
+.docs-card p,.docs-card li{margin:0;color:#3f5878;font-size:.78rem}
+.docs-card ul{margin:0;padding-left:1rem;display:grid;gap:.2rem}
+.docs-steps{margin-top:.62rem;display:grid;gap:.34rem}
+.docs-step{border:1px solid #d9e4f1;border-radius:.62rem;background:#fbfdff;padding:.46rem .56rem;font-size:.78rem;color:#3c5578}
+.docs-step strong{color:#14365d}
+.docs-code{margin-top:.54rem;border:1px solid #d8e2f1;border-radius:.58rem;background:#f5f9ff;padding:.48rem .56rem;font-family:"Consolas","Courier New",monospace;font-size:.73rem;color:#1f3657;overflow-x:auto;white-space:nowrap}
+.docs-note,.docs-warning{margin-top:.54rem;border-radius:.6rem;padding:.5rem .58rem;font-size:.76rem;font-weight:700}
+.docs-note{border:1px solid #cce3d6;background:#eefaf2;color:#1f6f4a}
+.docs-warning{border:1px solid #f2d3b4;background:#fff8f1;color:#8a4b0c}
+.docs-table-wrap{margin-top:.65rem;overflow-x:auto}
+.docs-table{width:100%;min-width:760px;border-collapse:collapse}
+.docs-table th,.docs-table td{border-bottom:1px solid #dbe5f1;padding:.46rem .42rem;text-align:left;vertical-align:top;font-size:.76rem;color:#334c6a}
+.docs-table th{font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:#5f738d;font-weight:800;background:#f4f8ff}
+.docs-empty{display:none;border:1px dashed #bfd3ea;border-radius:.65rem;background:#f7fbff;color:#4d6990;font-size:.79rem;font-weight:700;padding:.66rem .74rem}
+@media (max-width:1120px){.docs-layout{grid-template-columns:1fr}.docs-sidebar{position:static}}
+</style>
+
+<div class="workspace-shell">
+    <div class="docs-layout">
+        <aside class="docs-sidebar">
+            <p class="docs-label">Documentation Index</p>
+            <input id="docs-search" class="form-control form-control-sm docs-search" type="search" placeholder="Search docs...">
+            <ul class="docs-toc">
+                <li><a href="#intro">1. Introduction</a></li>
+                <li><a href="#quickstart">2. Quick Start</a></li>
+                <li><a href="#pages">3. Page Reference</a></li>
+                <li><a href="#workflows">4. Core Workflows</a></li>
+                <li><a href="#api">5. API Summary</a></li>
+                <li><a href="#configuration">6. Configuration</a></li>
+                <li><a href="#rbac">7. Access, Tenants, RBAC</a></li>
+                <li><a href="#monitoring">8. Monitoring & Reliability</a></li>
+                <li><a href="#troubleshooting">9. Troubleshooting</a></li>
+                <li><a href="#runbook">10. Backup/Restore Runbook</a></li>
+            </ul>
+            <div class="docs-note">This manual is structured by real UI features and production operations.</div>
+        </aside>
+
+        <div class="docs-main">
+            <section class="docs-hero" data-doc-block>
+                <h2>BSSCI Service Center Functional Documentation</h2>
+                <p>Comprehensive guide for operating sensors, base stations, network topology, telemetry flow, administration and runtime maintenance in one place.</p>
+            </section>
+
+            <section class="docs-section" id="intro" data-doc-block>
+                <h3>1. Introduction</h3>
+                <p class="docs-sub">Service Center is an operational control plane for MIOTY infrastructure: TLS communication, inventory governance, topology visualization and telemetry reliability.</p>
+                <div class="docs-grid">
+                    <article class="docs-card">
+                        <h4>Main objectives</h4>
+                        <ul>
+                            <li>Maintain secure transport between base stations and backend services.</li>
+                            <li>Manage full sensor lifecycle: create, register, attach, detach, monitor.</li>
+                            <li>Provide near real-time observability with dashboard + health pages.</li>
+                            <li>Support tenant separation with admin-level global oversight.</li>
+                        </ul>
+                    </article>
+                    <article class="docs-card">
+                        <h4>Data path</h4>
+                        <ul>
+                            <li>Uplinks arrive through TLSServer/BSSCI handlers.</li>
+                            <li>Internal queues decouple ingestion from persistence/publication.</li>
+                            <li>Data can flow to MQTT and optional storage backends.</li>
+                            <li>Frontend reads API projections designed for operational clarity.</li>
+                        </ul>
+                    </article>
+                </div>
+                <div class="docs-code">Base Station -> TLSServer -> Runtime queues -> MQTT + Timescale/Influx -> UI APIs</div>
+            </section>
+
+            <section class="docs-section" id="quickstart" data-doc-block>
+                <h3>2. Quick Start</h3>
+                <p class="docs-sub">Minimal commissioning sequence for a clean deployment.</p>
+                <div class="docs-steps">
+                    <div class="docs-step"><strong>Step 1:</strong> Verify containers and services are healthy (`bssci-service-center`, DB, broker, optional Grafana).</div>
+                    <div class="docs-step"><strong>Step 2:</strong> Open Configuration and validate server/MQTT/storage endpoints.</div>
+                    <div class="docs-step"><strong>Step 3:</strong> Add base station(s), then define GPS either in edit form or map workflow.</div>
+                    <div class="docs-step"><strong>Step 4:</strong> Add sensors and run attach flow to selected base station targets.</div>
+                    <div class="docs-step"><strong>Step 5:</strong> Validate telemetry in MQTT + Logs + System Health.</div>
+                </div>
+                <div class="docs-warning">If sensors are visible but no data arrives, verify attach mapping, registration status and topic path first.</div>
+            </section>
+
+            <section class="docs-section" id="pages" data-doc-block>
+                <h3>3. Page Reference</h3>
+                <p class="docs-sub">What each menu section is for and when to use it.</p>
+                <div class="docs-grid">
+                    <article class="docs-card"><h4>Dashboard</h4><p>Daily mission view with map/topology snapshot, signal quality, traffic, alert feed and gateway context.</p></article>
+                    <article class="docs-card"><h4>Sensors</h4><p>Inventory and lifecycle operations: create/edit, attach/detach, tenant labeling, status diagnostics.</p></article>
+                    <article class="docs-card"><h4>Base Stations</h4><p>Gateway inventory, runtime state, identities, certificates entry and location metadata.</p></article>
+                    <article class="docs-card"><h4>Network Topology</h4><p>Coverage map + topology graph, link inspection, problematic filters, GPS synchronization workflows.</p></article>
+                    <article class="docs-card"><h4>System Health</h4><p>Runtime counters, queue/retry reliability metrics and analytics for operational incidents.</p></article>
+                    <article class="docs-card"><h4>MQTT & Logs</h4><p>Broker health, publish behavior, test publish tools and log/audit visibility.</p></article>
+                    <article class="docs-card"><h4>Administration</h4><p>User management, tenant governance and role/scope-controlled administrative actions.</p></article>
+                    <article class="docs-card"><h4>Configuration</h4><p>Centralized runtime settings for server, storage, MQTT and maintenance operations.</p></article>
+                </div>
+            </section>
+
+            <section class="docs-section" id="workflows" data-doc-block>
+                <h3>4. Core Workflows</h3>
+                <p class="docs-sub">Production-safe way to perform common actions.</p>
+                <div class="docs-grid">
+                    <article class="docs-card">
+                        <h4>Add Base Station</h4>
+                        <ul>
+                            <li>Create entry in Base Stations and verify identity fields.</li>
+                            <li>Assign GPS to avoid map inconsistencies.</li>
+                            <li>Check connectivity and status propagation on Dashboard.</li>
+                        </ul>
+                    </article>
+                    <article class="docs-card">
+                        <h4>Add Sensor + Attach</h4>
+                        <ul>
+                            <li>Create sensor with EUI and optional descriptive label/tag.</li>
+                            <li>Use attach action to map sensor to one or more base stations.</li>
+                            <li>Confirm sensor row displays attached BS instead of <code>none</code>.</li>
+                        </ul>
+                    </article>
+                    <article class="docs-card">
+                        <h4>GPS Consistency</h4>
+                        <ul>
+                            <li>Use map placement and Save positions.</li>
+                            <li>Re-open sensor/base station edit forms and verify same coordinates.</li>
+                            <li>Resolve entries listed in Missing GPS assistant.</li>
+                        </ul>
+                    </article>
+                    <article class="docs-card">
+                        <h4>Incident Triage</h4>
+                        <ul>
+                            <li>Start at Dashboard alerts and health indicators.</li>
+                            <li>Inspect MQTT publish/reconnect behavior.</li>
+                            <li>Correlate queue depth, retry failures and logs.</li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
+            <section class="docs-section" id="api" data-doc-block>
+                <h3>5. API Summary</h3>
+                <p class="docs-sub">Main API families used by UI and operations scripts.</p>
+                <div class="docs-table-wrap">
+                    <table class="docs-table">
+                        <thead>
+                            <tr><th>Family</th><th>Example endpoints</th><th>Purpose</th><th>Access scope</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Sensors</td><td><code>/api/sensors</code> (+ attach/detach actions)</td><td>Inventory + assignment lifecycle</td><td>Sensor management permissions</td></tr>
+                            <tr><td>Base Stations</td><td><code>/api/base-stations</code></td><td>Gateway inventory and metadata</td><td>Base station management permissions</td></tr>
+                            <tr><td>Topology/Coverage</td><td><code>/api/coverage/*</code>, topology APIs</td><td>GPS map state and graph data</td><td>Authenticated, write-restricted</td></tr>
+                            <tr><td>Health/MQTT</td><td><code>/api/health*</code>, <code>/api/mqtt*</code></td><td>Runtime reliability and broker state</td><td>Authenticated</td></tr>
+                            <tr><td>Admin/Tenants</td><td><code>/api/users</code>, <code>/api/tenants</code>, exports</td><td>Governance and tenant operations</td><td>Admin scopes</td></tr>
+                            <tr><td>Audit</td><td><code>/api/audit/*</code></td><td>Read/export admin activity</td><td>Admin audit scope</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="docs-code">GET /api/grafana/dashboard-url?tenant_id=default&from=now-6h&to=now</div>
+            </section>
+
+            <section class="docs-section" id="configuration" data-doc-block>
+                <h3>6. Configuration</h3>
+                <p class="docs-sub">Operational policy for safe config changes.</p>
+                <div class="docs-grid">
+                    <article class="docs-card"><h4>General</h4><p>Core server behavior and runtime intervals.</p></article>
+                    <article class="docs-card"><h4>Storage</h4><p>Influx/Timescale connectivity, retention, compression and sync actions.</p></article>
+                    <article class="docs-card"><h4>Auto-detach + Optional modules</h4><p>Keep advanced modules hidden if not used in your deployment profile.</p></article>
+                    <article class="docs-card"><h4>Maintenance</h4><p>Service/container restart actions. Use only in controlled windows.</p></article>
+                </div>
+                <div class="docs-warning">Unsaved changes guard should be respected. Save before leaving if the change must persist.</div>
+            </section>
+
+            <section class="docs-section" id="rbac" data-doc-block>
+                <h3>7. Access, Tenants, RBAC</h3>
+                <p class="docs-sub">How permissions and tenant isolation should be interpreted.</p>
+                <div class="docs-grid">
+                    <article class="docs-card"><h4>Admin visibility</h4><p>Admin can be global (cross-tenant) with scope-based limits per action type.</p></article>
+                    <article class="docs-card"><h4>Tenant users</h4><p>Non-admin users should operate strictly within assigned tenant data boundaries.</p></article>
+                    <article class="docs-card"><h4>Auditability</h4><p>Critical actions should appear in admin audit logs with actor, target and status.</p></article>
+                </div>
+            </section>
+
+            <section class="docs-section" id="monitoring" data-doc-block>
+                <h3>8. Monitoring and Reliability</h3>
+                <p class="docs-sub">Metrics worth alerting in production.</p>
+                <div class="docs-table-wrap">
+                    <table class="docs-table">
+                        <thead>
+                            <tr><th>Metric</th><th>Why</th><th>Healthy behavior</th><th>Example alert</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Queue depth</td><td>Detect backpressure</td><td>Mostly low with short spikes</td><td>Warn >70%, critical >90%</td></tr>
+                            <tr><td>Retry fail rate</td><td>Detect persistent publish/write failures</td><td>Near zero rolling average</td><td>Alert >2% for 5-10m</td></tr>
+                            <tr><td>DB write latency</td><td>Storage/network health</td><td>Stable p95</td><td>Alert when crossing SLO</td></tr>
+                            <tr><td>MQTT reconnect count</td><td>Broker stability indicator</td><td>Rare reconnects</td><td>Alert on sudden bursts</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="docs-section" id="troubleshooting" data-doc-block>
+                <h3>9. Troubleshooting</h3>
+                <p class="docs-sub">Frequent issues and first checks.</p>
+                <div class="docs-grid">
+                    <article class="docs-card"><h4>Sensor shows BS: none</h4><p>Re-check attach mapping save response, tenant filters and refreshed sensor state projection.</p></article>
+                    <article class="docs-card"><h4>Map vs device GPS mismatch</h4><p>Run save/sync cycle and verify no duplicate EUI entry exists in stored map positions.</p></article>
+                    <article class="docs-card"><h4>No sensor traffic in MQTT</h4><p>Confirm registration + attach state, then inspect MQTT page counters and runtime queue metrics.</p></article>
+                    <article class="docs-card"><h4>Empty analytics panels</h4><p>Validate datasource, dashboard UID and tenant variable query behavior before UI-level assumptions.</p></article>
+                </div>
+            </section>
+
+            <section class="docs-section" id="runbook" data-doc-block>
+                <h3>10. Backup/Restore Runbook</h3>
+                <p class="docs-sub">Disaster recovery essentials.</p>
+                <div class="docs-steps">
+                    <div class="docs-step"><strong>Backup scope:</strong> DB data + config files + users/tenants + certificates + runtime JSON.</div>
+                    <div class="docs-step"><strong>Backup action:</strong> run backup script and verify archive completeness.</div>
+                    <div class="docs-step"><strong>Restore action:</strong> restore data layer first, then runtime files, then restart services.</div>
+                    <div class="docs-step"><strong>Validation:</strong> login, inventory counts, attach relationships, GPS state, MQTT publish, health metrics.</div>
+                </div>
+                <div class="docs-code">powershell -ExecutionPolicy Bypass -File scripts\\backup.ps1</div>
+                <div class="docs-code">powershell -ExecutionPolicy Bypass -File scripts\\restore.ps1 -BackupPath .\\backups\\latest</div>
+            </section>
+
+            <div id="docs-empty" class="docs-empty">No documentation section matches the current search.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const searchInput = document.getElementById('docs-search');
+    const blocks = Array.from(document.querySelectorAll('[data-doc-block]'));
+    const links = Array.from(document.querySelectorAll('.docs-toc a'));
+    const empty = document.getElementById('docs-empty');
+
+    function applySearch() {
+        const q = (searchInput.value || '').trim().toLowerCase();
+        let count = 0;
+        blocks.forEach((b) => {
+            const show = !q || (b.textContent || '').toLowerCase().includes(q);
+            b.style.display = show ? '' : 'none';
+            if (show) count += 1;
+        });
+        empty.style.display = count === 0 ? 'block' : 'none';
+    }
+
+    function markActive(hash) {
+        links.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === hash));
+    }
+
+    function onScroll() {
+        let current = '#intro';
+        blocks.forEach((b) => {
+            if (b.style.display === 'none' || !b.id) return;
+            const r = b.getBoundingClientRect();
+            if (r.top <= 160 && r.bottom >= 140) current = '#' + b.id;
+        });
+        markActive(current);
+    }
+
+    searchInput.addEventListener('input', applySearch);
+    window.addEventListener('hashchange', () => markActive(window.location.hash || '#intro'));
+    document.addEventListener('scroll', onScroll, { passive: true });
+
+    applySearch();
+    markActive(window.location.hash || '#intro');
+    onScroll();
+})();
+</script>
+{% endblock %}

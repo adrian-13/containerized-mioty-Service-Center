@@ -4,40 +4,72 @@
 {% block content %}
 <style>
 :root {
-    --coverage-map-height: clamp(620px, 78vh, 1080px);
-    --topology-map-height: clamp(620px, 78vh, 1080px);
+    --coverage-map-height: clamp(460px, 62vh, 760px);
+    --topology-map-height: clamp(420px, 56vh, 680px);
+    --network-surface: #f5f8fc;
+    --network-surface-soft: #eef3f9;
+    --network-border: #d7e1ee;
+    --network-text: #1d3049;
+    --network-muted: #60748d;
+    --network-brand: #1f4f96;
+    --network-brand-2: #16386b;
+    --network-accent: var(--brand-500);
 }
 
-.network-header {
+.network-hero {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.55rem;
-    padding: 0.58rem 0.72rem !important;
+    gap: 0.7rem;
+    margin-bottom: 0.36rem;
+    border: 1px solid var(--network-border);
+    border-radius: 0.84rem;
+    padding: 0.52rem 0.72rem;
+    background: linear-gradient(125deg, #ffffff 0%, #f7fbff 56%, #f0f5fb 100%);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
 }
 
 .network-kicker {
     margin: 0;
-    font-size: 0.67rem;
-    letter-spacing: 0.08em;
+    font-size: 0.58rem;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: #5f7088;
+    color: #667c95;
     font-weight: 800;
 }
 
 .network-title {
-    margin: 0.16rem 0 0;
+    margin: 0.04rem 0 0;
     font-family: "Sora", "Manrope", sans-serif;
-    font-size: 1.12rem;
-    font-weight: 700;
-    color: #0f172a;
+    font-size: 1rem;
+    line-height: 1.2;
+    font-weight: 800;
+    color: var(--network-text);
 }
 
 .network-subtitle {
-    margin: 0.18rem 0 0;
-    font-size: 0.74rem;
-    color: #5f7088;
+    display: none;
+}
+
+.network-hero-metrics {
+    display: flex;
+    align-items: center;
+    gap: 0.34rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.network-hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    padding: 0.18rem 0.46rem;
+    border-radius: 999px;
+    border: 1px solid #cedbec;
+    background: #f3f7fd;
+    color: #304a6a;
+    font-size: 0.63rem;
+    font-weight: 800;
 }
 
 .network-action-groups {
@@ -51,43 +83,69 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.8rem;
-    margin-bottom: 0.46rem;
-    border: 1px solid #d5deeb;
-    border-radius: 0.92rem;
-    padding: 0.34rem 0.48rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    gap: 0.56rem;
+    margin-bottom: 0.34rem;
+    border: 1px solid #2f507a;
+    border-radius: 0.8rem;
+    padding: 0.28rem 0.46rem;
+    background: linear-gradient(140deg, var(--network-brand-2) 0%, var(--network-brand) 100%);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
 }
 
 .network-mode-buttons {
     display: inline-flex;
     align-items: center;
-    gap: 0.38rem;
+    gap: 0.28rem;
 }
 
 .network-mode-btn {
-    border: 1px solid #d3deed;
-    background: #f3f8ff;
-    color: #36506f;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.12);
+    color: #d9e7fb;
     border-radius: 999px;
-    padding: 0.34rem 0.66rem;
-    font-size: 0.76rem;
+    padding: 0.26rem 0.56rem;
+    font-size: 0.71rem;
     font-weight: 800;
     letter-spacing: 0.02em;
     transition: all 0.2s ease;
 }
 
 .network-mode-btn.is-active {
-    color: #ffffff;
+    color: #1d314d;
     border-color: transparent;
-    background: linear-gradient(145deg, #e97c13 0%, #f39e45 100%);
-    box-shadow: 0 9px 16px rgba(233, 124, 19, 0.24);
+    background: linear-gradient(150deg, #ffffff 0%, #ecf5ff 100%);
+    box-shadow: 0 10px 18px rgba(6, 20, 39, 0.3);
 }
 
 .network-mode-meta {
-    color: #5a6f8a;
-    font-size: 0.74rem;
+    color: #dce8f8;
+    font-size: 0.68rem;
     font-weight: 700;
+    line-height: 1.2;
+}
+
+.network-mode-right .btn {
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.2rem 0.56rem;
+}
+
+.network-mode-right .btn.btn-primary {
+    border-color: transparent;
+    background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%);
+    color: #ffffff;
+    box-shadow: 0 10px 18px rgba(4, 15, 29, 0.22);
+}
+
+.network-mode-right .btn.btn-outline-secondary {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #e8f0fd;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.network-mode-right .btn.btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .network-mode-right {
@@ -95,29 +153,25 @@
     align-items: center;
     justify-content: flex-end;
     flex-wrap: wrap;
-    gap: 0.42rem;
+    gap: 0.32rem;
     margin-left: auto;
 }
 
 .network-control-grid {
     display: block;
-    margin-bottom: 0.45rem;
-}
-
-.network-control-card[data-mode="coverage"] {
-    display: none;
+    margin-bottom: 0.3rem;
 }
 
 .network-control-card {
-    border: 1px solid #d5deeb;
-    border-radius: 0.92rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    border: 1px solid var(--network-border);
+    border-radius: 0.78rem;
+    background: #ffffff;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
     overflow: hidden;
 }
 
 .network-control-card + .network-control-card {
-    margin-top: 0.8rem;
+    margin-top: 0.52rem;
 }
 
 .mode-hidden {
@@ -128,66 +182,171 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.7rem;
-    padding: 0.68rem 0.82rem;
-    border-bottom: 1px solid #dee7f2;
-    background: #f4f8fd;
+    gap: 0.5rem;
+    padding: 0.5rem 0.64rem;
+    border-bottom: 1px solid #dee7f4;
+    background: #f3f7fc;
 }
 
 .network-control-title {
     margin: 0;
-    font-size: 0.79rem;
+    font-size: 0.72rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #2d3b4f;
+    color: #2a3f5c;
 }
 
 .network-control-meta {
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     color: #607089;
     font-weight: 700;
 }
 
+.network-control-cache {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #d2ddef;
+    border-radius: 999px;
+    padding: 0.12rem 0.42rem;
+    background: #f4f8ff;
+    font-size: 0.63rem;
+    color: #4b6382;
+    font-weight: 800;
+}
+
 .network-control-body {
-    padding: 0.76rem 0.82rem;
+    padding: 0.56rem 0.64rem;
     display: grid;
-    gap: 0.62rem;
+    gap: 0.42rem;
 }
 
 .network-button-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.45rem;
+    gap: 0.34rem;
 }
 
 .network-button-row .btn {
-    min-width: 134px;
+    min-width: 114px;
+    padding: 0.2rem 0.56rem;
+    font-size: 0.68rem;
 }
 
 .network-inline-controls {
     display: flex;
     align-items: center;
-    gap: 0.52rem;
+    gap: 0.4rem;
     flex-wrap: wrap;
+}
+
+.network-inline-controls--chips {
+    gap: 0.3rem;
+}
+
+.network-inline-controls--dense {
+    gap: 0.34rem;
 }
 
 .network-inline-controls .form-select {
     width: auto;
-    min-width: 170px;
+    min-width: 148px;
+    font-size: 0.72rem;
+    padding-top: 0.18rem;
+    padding-bottom: 0.18rem;
+}
+
+.topology-search-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    flex-wrap: wrap;
+}
+
+.topology-search-group .form-control {
+    width: min(320px, 42vw);
+    min-width: 190px;
+    font-size: 0.72rem;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+
+.topology-search-group .btn {
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding-inline: 0.52rem;
+}
+
+.topology-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.58rem;
+}
+
+.topology-detail-actions .btn {
+    font-size: 0.71rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.24rem 0.62rem;
 }
 
 .network-badge-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.28rem;
-    padding: 0.2rem 0.48rem;
+    padding: 0.14rem 0.42rem;
     border-radius: 999px;
-    border: 1px solid #cfdaea;
-    background: #f8fbff;
-    color: #3d5570;
-    font-size: 0.69rem;
+    border: 1px solid #d3deed;
+    background: #f6f9fe;
+    color: #3c5674;
+    font-size: 0.64rem;
     font-weight: 700;
+}
+
+.network-control-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.38rem;
+    flex-wrap: wrap;
+}
+
+.network-control-note {
+    margin: 0;
+    font-size: 0.66rem;
+    color: #607089;
+    font-weight: 600;
+}
+
+.network-control-card--compact .network-control-head {
+    padding: 0.42rem 0.58rem;
+}
+
+.network-control-card--compact .network-control-body {
+    padding: 0.42rem 0.58rem;
+    gap: 0.32rem;
+}
+
+.network-control-card--compact .network-button-row .btn {
+    min-width: 0;
+    padding: 0.17rem 0.5rem;
+    font-size: 0.66rem;
+}
+
+.network-control-card--compact .network-inline-controls .form-check-label {
+    font-size: 0.75rem;
+}
+
+.network-control-card--compact .network-inline-controls .form-select {
+    min-width: 122px;
+    font-size: 0.7rem;
+}
+
+.network-control-card--compact .network-badge-chip {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.4rem;
 }
 
 .network-gps-grid {
@@ -258,10 +417,343 @@
     color: #607089;
 }
 
+.coverage-filter-grid {
+    display: grid;
+    gap: 0.44rem;
+}
+
+.coverage-filter-grid.coverage-filter-grid-compact {
+    grid-template-columns: minmax(240px, 1fr) minmax(170px, 220px) auto;
+    align-items: center;
+}
+
+.coverage-filter-grid .form-control,
+.coverage-filter-grid .form-select {
+    font-size: 0.78rem;
+}
+
+.coverage-filter-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.34rem;
+    margin-bottom: 0.62rem;
+    padding-left: 0.1rem;
+}
+
+.coverage-filter-summary {
+    font-size: 0.7rem;
+    color: #61728a;
+    font-weight: 700;
+    margin-left: auto;
+}
+
+.coverage-device-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(290px, 360px);
+    gap: 0.72rem;
+    align-items: start;
+}
+
+.coverage-device-main,
+.coverage-device-side {
+    min-width: 0;
+}
+
+.device-view-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    flex-wrap: wrap;
+    margin-right: 0.2rem;
+}
+
+.device-view-btn {
+    border: 1px solid #d0ddee;
+    background: #f4f8ff;
+    color: #2f4868;
+    border-radius: 999px;
+    padding: 0.24rem 0.58rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.34rem;
+    transition: all 0.18s ease;
+}
+
+.device-view-btn:hover {
+    border-color: #becde4;
+    background: #edf3fc;
+}
+
+.device-view-btn.is-active {
+    color: #ffffff;
+    border-color: transparent;
+    background: linear-gradient(145deg, #1e477f 0%, #295f9f 100%);
+    box-shadow: 0 8px 18px rgba(22, 56, 107, 0.28);
+}
+
+.device-view-count {
+    border-radius: 999px;
+    padding: 0.08rem 0.38rem;
+    font-size: 0.64rem;
+    font-weight: 800;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.2);
+    color: inherit;
+}
+
+.device-view-btn:not(.is-active) .device-view-count {
+    border-color: #cfdbec;
+    background: #ffffff;
+    color: #385476;
+}
+
+.device-list-section + .device-list-section {
+    margin-top: 0.54rem;
+}
+
+.device-list-panel.is-hidden {
+    display: none;
+}
+
+.device-list-section.is-missing-gps {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.device-list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.44rem;
+    margin-bottom: 0.32rem;
+}
+
+.device-list-title {
+    margin: 0;
+    font-size: 0.69rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #61738d;
+    font-weight: 800;
+}
+
+.device-list-count {
+    font-size: 0.67rem;
+    border: 1px solid #d3deed;
+    border-radius: 999px;
+    padding: 0.14rem 0.42rem;
+    color: #415975;
+    background: #f4f8ff;
+    font-weight: 700;
+}
+
+.device-picker-list {
+    display: grid;
+    gap: 0.32rem;
+    max-height: min(56vh, 640px);
+    overflow: auto;
+    padding-right: 0.12rem;
+}
+
+.device-picker-item {
+    border: 1px solid #d7e2f0;
+    background: #ffffff;
+    color: #1f324c;
+    border-radius: 0.62rem;
+    padding: 0.42rem 0.5rem;
+    text-align: left;
+    display: grid;
+    gap: 0.18rem;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.device-picker-item:hover {
+    border-color: #c0d0e5;
+    background: #f7fbff;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+}
+
+.device-picker-item.is-selected {
+    border-color: #2f6df6;
+    background: #eef4ff;
+    box-shadow: 0 10px 22px rgba(47, 109, 246, 0.2);
+}
+
+.device-picker-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+}
+
+.device-picker-title {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #21344f;
+}
+
+.device-picker-sub {
+    font-size: 0.67rem;
+    color: #5b6f88;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    word-break: break-all;
+}
+
+.device-picker-state-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+
+.device-picker-state {
+    font-size: 0.66rem;
+    color: #607089;
+    font-weight: 700;
+}
+
+.missing-gps-summary {
+    margin: 0;
+    margin-bottom: 0.36rem;
+    font-size: 0.68rem;
+    color: #6c5a34;
+    background: #fff7e8;
+    border: 1px solid #f1dfba;
+    border-radius: 0.55rem;
+    padding: 0.3rem 0.44rem;
+}
+
+.missing-gps-list {
+    display: grid;
+    gap: 0.32rem;
+    max-height: min(56vh, 640px);
+    overflow: auto;
+    padding-right: 0.12rem;
+}
+
+.missing-gps-item {
+    border: 1px solid #edd9b1;
+    background: #fffdf8;
+    color: #1f324c;
+    border-radius: 0.62rem;
+    padding: 0.4rem 0.48rem;
+    text-align: left;
+    display: grid;
+    gap: 0.14rem;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.missing-gps-item:hover {
+    border-color: #d6b56b;
+    background: #fff8e9;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+}
+
+.missing-gps-item.is-selected {
+    border-color: #2f6df6;
+    background: #eef4ff;
+    box-shadow: 0 10px 22px rgba(47, 109, 246, 0.2);
+}
+
+.missing-gps-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+}
+
+.missing-gps-type-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.1rem 0.42rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    border: 1px solid #d8e2f0;
+    background: #f3f7ff;
+    color: #405875;
+}
+
+.missing-gps-note {
+    font-size: 0.66rem;
+    color: #7a6437;
+    font-weight: 700;
+}
+
+.device-status-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.1rem 0.42rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    border: 1px solid transparent;
+}
+
+.device-status-chip.status-online {
+    color: #0f7a44;
+    background: #e8f8ee;
+    border-color: #b9e8cb;
+}
+
+.device-status-chip.status-offline {
+    color: #8f1733;
+    background: #ffeef1;
+    border-color: #f5c6d0;
+}
+
+.device-status-chip.status-warning {
+    color: #8a5400;
+    background: #fff6e9;
+    border-color: #f2d9aa;
+}
+
+.device-status-chip.status-no-data {
+    color: #5f7088;
+    background: #eef3fa;
+    border-color: #d8e2f0;
+}
+
+.device-detail-grid {
+    display: grid;
+    gap: 0.33rem;
+    margin-top: 0.36rem;
+}
+
+.device-detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.44rem;
+    font-size: 0.72rem;
+    color: #4a5f79;
+    border-bottom: 1px dashed #dee7f4;
+    padding-bottom: 0.24rem;
+}
+
+.device-detail-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.device-detail-row strong {
+    color: #1d3049;
+    text-align: right;
+    font-weight: 800;
+}
+
 .network-section {
-    border: 1px solid #d5deeb;
+    border: 1px solid var(--network-border);
     border-radius: 0.98rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+    background: #ffffff;
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
     overflow: hidden;
     margin-bottom: 0.58rem;
@@ -273,8 +765,8 @@
     justify-content: space-between;
     gap: 0.8rem;
     padding: 0.56rem 0.72rem;
-    border-bottom: 1px solid #dce5f2;
-    background: linear-gradient(150deg, #1b2840 0%, #2a3f60 100%);
+    border-bottom: 1px solid #d8e3f0;
+    background: linear-gradient(140deg, #1e3557 0%, #294870 100%);
     color: #f8fbff;
 }
 
@@ -291,15 +783,16 @@
 }
 
 .network-section-body {
-    padding: 0.58rem;
+    padding: 0.64rem;
+    background: var(--network-surface);
 }
 
 .workspace-tabs {
     margin-bottom: 0.42rem;
     padding: 0.16rem;
-    border: 1px solid #d5deeb;
+    border: 1px solid var(--network-border);
     border-radius: 0.9rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    background: #ffffff;
 }
 
 .workspace-tabs .nav-link {
@@ -312,9 +805,9 @@
 }
 
 .workspace-tabs .nav-link.active {
-    color: #fff;
-    background: linear-gradient(145deg, #e97c13 0%, #f39e45 100%);
-    box-shadow: 0 9px 16px rgba(233, 124, 19, 0.26);
+    color: #ffffff;
+    background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%);
+    box-shadow: 0 9px 16px rgba(var(--brand-rgb), 0.25);
 }
 
 .workspace-tabs .tab-save-btn {
@@ -336,11 +829,12 @@
 }
 
 .network-side-panel {
-    border: 1px solid #d5deeb;
+    border: 1px solid var(--network-border);
     border-radius: 0.9rem;
     background: #fff;
     overflow: hidden;
     margin-bottom: 0.48rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
 .network-side-panel:last-child {
@@ -349,7 +843,7 @@
 
 .network-side-head {
     padding: 0.58rem 0.68rem;
-    border-bottom: 1px solid #e1e9f4;
+    border-bottom: 1px solid #e0e8f3;
     background: #f4f8fd;
     font-size: 0.74rem;
     font-weight: 800;
@@ -387,17 +881,31 @@
 
 .map-canvas {
     position: relative;
-    border: 1px solid #d6deea;
-    border-radius: 0.76rem;
+    border: 1px solid #d1dced;
+    border-radius: 0.9rem;
     overflow: hidden;
-    background: #eef3fa;
+    background: #eaf0f8;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
 }
 
 .map-canvas-tools {
     position: absolute;
     top: 0.55rem;
-    right: 0.55rem;
+    left: 0.55rem;
+    right: auto;
     z-index: 700;
+    display: flex;
+    flex-direction: column;
+    gap: 0.34rem;
+    align-items: flex-start;
+}
+
+.map-canvas-tool-group {
+    display: flex;
+    align-items: center;
+    gap: 0.34rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
 .map-canvas-tools .btn {
@@ -445,6 +953,50 @@ body.map-fullscreen-active {
     width: 100%;
 }
 
+#osmMap .leaflet-top.leaflet-left {
+    margin-top: 0.45rem;
+    margin-left: 0.45rem;
+}
+
+#osmMap .leaflet-control-zoom {
+    border: 1px solid #b7c8de;
+    border-radius: 0.78rem;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+}
+
+#osmMap .leaflet-control-zoom a {
+    width: 2.06rem;
+    height: 2.06rem;
+    line-height: 2.06rem;
+    font-size: 0;
+    color: #22456d;
+    background: rgba(255, 255, 255, 0.97);
+    border-bottom: 1px solid #d8e3f2;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+#osmMap .leaflet-control-zoom a:last-child {
+    border-bottom: 0;
+}
+
+#osmMap .leaflet-control-zoom a:hover,
+#osmMap .leaflet-control-zoom a:focus {
+    color: #0f3d73;
+    background: #ecf4ff;
+}
+
+#osmMap .leaflet-control-zoom a i {
+    font-size: 0.82rem;
+    line-height: 2.06rem;
+    pointer-events: none;
+}
+
+/* Keep custom controls in Coverage below Leaflet +/- controls */
+#osmMapCanvas .map-canvas-tools {
+    top: 5.1rem;
+}
+
 #floorplanContainer {
     height: 600px;
     width: 100%;
@@ -456,13 +1008,47 @@ body.map-fullscreen-active {
 }
 
 #coverageWorkspace .network-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 250px);
+    grid-template-columns: minmax(0, 1fr);
 }
 
-#coverageWorkspace .network-grid > div:last-child {
-    position: sticky;
-    top: 0.46rem;
-    align-self: start;
+#coverageWorkspace .coverage-main-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
+}
+
+#coverageWorkspace .coverage-side-stack {
+    display: grid;
+    gap: 0.72rem;
+    align-items: start;
+}
+
+#coverageWorkspace .coverage-side-stack .network-side-panel {
+    margin-bottom: 0;
+}
+
+#coverageWorkspace .coverage-device-explorer-panel {
+    margin-top: 0.72rem;
+}
+
+#coverageWorkspace .coverage-device-explorer-panel .device-picker-list {
+    max-height: min(56vh, 640px);
+}
+
+#coverageWorkspace .coverage-legend-inline {
+    margin-bottom: 0.62rem;
+}
+
+#coverageWorkspace .coverage-legend-inline .network-side-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.9rem;
+    align-items: center;
+    padding-top: 0.42rem;
+    padding-bottom: 0.42rem;
+}
+
+#coverageWorkspace .coverage-legend-inline .legend-row {
+    margin-bottom: 0;
+    font-size: 0.72rem;
 }
 
 #coverageWorkspace #osmMap,
@@ -475,17 +1061,73 @@ body.map-fullscreen-active {
 }
 
 #topologyWorkspace .network-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    gap: 0.72rem;
+    align-items: start;
 }
 
-#topologyWorkspace .network-grid > div:last-child {
-    position: sticky;
-    top: 0.46rem;
-    align-self: start;
+#topologyWorkspace .topology-side-dock {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.62rem;
+    margin-top: 0;
+    align-items: start;
+    max-height: var(--topology-map-height);
+    overflow: auto;
+    padding-right: 0.12rem;
+}
+
+#topologyWorkspace .topology-side-dock .network-side-panel {
+    margin-bottom: 0;
+}
+
+#topologyWorkspace .topology-legend-panel {
+    grid-column: span 1;
+}
+
+#topologyWorkspace .topology-stats-panel {
+    grid-column: span 1;
+}
+
+.topology-control-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.38rem;
+    justify-content: flex-end;
+    margin-left: auto;
+    align-self: center;
+}
+
+.topology-control-actions .btn {
+    border-radius: 0.62rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0 0.58rem;
+    width: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    height: 1.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.topology-control-note {
+    font-size: 0.72rem;
+    color: #637892;
+    display: block;
+    margin-top: 0.24rem;
+}
+
+#topologyWorkspace #topo_detailsCard {
+    grid-column: span 1;
 }
 
 #topologyWorkspace #cy {
     height: var(--topology-map-height);
+    min-height: 420px;
 }
 
 #topologyWorkspace .network-section-head small {
@@ -527,18 +1169,34 @@ body.map-fullscreen-active {
         grid-template-columns: 1fr;
     }
 
-    #coverageWorkspace .network-grid > div:last-child {
-        position: static;
+    #coverageWorkspace .coverage-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .coverage-device-layout {
+        grid-template-columns: 1fr;
     }
 
     #topologyWorkspace .network-grid > div:last-child {
         position: static;
     }
+
+    #topologyWorkspace .topology-side-dock {
+        grid-template-columns: 1fr;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .topology-control-actions {
+        justify-content: flex-start;
+        margin-left: 0;
+    }
 }
 
 @media (max-width: 767.98px) {
-    .network-header {
+    .network-hero {
         flex-direction: column;
+        align-items: flex-start;
     }
 
     .network-action-groups {
@@ -559,6 +1217,41 @@ body.map-fullscreen-active {
         grid-template-columns: 1fr;
     }
 
+    .topology-search-group {
+        width: 100%;
+    }
+
+    .topology-search-group .form-control {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .topology-control-actions {
+        justify-content: flex-start;
+    }
+
+    .coverage-filter-grid.coverage-filter-grid-compact {
+        grid-template-columns: 1fr;
+    }
+
+    .coverage-filter-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .coverage-filter-summary {
+        margin-left: 0;
+    }
+
+    .device-view-tabs {
+        width: 100%;
+    }
+
+    .device-view-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
     .workspace-tabs .nav-item.ms-auto {
         margin-left: 0 !important;
         width: 100%;
@@ -573,10 +1266,31 @@ body.map-fullscreen-active {
         width: 100%;
     }
 
+    .network-hero-metrics {
+        justify-content: flex-start;
+    }
+
+    .network-control-card--compact .network-control-note {
+        flex-basis: 100%;
+    }
+
 }
 </style>
 
 <div id="mapFullscreenBackdrop" onclick="closeActiveFullscreen()"></div>
+
+<div class="network-hero">
+    <div>
+        <p class="network-kicker">Coverage and Routing</p>
+        <h2 class="network-title">Network Topology Workspace</h2>
+        <p class="network-subtitle">Place devices precisely, verify link quality and manage topology from one operational view.</p>
+    </div>
+    <div class="network-hero-metrics">
+        <span class="network-hero-pill"><i class="fas fa-map-pin"></i>GPS synced</span>
+        <span class="network-hero-pill"><i class="fas fa-project-diagram"></i>Live topology</span>
+        <span class="network-hero-pill"><i class="fas fa-shield-alt"></i>Tenant-aware</span>
+    </div>
+</div>
 
 <div class="network-mode-bar">
     <div class="network-mode-buttons" role="tablist" aria-label="Workspace mode">
@@ -588,34 +1302,57 @@ body.map-fullscreen-active {
         </button>
     </div>
     <div class="network-mode-right">
-        <span class="network-mode-meta" id="networkModeHint">Coverage mode: map/floorplan positioning and signal heatmap.</span>
+        <span class="network-mode-meta" id="networkModeHint">Coverage mode: map + floorplan positioning.</span>
         <button class="btn btn-outline-secondary btn-sm mode-hidden" id="focusTopologyBtn" onclick="focusTopologyView()"><i class="fas fa-crosshairs"></i> Focus</button>
         <button class="btn btn-primary btn-sm" onclick="refreshNetworkWorkspace()"><i class="fas fa-sync"></i> Refresh</button>
     </div>
 </div>
 
 <div class="network-control-grid">
-    <div class="network-control-card" data-mode="coverage">
+    <div class="network-control-card network-control-card--compact" data-mode="coverage">
         <div class="network-control-head">
             <p class="network-control-title"><i class="fas fa-map-marked-alt me-2"></i>Coverage Controls</p>
             <span class="network-control-meta">Updated <span id="coverageRefreshStamp">never</span></span>
+            <span class="network-control-cache" id="coverageCacheAge">Cache -</span>
         </div>
         <div class="network-control-body">
-            <div class="network-button-row">
-                <button class="btn btn-primary btn-sm" onclick="refreshNetworkWorkspace()"><i class="fas fa-sync me-1"></i>Refresh Data</button>
+            <div class="network-control-toolbar">
+                <div class="network-button-row">
+                    <button class="btn btn-primary btn-sm" onclick="refreshNetworkWorkspace()"><i class="fas fa-sync me-1"></i>Refresh Data</button>
+                </div>
+                <div class="network-inline-controls network-inline-controls--chips">
+                    <span class="network-badge-chip"><i class="fas fa-broadcast-tower"></i><span id="coverageBsChip">0 BS</span></span>
+                    <span class="network-badge-chip"><i class="fas fa-microchip"></i><span id="coverageSensorChip">0 Sensors</span></span>
+                    <span class="network-badge-chip"><i class="fas fa-map-pin"></i><span id="coveragePositionChip">0 positioned</span></span>
+                </div>
             </div>
-            <div class="network-inline-controls">
-                <span class="network-badge-chip"><i class="fas fa-broadcast-tower"></i><span id="coverageBsChip">0 BS</span></span>
-                <span class="network-badge-chip"><i class="fas fa-microchip"></i><span id="coverageSensorChip">0 Sensors</span></span>
-                <span class="network-badge-chip"><i class="fas fa-map-pin"></i><span id="coveragePositionChip">0 positioned</span></span>
+            <div class="network-inline-controls network-inline-controls--dense">
+                <div class="form-check m-0">
+                    <input class="form-check-input" type="checkbox" id="showBaseStations" checked>
+                    <label class="form-check-label small" for="showBaseStations">Show base stations</label>
+                </div>
+                <div class="form-check m-0">
+                    <input class="form-check-input" type="checkbox" id="showSensors" checked>
+                    <label class="form-check-label small" for="showSensors">Show sensors</label>
+                </div>
+                <div class="form-check m-0">
+                    <input class="form-check-input" type="checkbox" id="showHeatmap">
+                    <label class="form-check-label small" for="showHeatmap">Heatmap</label>
+                </div>
+                <label class="form-label mb-0 small text-muted">Signal metric</label>
+                <select class="form-select form-select-sm" id="metricSelect">
+                    <option value="snr" selected>SNR (dB)</option>
+                    <option value="rssi">RSSI (dBm)</option>
+                </select>
+                <span class="network-control-note"><i class="fas fa-location-arrow me-1"></i>GPS changes sync automatically.</span>
             </div>
-            <div class="small text-muted fw-semibold">Map position changes are synced to Base Stations and Sensors GPS settings automatically.</div>
         </div>
     </div>
     <div class="network-control-card mode-hidden" data-mode="topology">
         <div class="network-control-head">
             <p class="network-control-title"><i class="fas fa-project-diagram me-2"></i>Topology Controls</p>
             <span class="network-control-meta">Updated <span id="topologyRefreshStamp">never</span></span>
+            <span class="network-control-cache" id="topologyCacheAge">Cache -</span>
         </div>
         <div class="network-control-body">
             <div class="network-inline-controls">
@@ -623,6 +1360,20 @@ body.map-fullscreen-active {
                 <span class="network-badge-chip"><i class="fas fa-microchip"></i><span id="topologySensorChip">0 Sensors</span></span>
                 <span class="network-badge-chip"><i class="fas fa-link"></i><span id="topologyConnectionChip">0 links</span></span>
                 <span class="network-badge-chip"><i class="fas fa-exclamation-triangle"></i><span id="topologyIssueChip">0 issues</span></span>
+                <div class="topology-control-actions">
+                    <button class="btn btn-primary btn-sm" type="button" onclick="refreshNetworkWorkspace()">
+                        <i class="fas fa-sync me-1"></i>Refresh
+                    </button>
+                    <button class="btn btn-success btn-sm" type="button" onclick="saveTopoPositions()">
+                        <i class="fas fa-save me-1"></i>Save
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" onclick="resetLayout()">
+                        <i class="fas fa-undo me-1"></i>Reset
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" onclick="focusTopologyView()">
+                        <i class="fas fa-crosshairs me-1"></i>Fit graph
+                    </button>
+                </div>
             </div>
             <div class="network-inline-controls">
                 <label class="form-label mb-0 small text-muted">Layout</label>
@@ -639,6 +1390,12 @@ body.map-fullscreen-active {
                     <option value="sensor">Sensors only</option>
                     <option value="problems">Problems + context</option>
                 </select>
+                <label class="form-label mb-0 small text-muted">Routes</label>
+                <select class="form-select form-select-sm" id="topologyRouteSourceFilter">
+                    <option value="both" selected>Live + assigned</option>
+                    <option value="live">Live only</option>
+                    <option value="assigned">Assigned only</option>
+                </select>
                 <div class="form-check m-0">
                     <input class="form-check-input" type="checkbox" id="topologyHighlightProblems" checked>
                     <label class="form-check-label small" for="topologyHighlightProblems">Highlight issues</label>
@@ -648,6 +1405,22 @@ body.map-fullscreen-active {
                     <label class="form-check-label small" for="showSecondaryRoutes">Show secondary routes</label>
                 </div>
             </div>
+            <div class="network-inline-controls">
+                <div class="topology-search-group">
+                    <input type="search" class="form-control form-control-sm" id="topologyNodeSearch" placeholder="Search by EUI or name">
+                    <button class="btn btn-outline-primary btn-sm" type="button" id="topologyNodeSearchBtn">
+                        <i class="fas fa-crosshairs me-1"></i>Focus
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="topologyNodeSearchClearBtn">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </button>
+                </div>
+                <div class="form-check m-0">
+                    <input class="form-check-input" type="checkbox" id="topologyIssuesOnly">
+                    <label class="form-check-label small" for="topologyIssuesOnly">Only problematic</label>
+                </div>
+            </div>
+            <small class="topology-control-note">Live uplink routes use quality colors. Registered-only links are blue dashed so sensor-to-base-station assignment remains visible.</small>
         </div>
     </div>
 </div>
@@ -671,11 +1444,32 @@ body.map-fullscreen-active {
             </li>
         </ul>
 
-        <div class="network-grid">
+        <div class="network-side-panel coverage-legend-inline" id="coverageLegendPanel">
+            <div class="network-side-head with-action">
+                <span>Legend</span>
+                <button type="button" class="network-side-toggle" id="coverageLegendToggle" onclick="toggleLegendPanel('coverageLegendPanel', 'coverageLegendToggle', 'network_coverage_legend_collapsed')">
+                    <i class="fas fa-eye-slash me-1"></i>Hide
+                </button>
+            </div>
+            <div class="network-side-body">
+                <div class="legend-row"><span class="legend-chip-circle" style="width: 20px; height: 20px; background: #ff8c00;"></span><span>Base Station</span></div>
+                <div class="legend-row"><span class="legend-chip-circle" style="width: 13px; height: 13px; background: #17a2b8;"></span><span>Sensor</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #00ff00;"></span><span>Excellent (&gt;10 dB)</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #7fff00;"></span><span>Good (5-10 dB)</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ffff00;"></span><span>Fair (0-5 dB)</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff7f00;"></span><span>Poor (-5-0 dB)</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff0000;"></span><span>Critical (&lt;-5 dB)</span></div>
+            </div>
+        </div>
+
+        <div class="network-grid coverage-main-grid">
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="osm-pane" role="tabpanel">
                     <div class="map-canvas" id="osmMapCanvas">
                         <div class="map-canvas-tools">
+                            <button class="btn btn-light btn-sm" id="osmWheelToggleBtn" type="button" onclick="toggleOsmWheelZoom()">
+                                <i class="fas fa-mouse-pointer me-1"></i>Wheel zoom off
+                            </button>
                             <button class="btn btn-light btn-sm" id="osmFullscreenBtn" type="button" onclick="toggleMapFullscreen('osmMapCanvas', 'osmFullscreenBtn')">
                                 <i class="fas fa-expand me-1"></i>Full screen
                             </button>
@@ -710,51 +1504,45 @@ body.map-fullscreen-active {
                 </div>
             </div>
 
-            <div>
-                <div class="network-side-panel" id="coverageLegendPanel">
+            <div class="coverage-side-stack">
+                <div class="network-side-panel coverage-selected-panel">
                     <div class="network-side-head with-action">
-                        <span>Legend</span>
-                        <button type="button" class="network-side-toggle" id="coverageLegendToggle" onclick="toggleLegendPanel('coverageLegendPanel', 'coverageLegendToggle', 'network_coverage_legend_collapsed')">
-                            <i class="fas fa-eye-slash me-1"></i>Hide
+                        <span>Selected Device</span>
+                        <button class="network-side-toggle" type="button" id="focusSelectedCoverageDevice">
+                            <i class="fas fa-location-arrow me-1"></i>Focus
                         </button>
                     </div>
                     <div class="network-side-body">
-                        <div class="legend-row"><span class="legend-chip-circle" style="width: 22px; height: 22px; background: #ff8c00;"></span><span>Base Station</span></div>
-                        <div class="legend-row"><span class="legend-chip-circle" style="width: 14px; height: 14px; background: #17a2b8;"></span><span>Sensor</span></div>
-                        <hr>
-                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #00ff00;"></span><span>Excellent (&gt;10 dB)</span></div>
-                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #7fff00;"></span><span>Good (5-10 dB)</span></div>
-                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #ffff00;"></span><span>Fair (0-5 dB)</span></div>
-                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff7f00;"></span><span>Poor (-5-0 dB)</span></div>
-                        <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff0000;"></span><span>Critical (&lt;-5 dB)</span></div>
+                        <div class="selected-device-card">
+                            <div class="selected-device-main" id="selectedCoverageDevice">No device selected</div>
+                            <div class="selected-device-sub" id="selectedCoverageDeviceHint">Select device, then drag marker on map to update GPS.</div>
+                        </div>
+                        <div class="device-detail-grid">
+                            <div class="device-detail-row"><span>Status</span><strong id="selectedDeviceStatus">-</strong></div>
+                            <div class="device-detail-row"><span>Tenant</span><strong id="selectedDeviceTenant">-</strong></div>
+                            <div class="device-detail-row"><span>Last seen</span><strong id="selectedDeviceLastSeen">-</strong></div>
+                            <div class="device-detail-row"><span>Primary path</span><strong id="selectedDevicePrimaryPath">-</strong></div>
+                            <div class="device-detail-row"><span>Coverage links</span><strong id="selectedDeviceCoverage">-</strong></div>
+                            <div class="device-detail-row"><span>Best signal</span><strong id="selectedDeviceSignal">-</strong></div>
+                            <div class="device-detail-row"><span>Position source</span><strong id="selectedDevicePositionSource">-</strong></div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="network-side-panel">
+                <div class="network-side-panel coverage-gps-panel">
                     <div class="network-side-head">GPS Editor</div>
                     <div class="network-side-body">
                         <div class="coverage-editor">
-                            <div class="selected-device-card">
-                                <div class="selected-device-main" id="selectedCoverageDevice">No device selected</div>
-                                <div class="selected-device-sub" id="selectedCoverageDeviceHint">Click a marker on the map to edit GPS.</div>
-                            </div>
-
                             <div class="network-gps-grid">
-                                <input type="number" class="form-control form-control-sm" step="0.000001" id="gpsLatInput" placeholder="Latitude (-90 to 90)">
-                                <input type="number" class="form-control form-control-sm" step="0.000001" id="gpsLngInput" placeholder="Longitude (-180 to 180)">
+                                <input type="text" class="form-control form-control-sm" id="gpsLatInput" placeholder="Latitude" readonly>
+                                <input type="text" class="form-control form-control-sm" id="gpsLngInput" placeholder="Longitude" readonly>
                             </div>
                             <div class="network-button-row placement-button-row">
-                                <button class="btn btn-outline-primary btn-sm" type="button" id="setGpsCenterBtn" onclick="setGpsFromMapCenter()">
-                                    <i class="fas fa-crosshairs me-1"></i>Use map center
-                                </button>
-                                <button class="btn btn-primary btn-sm" type="button" id="placeByGpsBtn" onclick="placeSelectedDeviceByGps()">
-                                    <i class="fas fa-location-arrow me-1"></i>Apply GPS
-                                </button>
                                 <button class="btn btn-outline-secondary btn-sm" type="button" id="clearSelectedCoverageDevice">
                                     <i class="fas fa-times-circle me-1"></i>Clear
                                 </button>
                             </div>
-                            <p class="placement-inline-note"><i class="fas fa-info-circle me-1"></i>Drag marker or set GPS manually. Changes sync to device settings.</p>
+                            <p class="placement-inline-note"><i class="fas fa-info-circle me-1"></i>GPS updates are synchronized automatically when marker is moved.</p>
 
                             <div class="placement-lock-card">
                                 <div>
@@ -776,6 +1564,71 @@ body.map-fullscreen-active {
                 </div>
             </div>
         </div>
+
+        <div class="network-side-panel coverage-device-explorer-panel">
+            <div class="network-side-head">Device Explorer</div>
+            <div class="network-side-body">
+                <div class="coverage-filter-grid coverage-filter-grid-compact">
+                    <input type="search" class="form-control form-control-sm" id="deviceSearchInput" placeholder="Search by EUI or name">
+                    <select class="form-select form-select-sm" id="deviceStatusFilter">
+                        <option value="all" selected>All statuses</option>
+                        <option value="online">Online</option>
+                        <option value="warning">Warning</option>
+                        <option value="offline">Offline</option>
+                        <option value="no-data">No data</option>
+                    </select>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="clearDeviceFilters">
+                        <i class="fas fa-eraser me-1"></i>Clear
+                    </button>
+                </div>
+                <div class="coverage-filter-meta">
+                    <div class="device-view-tabs" role="tablist" aria-label="Device type view">
+                        <button type="button" class="device-view-btn is-active" id="deviceViewBsBtn" onclick="setDeviceListMode('bs')">
+                            <i class="fas fa-broadcast-tower"></i>
+                            <span>Base Stations</span>
+                            <span class="device-view-count" id="deviceViewBsCount">0</span>
+                        </button>
+                        <button type="button" class="device-view-btn" id="deviceViewSensorBtn" onclick="setDeviceListMode('sensor')">
+                            <i class="fas fa-microchip"></i>
+                            <span>Sensors</span>
+                            <span class="device-view-count" id="deviceViewSensorCount">0</span>
+                        </button>
+                    </div>
+                    <span class="coverage-filter-summary" id="placementFilterSummary">Showing 0 of 0 devices</span>
+                </div>
+
+                <div class="coverage-device-layout">
+                    <div class="coverage-device-main">
+                        <div class="device-list-section device-list-panel" id="baseStationsPanel">
+                            <div class="device-list-head">
+                                <p class="device-list-title">Base Stations</p>
+                                <span class="device-list-count" id="visibleBsCount">0 / 0</span>
+                            </div>
+                            <div class="device-picker-list" id="baseStationList"></div>
+                        </div>
+
+                        <div class="device-list-section device-list-panel is-hidden" id="sensorsPanel">
+                            <div class="device-list-head">
+                                <p class="device-list-title">Sensors</p>
+                                <span class="device-list-count" id="visibleSensorCount">0 / 0</span>
+                            </div>
+                            <div class="device-picker-list" id="sensorList"></div>
+                        </div>
+                    </div>
+
+                    <div class="coverage-device-side">
+                        <div class="device-list-section is-missing-gps">
+                            <div class="device-list-head">
+                                <p class="device-list-title">Missing GPS</p>
+                                <span class="device-list-count" id="missingGpsCount">0</span>
+                            </div>
+                            <p class="missing-gps-summary" id="missingGpsSummary">All devices have GPS coordinates and can be shown on OpenStreetMap.</p>
+                            <div class="missing-gps-list" id="missingGpsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -789,29 +1642,35 @@ body.map-fullscreen-active {
             <li class="nav-item" role="presentation">
                 <span class="nav-link active">Topology Graph</span>
             </li>
-            <li class="nav-item ms-auto" role="presentation">
-                <div class="tab-actions">
-                    <button class="btn btn-success btn-sm tab-save-btn" type="button" onclick="saveTopoPositions()">
-                        <i class="fas fa-save me-1"></i>Save positions
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm" type="button" onclick="resetLayout()">
-                        <i class="fas fa-compress-arrows-alt me-1"></i>Reset
-                    </button>
-                </div>
-            </li>
         </ul>
         <div class="network-grid">
             <div class="map-canvas" id="topologyMapCanvas">
                 <div class="map-canvas-tools">
-                    <button class="btn btn-light btn-sm" id="topologyFullscreenBtn" type="button" onclick="toggleMapFullscreen('topologyMapCanvas', 'topologyFullscreenBtn')">
-                        <i class="fas fa-expand me-1"></i>Full screen
-                    </button>
+                    <div class="map-canvas-tool-group">
+                        <button class="btn btn-light btn-sm" id="topologyZoomOutBtn" type="button" onclick="zoomTopologyOut()">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <button class="btn btn-light btn-sm" id="topologyZoomInBtn" type="button" onclick="zoomTopologyIn()">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                        <button class="btn btn-light btn-sm" id="topologyFitBtn" type="button" onclick="focusTopologyView()">
+                            <i class="fas fa-crosshairs"></i>
+                        </button>
+                    </div>
+                    <div class="map-canvas-tool-group">
+                        <button class="btn btn-light btn-sm" id="topologyWheelToggleBtn" type="button" onclick="toggleTopologyWheelZoom()">
+                            <i class="fas fa-mouse-pointer me-1"></i>Wheel zoom off
+                        </button>
+                        <button class="btn btn-light btn-sm" id="topologyFullscreenBtn" type="button" onclick="toggleMapFullscreen('topologyMapCanvas', 'topologyFullscreenBtn')">
+                            <i class="fas fa-expand me-1"></i>Full screen
+                        </button>
+                    </div>
                 </div>
                 <div id="cy"></div>
             </div>
 
-            <div>
-                <div class="network-side-panel" id="topologyLegendPanel">
+            <div class="topology-side-dock">
+                <div class="network-side-panel topology-legend-panel" id="topologyLegendPanel">
                     <div class="network-side-head with-action">
                         <span>Legend</span>
                         <button type="button" class="network-side-toggle" id="topologyLegendToggle" onclick="toggleLegendPanel('topologyLegendPanel', 'topologyLegendToggle', 'network_topology_legend_collapsed')">
@@ -822,18 +1681,38 @@ body.map-fullscreen-active {
                         <div class="legend-row"><span class="legend-chip-circle" style="width: 22px; height: 22px; background: #ff8c00;"></span><span>Base Station</span></div>
                         <div class="legend-row"><span class="legend-chip-circle" style="width: 14px; height: 14px; background: #17a2b8;"></span><span>Sensor</span></div>
                         <hr>
-                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #28a745;"></span><span>Primary Route</span></div>
-                        <div class="legend-row"><span style="width: 28px; height: 2px; background: #aaa;"></span><span>Secondary Route</span></div>
+                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 4px solid #1f9d57;"></span><span>Primary route (live)</span></div>
+                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 2px dashed #8d9cb1;"></span><span>Secondary route (live)</span></div>
+                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 2px dashed #4d7bd6;"></span><span>Assigned relation (registration)</span></div>
+                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 2px dotted #5a8df0;"></span><span>Assigned relation (configured)</span></div>
+                        <hr>
+                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #1f9d57;"></span><span>Good link quality</span></div>
+                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #d2a12a;"></span><span>Fair link quality</span></div>
+                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #d9822b;"></span><span>Poor link quality</span></div>
+                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #cc4a4a;"></span><span>Critical link quality</span></div>
                     </div>
                 </div>
 
-                <div class="network-side-panel">
+                <div class="network-side-panel topology-stats-panel">
                     <div class="network-side-head">Topology Stats</div>
                     <div class="network-side-body">
                         <div class="stat-row"><span>Base Stations</span><strong id="topo_bsCount">0</strong></div>
                         <div class="stat-row"><span>Sensors</span><strong id="topo_sensorCount">0</strong></div>
                         <div class="stat-row"><span>Connections</span><strong id="edgeCount">0</strong></div>
                         <div class="stat-row"><span>Problem Nodes</span><strong id="topo_issueCount">0</strong></div>
+                    </div>
+                </div>
+
+                <div class="network-side-panel topology-stats-panel">
+                    <div class="network-side-head">Relationships</div>
+                    <div class="network-side-body">
+                        <div class="stat-row"><span>Online BS</span><strong id="topo_onlineBsCount">0</strong></div>
+                        <div class="stat-row"><span>Linked Sensors</span><strong id="topo_linkedSensorCount">0</strong></div>
+                        <div class="stat-row"><span>Orphan Sensors</span><strong id="topo_orphanSensorCount">0</strong></div>
+                        <div class="stat-row"><span>Multi-BS Sensors</span><strong id="topo_multiSensorCount">0</strong></div>
+                        <div class="stat-row"><span>Primary Routes</span><strong id="topo_primaryEdgeCount">0</strong></div>
+                        <div class="stat-row"><span>Live Routes</span><strong id="topo_liveEdgeCount">0</strong></div>
+                        <div class="stat-row"><span>Assigned Routes</span><strong id="topo_assignedEdgeCount">0</strong></div>
                     </div>
                 </div>
 
@@ -868,18 +1747,77 @@ let originalImageWidth = 0;
 let originalImageHeight = 0;
 let topologyData = { sensors: {}, base_stations: [] };
 let deviceSearchQuery = '';
+let deviceStatusFilter = 'all';
+let deviceListMode = 'bs';
 let topologyRefreshTimer = null;
 let osmViewState = null;
 let workspaceMode = 'coverage';
 let coveragePositionsLocked = false;
 let activeFullscreenCanvasId = null;
 let activeFullscreenButtonId = null;
+let osmWheelZoomEnabled = false;
+let topologyWheelZoomEnabled = false;
+let topologySelectedNodeId = '';
+const TOPOLOGY_EDGE_STALE_MINUTES = 15;
+const NETWORK_SWR_TTL_MS = 15000;
+const NETWORK_CACHE_KEYS = {
+    devices: 'network_devices_bundle_v1',
+    coverageTopology: 'network_coverage_topology_v1',
+    topologyGraph: 'network_topology_graph_v1'
+};
+let coverageWorkspaceBooted = false;
+let topologyWorkspaceBooted = false;
+let topologyAutoRefreshStarted = false;
+let networkCacheBadgeTimer = null;
+const NETWORK_CACHE_META = {
+    coverage: { source: 'none', ts: 0 },
+    topology: { source: 'none', ts: 0 }
+};
 
-function setRefreshStamp(elementId) {
+function setRefreshStamp(elementId, meta = null) {
     const el = document.getElementById(elementId);
     if (el) {
         el.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
+    if (meta && typeof meta === 'object') {
+        const key = meta.kind === 'topology' ? 'topology' : 'coverage';
+        NETWORK_CACHE_META[key] = {
+            source: String(meta.source || 'network').toLowerCase(),
+            ts: Number(meta.ts || Date.now())
+        };
+        renderNetworkCacheBadges();
+    }
+}
+
+function renderNetworkCacheBadges() {
+    const paint = (key, elementId) => {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        const item = NETWORK_CACHE_META[key];
+        if (!item || !item.ts) {
+            el.textContent = 'Cache -';
+            return;
+        }
+        const source = String(item.source || 'network').toLowerCase();
+        if (source.startsWith('cache') || source === 'session') {
+            const ageSeconds = Math.max(0, Math.round((Date.now() - item.ts) / 1000));
+            el.textContent = `Cache ${ageSeconds}s`;
+            return;
+        }
+        el.textContent = 'Live';
+    };
+    paint('coverage', 'coverageCacheAge');
+    paint('topology', 'topologyCacheAge');
+}
+
+function setNetworkSectionSkeleton(selector, enabled, soft = false) {
+    if (window.AppPerf && typeof window.AppPerf.setSkeleton === 'function') {
+        window.AppPerf.setSkeleton(selector, Boolean(enabled), { soft: Boolean(soft) });
+        return;
+    }
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.style.opacity = enabled ? '0.65' : '1';
 }
 
 function escapeHtml(value) {
@@ -889,6 +1827,12 @@ function escapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+function escapeJsString(value) {
+    return String(value ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'");
 }
 
 function setLegendPanelCollapsed(panelId, buttonId, collapsed) {
@@ -916,6 +1860,74 @@ function setFullscreenButtonState(buttonId, isActive) {
     btn.innerHTML = isActive
         ? '<i class="fas fa-compress me-1"></i>Exit full screen'
         : '<i class="fas fa-expand me-1"></i>Full screen';
+}
+
+function updateOsmWheelZoomButton() {
+    const btn = document.getElementById('osmWheelToggleBtn');
+    if (!btn) return;
+    btn.innerHTML = osmWheelZoomEnabled
+        ? '<i class="fas fa-mouse-pointer me-1"></i>Wheel zoom on'
+        : '<i class="fas fa-mouse-pointer me-1"></i>Wheel zoom off';
+    btn.classList.toggle('btn-success', osmWheelZoomEnabled);
+    btn.classList.toggle('btn-light', !osmWheelZoomEnabled);
+}
+
+function setOsmWheelZoom(enabled) {
+    if (!osmMap || !osmMap.scrollWheelZoom) return;
+    osmWheelZoomEnabled = !!enabled;
+    if (osmWheelZoomEnabled) {
+        osmMap.scrollWheelZoom.enable();
+    } else {
+        osmMap.scrollWheelZoom.disable();
+    }
+    updateOsmWheelZoomButton();
+}
+
+function toggleOsmWheelZoom() {
+    setOsmWheelZoom(!osmWheelZoomEnabled);
+}
+
+function updateTopologyWheelZoomButton() {
+    const btn = document.getElementById('topologyWheelToggleBtn');
+    if (!btn) return;
+    btn.innerHTML = topologyWheelZoomEnabled
+        ? '<i class="fas fa-mouse-pointer me-1"></i>Wheel zoom on'
+        : '<i class="fas fa-mouse-pointer me-1"></i>Wheel zoom off';
+    btn.classList.toggle('btn-success', topologyWheelZoomEnabled);
+    btn.classList.toggle('btn-light', !topologyWheelZoomEnabled);
+}
+
+function setTopologyWheelZoom(enabled) {
+    topologyWheelZoomEnabled = !!enabled;
+    if (cy) {
+        cy.userZoomingEnabled(topologyWheelZoomEnabled);
+    }
+    updateTopologyWheelZoomButton();
+}
+
+function toggleTopologyWheelZoom() {
+    setTopologyWheelZoom(!topologyWheelZoomEnabled);
+}
+
+function topologySetZoom(targetZoom) {
+    if (!cy) return;
+    const minZoom = 0.2;
+    const maxZoom = 2.8;
+    const next = Math.max(minZoom, Math.min(maxZoom, Number(targetZoom) || cy.zoom()));
+    cy.zoom({
+        level: next,
+        renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+    });
+}
+
+function zoomTopologyIn() {
+    if (!cy) return;
+    topologySetZoom(cy.zoom() * 1.18);
+}
+
+function zoomTopologyOut() {
+    if (!cy) return;
+    topologySetZoom(cy.zoom() / 1.18);
 }
 
 function resizeNetworkCanvas(canvasId) {
@@ -974,6 +1986,160 @@ function normalizeEuiUpper(value) {
     return String(value || '').trim().toUpperCase();
 }
 
+function parseFiniteNumber(value) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+}
+
+function normalizeCoveragePositionEntry(rawKey, rawValue) {
+    if (!rawValue || typeof rawValue !== 'object') return null;
+
+    const keyRaw = String(rawKey || '').trim();
+    const keyUpper = keyRaw.toUpperCase();
+    let inferredType = '';
+    let euiFromKey = '';
+    if (keyUpper.startsWith('BS_')) {
+        inferredType = 'bs';
+        euiFromKey = keyUpper.substring(3);
+    } else if (keyUpper.startsWith('SENSOR_')) {
+        inferredType = 'sensor';
+        euiFromKey = keyUpper.substring(7);
+    }
+
+    const rawDeviceType = String(rawValue.deviceType || '').trim().toLowerCase();
+    const deviceType = rawDeviceType === 'bs' || rawDeviceType === 'base_station'
+        ? 'bs'
+        : (rawDeviceType === 'sensor' ? 'sensor' : (inferredType || 'sensor'));
+
+    const eui = normalizeEuiUpper(rawValue.eui || euiFromKey);
+    if (!eui) return null;
+
+    const rawType = String(rawValue.type || '').trim().toLowerCase();
+    const posType = rawType === 'floorplan' ? 'floorplan' : 'osm';
+
+    const normalized = {
+        type: posType,
+        deviceType,
+        eui
+    };
+
+    if (posType === 'osm') {
+        const lat = parseFiniteNumber(rawValue.lat);
+        const lng = parseFiniteNumber(rawValue.lng);
+        if (lat === null || lng === null) return null;
+        normalized.lat = lat;
+        normalized.lng = lng;
+    } else {
+        const x = parseFiniteNumber(rawValue.x);
+        const y = parseFiniteNumber(rawValue.y);
+        if (x === null || y === null) return null;
+        normalized.x = x;
+        normalized.y = y;
+    }
+
+    normalized.key = `${deviceType}_${eui}`;
+    return normalized;
+}
+
+function normalizeCoveragePositionsMap(rawPositions) {
+    const source = rawPositions && typeof rawPositions === 'object' ? rawPositions : {};
+    const normalizedMap = {};
+    Object.entries(source).forEach(([rawKey, rawValue]) => {
+        const normalized = normalizeCoveragePositionEntry(rawKey, rawValue);
+        if (!normalized) return;
+        const existing = normalizedMap[normalized.key];
+        const { key, ...payload } = normalized;
+        if (!existing) {
+            normalizedMap[key] = payload;
+            return;
+        }
+        // Prefer OSM when duplicates collide to keep GPS/inventory sync deterministic.
+        if (existing.type !== 'osm' && payload.type === 'osm') {
+            normalizedMap[key] = payload;
+            return;
+        }
+        if (existing.type === payload.type) {
+            normalizedMap[key] = payload;
+        }
+    });
+    return normalizedMap;
+}
+
+function mergeBaseStationRecords(records) {
+    const list = Array.isArray(records) ? records : [];
+    const merged = new Map();
+
+    list.forEach(item => {
+        if (!item || typeof item !== 'object') return;
+        const eui = normalizeEuiUpper(item.eui || item.EUI || '');
+        if (!eui) return;
+
+        const prev = merged.get(eui) || {};
+        const next = { ...prev, ...item, eui, EUI: eui };
+        next.connected = Boolean(prev.connected) || Boolean(item.connected);
+
+        const prevLat = parseFiniteNumber(prev.gps_lat);
+        const prevLng = parseFiniteNumber(prev.gps_lng);
+        const currLat = parseFiniteNumber(item.gps_lat);
+        const currLng = parseFiniteNumber(item.gps_lng);
+        if (currLat !== null && currLng !== null) {
+            next.gps_lat = currLat;
+            next.gps_lng = currLng;
+        } else if (prevLat !== null && prevLng !== null) {
+            next.gps_lat = prevLat;
+            next.gps_lng = prevLng;
+        }
+
+        if (!String(next.name || '').trim()) {
+            next.name = String(prev.name || item.name || eui.substring(0, 8)).trim();
+        }
+        merged.set(eui, next);
+    });
+
+    return Array.from(merged.values()).sort((a, b) => {
+        const aConnected = Boolean(a.connected);
+        const bConnected = Boolean(b.connected);
+        if (aConnected !== bConnected) return aConnected ? -1 : 1;
+        return String(a.name || a.eui).localeCompare(String(b.name || b.eui), undefined, { sensitivity: 'base' });
+    });
+}
+
+function mergeSensorRecords(records) {
+    const list = Array.isArray(records) ? records : [];
+    const merged = new Map();
+
+    list.forEach(item => {
+        if (!item || typeof item !== 'object') return;
+        const eui = normalizeEuiUpper(item.eui || item.EUI || '');
+        if (!eui) return;
+
+        const prev = merged.get(eui) || {};
+        const next = { ...prev, ...item, eui, EUI: eui };
+
+        const prevAttached = Array.isArray(prev.attached_base_stations) ? prev.attached_base_stations : [];
+        const currAttached = Array.isArray(item.attached_base_stations) ? item.attached_base_stations : [];
+        next.attached_base_stations = Array.from(new Set(
+            [...prevAttached, ...currAttached].map(value => normalizeEuiUpper(value)).filter(Boolean)
+        ));
+
+        const prevBs = Array.isArray(prev.base_stations) ? prev.base_stations : [];
+        const currBs = Array.isArray(item.base_stations) ? item.base_stations : [];
+        next.base_stations = Array.from(new Set(
+            [...prevBs, ...currBs].map(value => normalizeEuiUpper(value)).filter(Boolean)
+        ));
+
+        if (!String(next.name || '').trim()) {
+            next.name = String(prev.name || item.name || eui.substring(0, 8)).trim();
+        }
+
+        merged.set(eui, next);
+    });
+
+    return Array.from(merged.values()).sort((a, b) =>
+        String(a.name || a.eui).localeCompare(String(b.name || b.eui), undefined, { sensitivity: 'base' })
+    );
+}
+
 function coverageDeviceKey(type, eui) {
     const prefix = String(type || '').toLowerCase() === 'bs' ? 'bs' : 'sensor';
     return `${prefix}_${normalizeEuiUpper(eui)}`;
@@ -999,6 +2165,70 @@ function getCoverageDeviceRecord(type, eui) {
     return devices.sensors.find(sensor => normalizeEuiUpper(sensor.eui || sensor.EUI) === target) || null;
 }
 
+function parseCoordinateValue(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+}
+
+function hasInventoryGps(record) {
+    if (!record || typeof record !== 'object') return false;
+    const lat = parseCoordinateValue(record.gps_lat ?? record.latitude ?? record.lat);
+    const lng = parseCoordinateValue(record.gps_lng ?? record.longitude ?? record.lng ?? record.lon);
+    return lat !== null && lng !== null;
+}
+
+function hasCoverageOsmPosition(type, eui) {
+    const key = coverageDeviceKey(type, eui);
+    const pos = devicePositions[key];
+    if (!pos || pos.type !== 'osm') return false;
+    const lat = parseCoordinateValue(pos.lat);
+    const lng = parseCoordinateValue(pos.lng);
+    return lat !== null && lng !== null;
+}
+
+function deviceMissingGps(type, record) {
+    const eui = normalizeEuiUpper(record?.eui || record?.EUI || '');
+    if (!eui) return false;
+    return !hasCoverageOsmPosition(type, eui) && !hasInventoryGps(record);
+}
+
+function coveragePositionTypeFromKey(key, fallbackType = '') {
+    const normalizedFallback = String(fallbackType || '').toLowerCase();
+    if (String(key || '').startsWith('bs_')) return 'bs';
+    if (String(key || '').startsWith('sensor_')) return 'sensor';
+    if (normalizedFallback === 'bs' || normalizedFallback === 'base_station') return 'bs';
+    return 'sensor';
+}
+
+function coveragePositionEuiFromKey(key, fallbackEui = '') {
+    const fromFallback = normalizeEuiUpper(fallbackEui);
+    if (fromFallback) return fromFallback;
+    const raw = String(key || '');
+    if (raw.startsWith('bs_')) return normalizeEuiUpper(raw.slice(3));
+    if (raw.startsWith('sensor_')) return normalizeEuiUpper(raw.slice(7));
+    return '';
+}
+
+function isKnownCoverageDevice(type, eui) {
+    return !!getCoverageDeviceRecord(type, eui);
+}
+
+function pruneUnknownCoveragePositions() {
+    if (!devicePositions || typeof devicePositions !== 'object') return 0;
+    let removed = 0;
+    Object.keys(devicePositions).forEach(key => {
+        const pos = devicePositions[key];
+        const type = coveragePositionTypeFromKey(key, pos?.deviceType);
+        const eui = coveragePositionEuiFromKey(key, pos?.eui);
+        if (!eui || !isKnownCoverageDevice(type, eui)) {
+            delete devicePositions[key];
+            removed += 1;
+        }
+    });
+    return removed;
+}
+
 function getSelectedDevicePosition() {
     if (!selectedDevice) return null;
     const key = coverageDeviceKey(selectedDevice.type, selectedDevice.eui);
@@ -1012,20 +2242,199 @@ function setGpsInputs(lat, lng) {
     const lngInput = document.getElementById('gpsLngInput');
     const latNum = Number(lat);
     const lngNum = Number(lng);
-    if (latInput && Number.isFinite(latNum)) latInput.value = latNum.toFixed(6);
-    if (lngInput && Number.isFinite(lngNum)) lngInput.value = lngNum.toFixed(6);
+    if (latInput) latInput.value = Number.isFinite(latNum) ? latNum.toFixed(6) : '';
+    if (lngInput) lngInput.value = Number.isFinite(lngNum) ? lngNum.toFixed(6) : '';
+}
+
+function formatStatusLabel(key) {
+    switch (String(key || '').toLowerCase()) {
+        case 'online':
+            return 'Online';
+        case 'warning':
+            return 'Warning';
+        case 'offline':
+            return 'Offline';
+        default:
+            return 'No data';
+    }
+}
+
+function getSensorCoverageStats(sensorRecord) {
+    const sources = sensorRecord?.topology?.base_stations || {};
+    const entries = Object.entries(sources);
+    let bestSnr = null;
+    let bestRssi = null;
+    let bestBs = '';
+
+    entries.forEach(([bsEui, stats]) => {
+        const snr = Number(stats?.snr);
+        const rssi = Number(stats?.rssi);
+        if (Number.isFinite(snr) && (bestSnr === null || snr > bestSnr)) {
+            bestSnr = snr;
+            bestBs = normalizeEuiUpper(bsEui);
+        }
+        if (Number.isFinite(rssi) && (bestRssi === null || rssi > bestRssi)) {
+            bestRssi = rssi;
+        }
+    });
+
+    return {
+        receiverCount: entries.length,
+        bestSnr,
+        bestRssi,
+        bestBs
+    };
+}
+
+function getBaseStationSignalStats(bsEui) {
+    const target = normalizeEuiUpper(bsEui);
+    if (!target) return { links: 0, avgSnr: null, avgRssi: null };
+
+    let links = 0;
+    let snrSum = 0;
+    let rssiSum = 0;
+    let snrCount = 0;
+    let rssiCount = 0;
+
+    devices.sensors.forEach(sensor => {
+        const linksMap = sensor?.topology?.base_stations || {};
+        Object.entries(linksMap).forEach(([srcBs, stats]) => {
+            if (normalizeEuiUpper(srcBs) !== target) return;
+            links += 1;
+            const snr = Number(stats?.snr);
+            const rssi = Number(stats?.rssi);
+            if (Number.isFinite(snr)) {
+                snrSum += snr;
+                snrCount += 1;
+            }
+            if (Number.isFinite(rssi)) {
+                rssiSum += rssi;
+                rssiCount += 1;
+            }
+        });
+    });
+
+    return {
+        links,
+        avgSnr: snrCount > 0 ? (snrSum / snrCount) : null,
+        avgRssi: rssiCount > 0 ? (rssiSum / rssiCount) : null
+    };
+}
+
+function getCoverageDeviceStatus(type, record) {
+    if (type === 'bs') {
+        if (record?.connected) return { key: 'online', label: 'Online' };
+        return { key: 'offline', label: 'Offline' };
+    }
+
+    const activity = String(record?.activity_status || '').toLowerCase();
+    const sensorStats = getSensorCoverageStats(record);
+    if (sensorStats.receiverCount > 0) {
+        return { key: 'online', label: 'Online' };
+    }
+    if (activity === 'warning' || activity === 'detached' || (record?.registered && activity !== 'no_data')) {
+        return { key: 'warning', label: 'Warning' };
+    }
+    if (activity === 'active') {
+        return { key: 'online', label: 'Online' };
+    }
+    if (activity === 'no_data' || activity === '') {
+        return { key: 'no-data', label: 'No data' };
+    }
+    return { key: 'offline', label: 'Offline' };
+}
+
+function getDevicePositionSourceLabel(type, eui) {
+    const key = coverageDeviceKey(type, eui);
+    const pos = devicePositions[key];
+    if (!pos) return 'Not set';
+    if (pos.type === 'osm') return 'OpenStreetMap';
+    if (pos.type === 'floorplan') return 'Floor plan';
+    return String(pos.type || 'Unknown');
+}
+
+function updateSelectedDeviceInsights(device, record) {
+    const statusEl = document.getElementById('selectedDeviceStatus');
+    const tenantEl = document.getElementById('selectedDeviceTenant');
+    const lastSeenEl = document.getElementById('selectedDeviceLastSeen');
+    const primaryEl = document.getElementById('selectedDevicePrimaryPath');
+    const coverageEl = document.getElementById('selectedDeviceCoverage');
+    const signalEl = document.getElementById('selectedDeviceSignal');
+    const sourceEl = document.getElementById('selectedDevicePositionSource');
+
+    if (!statusEl || !tenantEl || !lastSeenEl || !primaryEl || !coverageEl || !signalEl || !sourceEl) return;
+
+    if (!device || !record) {
+        statusEl.textContent = '-';
+        tenantEl.textContent = '-';
+        lastSeenEl.textContent = '-';
+        primaryEl.textContent = '-';
+        coverageEl.textContent = '-';
+        signalEl.textContent = '-';
+        sourceEl.textContent = '-';
+        return;
+    }
+
+    const statusInfo = getCoverageDeviceStatus(device.type, record);
+    statusEl.innerHTML = `<span class="device-status-chip status-${escapeHtml(statusInfo.key)}">${escapeHtml(statusInfo.label)}</span>`;
+    tenantEl.textContent = String(record?.tenant_id || 'default');
+
+    const hoursSinceLastSeen = Number(record?.hours_since_last_seen);
+    if (Number.isFinite(hoursSinceLastSeen) && hoursSinceLastSeen >= 0) {
+        if (hoursSinceLastSeen < 1) {
+            lastSeenEl.textContent = 'Under 1h ago';
+        } else {
+            lastSeenEl.textContent = `${Math.round(hoursSinceLastSeen)}h ago`;
+        }
+    } else if (record?.registered) {
+        lastSeenEl.textContent = 'Registered';
+    } else {
+        lastSeenEl.textContent = 'No data';
+    }
+
+    const eui = normalizeEuiUpper(device.eui);
+    sourceEl.textContent = getDevicePositionSourceLabel(device.type, eui);
+
+    if (device.type === 'bs') {
+        const signal = getBaseStationSignalStats(eui);
+        primaryEl.textContent = eui || '-';
+        coverageEl.textContent = `${signal.links} sensor link${signal.links === 1 ? '' : 's'}`;
+        if (signal.avgSnr === null && signal.avgRssi === null) {
+            signalEl.textContent = 'No signal samples';
+        } else {
+            const snrText = signal.avgSnr === null ? 'n/a' : `${signal.avgSnr.toFixed(1)} dB`;
+            const rssiText = signal.avgRssi === null ? 'n/a' : `${signal.avgRssi.toFixed(0)} dBm`;
+            signalEl.textContent = `SNR ${snrText} | RSSI ${rssiText}`;
+        }
+        return;
+    }
+
+    const stats = getSensorCoverageStats(record);
+    primaryEl.textContent = stats.bestBs || 'No primary route';
+    coverageEl.textContent = `${stats.receiverCount} base station${stats.receiverCount === 1 ? '' : 's'}`;
+    if (stats.bestSnr === null && stats.bestRssi === null) {
+        signalEl.textContent = 'No signal samples';
+    } else {
+        const snrText = stats.bestSnr === null ? 'n/a' : `${stats.bestSnr.toFixed(1)} dB`;
+        const rssiText = stats.bestRssi === null ? 'n/a' : `${stats.bestRssi.toFixed(0)} dBm`;
+        signalEl.textContent = `SNR ${snrText} | RSSI ${rssiText}`;
+    }
 }
 
 function updateSelectedCoverageDevice() {
     const label = document.getElementById('selectedCoverageDevice');
     const hint = document.getElementById('selectedCoverageDeviceHint');
     const clearBtn = document.getElementById('clearSelectedCoverageDevice');
+    const focusBtn = document.getElementById('focusSelectedCoverageDevice');
 
     if (!label) return;
     if (!selectedDevice) {
         label.textContent = 'No device selected';
-        if (hint) hint.textContent = 'Click a marker on the map to edit GPS.';
+        if (hint) hint.textContent = 'Select device, then drag marker on map to update GPS.';
+        setGpsInputs(null, null);
+        updateSelectedDeviceInsights(null, null);
         if (clearBtn) clearBtn.disabled = true;
+        if (focusBtn) focusBtn.disabled = true;
         updatePlacementActionState();
         return;
     }
@@ -1037,17 +2446,22 @@ function updateSelectedCoverageDevice() {
     label.textContent = name ? `${typeLabel}: ${name}` : `${typeLabel}: ${euiText.substring(0, 14)}`;
     if (hint) hint.textContent = euiText;
     if (clearBtn) clearBtn.disabled = false;
+    if (focusBtn) focusBtn.disabled = false;
 
     const pos = getSelectedDevicePosition();
     if (pos) {
         setGpsInputs(pos.lat, pos.lng);
+    } else {
+        setGpsInputs(record?.gps_lat, record?.gps_lng);
     }
+    updateSelectedDeviceInsights(selectedDevice, record);
     updatePlacementActionState();
 }
 
 function resetCoverageSelection() {
     selectedDevice = null;
     updateSelectedCoverageDevice();
+    renderDeviceLists();
 }
 
 async function syncDeviceGpsToBackend(device, lat, lng) {
@@ -1073,19 +2487,29 @@ async function syncDeviceGpsToBackend(device, lat, lng) {
 }
 
 function updatePlacementActionState() {
-    const placeBtn = document.getElementById('placeByGpsBtn');
     const latInput = document.getElementById('gpsLatInput');
     const lngInput = document.getElementById('gpsLngInput');
+    if (latInput) latInput.disabled = !selectedDevice;
+    if (lngInput) lngInput.disabled = !selectedDevice;
+}
 
-    const canPlace = !!selectedDevice && !coveragePositionsLocked;
-    if (placeBtn) {
-        placeBtn.disabled = !canPlace;
-        placeBtn.title = !selectedDevice
-            ? 'Select a device first'
-            : (coveragePositionsLocked ? 'Unlock positions first' : 'Place selected device');
+function setDeviceListMode(mode, persist = true) {
+    const normalized = String(mode || '').toLowerCase() === 'sensor' ? 'sensor' : 'bs';
+    deviceListMode = normalized;
+
+    const bsBtn = document.getElementById('deviceViewBsBtn');
+    const sensorBtn = document.getElementById('deviceViewSensorBtn');
+    const bsPanel = document.getElementById('baseStationsPanel');
+    const sensorPanel = document.getElementById('sensorsPanel');
+
+    if (bsBtn) bsBtn.classList.toggle('is-active', normalized === 'bs');
+    if (sensorBtn) sensorBtn.classList.toggle('is-active', normalized === 'sensor');
+    if (bsPanel) bsPanel.classList.toggle('is-hidden', normalized !== 'bs');
+    if (sensorPanel) sensorPanel.classList.toggle('is-hidden', normalized !== 'sensor');
+
+    if (persist) {
+        localStorage.setItem('network_device_list_mode', normalized);
     }
-    if (latInput) latInput.disabled = coveragePositionsLocked;
-    if (lngInput) lngInput.disabled = coveragePositionsLocked;
 }
 
 function refreshCoverageLockUi() {
@@ -1137,8 +2561,8 @@ function applyWorkspaceMode() {
     const hint = document.getElementById('networkModeHint');
     if (hint) {
         hint.textContent = isCoverage
-            ? 'Coverage mode: map/floorplan positioning and signal heatmap.'
-            : 'Topology mode: routing graph, link health and layout controls.';
+            ? 'Coverage mode: map + floorplan positioning.'
+            : 'Topology mode: routing graph and link health.';
     }
 
     const focusBtn = document.getElementById('focusTopologyBtn');
@@ -1148,7 +2572,10 @@ function applyWorkspaceMode() {
 
     if (isCoverage) {
         setTimeout(() => {
-            if (osmMap) osmMap.invalidateSize();
+            if (osmMap) {
+                osmMap.invalidateSize();
+                applySavedOsmViewState();
+            }
             drawFloorplan();
         }, 120);
     } else {
@@ -1165,31 +2592,142 @@ function setWorkspaceMode(mode) {
     applyWorkspaceMode();
 
     if (workspaceMode === 'topology') {
-        loadTopology();
+        bootTopologyWorkspace();
+    } else {
+        bootCoverageWorkspace();
     }
 }
 
+async function bootCoverageWorkspace(force = false) {
+    if (coverageWorkspaceBooted && !force) return;
+    setNetworkSectionSkeleton('#coverageWorkspace', true, true);
+    await loadPositionsFromServer();
+    if (!osmMap) {
+        initOSMMap();
+    }
+    if (!floorplanCtx) {
+        initFloorplan();
+    }
+    await Promise.allSettled([loadDevices(force), refreshTopology(force)]);
+    coverageWorkspaceBooted = true;
+    setNetworkSectionSkeleton('#coverageWorkspace', false);
+}
+
+async function bootTopologyWorkspace(force = false) {
+    if (!cy) {
+        initCytoscape();
+        try {
+            const savedZoom = localStorage.getItem('bssci_network_zoom');
+            const savedPan = localStorage.getItem('bssci_network_pan');
+            if (savedZoom && savedPan) {
+                cy.zoom(parseFloat(savedZoom));
+                cy.pan(JSON.parse(savedPan));
+            }
+        } catch (e) {
+            console.error('Failed to load view state', e);
+        }
+    }
+    await loadTopology(force);
+    topologyWorkspaceBooted = true;
+    if (!topologyAutoRefreshStarted) {
+        topologyRefreshTimer = setInterval(() => {
+            loadTopology(false);
+        }, 30000);
+        topologyAutoRefreshStarted = true;
+    }
+}
+
+function hasSavedOsmViewState() {
+    if (!osmViewState || !Array.isArray(osmViewState.center) || osmViewState.center.length < 2) {
+        return false;
+    }
+    const lat = Number(osmViewState.center[0]);
+    const lng = Number(osmViewState.center[1]);
+    const zoom = Number(osmViewState.zoom);
+    return Number.isFinite(lat) && Number.isFinite(lng) && Number.isFinite(zoom);
+}
+
+function applySavedOsmViewState() {
+    if (!osmMap || !hasSavedOsmViewState()) return false;
+    const lat = Number(osmViewState.center[0]);
+    const lng = Number(osmViewState.center[1]);
+    const zoom = Number(osmViewState.zoom);
+    osmMap.setView([lat, lng], zoom, { animate: false });
+    return true;
+}
+
 async function loadPositionsFromServer() {
+    const parseCoverageStatePayload = (payload) => {
+        if (!payload || typeof payload !== 'object') return null;
+        if (payload.positions && typeof payload.positions === 'object') return payload;
+        if (Object.keys(payload).length > 0 && !payload.error) {
+            return { positions: payload };
+        }
+        return null;
+    };
+
+    const applyCoverageStatePayload = (payload, overwrite = true) => {
+        const parsed = parseCoverageStatePayload(payload);
+        if (!parsed) return false;
+
+        if (parsed.positions && typeof parsed.positions === 'object') {
+            const incomingPositions = normalizeCoveragePositionsMap(parsed.positions);
+            const currentPositions = normalizeCoveragePositionsMap(devicePositions || {});
+            devicePositions = overwrite ? incomingPositions : { ...currentPositions, ...incomingPositions };
+        }
+
+        if (parsed.floorplanZoom !== undefined) {
+            const zoom = Number(parsed.floorplanZoom);
+            if (Number.isFinite(zoom) && zoom > 0) {
+                currentZoom = zoom;
+            }
+        }
+
+        if (typeof parsed.locked === 'boolean') {
+            coveragePositionsLocked = parsed.locked;
+        }
+
+        if (parsed.osmView && Array.isArray(parsed.osmView.center)) {
+            osmViewState = {
+                center: [Number(parsed.osmView.center[0]), Number(parsed.osmView.center[1])],
+                zoom: Number(parsed.osmView.zoom || 6)
+            };
+        }
+        return true;
+    };
+
+    let localState = null;
+    try {
+        const rawLocal = localStorage.getItem('bssci_coverage_positions');
+        if (rawLocal) {
+            localState = JSON.parse(rawLocal);
+            applyCoverageStatePayload(localState, true);
+        }
+    } catch (e) {
+        console.warn('Failed to parse local coverage positions cache', e);
+    }
+
     try {
         const response = await fetch('/api/coverage/positions');
         if (response.ok) {
             const data = await response.json();
-            if (data.positions) {
-                devicePositions = data.positions;
-                if (data.floorplanZoom) {
-                    currentZoom = Number(data.floorplanZoom) || currentZoom;
+            const parsedServer = parseCoverageStatePayload(data);
+            if (parsedServer) {
+                const localSavedAt = Number(localState?.savedAt || 0);
+                const serverSavedAt = Number(parsedServer.savedAt || 0);
+                const localIsNewer = localSavedAt > 0 && (serverSavedAt <= 0 || localSavedAt > serverSavedAt);
+
+                if (localIsNewer) {
+                    // Persist newer local state back to server when server lags behind
+                    saveCoveragePositions(true);
+                } else {
+                    applyCoverageStatePayload(parsedServer, true);
+                    try {
+                        localStorage.setItem('bssci_coverage_positions', JSON.stringify(parsedServer));
+                    } catch (e) {
+                        console.warn('Failed to update local coverage cache from server payload', e);
+                    }
                 }
-                if (typeof data.locked === 'boolean') {
-                    coveragePositionsLocked = data.locked;
-                }
-                if (data.osmView && Array.isArray(data.osmView.center)) {
-                    osmViewState = {
-                        center: [Number(data.osmView.center[0]), Number(data.osmView.center[1])],
-                        zoom: Number(data.osmView.zoom || 6)
-                    };
-                }
-            } else if (Object.keys(data).length > 0 && !data.error) {
-                devicePositions = data;
             }
         }
     } catch (e) {
@@ -1200,11 +2738,17 @@ async function loadPositionsFromServer() {
 function initOSMMap() {
     const initialCenter = (osmViewState && Array.isArray(osmViewState.center)) ? osmViewState.center : [51.1657, 10.4515];
     const initialZoom = (osmViewState && Number.isFinite(Number(osmViewState.zoom))) ? Number(osmViewState.zoom) : 6;
-    osmMap = L.map('osmMap').setView(initialCenter, initialZoom);
+    osmMap = L.map('osmMap', {
+        scrollWheelZoom: false,
+        zoomControl: true
+    }).setView(initialCenter, initialZoom);
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(osmMap);
+    enhanceLeafletZoomButtons(osmMap);
+
+    setOsmWheelZoom(false);
     
     osmMap.on('click', function(e) {
         if (selectedDevice) {
@@ -1223,6 +2767,28 @@ function initOSMMap() {
             zoom: osmMap.getZoom()
         };
     });
+}
+
+function enhanceLeafletZoomButtons(mapInstance) {
+    if (!mapInstance || typeof mapInstance.getContainer !== 'function') return;
+    const container = mapInstance.getContainer();
+    if (!container) return;
+
+    const zoomIn = container.querySelector('.leaflet-control-zoom-in');
+    if (zoomIn && zoomIn.dataset.enhanced !== '1') {
+        zoomIn.dataset.enhanced = '1';
+        zoomIn.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i>';
+        zoomIn.setAttribute('title', 'Zoom in');
+        zoomIn.setAttribute('aria-label', 'Zoom in');
+    }
+
+    const zoomOut = container.querySelector('.leaflet-control-zoom-out');
+    if (zoomOut && zoomOut.dataset.enhanced !== '1') {
+        zoomOut.dataset.enhanced = '1';
+        zoomOut.innerHTML = '<i class="fas fa-minus" aria-hidden="true"></i>';
+        zoomOut.setAttribute('title', 'Zoom out');
+        zoomOut.setAttribute('aria-label', 'Zoom out');
+    }
 }
 
 function initFloorplan() {
@@ -1356,67 +2922,148 @@ function applyZoom() {
     drawFloorplan();
 }
 
-function loadDevices() {
-    Promise.all([
+function applyCoverageDeviceBundle(bundle, meta = {}) {
+    const bsData = bundle?.bsData || { base_stations: [] };
+    const sensorData = bundle?.sensorData || {};
+    const topoData = bundle?.topoData || { sensors: {}, base_stations: [] };
+
+    if (bsData && bsData.error) {
+        showAlert('warning', `Base station list error: ${bsData.error}`);
+    }
+    devices.baseStations = mergeBaseStationRecords(bsData.base_stations || []);
+    topologyData = topoData || { sensors: {}, base_stations: [] };
+
+    if (Array.isArray(sensorData.sensors)) {
+        devices.sensors = mergeSensorRecords(sensorData.sensors);
+    } else if (sensorData && typeof sensorData === 'object' && !Array.isArray(sensorData)) {
+        const list = Object.entries(sensorData).map(([eui, data]) => ({
+            eui: eui,
+            EUI: eui,
+            ...data
+        }));
+        devices.sensors = mergeSensorRecords(list);
+    } else {
+        devices.sensors = [];
+    }
+
+    devices.sensors.forEach(sensor => {
+        const eui = (sensor.eui || sensor.EUI || '').toUpperCase();
+        if (topologyData.sensors && topologyData.sensors[eui]) {
+            sensor.topology = topologyData.sensors[eui];
+        } else {
+            sensor.topology = { base_stations: {} };
+        }
+    });
+
+    const bsCountEl = document.getElementById('cov_bsCount');
+    const sensorCountEl = document.getElementById('cov_sensorCount');
+    const bsChipEl = document.getElementById('coverageBsChip');
+    const sensorChipEl = document.getElementById('coverageSensorChip');
+    if (bsCountEl) bsCountEl.textContent = devices.baseStations.length;
+    if (sensorCountEl) sensorCountEl.textContent = devices.sensors.length;
+    if (bsChipEl) bsChipEl.textContent = `${devices.baseStations.length} BS`;
+    if (sensorChipEl) sensorChipEl.textContent = `${devices.sensors.length} Sensors`;
+
+    const removedGhostPositions = pruneUnknownCoveragePositions();
+    if (removedGhostPositions > 0) {
+        console.info(`Pruned ${removedGhostPositions} stale coverage position(s) that are not in current inventory.`);
+    }
+
+    renderDeviceLists();
+    restorePositions();
+    updatePositionedCount();
+    updateSelectedCoverageDevice();
+    setRefreshStamp('coverageRefreshStamp', meta);
+}
+
+function fetchCoverageDeviceBundle() {
+    return Promise.all([
         fetch('/api/base_stations').then(r => r.ok ? r.json() : { base_stations: [] }),
         fetch('/api/sensors').then(r => r.ok ? r.json() : {}),
         fetch('/api/coverage/topology').then(r => r.ok ? r.json() : { sensors: {}, base_stations: [] })
-    ]).then(([bsData, sensorData, topoData]) => {
-        devices.baseStations = bsData.base_stations || [];
-        topologyData = topoData || { sensors: {}, base_stations: [] };
-        
-        if (Array.isArray(sensorData.sensors)) {
-            devices.sensors = sensorData.sensors;
-        } else if (sensorData && typeof sensorData === 'object' && !Array.isArray(sensorData)) {
-            devices.sensors = Object.entries(sensorData).map(([eui, data]) => ({
-                eui: eui,
-                EUI: eui,
-                ...data
-            }));
-        } else {
-            devices.sensors = [];
-        }
-        
-        devices.sensors.forEach(sensor => {
-            const eui = (sensor.eui || sensor.EUI || '').toUpperCase();
-            if (topologyData.sensors && topologyData.sensors[eui]) {
-                sensor.topology = topologyData.sensors[eui];
+    ]).then(([bsData, sensorData, topoData]) => ({ bsData, sensorData, topoData }));
+}
+
+async function loadDevices(force = false) {
+    if (!coverageWorkspaceBooted) {
+        setNetworkSectionSkeleton('#coverageWorkspace', true, true);
+    }
+    try {
+        if (window.AppPerf && typeof window.AppPerf.swr === 'function') {
+            const result = await window.AppPerf.swr(
+                NETWORK_CACHE_KEYS.devices,
+                fetchCoverageDeviceBundle,
+                {
+                    ttlMs: NETWORK_SWR_TTL_MS,
+                    force: Boolean(force),
+                    onCached: (bundle, meta) => {
+                        applyCoverageDeviceBundle(bundle, { ...(meta || {}), source: 'cache', kind: 'coverage' });
+                        setNetworkSectionSkeleton('#coverageWorkspace', false, true);
+                    },
+                    onFresh: (bundle, meta) => {
+                        applyCoverageDeviceBundle(bundle, { ...(meta || {}), source: 'network', kind: 'coverage' });
+                        setNetworkSectionSkeleton('#coverageWorkspace', false);
+                    },
+                    onError: () => setNetworkSectionSkeleton('#coverageWorkspace', false)
+                }
+            );
+            if (result?.data && !coverageWorkspaceBooted) {
+                applyCoverageDeviceBundle(result.data, {
+                    ts: result.ts,
+                    source: result.source && String(result.source).startsWith('cache') ? 'cache' : 'network',
+                    kind: 'coverage'
+                });
             }
-        });
-        
-        const bsCountEl = document.getElementById('cov_bsCount');
-        const sensorCountEl = document.getElementById('cov_sensorCount');
-        const bsChipEl = document.getElementById('coverageBsChip');
-        const sensorChipEl = document.getElementById('coverageSensorChip');
-        if (bsCountEl) bsCountEl.textContent = devices.baseStations.length;
-        if (sensorCountEl) sensorCountEl.textContent = devices.sensors.length;
-        if (bsChipEl) bsChipEl.textContent = `${devices.baseStations.length} BS`;
-        if (sensorChipEl) sensorChipEl.textContent = `${devices.sensors.length} Sensors`;
-        
-        renderDeviceLists();
-        restorePositions();
-        updatePositionedCount();
-        updateSelectedCoverageDevice();
-        setRefreshStamp('coverageRefreshStamp');
-    }).catch(err => {
+        } else {
+            const bundle = await fetchCoverageDeviceBundle();
+            applyCoverageDeviceBundle(bundle, { ts: Date.now(), source: 'network', kind: 'coverage' });
+            setNetworkSectionSkeleton('#coverageWorkspace', false);
+        }
+    } catch (err) {
         console.error('Error loading devices:', err);
         renderDeviceLists();
         restorePositions();
         updatePositionedCount();
         updateSelectedCoverageDevice();
-    });
+        setNetworkSectionSkeleton('#coverageWorkspace', false);
+    }
 }
 
-function refreshTopology() {
-    fetch('/api/coverage/topology').then(r => r.json()).then(data => {
+async function refreshTopology(force = false) {
+    const applyCoverageTopology = (data, meta = {}) => {
         topologyData = data || { sensors: {}, base_stations: [] };
         devices.sensors.forEach(sensor => {
             const eui = (sensor.eui || sensor.EUI || '').toUpperCase();
             if (topologyData.sensors[eui]) {
                 sensor.topology = topologyData.sensors[eui];
+            } else {
+                sensor.topology = { base_stations: {} };
             }
         });
-    });
+        renderDeviceLists();
+        updateSelectedCoverageDevice();
+        setRefreshStamp('coverageRefreshStamp', meta);
+    };
+
+    try {
+        if (window.AppPerf && typeof window.AppPerf.swr === 'function') {
+            await window.AppPerf.swr(
+                NETWORK_CACHE_KEYS.coverageTopology,
+                () => fetch('/api/coverage/topology').then(r => r.ok ? r.json() : { sensors: {}, base_stations: [] }),
+                {
+                    ttlMs: NETWORK_SWR_TTL_MS,
+                    force: Boolean(force),
+                    onCached: (data, meta) => applyCoverageTopology(data, { ...(meta || {}), source: 'cache', kind: 'coverage' }),
+                    onFresh: (data, meta) => applyCoverageTopology(data, { ...(meta || {}), source: 'network', kind: 'coverage' }),
+                }
+            );
+            return;
+        }
+        const data = await fetch('/api/coverage/topology').then(r => r.json());
+        applyCoverageTopology(data, { ts: Date.now(), source: 'network', kind: 'coverage' });
+    } catch (error) {
+        console.error('Failed to refresh coverage topology', error);
+    }
 }
 
 function renderDeviceLists() {
@@ -1428,52 +3075,100 @@ function renderDeviceLists() {
     const bsCount = document.getElementById('visibleBsCount');
     const sensorCount = document.getElementById('visibleSensorCount');
     const summary = document.getElementById('placementFilterSummary');
+    const viewBsCount = document.getElementById('deviceViewBsCount');
+    const viewSensorCount = document.getElementById('deviceViewSensorCount');
     const query = (deviceSearchQuery || '').trim().toLowerCase();
-    
+
     const filteredBaseStations = devices.baseStations.filter(bs => {
+        const eui = normalizeEuiUpper(bs.eui || bs.EUI || '');
+        const name = String(bs.name || '').toLowerCase();
+        const statusInfo = getCoverageDeviceStatus('bs', bs);
+
+        if (deviceStatusFilter !== 'all' && statusInfo.key !== deviceStatusFilter) return false;
         if (!query) return true;
-        const eui = (bs.eui || bs.EUI || '').toLowerCase();
-        const name = (bs.name || '').toLowerCase();
-        return eui.includes(query) || name.includes(query);
+        return eui.toLowerCase().includes(query) || name.includes(query);
     });
 
-    const filteredSensors = devices.sensors.filter(s => {
+    const filteredSensors = devices.sensors.filter(sensor => {
+        const eui = normalizeEuiUpper(sensor.eui || sensor.EUI || '');
+        const name = String(sensor.name || sensor.label || '').toLowerCase();
+        const statusInfo = getCoverageDeviceStatus('sensor', sensor);
+
+        if (deviceStatusFilter !== 'all' && statusInfo.key !== deviceStatusFilter) return false;
         if (!query) return true;
-        const eui = (s.eui || s.EUI || '').toLowerCase();
-        const name = (s.name || s.label || '').toLowerCase();
-        return eui.includes(query) || name.includes(query);
+        return eui.toLowerCase().includes(query) || name.includes(query);
     });
 
     if (bsCount) bsCount.textContent = `${filteredBaseStations.length} / ${devices.baseStations.length}`;
     if (sensorCount) sensorCount.textContent = `${filteredSensors.length} / ${devices.sensors.length}`;
     if (summary) summary.textContent = `Showing ${filteredBaseStations.length + filteredSensors.length} of ${devices.baseStations.length + devices.sensors.length} devices`;
+    if (viewBsCount) viewBsCount.textContent = String(filteredBaseStations.length);
+    if (viewSensorCount) viewSensorCount.textContent = String(filteredSensors.length);
+
+    const bsSignalAccumulator = {};
+    devices.sensors.forEach(sensor => {
+        const linksMap = sensor?.topology?.base_stations || {};
+        Object.entries(linksMap).forEach(([bsEui, stats]) => {
+            const key = normalizeEuiUpper(bsEui);
+            if (!key) return;
+            const item = bsSignalAccumulator[key] || { links: 0, snrSum: 0, snrCount: 0, rssiSum: 0, rssiCount: 0 };
+            item.links += 1;
+            const snr = Number(stats?.snr);
+            const rssi = Number(stats?.rssi);
+            if (Number.isFinite(snr)) {
+                item.snrSum += snr;
+                item.snrCount += 1;
+            }
+            if (Number.isFinite(rssi)) {
+                item.rssiSum += rssi;
+                item.rssiCount += 1;
+            }
+            bsSignalAccumulator[key] = item;
+        });
+    });
 
     bsList.innerHTML = filteredBaseStations.map(bs => {
-        const eui = bs.eui || bs.EUI || 'Unknown';
+        const eui = normalizeEuiUpper(bs.eui || bs.EUI || 'Unknown');
         const euiEncoded = encodeURIComponent(eui);
         const name = bs.name || 'Base station';
         const positioned = !!devicePositions[`bs_${eui}`];
         const isSelected = !!selectedDevice && selectedDevice.type === 'bs' && selectedDevice.eui === eui;
+        const statusInfo = getCoverageDeviceStatus('bs', bs);
+        const signal = bsSignalAccumulator[eui] || { links: 0 };
         return `
             <button class="device-picker-item ${isSelected ? 'is-selected' : ''} ${positioned ? 'is-positioned' : ''}" onclick="selectDevice('bs', decodeURIComponent('${euiEncoded}'))" title="${escapeHtml(eui)}">
-                <span class="device-picker-title">${escapeHtml(name)}</span>
+                <span class="device-picker-title-row">
+                    <span class="device-picker-title">${escapeHtml(name)}</span>
+                    <span class="device-status-chip status-${escapeHtml(statusInfo.key)}">${escapeHtml(formatStatusLabel(statusInfo.key))}</span>
+                </span>
                 <span class="device-picker-sub">${escapeHtml(eui)}</span>
-                <span class="device-picker-state">${positioned ? 'Positioned' : 'Not positioned'}</span>
+                <span class="device-picker-state-row">
+                    <span class="device-picker-state">${positioned ? 'Positioned' : 'Not positioned'}</span>
+                    <span class="device-picker-state">${signal.links} link${signal.links === 1 ? '' : 's'}</span>
+                </span>
             </button>
         `;
     }).join('');
     
-    sensorList.innerHTML = filteredSensors.map(s => {
-        const eui = s.eui || s.EUI || 'Unknown';
+    sensorList.innerHTML = filteredSensors.map(sensor => {
+        const eui = normalizeEuiUpper(sensor.eui || sensor.EUI || 'Unknown');
         const euiEncoded = encodeURIComponent(eui);
-        const name = s.name || s.label || 'Sensor';
+        const name = sensor.name || sensor.label || 'Sensor';
         const positioned = !!devicePositions[`sensor_${eui}`];
         const isSelected = !!selectedDevice && selectedDevice.type === 'sensor' && selectedDevice.eui === eui;
+        const statusInfo = getCoverageDeviceStatus('sensor', sensor);
+        const stats = getSensorCoverageStats(sensor);
         return `
             <button class="device-picker-item ${isSelected ? 'is-selected' : ''} ${positioned ? 'is-positioned' : ''}" onclick="selectDevice('sensor', decodeURIComponent('${euiEncoded}'))" title="${escapeHtml(eui)}">
-                <span class="device-picker-title">${escapeHtml(name)}</span>
+                <span class="device-picker-title-row">
+                    <span class="device-picker-title">${escapeHtml(name)}</span>
+                    <span class="device-status-chip status-${escapeHtml(statusInfo.key)}">${escapeHtml(formatStatusLabel(statusInfo.key))}</span>
+                </span>
                 <span class="device-picker-sub">${escapeHtml(eui)}</span>
-                <span class="device-picker-state">${positioned ? 'Positioned' : 'Not positioned'}</span>
+                <span class="device-picker-state-row">
+                    <span class="device-picker-state">${positioned ? 'Positioned' : 'Not positioned'}</span>
+                    <span class="device-picker-state">${stats.receiverCount} route${stats.receiverCount === 1 ? '' : 's'}</span>
+                </span>
             </button>
         `;
     }).join('');
@@ -1485,6 +3180,74 @@ function renderDeviceLists() {
     if (!sensorList.innerHTML) {
         sensorList.innerHTML = '<span class="text-muted small">No sensors match current filter.</span>';
     }
+
+    setDeviceListMode(deviceListMode, false);
+    renderMissingGpsList();
+}
+
+function renderMissingGpsList() {
+    const listEl = document.getElementById('missingGpsList');
+    const summaryEl = document.getElementById('missingGpsSummary');
+    const countEl = document.getElementById('missingGpsCount');
+    if (!listEl || !summaryEl || !countEl) {
+        return;
+    }
+
+    const missing = [];
+
+    devices.baseStations.forEach(bs => {
+        if (!deviceMissingGps('bs', bs)) return;
+        const eui = normalizeEuiUpper(bs.eui || bs.EUI || '');
+        if (!eui) return;
+        missing.push({
+            type: 'bs',
+            eui,
+            name: bs.name || 'Base station'
+        });
+    });
+
+    devices.sensors.forEach(sensor => {
+        if (!deviceMissingGps('sensor', sensor)) return;
+        const eui = normalizeEuiUpper(sensor.eui || sensor.EUI || '');
+        if (!eui) return;
+        missing.push({
+            type: 'sensor',
+            eui,
+            name: sensor.name || sensor.label || 'Sensor'
+        });
+    });
+
+    missing.sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'bs' ? -1 : 1;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
+
+    countEl.textContent = String(missing.length);
+
+    if (missing.length === 0) {
+        summaryEl.textContent = 'All devices have GPS coordinates and can be shown on OpenStreetMap.';
+        listEl.innerHTML = '<span class="text-muted small">No missing GPS entries.</span>';
+        return;
+    }
+
+    summaryEl.textContent = `${missing.length} device${missing.length === 1 ? '' : 's'} are hidden on OpenStreetMap until GPS is assigned.`;
+
+    listEl.innerHTML = missing.map(item => {
+        const isSelected = !!selectedDevice && selectedDevice.type === item.type && selectedDevice.eui === item.eui;
+        const euiEncoded = encodeURIComponent(item.eui);
+        const typeLabel = item.type === 'bs' ? 'Base station' : 'Sensor';
+        const typeIcon = item.type === 'bs' ? 'fa-broadcast-tower' : 'fa-microchip';
+        return `
+            <button class="missing-gps-item ${isSelected ? 'is-selected' : ''}" onclick="selectDevice('${item.type}', decodeURIComponent('${euiEncoded}'))" title="${escapeHtml(item.eui)}">
+                <span class="missing-gps-title-row">
+                    <span class="device-picker-title">${escapeHtml(item.name)}</span>
+                    <span class="missing-gps-type-chip"><i class="fas ${typeIcon} me-1"></i>${typeLabel}</span>
+                </span>
+                <span class="device-picker-sub">${escapeHtml(item.eui)}</span>
+                <span class="missing-gps-note"><i class="fas fa-map-marker-alt me-1"></i>GPS not configured</span>
+            </button>
+        `;
+    }).join('');
 }
 
 function selectDevice(type, eui) {
@@ -1494,6 +3257,51 @@ function selectDevice(type, eui) {
     selectedDevice = { type: normalizedType, eui: normalizedEui };
     updateSelectedCoverageDevice();
     renderDeviceLists();
+}
+
+function focusSelectedDeviceOnMap() {
+    if (!selectedDevice) {
+        showAlert('warning', 'Select a device first.');
+        return;
+    }
+    const key = coverageDeviceKey(selectedDevice.type, selectedDevice.eui);
+    const pos = devicePositions[key];
+    if (!pos) {
+        showAlert('warning', 'Selected device has no saved position.');
+        return;
+    }
+
+    if (pos.type === 'osm') {
+        const osmTab = document.getElementById('osm-tab');
+        if (osmTab && typeof bootstrap !== 'undefined') {
+            bootstrap.Tab.getOrCreateInstance(osmTab).show();
+        }
+        setTimeout(() => {
+            if (osmMap) {
+                osmMap.setView([pos.lat, pos.lng], Math.max(osmMap.getZoom(), 15), { animate: true });
+                const marker = markers[key];
+                if (marker) marker.openPopup();
+            }
+        }, 120);
+        return;
+    }
+
+    if (pos.type === 'floorplan') {
+        const floorTab = document.getElementById('floorplan-tab');
+        if (floorTab && typeof bootstrap !== 'undefined') {
+            bootstrap.Tab.getOrCreateInstance(floorTab).show();
+        }
+        setTimeout(() => {
+            const container = document.getElementById('floorplanContainer');
+            if (!container) return;
+            const targetX = Math.max(0, (Number(pos.x) * currentZoom) - (container.clientWidth / 2));
+            const targetY = Math.max(0, (Number(pos.y) * currentZoom) - (container.clientHeight / 2));
+            container.scrollTo({ left: targetX, top: targetY, behavior: 'smooth' });
+        }, 120);
+        return;
+    }
+
+    showAlert('info', 'Unsupported position source.');
 }
 
 function placeDeviceOnMap(device, latlng) {
@@ -1579,16 +3387,27 @@ function addMarkerToMap(device, latlng) {
     
     const color = normalizedDevice.type === 'bs' ? '#ff8c00' : '#17a2b8';
     const size = normalizedDevice.type === 'bs' ? 15 : 10;
+    const record = getCoverageDeviceRecord(normalizedDevice.type, normalizedDevice.eui);
+    const status = getCoverageDeviceStatus(normalizedDevice.type, record);
+    const statusColor = status.key === 'online'
+        ? '#12a150'
+        : status.key === 'warning'
+            ? '#d38a12'
+            : status.key === 'offline'
+                ? '#cc2e4a'
+                : '#7a8ea8';
     
     const icon = L.divIcon({
         className: 'custom-marker',
-        html: `<div style="width: ${size*2}px; height: ${size*2}px; background: ${color}; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
+        html: `<div style="width:${size * 2}px;height:${size * 2}px;background:${color};border-radius:50%;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,0.3),0 0 0 3px ${statusColor};"></div>`,
         iconSize: [size*2, size*2],
         iconAnchor: [size, size]
     });
     
     const marker = L.marker(latlng, { icon: icon, draggable: !coveragePositionsLocked });
-    marker.bindPopup(`<b>${normalizedDevice.type === 'bs' ? 'Base Station' : 'Sensor'}</b><br>${normalizedDevice.eui}`);
+    marker.bindPopup(
+        `<b>${normalizedDevice.type === 'bs' ? 'Base Station' : 'Sensor'}</b><br>${normalizedDevice.eui}<br><small>Status: ${escapeHtml(status.label)}</small>`
+    );
     marker.on('click', function(e) {
         selectDevice(normalizedDevice.type, normalizedDevice.eui);
         const markerPos = e?.latlng || marker.getLatLng();
@@ -1623,13 +3442,17 @@ function restorePositions() {
     markers = {};
 
     Object.entries(devicePositions).forEach(([key, pos]) => {
-        if (pos.type === 'osm') {
-            addMarkerToMap({ type: pos.deviceType, eui: pos.eui }, { lat: pos.lat, lng: pos.lng });
+        const type = coveragePositionTypeFromKey(key, pos?.deviceType);
+        const eui = coveragePositionEuiFromKey(key, pos?.eui);
+        if (pos.type === 'osm' && eui && isKnownCoverageDevice(type, eui)) {
+            addMarkerToMap({ type: type, eui: eui }, { lat: pos.lat, lng: pos.lng });
         }
     });
     
     const markerArray = Object.values(markers);
-    if (markerArray.length > 0) {
+    if (applySavedOsmViewState()) {
+        // Keep the last saved OSM view on navigation/mode switches.
+    } else if (markerArray.length > 0) {
         const group = L.featureGroup(markerArray);
         osmMap.fitBounds(group.getBounds().pad(0.1));
     }
@@ -1885,9 +3708,10 @@ function updateDisplay() {
 
 function saveCoveragePositions(silent = false) {
     const saveData = {
-        positions: devicePositions,
+        positions: normalizeCoveragePositionsMap(devicePositions),
         floorplanZoom: currentZoom,
-        locked: coveragePositionsLocked
+        locked: coveragePositionsLocked,
+        savedAt: Date.now()
     };
 
     if (osmMap) {
@@ -1907,7 +3731,19 @@ function saveCoveragePositions(silent = false) {
     fetch('/api/coverage/positions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
         body: JSON.stringify(saveData)
+    }).then(async (response) => {
+        if (!response.ok) {
+            let details = `HTTP ${response.status}`;
+            try {
+                const payload = await response.json();
+                details = payload?.error || payload?.message || details;
+            } catch (_) {
+                // ignore parse error
+            }
+            console.warn('Failed to save coverage positions to server:', details);
+        }
     }).catch(e => console.error('Failed to save to server', e));
     
     if (!silent) {
@@ -1938,42 +3774,6 @@ function updatePositionedCount() {
     const coverageChipEl = document.getElementById('coveragePositionChip');
     if (positionedCountEl) positionedCountEl.textContent = count;
     if (coverageChipEl) coverageChipEl.textContent = `${count} positioned`;
-}
-
-function setGpsFromMapCenter() {
-    if (!osmMap) return;
-    const center = osmMap.getCenter();
-    const latInput = document.getElementById('gpsLatInput');
-    const lngInput = document.getElementById('gpsLngInput');
-    if (latInput) latInput.value = Number(center.lat).toFixed(6);
-    if (lngInput) lngInput.value = Number(center.lng).toFixed(6);
-}
-
-function placeSelectedDeviceByGps() {
-    if (!selectedDevice) {
-        showAlert('warning', 'Select a device first.');
-        return;
-    }
-    if (coveragePositionsLocked) {
-        showAlert('warning', 'Positions are locked. Disable lock to place by GPS.');
-        return;
-    }
-
-    const lat = Number(document.getElementById('gpsLatInput')?.value);
-    const lng = Number(document.getElementById('gpsLngInput')?.value);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        showAlert('warning', 'Enter valid latitude and longitude.');
-        return;
-    }
-    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        showAlert('warning', 'GPS out of range. Latitude -90..90, longitude -180..180.');
-        return;
-    }
-
-    placeDeviceOnMap(selectedDevice, { lat, lng });
-    if (osmMap) {
-        osmMap.setView([lat, lng], Math.max(osmMap.getZoom(), 14));
-    }
 }
 
 function showAlert(type, message) {
@@ -2243,6 +4043,187 @@ function applyManualTopologyPositions() {
     });
 }
 
+function normalizeEpochMs(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return null;
+    if (numeric > 1e18) return numeric / 1e6; // ns -> ms
+    if (numeric > 1e15) return numeric / 1e3; // us -> ms
+    if (numeric > 1e12) return numeric; // already ms
+    return numeric * 1000; // seconds -> ms
+}
+
+function getTopologyEdgeStatus(edgeData) {
+    const explicitStatus = String(edgeData?.link_status || '').trim().toLowerCase();
+    if (explicitStatus) return explicitStatus;
+
+    const routeKind = String(edgeData?.route_kind || 'live').toLowerCase();
+    if (routeKind === 'registration' || routeKind === 'configured') {
+        return 'assigned';
+    }
+
+    const snr = Number(edgeData?.snr);
+    if (!Number.isFinite(snr)) return 'unknown';
+    if (snr >= 10) return 'good';
+    if (snr >= 0) return 'fair';
+    if (snr >= -5) return 'poor';
+    return 'critical';
+}
+
+function getTopologyEdgeStatusClass(edgeData) {
+    const status = getTopologyEdgeStatus(edgeData);
+    if (status === 'good') return 'edge-status-good';
+    if (status === 'fair') return 'edge-status-fair';
+    if (status === 'poor') return 'edge-status-poor';
+    if (status === 'critical') return 'edge-status-critical';
+    if (status === 'stale') return 'edge-status-stale';
+    if (status === 'assigned') return 'edge-status-assigned';
+    if (status === 'assigned_offline') return 'edge-status-assigned-offline';
+    return 'edge-status-unknown';
+}
+
+function isTopologyProblemEdge(edgeOrData) {
+    if (!edgeOrData) return false;
+    const data = typeof edgeOrData.data === 'function' ? edgeOrData.data() : edgeOrData;
+    const staleClass = typeof edgeOrData.hasClass === 'function' && edgeOrData.hasClass('edge-status-stale');
+    if (staleClass) return true;
+    if (Boolean(data?.problematic)) return true;
+    const status = getTopologyEdgeStatus(data);
+    return status === 'poor' || status === 'critical' || status === 'assigned_offline';
+}
+
+function applyTopologyEdgeClasses() {
+    if (!cy) return;
+    const staleThresholdMs = TOPOLOGY_EDGE_STALE_MINUTES * 60 * 1000;
+    const now = Date.now();
+    cy.edges().forEach(edge => {
+        edge.removeClass('edge-primary edge-secondary edge-assigned edge-configured edge-status-good edge-status-fair edge-status-poor edge-status-critical edge-status-stale edge-status-assigned edge-status-assigned-offline edge-status-unknown');
+        const routeKind = String(edge.data('route_kind') || 'live').toLowerCase();
+        const isAssigned = routeKind === 'registration' || routeKind === 'configured';
+        if (isAssigned) {
+            edge.addClass('edge-assigned');
+            if (routeKind === 'configured') {
+                edge.addClass('edge-configured');
+            }
+        } else {
+            edge.addClass(Boolean(edge.data('primary')) ? 'edge-primary' : 'edge-secondary');
+        }
+
+        let statusClass = getTopologyEdgeStatusClass(edge.data());
+        if (!isAssigned) {
+            const seenMs = normalizeEpochMs(edge.data('last_seen'));
+            if (seenMs && (now - seenMs) > staleThresholdMs) {
+                statusClass = 'edge-status-stale';
+            }
+        }
+        edge.addClass(statusClass);
+    });
+}
+
+function clearTopologySelection() {
+    topologySelectedNodeId = '';
+    if (cy) {
+        cy.elements().removeClass('highlighted faded');
+    }
+    const detailsCard = document.getElementById('topo_detailsCard');
+    if (detailsCard) {
+        detailsCard.style.display = 'none';
+    }
+}
+
+function selectTopologyNode(node, options = {}) {
+    if (!cy || !node || node.length === 0) return false;
+    const shouldFocus = options.focus === true;
+
+    topologySelectedNodeId = node.id();
+    showNodeDetails(node.data(), node.id());
+
+    cy.elements().removeClass('highlighted faded');
+    node.addClass('highlighted');
+    node.connectedEdges().addClass('highlighted');
+    node.neighborhood().addClass('highlighted');
+    cy.elements().not(node).not(node.connectedEdges()).not(node.neighborhood()).addClass('faded');
+
+    if (shouldFocus) {
+        const targetZoom = Math.max(cy.zoom(), 0.95);
+        cy.animate({
+            center: { eles: node },
+            zoom: targetZoom
+        }, {
+            duration: 280
+        });
+    }
+    return true;
+}
+
+function topologyNodeMatchesSearch(node, queryRaw, queryNorm) {
+    const label = String(node.data('label') || '').toLowerCase();
+    const eui = normalizeEuiUpper(node.data('eui'));
+    const id = String(node.id() || '').toLowerCase();
+    return label.includes(queryRaw) || eui.includes(queryNorm) || id.includes(queryRaw);
+}
+
+function focusTopologySearch(query, showWarning = true) {
+    if (!cy) return false;
+    const raw = String(query || '').trim().toLowerCase();
+    const norm = normalizeEuiUpper(query || '');
+    if (!raw && !norm) {
+        if (showWarning) showAlert('warning', 'Type EUI or node name first.');
+        return false;
+    }
+
+    const candidates = cy.nodes().filter(node => topologyNodeMatchesSearch(node, raw, norm));
+    if (!candidates || candidates.length === 0) {
+        if (showWarning) showAlert('warning', `No topology node matched "${escapeHtml(query)}".`);
+        return false;
+    }
+
+    const exactEui = candidates.filter(node => normalizeEuiUpper(node.data('eui')) === norm);
+    const prefixEui = candidates.filter(node => normalizeEuiUpper(node.data('eui')).startsWith(norm));
+    const targetNode = exactEui[0] || prefixEui[0] || candidates[0];
+
+    if (targetNode.hasClass('node-filter-hidden')) {
+        const nodeFilter = document.getElementById('topologyNodeFilter');
+        if (nodeFilter) nodeFilter.value = 'all';
+        const issuesOnlyToggle = document.getElementById('topologyIssuesOnly');
+        if (issuesOnlyToggle && issuesOnlyToggle.checked) {
+            issuesOnlyToggle.checked = false;
+            localStorage.setItem('network_topology_only_problematic', '0');
+            localStorage.setItem('network_topology_issues_only', '0');
+        }
+        applyTopologyFilters();
+    }
+
+    selectTopologyNode(targetNode, { focus: true });
+    return true;
+}
+
+function focusTopologyNode(nodeId) {
+    if (!cy) return;
+    const target = cy.getElementById(String(nodeId || ''));
+    if (!target || target.length === 0) return;
+    selectTopologyNode(target, { focus: true });
+}
+
+function clearTopologySearch() {
+    const input = document.getElementById('topologyNodeSearch');
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+    clearTopologySelection();
+}
+
+function openCoverageFromTopology(type, eui) {
+    const normalizedType = String(type || '').toLowerCase() === 'bs' ? 'bs' : 'sensor';
+    const normalizedEui = normalizeEuiUpper(eui);
+    if (!normalizedEui) return;
+    setWorkspaceMode('coverage');
+    selectDevice(normalizedType, normalizedEui);
+    setTimeout(() => {
+        focusSelectedDeviceOnMap();
+    }, 160);
+}
+
 function initCytoscape() {
     cy = cytoscape({
         container: document.getElementById('cy'),
@@ -2252,12 +4233,15 @@ function initCytoscape() {
                 style: {
                     'background-color': '#ff8c00',
                     'label': 'data(label)',
+                    'shape': 'round-rectangle',
                     'width': 60,
                     'height': 60,
                     'font-size': '14px',
                     'font-weight': 'bold',
                     'text-valign': 'bottom',
                     'text-margin-y': 8,
+                    'text-wrap': 'ellipsis',
+                    'text-max-width': 170,
                     'border-width': 3,
                     'border-color': '#cc7000',
                     'text-background-opacity': 0.7,
@@ -2278,11 +4262,14 @@ function initCytoscape() {
                 style: {
                     'background-color': '#17a2b8',
                     'label': 'data(label)',
+                    'shape': 'ellipse',
                     'width': 25,
                     'height': 25,
                     'font-size': '11px',
                     'text-valign': 'bottom',
                     'text-margin-y': 5,
+                    'text-wrap': 'ellipsis',
+                    'text-max-width': 130,
                     'text-background-opacity': 0.7,
                     'text-background-color': '#ffffff',
                     'text-background-padding': '1px',
@@ -2292,18 +4279,101 @@ function initCytoscape() {
             {
                 selector: 'edge',
                 style: {
-                    'width': 1,
-                    'line-color': '#aaa',
+                    'width': 1.6,
+                    'line-color': '#8d9cb1',
                     'curve-style': 'bezier',
-                    'opacity': 0.6
+                    'opacity': 0.78,
+                    'target-arrow-shape': 'triangle',
+                    'target-arrow-color': '#8d9cb1',
+                    'arrow-scale': 0.65
                 }
             },
             {
-                selector: 'edge[?primary]',
+                selector: 'edge.edge-primary',
                 style: {
-                    'width': 3,
-                    'line-color': '#28a745',
-                    'opacity': 1
+                    'width': 3.2,
+                    'line-style': 'solid',
+                    'opacity': 0.95
+                }
+            },
+            {
+                selector: 'edge.edge-secondary',
+                style: {
+                    'width': 1.9,
+                    'line-style': 'dashed',
+                    'opacity': 0.66
+                }
+            },
+            {
+                selector: 'edge.edge-assigned',
+                style: {
+                    'width': 2.1,
+                    'line-style': 'dashed',
+                    'opacity': 0.82
+                }
+            },
+            {
+                selector: 'edge.edge-configured',
+                style: {
+                    'line-style': 'dotted'
+                }
+            },
+            {
+                selector: 'edge.edge-status-good',
+                style: {
+                    'line-color': '#1f9d57',
+                    'target-arrow-color': '#1f9d57'
+                }
+            },
+            {
+                selector: 'edge.edge-status-fair',
+                style: {
+                    'line-color': '#d2a12a',
+                    'target-arrow-color': '#d2a12a'
+                }
+            },
+            {
+                selector: 'edge.edge-status-poor',
+                style: {
+                    'line-color': '#d9822b',
+                    'target-arrow-color': '#d9822b'
+                }
+            },
+            {
+                selector: 'edge.edge-status-critical',
+                style: {
+                    'line-color': '#cc4a4a',
+                    'target-arrow-color': '#cc4a4a'
+                }
+            },
+            {
+                selector: 'edge.edge-status-stale',
+                style: {
+                    'line-color': '#7f8b9c',
+                    'target-arrow-color': '#7f8b9c',
+                    'line-style': 'dotted',
+                    'opacity': 0.35
+                }
+            },
+            {
+                selector: 'edge.edge-status-assigned',
+                style: {
+                    'line-color': '#4d7bd6',
+                    'target-arrow-color': '#4d7bd6'
+                }
+            },
+            {
+                selector: 'edge.edge-status-assigned-offline',
+                style: {
+                    'line-color': '#cc4a4a',
+                    'target-arrow-color': '#cc4a4a'
+                }
+            },
+            {
+                selector: 'edge.edge-status-unknown',
+                style: {
+                    'line-color': '#8d9cb1',
+                    'target-arrow-color': '#8d9cb1'
                 }
             },
             {
@@ -2355,11 +4425,13 @@ function initCytoscape() {
             }
         ],
         layout: { name: 'preset' },
-        wheelSensitivity: 0.3,
+        wheelSensitivity: 0.18,
         autoungrabify: false,
-        userZoomingEnabled: true,
+        userZoomingEnabled: false,
         userPanningEnabled: true
     });
+
+    setTopologyWheelZoom(false);
     
     cy.on('dragfree', 'node', function(evt) {
         const node = evt.target;
@@ -2368,19 +4440,12 @@ function initCytoscape() {
     
     cy.on('tap', 'node', function(evt) {
         const node = evt.target;
-        showNodeDetails(node.data());
-        
-        cy.elements().removeClass('highlighted faded');
-        node.addClass('highlighted');
-        node.connectedEdges().addClass('highlighted');
-        node.neighborhood().addClass('highlighted');
-        cy.elements().not(node).not(node.connectedEdges()).not(node.neighborhood()).addClass('faded');
+        selectTopologyNode(node, { focus: false });
     });
     
     cy.on('tap', function(evt) {
         if (evt.target === cy) {
-            cy.elements().removeClass('highlighted faded');
-            document.getElementById('topo_detailsCard').style.display = 'none';
+            clearTopologySelection();
         }
     });
     
@@ -2393,15 +4458,30 @@ function initCytoscape() {
     });
 }
 
-function showNodeDetails(data) {
+function showNodeDetails(data, nodeId = '') {
     const card = document.getElementById('topo_detailsCard');
     const title = document.getElementById('topo_detailsTitle');
     const body = document.getElementById('topo_detailsBody');
-    
+    if (!card || !title || !body || !data) return;
+
+    const safeNodeId = escapeJsString(nodeId || data.id || '');
+    const safeEui = escapeJsString(data.eui || '');
+    const coverageType = data.type === 'base_station' ? 'bs' : 'sensor';
+    const actionsHtml = `
+        <div class="topology-detail-actions">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="focusTopologyNode('${safeNodeId}')">
+                <i class="fas fa-crosshairs me-1"></i>Focus
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openCoverageFromTopology('${coverageType}', '${safeEui}')">
+                <i class="fas fa-map-marked-alt me-1"></i>Open in coverage
+            </button>
+        </div>
+    `;
+
     card.style.display = 'block';
     
     if (data.type === 'base_station') {
-        title.textContent = 'Base Station';
+        title.innerHTML = '<i class="fas fa-broadcast-tower me-2"></i>Base Station';
         const bsIssue = isTopologyProblemNode(data);
         body.innerHTML = `
             <div class="mb-2"><strong>EUI:</strong><br><small>${data.eui}</small></div>
@@ -2414,19 +4494,32 @@ function showNodeDetails(data) {
             <div class="mb-1"><strong>CPU:</strong> ${data.cpu}%</div>
             <div class="mb-1"><strong>Memory:</strong> ${data.memory}%</div>
             <div class="mb-1"><strong>Duty Cycle:</strong> ${data.duty_cycle}%</div>
+            ${actionsHtml}
         `;
     } else {
-        title.textContent = 'Sensor';
+        title.innerHTML = '<i class="fas fa-microchip me-2"></i>Sensor';
+        const assignedBases = Array.isArray(data.assigned_bases) ? data.assigned_bases.filter(Boolean) : [];
+        const assignedBasesHtml = assignedBases.length
+            ? `<small>${assignedBases.map(bs => `<code>${escapeHtml(bs)}</code>`).join('<br>')}</small>`
+            : '<span class="text-muted">N/A</span>';
+        const liveReceivers = Number(data.live_receiver_count || 0);
         const sensorIssue = isTopologyProblemNode(data);
         const sensorIssueLabel = Number(data.receiver_count || 0) <= 0
-            ? 'No receiving base station'
+            ? 'No base-station relation'
+            : liveReceivers <= 0
+                ? 'No live uplink yet (assignment only)'
             : 'Missing primary route';
         body.innerHTML = `
             <div class="mb-2"><strong>EUI:</strong><br><small>${data.eui}</small></div>
             <div class="mb-2"><strong>Name:</strong> ${data.label}</div>
             <div class="mb-2"><strong>Primary BS:</strong><br><small>${data.primary_bs || 'N/A'}</small></div>
             <div class="mb-2"><strong>Receivers:</strong> ${data.receiver_count}</div>
+            <div class="mb-2"><strong>Live receivers:</strong> ${liveReceivers}</div>
+            <div class="mb-2"><strong>Assigned BS:</strong><br>${assignedBasesHtml}</div>
+            <div class="mb-2"><strong>Configured:</strong> ${data.configured ? 'Yes' : 'No'}</div>
+            <div class="mb-2"><strong>Registered:</strong> ${data.registered ? 'Yes' : 'No'}</div>
             <div class="mb-2"><strong>Issue:</strong> ${sensorIssue ? `<span class="badge bg-danger">${sensorIssueLabel}</span>` : '<span class="badge bg-success">Healthy</span>'}</div>
+            ${actionsHtml}
         `;
     }
 }
@@ -2441,13 +4534,14 @@ function isTopologyProblemNode(nodeData) {
     return receiverCount <= 0 || !hasPrimary;
 }
 
-function shouldShowTopologyNode(node, filter, problemNodeIds) {
+function shouldShowTopologyNode(node, filter, problemNodeIds, problemEdgeNodeIds = null) {
     const type = String(node.data('type') || '');
     if (filter === 'all') return true;
     if (filter === 'bs') return type === 'base_station';
     if (filter === 'sensor') return type === 'sensor';
     if (filter === 'problems') {
         if (problemNodeIds.has(node.id())) return true;
+        if (problemEdgeNodeIds && problemEdgeNodeIds.has(node.id())) return true;
         return node.connectedEdges().some(edge => {
             const srcId = edge.source().id();
             const dstId = edge.target().id();
@@ -2461,8 +4555,17 @@ function updateTopologyStats() {
     if (!cy) return;
     const bsNodes = cy.nodes('[type="base_station"]');
     const sensorNodes = cy.nodes('[type="sensor"]');
-    const issueCount = cy.nodes().filter(n => isTopologyProblemNode(n.data())).length;
+    const problemNodeCount = cy.nodes().filter(n => isTopologyProblemNode(n.data())).length;
+    const problemEdgeCount = cy.edges().filter(edge => isTopologyProblemEdge(edge)).length;
+    const issueCount = problemNodeCount + problemEdgeCount;
     const edgeCount = cy.edges().length;
+    const onlineBsCount = bsNodes.filter(n => Boolean(n.data('connected'))).length;
+    const linkedSensorCount = sensorNodes.filter(n => Number(n.data('receiver_count') || 0) > 0).length;
+    const orphanSensorCount = sensorNodes.length - linkedSensorCount;
+    const multiSensorCount = sensorNodes.filter(n => Number(n.data('receiver_count') || 0) > 1).length;
+    const primaryEdgeCount = cy.edges().filter(edge => Boolean(edge.data('primary'))).length;
+    const liveEdgeCount = cy.edges().filter(edge => String(edge.data('route_kind') || 'live').toLowerCase() === 'live').length;
+    const assignedEdgeCount = Math.max(0, edgeCount - liveEdgeCount);
 
     const bsEl = document.getElementById('topo_bsCount');
     const sensorEl = document.getElementById('topo_sensorCount');
@@ -2472,6 +4575,20 @@ function updateTopologyStats() {
     if (sensorEl) sensorEl.textContent = String(sensorNodes.length);
     if (edgeEl) edgeEl.textContent = String(edgeCount);
     if (issueEl) issueEl.textContent = String(issueCount);
+    const onlineBsEl = document.getElementById('topo_onlineBsCount');
+    const linkedSensorEl = document.getElementById('topo_linkedSensorCount');
+    const orphanSensorEl = document.getElementById('topo_orphanSensorCount');
+    const multiSensorEl = document.getElementById('topo_multiSensorCount');
+    const primaryEdgeEl = document.getElementById('topo_primaryEdgeCount');
+    const liveEdgeEl = document.getElementById('topo_liveEdgeCount');
+    const assignedEdgeEl = document.getElementById('topo_assignedEdgeCount');
+    if (onlineBsEl) onlineBsEl.textContent = String(onlineBsCount);
+    if (linkedSensorEl) linkedSensorEl.textContent = String(linkedSensorCount);
+    if (orphanSensorEl) orphanSensorEl.textContent = String(orphanSensorCount);
+    if (multiSensorEl) multiSensorEl.textContent = String(multiSensorCount);
+    if (primaryEdgeEl) primaryEdgeEl.textContent = String(primaryEdgeCount);
+    if (liveEdgeEl) liveEdgeEl.textContent = String(liveEdgeCount);
+    if (assignedEdgeEl) assignedEdgeEl.textContent = String(assignedEdgeCount);
 
     const bsChip = document.getElementById('topologyBsChip');
     const sensorChip = document.getElementById('topologySensorChip');
@@ -2487,80 +4604,148 @@ function applyTopologyFilters() {
     if (!cy) return;
     const filter = document.getElementById('topologyNodeFilter')?.value || 'all';
     const highlightProblems = document.getElementById('topologyHighlightProblems')?.checked !== false;
+    const onlyProblematic = document.getElementById('topologyIssuesOnly')?.checked === true;
 
     const problemNodeIds = new Set(
         cy.nodes().filter(n => isTopologyProblemNode(n.data())).map(n => n.id())
     );
+    const problemEdgeIds = new Set(
+        cy.edges().filter(edge => isTopologyProblemEdge(edge)).map(edge => edge.id())
+    );
+    const problemEdgeNodeIds = new Set();
+    cy.edges().forEach(edge => {
+        if (!problemEdgeIds.has(edge.id())) return;
+        problemEdgeNodeIds.add(edge.source().id());
+        problemEdgeNodeIds.add(edge.target().id());
+    });
+    const issueContextNodeIds = new Set(problemNodeIds);
+    if (onlyProblematic) {
+        problemEdgeNodeIds.forEach(id => issueContextNodeIds.add(id));
+        cy.edges().forEach(edge => {
+            const srcId = edge.source().id();
+            const dstId = edge.target().id();
+            if (problemNodeIds.has(srcId) || problemNodeIds.has(dstId) || problemEdgeIds.has(edge.id())) {
+                issueContextNodeIds.add(srcId);
+                issueContextNodeIds.add(dstId);
+            }
+        });
+    }
 
     cy.nodes().forEach(node => {
-        const visible = shouldShowTopologyNode(node, filter, problemNodeIds);
+        const visibleByFilter = shouldShowTopologyNode(node, filter, problemNodeIds, problemEdgeNodeIds);
+        const visible = visibleByFilter && (!onlyProblematic || issueContextNodeIds.has(node.id()));
+        const hasProblemEdge = node.connectedEdges().some(edge => problemEdgeIds.has(edge.id()));
         node.toggleClass('node-filter-hidden', !visible);
-        node.toggleClass('node-problem', highlightProblems && isTopologyProblemNode(node.data()));
+        node.toggleClass('node-problem', highlightProblems && (isTopologyProblemNode(node.data()) || hasProblemEdge));
     });
 
     cy.edges().forEach(edge => {
         const srcHidden = edge.source().hasClass('node-filter-hidden');
         const dstHidden = edge.target().hasClass('node-filter-hidden');
-        edge.toggleClass('edge-filter-hidden', srcHidden || dstHidden);
+        const hiddenByProblem = onlyProblematic && !problemEdgeIds.has(edge.id());
+        edge.toggleClass('edge-filter-hidden', srcHidden || dstHidden || hiddenByProblem);
     });
 }
 
-function loadTopology() {
-    fetch('/api/network')
-        .then(r => r.json())
-        .then(data => {
-            if (!data.success) return;
-            
-            const currentNodes = cy.nodes();
-            const newElements = [];
-            const existingIds = new Set();
-            
-            const currentCyZoom = cy.zoom();
-            const currentPan = {...cy.pan()};
-            
-            data.nodes.forEach(node => {
-                existingIds.add(node.id);
-                const existing = cy.getElementById(node.id);
-                if (existing.length > 0) {
-                    existing.data(node);
-                    if (manualPositions[node.id]) {
-                        existing.position(manualPositions[node.id]);
-                    }
-                } else {
-                    newElements.push({ data: node, position: manualPositions[node.id] || undefined });
-                }
-            });
-            
-            data.edges.forEach(edge => {
-                existingIds.add(edge.id);
-                const existing = cy.getElementById(edge.id);
-                if (existing.length > 0) {
-                    existing.data(edge);
-                } else {
-                    newElements.push({ data: edge });
-                }
-            });
-            
-            cy.elements().filter(ele => !existingIds.has(ele.id())).remove();
-            
-            if (newElements.length > 0) {
-                cy.add(newElements);
-                const nodesToLayout = cy.nodes().filter(n => !manualPositions[n.id()]);
-                if (nodesToLayout.length > 0 && Object.keys(manualPositions).length === 0) {
-                    runDefaultLayout();
-                } else {
-                    cy.zoom(currentCyZoom);
-                    cy.pan(currentPan);
-                }
-            } else {
-                cy.zoom(currentCyZoom);
-                cy.pan(currentPan);
+function applyNetworkTopologyPayload(data, meta = {}) {
+    if (!cy || !data || !data.success) return;
+
+    const newElements = [];
+    const existingIds = new Set();
+    const currentCyZoom = cy.zoom();
+    const currentPan = { ...cy.pan() };
+
+    data.nodes.forEach(node => {
+        existingIds.add(node.id);
+        const existing = cy.getElementById(node.id);
+        if (existing.length > 0) {
+            existing.data(node);
+            if (manualPositions[node.id]) {
+                existing.position(manualPositions[node.id]);
             }
-            
-            applyRouteVisibility();
-            updateTopologyStats();
-            setRefreshStamp('topologyRefreshStamp');
-        });
+        } else {
+            newElements.push({ data: node, position: manualPositions[node.id] || undefined });
+        }
+    });
+
+    data.edges.forEach(edge => {
+        existingIds.add(edge.id);
+        const existing = cy.getElementById(edge.id);
+        if (existing.length > 0) {
+            existing.data(edge);
+        } else {
+            newElements.push({ data: edge });
+        }
+    });
+
+    cy.elements().filter(ele => !existingIds.has(ele.id())).remove();
+
+    if (newElements.length > 0) {
+        cy.add(newElements);
+        const nodesToLayout = cy.nodes().filter(n => !manualPositions[n.id()]);
+        if (nodesToLayout.length > 0 && Object.keys(manualPositions).length === 0) {
+            runDefaultLayout();
+        } else {
+            cy.zoom(currentCyZoom);
+            cy.pan(currentPan);
+        }
+    } else {
+        cy.zoom(currentCyZoom);
+        cy.pan(currentPan);
+    }
+
+    applyRouteVisibility();
+    updateTopologyStats();
+    if (topologySelectedNodeId) {
+        const selected = cy.getElementById(topologySelectedNodeId);
+        if (selected && selected.length > 0) {
+            selectTopologyNode(selected, { focus: false });
+        } else {
+            clearTopologySelection();
+        }
+    }
+    setRefreshStamp('topologyRefreshStamp', meta);
+}
+
+async function loadTopology(force = false) {
+    if (!topologyWorkspaceBooted) {
+        setNetworkSectionSkeleton('#topologyWorkspace', true, true);
+    }
+    try {
+        if (window.AppPerf && typeof window.AppPerf.swr === 'function') {
+            const result = await window.AppPerf.swr(
+                NETWORK_CACHE_KEYS.topologyGraph,
+                () => fetch('/api/network').then(r => r.ok ? r.json() : { success: false, nodes: [], edges: [] }),
+                {
+                    ttlMs: NETWORK_SWR_TTL_MS,
+                    force: Boolean(force),
+                    onCached: (payload, meta) => {
+                        applyNetworkTopologyPayload(payload, { ...(meta || {}), source: 'cache', kind: 'topology' });
+                        setNetworkSectionSkeleton('#topologyWorkspace', false, true);
+                    },
+                    onFresh: (payload, meta) => {
+                        applyNetworkTopologyPayload(payload, { ...(meta || {}), source: 'network', kind: 'topology' });
+                        setNetworkSectionSkeleton('#topologyWorkspace', false);
+                    },
+                    onError: () => setNetworkSectionSkeleton('#topologyWorkspace', false)
+                }
+            );
+            if (result?.data && !topologyWorkspaceBooted) {
+                applyNetworkTopologyPayload(result.data, {
+                    ts: result.ts,
+                    source: result.source && String(result.source).startsWith('cache') ? 'cache' : 'network',
+                    kind: 'topology'
+                });
+            }
+            return;
+        }
+        const data = await fetch('/api/network').then(r => r.json());
+        applyNetworkTopologyPayload(data, { ts: Date.now(), source: 'network', kind: 'topology' });
+        setNetworkSectionSkeleton('#topologyWorkspace', false);
+    } catch (error) {
+        console.error('Failed to load topology:', error);
+        setNetworkSectionSkeleton('#topologyWorkspace', false);
+    }
 }
 
 function runLayeredLayout() {
@@ -2682,25 +4867,38 @@ function resetLayout() {
 
 function applyRouteVisibility() {
     if (!cy) return;
+    applyTopologyEdgeClasses();
     const showSecondary = document.getElementById('showSecondaryRoutes')?.checked !== false;
+    const routeSource = document.getElementById('topologyRouteSourceFilter')?.value || 'both';
     cy.edges().forEach(edge => {
+        const routeKind = String(edge.data('route_kind') || 'live').toLowerCase();
+        const isAssigned = routeKind !== 'live';
+        const sourceAllowed = routeSource === 'both'
+            || (routeSource === 'live' && !isAssigned)
+            || (routeSource === 'assigned' && isAssigned);
+
+        if (!sourceAllowed) {
+            edge.addClass('route-hidden');
+            return;
+        }
+
+        if (isAssigned) {
+            edge.removeClass('route-hidden');
+            return;
+        }
         const isPrimary = Boolean(edge.data('primary'));
         edge.toggleClass('route-hidden', !isPrimary && !showSecondary);
     });
     applyTopologyFilters();
 }
 
-function refreshNetworkWorkspace() {
+async function refreshNetworkWorkspace() {
     if (workspaceMode === 'coverage') {
-        loadDevices();
-        refreshTopology();
-        setRefreshStamp('coverageRefreshStamp');
+        await Promise.allSettled([loadDevices(true), refreshTopology(true)]);
         return;
     }
 
-    refreshTopology();
-    loadTopology();
-    setRefreshStamp('topologyRefreshStamp');
+    await Promise.allSettled([refreshTopology(true), loadTopology(true)]);
 }
 
 function focusTopologyView() {
@@ -2715,22 +4913,25 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (savedWorkspaceMode === 'coverage' || savedWorkspaceMode === 'topology') {
         workspaceMode = savedWorkspaceMode;
     }
+    const savedDeviceListMode = localStorage.getItem('network_device_list_mode');
+    if (savedDeviceListMode === 'bs' || savedDeviceListMode === 'sensor') {
+        deviceListMode = savedDeviceListMode;
+    }
     const savedCoverageLock = localStorage.getItem('bssci_coverage_locked');
     if (savedCoverageLock === '1' || savedCoverageLock === '0') {
         coveragePositionsLocked = savedCoverageLock === '1';
     }
     applyWorkspaceMode();
+    networkCacheBadgeTimer = setInterval(renderNetworkCacheBadges, 1000);
+    renderNetworkCacheBadges();
 
     const coverageLegendCollapsed = localStorage.getItem('network_coverage_legend_collapsed') === '1';
     const topologyLegendCollapsed = localStorage.getItem('network_topology_legend_collapsed') === '1';
     setLegendPanelCollapsed('coverageLegendPanel', 'coverageLegendToggle', coverageLegendCollapsed);
     setLegendPanelCollapsed('topologyLegendPanel', 'topologyLegendToggle', topologyLegendCollapsed);
+    setDeviceListMode(deviceListMode, false);
 
-    // Coverage init
-    await loadPositionsFromServer();
-    initOSMMap();
-    initFloorplan();
-    loadDevices();
+    // Workspace boot is now lazy (coverage/topology), based on selected mode and viewport visibility.
     
     const showHeatmapInput = document.getElementById('showHeatmap');
     const showBaseStationsInput = document.getElementById('showBaseStations');
@@ -2759,6 +4960,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (showSecondaryRoutesToggle) {
         showSecondaryRoutesToggle.addEventListener('change', applyRouteVisibility);
     }
+    const topologyRouteSourceFilter = document.getElementById('topologyRouteSourceFilter');
+    if (topologyRouteSourceFilter) {
+        const savedRouteSource = localStorage.getItem('network_topology_route_source');
+        if (savedRouteSource === 'both' || savedRouteSource === 'live' || savedRouteSource === 'assigned') {
+            topologyRouteSourceFilter.value = savedRouteSource;
+        }
+        topologyRouteSourceFilter.addEventListener('change', function() {
+            localStorage.setItem('network_topology_route_source', this.value || 'both');
+            applyRouteVisibility();
+        });
+    }
     const topologyLayoutSelect = document.getElementById('topologyLayoutSelect');
     if (topologyLayoutSelect) {
         topologyLayoutSelect.addEventListener('change', () => {
@@ -2783,6 +4995,38 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (topologyHighlightProblems) {
         topologyHighlightProblems.addEventListener('change', applyTopologyFilters);
     }
+    const topologyIssuesOnly = document.getElementById('topologyIssuesOnly');
+    if (topologyIssuesOnly) {
+        const savedIssuesOnly = localStorage.getItem('network_topology_only_problematic')
+            ?? localStorage.getItem('network_topology_issues_only');
+        if (savedIssuesOnly === '1' || savedIssuesOnly === '0') {
+            topologyIssuesOnly.checked = savedIssuesOnly === '1';
+        }
+        topologyIssuesOnly.addEventListener('change', function() {
+            localStorage.setItem('network_topology_only_problematic', this.checked ? '1' : '0');
+            localStorage.setItem('network_topology_issues_only', this.checked ? '1' : '0');
+            applyTopologyFilters();
+        });
+    }
+    const topologyNodeSearchInput = document.getElementById('topologyNodeSearch');
+    const topologyNodeSearchBtn = document.getElementById('topologyNodeSearchBtn');
+    const topologyNodeSearchClearBtn = document.getElementById('topologyNodeSearchClearBtn');
+    if (topologyNodeSearchBtn) {
+        topologyNodeSearchBtn.addEventListener('click', function() {
+            focusTopologySearch(topologyNodeSearchInput?.value || '');
+        });
+    }
+    if (topologyNodeSearchInput) {
+        topologyNodeSearchInput.addEventListener('keydown', function(evt) {
+            if (evt.key === 'Enter') {
+                evt.preventDefault();
+                focusTopologySearch(this.value || '');
+            }
+        });
+    }
+    if (topologyNodeSearchClearBtn) {
+        topologyNodeSearchClearBtn.addEventListener('click', clearTopologySearch);
+    }
     const deviceSearchInput = document.getElementById('deviceSearchInput');
     if (deviceSearchInput) {
         deviceSearchInput.addEventListener('input', function() {
@@ -2790,11 +5034,34 @@ document.addEventListener('DOMContentLoaded', async function() {
             renderDeviceLists();
         });
     }
+    const deviceStatusFilterInput = document.getElementById('deviceStatusFilter');
+    if (deviceStatusFilterInput) {
+        deviceStatusFilterInput.addEventListener('change', function() {
+            deviceStatusFilter = this.value || 'all';
+            renderDeviceLists();
+        });
+    }
+    const clearDeviceFiltersBtn = document.getElementById('clearDeviceFilters');
+    if (clearDeviceFiltersBtn) {
+        clearDeviceFiltersBtn.addEventListener('click', function() {
+            deviceSearchQuery = '';
+            deviceStatusFilter = 'all';
+            if (deviceSearchInput) deviceSearchInput.value = '';
+            if (deviceStatusFilterInput) deviceStatusFilterInput.value = 'all';
+            renderDeviceLists();
+        });
+    }
+    const focusSelectedCoverageDeviceBtn = document.getElementById('focusSelectedCoverageDevice');
+    if (focusSelectedCoverageDeviceBtn) {
+        focusSelectedCoverageDeviceBtn.addEventListener('click', focusSelectedDeviceOnMap);
+    }
     
     document.querySelectorAll('#mapTabs button').forEach(tab => {
         tab.addEventListener('shown.bs.tab', function() {
             if (this.id === 'osm-tab') {
-                setTimeout(() => osmMap.invalidateSize(), 100);
+                setTimeout(() => {
+                    if (osmMap) osmMap.invalidateSize();
+                }, 100);
             }
         });
     });
@@ -2808,25 +5075,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     setTimeout(() => {
         if (osmMap) {
             osmMap.invalidateSize();
-            setGpsFromMapCenter();
         }
     }, 120);
 
-    // Topology init
-    initCytoscape();
-    applyWorkspaceMode();
-    
-    try {
-        const savedZoom = localStorage.getItem('bssci_network_zoom');
-        const savedPan = localStorage.getItem('bssci_network_pan');
-        if (savedZoom && savedPan) {
-            cy.zoom(parseFloat(savedZoom));
-            cy.pan(JSON.parse(savedPan));
-        }
-    } catch (e) { console.error('Failed to load view state', e); }
+    if (window.AppPerf && typeof window.AppPerf.observeLazy === 'function') {
+        window.AppPerf.observeLazy('#coverageWorkspace', () => {
+            bootCoverageWorkspace().catch((error) => {
+                console.error('Coverage workspace boot failed:', error);
+                setNetworkSectionSkeleton('#coverageWorkspace', false);
+            });
+        }, { rootMargin: '180px' });
+        window.AppPerf.observeLazy('#topologyWorkspace', () => {
+            bootTopologyWorkspace().catch((error) => {
+                console.error('Topology workspace boot failed:', error);
+                setNetworkSectionSkeleton('#topologyWorkspace', false);
+            });
+        }, { rootMargin: '180px' });
+    }
 
-    loadTopology();
-    topologyRefreshTimer = setInterval(loadTopology, 30000);
+    if (workspaceMode === 'topology') {
+        await bootTopologyWorkspace();
+    } else {
+        await bootCoverageWorkspace();
+    }
     refreshCoverageLockUi();
     updateSelectedCoverageDevice();
 });

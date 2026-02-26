@@ -8,4 +8,5 @@ web_ui.syntaxcheck.pyc.*
 attached_assets/*
 .env
 logs/
+backups/
 base_stations.json

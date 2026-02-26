@@ -357,6 +357,24 @@
     line-height: 1.2;
 }
 
+.sensor-tenant-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    font-size: 0.66rem;
+    font-weight: 800;
+    border: 1px solid #bad2f1;
+    color: #1f4b7a;
+    background: #e8f1fd;
+    border-radius: 999px;
+    padding: 0.1rem 0.4rem;
+    line-height: 1.2;
+}
+
+.sensor-tenant-chip i {
+    font-size: 0.62rem;
+}
+
 .sensor-badge-stack {
     display: inline-flex;
     gap: 0.3rem;
@@ -405,12 +423,191 @@
     color: #324a67;
 }
 
+.attach-modal-meta {
+    border: 1px solid #d5deeb;
+    border-radius: 0.75rem;
+    background: linear-gradient(180deg, #f9fcff 0%, #f4f8ff 100%);
+    padding: 0.7rem 0.82rem;
+    margin-bottom: 0.7rem;
+}
+
+.attach-modal-label {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #607089;
+    font-weight: 800;
+}
+
+.attach-modal-sensor {
+    margin-top: 0.16rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1f3550;
+}
+
+.attach-bs-list {
+    max-height: 330px;
+    overflow: auto;
+    border: 1px solid #d9e3f1;
+    border-radius: 0.72rem;
+    background: #fff;
+}
+
+.attach-bs-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.58rem;
+    padding: 0.62rem 0.72rem;
+    border-bottom: 1px solid #e7eef8;
+    cursor: pointer;
+}
+
+.attach-bs-item:last-child {
+    border-bottom: none;
+}
+
+.attach-bs-item:hover {
+    background: #f8fbff;
+}
+
+.attach-bs-item--attached {
+    background: #f2fbf6;
+}
+
+.attach-bs-item--attached:hover {
+    background: #ecf8f2;
+}
+
+.attach-bs-main {
+    display: grid;
+    gap: 0.16rem;
+    min-width: 0;
+}
+
+.attach-bs-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1f3550;
+}
+
+.attach-bs-meta {
+    font-size: 0.72rem;
+    color: #5f7088;
+    word-break: break-all;
+}
+
+.attach-bs-state {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.attach-bs-state--on {
+    background: #d9f5e4;
+    color: #146c43;
+}
+
+.attach-bs-state--off {
+    background: #eef3fb;
+    color: #4a6281;
+}
+
 .table-empty {
     text-align: center;
     color: #6b7f98;
     font-size: 0.82rem;
     font-weight: 600;
     padding: 1rem 0.6rem !important;
+}
+
+.sensor-detail-banner {
+    border: 1px solid #d7e2f1;
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%);
+    padding: 0.86rem 0.96rem;
+}
+
+.sensor-detail-kpi {
+    border: 1px solid #d7e2f1;
+    border-radius: 0.85rem;
+    background: #fff;
+    padding: 0.8rem 0.9rem;
+    height: 100%;
+}
+
+.sensor-detail-kpi-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #607089;
+    font-weight: 800;
+}
+
+.sensor-detail-kpi-value {
+    margin-top: 0.2rem;
+    font-size: 1.32rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #0f172a;
+}
+
+.sensor-detail-kpi-note {
+    margin-top: 0.18rem;
+    font-size: 0.74rem;
+    color: #5f7088;
+}
+
+.sensor-detail-card {
+    border: 1px solid #d7e2f1;
+    border-radius: 0.9rem;
+    background: #fff;
+    height: 100%;
+}
+
+.sensor-detail-card .card-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #1f3550;
+}
+
+.sensor-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 0.2rem 0.58rem;
+    border: 1px solid transparent;
+}
+
+.sensor-status-chip--online {
+    background: #e6f7ef;
+    color: #0f5c36;
+    border-color: #9fdabf;
+}
+
+.sensor-status-chip--warning {
+    background: #fff4dd;
+    color: #8a5b00;
+    border-color: #f0cc83;
+}
+
+.sensor-status-chip--offline {
+    background: #feecef;
+    color: #8f2430;
+    border-color: #efb1bb;
+}
+
+.sensor-status-chip--unknown {
+    background: #edf2f9;
+    color: #4a5f78;
+    border-color: #d3dfec;
 }
 
 .is-hidden {
@@ -479,18 +676,10 @@
 </style>
 
 <div class="sensor-page workspace-shell" id="sensorPage">
-    <div class="sensor-header workspace-head">
-        <div>
-            <p class="sensor-kicker workspace-kicker">Device Registry</p>
-            <h2 class="sensor-title workspace-title">Sensor Management</h2>
-            <p class="sensor-subtitle workspace-subtitle">Manage registration, monitor activity, and run safe bulk operations.</p>
-        </div>
+    <div class="workspace-toolbar">
         <div class="sensor-actions workspace-actions">
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sensorModal" onclick="openSensorModal()">
                 <i class="fas fa-plus"></i> Add Sensor
-            </button>
-            <button class="btn btn-success" onclick="attachAllSensors()" title="Attach all sensors to base stations">
-                <i class="fas fa-link"></i> Attach All
             </button>
             <div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -710,6 +899,62 @@
         </div>
     </div>
 </div>
+
+<!-- Attach Sensor Modal -->
+<div class="modal fade" id="attachSensorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-link me-2"></i>Manage Sensor Attachments</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="attach-modal-meta">
+                    <div class="attach-modal-label">Sensor</div>
+                    <div id="attachSensorTargetLabel" class="attach-modal-sensor">-</div>
+                    <div id="attachSensorStateHint" class="small text-muted mt-1">Loading current attachment state...</div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-primary" onclick="setAllAttachTargets(true)">
+                            <i class="fas fa-check-double me-1"></i>All base stations
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setAllAttachTargets(false)">Clear selection (detach)</button>
+                    </div>
+                    <span id="attachSelectionCount" class="sensor-meta-note">0 selected</span>
+                </div>
+                <div id="attachBaseStationList" class="attach-bs-list p-3 text-muted small">Loading base stations...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="attachConfirmBtn" onclick="submitAttachSelection()" disabled>
+                    <i class="fas fa-save me-1"></i>Save mapping
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Action Modal -->
+<div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmActionModalTitle">
+                    <i class="fas fa-triangle-exclamation text-warning me-2"></i>Confirm action
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmActionModalBody" class="mb-0 text-muted"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmActionOkBtn" onclick="resolveConfirmAction(true)">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -722,7 +967,13 @@ let sensorRefreshTimer = null;
 let sensorCurrentPage = 1;
 let sensorPageSize = 20;
 let currentPageSensors = [];
+let attachTargetSensorEuis = [];
+let attachModalInstance = null;
+let attachPresenceMap = new Map();
+let confirmActionModalInstance = null;
+let confirmActionResolver = null;
 const SENSOR_AUTO_REFRESH_MS = 10000;
+const SENSOR_IS_ADMIN = {{ 'true' if current_user and current_user.role == 'admin' else 'false' }};
 const SENSOR_VIEW_PREFS_KEY = 'sensors_view_prefs_v1';
 const defaultSensorViewPrefs = {
     showSummary: true,
@@ -730,6 +981,33 @@ const defaultSensorViewPrefs = {
     compact: false
 };
 let sensorViewPrefs = { ...defaultSensorViewPrefs };
+let sensorFormBaseline = null;
+let sensorModalCloseBySave = false;
+
+const SENSOR_FORM_FIELDS = ['eui', 'nwKey', 'shortAddr', 'sensorName', 'sensorTags', 'sensorGpsLat', 'sensorGpsLng', 'bidi'];
+
+function getSensorFormSnapshot() {
+    const snapshot = {};
+    SENSOR_FORM_FIELDS.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === 'checkbox') {
+            snapshot[id] = !!el.checked;
+        } else {
+            snapshot[id] = String(el.value ?? '');
+        }
+    });
+    return snapshot;
+}
+
+function setSensorFormBaseline() {
+    sensorFormBaseline = JSON.stringify(getSensorFormSnapshot());
+}
+
+function isSensorFormDirty() {
+    if (!sensorFormBaseline) return false;
+    return JSON.stringify(getSensorFormSnapshot()) !== sensorFormBaseline;
+}
 
 function showAlert(type, message) {
     const alertContainer = document.getElementById('alert-container') || createAlertContainer();
@@ -753,6 +1031,59 @@ function createAlertContainer() {
     container.style.cssText = 'position: fixed; top: 70px; right: 20px; z-index: 9999; max-width: 420px;';
     document.body.appendChild(container);
     return container;
+}
+
+function confirmWithModal(options = {}) {
+    const modalEl = document.getElementById('confirmActionModal');
+    if (!modalEl) {
+        return Promise.resolve(window.confirm(options.message || 'Are you sure?'));
+    }
+
+    if (!confirmActionModalInstance) {
+        confirmActionModalInstance = new bootstrap.Modal(modalEl);
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            if (typeof confirmActionResolver === 'function') {
+                const resolver = confirmActionResolver;
+                confirmActionResolver = null;
+                resolver(false);
+            }
+        });
+    }
+
+    const titleNode = document.getElementById('confirmActionModalTitle');
+    const bodyNode = document.getElementById('confirmActionModalBody');
+    const okBtn = document.getElementById('confirmActionOkBtn');
+
+    const title = options.title || 'Confirm action';
+    const message = options.message || 'Are you sure you want to continue?';
+    const confirmText = options.confirmText || 'Confirm';
+    const confirmClass = options.confirmClass || 'btn-primary';
+
+    if (titleNode) {
+        titleNode.innerHTML = `<i class="fas fa-triangle-exclamation text-warning me-2"></i>${escapeHtml(title)}`;
+    }
+    if (bodyNode) {
+        bodyNode.innerHTML = message;
+    }
+    if (okBtn) {
+        okBtn.className = `btn ${confirmClass}`;
+        okBtn.textContent = confirmText;
+    }
+
+    return new Promise(resolve => {
+        confirmActionResolver = resolve;
+        confirmActionModalInstance.show();
+    });
+}
+
+function resolveConfirmAction(confirmed) {
+    if (!confirmActionModalInstance) return;
+    if (typeof confirmActionResolver === 'function') {
+        const resolver = confirmActionResolver;
+        confirmActionResolver = null;
+        resolver(Boolean(confirmed));
+    }
+    confirmActionModalInstance.hide();
 }
 
 function escapeHtml(value) {
@@ -884,9 +1215,19 @@ function formatHoursAgo(hours) {
     return `${(value / 24).toFixed(1)}d ago`;
 }
 
+function getRuntimeBaseStations(sensor) {
+    return Array.isArray(sensor.base_stations) ? sensor.base_stations.filter(Boolean) : [];
+}
+
+function getAttachedBaseStations(sensor) {
+    return Array.isArray(sensor.attached_base_stations) ? sensor.attached_base_stations.filter(Boolean) : [];
+}
+
 function getPrimaryPath(sensor) {
     const path = sensor.preferredDownlinkPath || {};
-    const baseStation = path.baseStation || (Array.isArray(sensor.base_stations) ? sensor.base_stations[0] : null);
+    const runtimeBases = getRuntimeBaseStations(sensor);
+    const attachedBases = getAttachedBaseStations(sensor);
+    const baseStation = path.baseStation || runtimeBases[0] || attachedBases[0] || null;
     return {
         baseStation: baseStation || null,
         snr: path.snr,
@@ -966,16 +1307,21 @@ function getFilteredSensors() {
         if (!needle) return true;
 
         const path = getPrimaryPath(sensor);
+        const runtimeBases = getRuntimeBaseStations(sensor);
+        const attachedBases = getAttachedBaseStations(sensor);
+        const visibleBases = runtimeBases.length > 0 ? runtimeBases : attachedBases;
         const tags = [
             sensor.eui,
             sensor.name || '',
+            SENSOR_IS_ADMIN ? (sensor.tenant_id || '') : '',
             Array.isArray(sensor.tags) ? sensor.tags.join(' ') : '',
             sensor.shortAddr,
             formatGps(sensor.gps_lat, sensor.gps_lng),
             sensor.activity_status,
             isRegistered(sensor) ? 'registered' : 'unregistered',
             path.baseStation || '',
-            Array.isArray(sensor.base_stations) ? sensor.base_stations.join(' ') : '',
+            visibleBases.join(' '),
+            attachedBases.join(' '),
             Array.isArray(sensor.missing_registrations) ? sensor.missing_registrations.join(' ') : ''
         ].join(' ').toLowerCase();
         return tags.includes(needle);
@@ -1066,20 +1412,27 @@ function renderSensors(filteredSensors) {
     tbody.innerHTML = pageInfo.pageSensors.map(sensor => {
         const status = getSensorStatusLabel(sensor);
         const primaryPath = getPrimaryPath(sensor);
+        const runtimeBases = getRuntimeBaseStations(sensor);
+        const attachedBases = getAttachedBaseStations(sensor);
         const lastSeen = formatHoursAgo(sensor.hours_since_last_seen);
         const missing = Array.isArray(sensor.missing_registrations) ? sensor.missing_registrations.length : 0;
         const totalAvailable = sensor.total_available_bases || 0;
-        const totalRegistrations = sensor.total_registrations || (Array.isArray(sensor.base_stations) ? sensor.base_stations.length : 0);
+        const totalRegistrations = sensor.total_registrations || runtimeBases.length;
         const bidiLabel = sensor.bidi ? 'Bi-directional' : 'Uplink only';
         const sensorName = (sensor.name || '').trim();
         const sensorTags = Array.isArray(sensor.tags) ? sensor.tags : [];
         const gpsText = formatGps(sensor.gps_lat, sensor.gps_lng);
+        const tenantLabel = SENSOR_IS_ADMIN
+            ? `<div class="sensor-tag-row"><span class="sensor-tenant-chip"><i class="fas fa-building"></i>Tenant ${escapeHtml(sensor.tenant_id || 'default')}</span></div>`
+            : '';
         const tagsHtml = sensorTags.length > 0
             ? `<div class="sensor-tag-row">${sensorTags.map(tag => `<span class="sensor-tag-chip">${escapeHtml(tag)}</span>`).join('')}</div>`
             : '';
-        const baseInfo = Array.isArray(sensor.base_stations) && sensor.base_stations.length > 0
-            ? escapeHtml(sensor.base_stations.join(', '))
-            : 'none';
+        const baseInfoHtml = runtimeBases.length > 0
+            ? escapeHtml(runtimeBases.join(', '))
+            : (attachedBases.length > 0
+                ? `${escapeHtml(attachedBases.join(', '))} <span class="text-muted">(pending)</span>`
+                : 'none');
 
         return `
             <tr data-sensor-eui="${escapeHtml(sensor.eui)}">
@@ -1098,6 +1451,7 @@ function renderSensors(filteredSensors) {
                             </button>
                         </div>
                         ${sensorName ? `<div class="sensor-name">${escapeHtml(sensorName)}</div>` : ''}
+                        ${tenantLabel}
                         <span class="sensor-subline">Addr ${escapeHtml(sensor.shortAddr)} | ${bidiLabel}</span>
                         ${gpsText ? `<span class="sensor-subline">GPS ${escapeHtml(gpsText)}</span>` : ''}
                         ${tagsHtml}
@@ -1108,7 +1462,7 @@ function renderSensors(filteredSensors) {
                         <span class="badge ${status.klass}">${status.text}</span>
                         ${isRegistered(sensor) ? '<span class="badge sensor-reg-state sensor-reg-state--on">Registered</span>' : '<span class="badge sensor-reg-state sensor-reg-state--off">Not registered</span>'}
                     </div>
-                    <div class="sensor-subline mt-1">BS: ${baseInfo}</div>
+                    <div class="sensor-subline mt-1">BS: ${baseInfoHtml}</div>
                 </td>
                 <td>
                     <div>${lastSeen}</div>
@@ -1129,8 +1483,7 @@ function renderSensors(filteredSensors) {
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle sensor-actions-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">Actions</button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><button class="dropdown-item" onclick="showSensorDetails('${escapeHtml(sensor.eui)}')"><i class="fas fa-chart-line me-2"></i>Details</button></li>
-                            <li><button class="dropdown-item" onclick="attachSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-link me-2"></i>Attach</button></li>
-                            <li><button class="dropdown-item" onclick="detachSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-unlink me-2"></i>Detach</button></li>
+                            <li><button class="dropdown-item" onclick="openAttachSensorModal('${escapeHtml(sensor.eui)}')"><i class="fas fa-link me-2"></i>Manage attach</button></li>
                             <li><button class="dropdown-item" onclick="editSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-pen me-2"></i>Edit</button></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><button class="dropdown-item text-danger" onclick="deleteSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-trash me-2"></i>Delete</button></li>
@@ -1219,6 +1572,8 @@ function openSensorModal(sensor = null) {
         document.getElementById('sensorGpsLng').value = '';
         document.getElementById('eui').readOnly = false;
     }
+    setSensorFormBaseline();
+    sensorModalCloseBySave = false;
 }
 
 function editSensor(eui) {
@@ -1262,7 +1617,9 @@ function saveSensor() {
     apiRequest('/api/sensors', 'POST', formData)
         .then(result => {
             const modal = bootstrap.Modal.getInstance(document.getElementById('sensorModal'));
+            sensorModalCloseBySave = true;
             if (modal) modal.hide();
+            setSensorFormBaseline();
             showAlert('success', result.message || `Sensor ${formData.eui} saved.`);
             loadSensors(true);
         })
@@ -1271,18 +1628,270 @@ function saveSensor() {
         });
 }
 
-function attachSensor(eui) {
-    if (!confirm(`Attach sensor ${eui} to all connected base stations?`)) return;
-    apiRequest(`/api/sensors/${eui}/attach`, 'POST')
-        .then(data => {
-            showAlert('success', data.message || `Attach requested for ${eui}.`);
-            loadSensors(true);
-        })
-        .catch(error => showAlert('danger', `Error attaching sensor: ${error.message}`));
+function setAttachTargetSensors(targets) {
+    const normalizedTargets = Array.isArray(targets)
+        ? [...new Set(targets.map(item => String(item || '').trim().toUpperCase()).filter(Boolean))]
+        : [];
+    attachTargetSensorEuis = normalizedTargets;
+    rebuildAttachPresenceMap();
+
+    const labelNode = document.getElementById('attachSensorTargetLabel');
+    if (labelNode) {
+        if (normalizedTargets.length === 1) {
+            const targetEui = normalizedTargets[0];
+            const sensor = sensorCache.find(item => item.eui === targetEui);
+            const sensorName = sensor && sensor.name ? ` (${sensor.name})` : '';
+            labelNode.textContent = `${targetEui}${sensorName}`;
+        } else if (normalizedTargets.length > 1) {
+            labelNode.textContent = `${normalizedTargets.length} selected sensors`;
+        } else {
+            labelNode.textContent = '-';
+        }
+    }
+
+    const hintNode = document.getElementById('attachSensorStateHint');
+    if (hintNode) {
+        if (normalizedTargets.length === 1) {
+            const mappedCount = Array.from(attachPresenceMap.values()).filter(count => count > 0).length;
+            hintNode.innerHTML = mappedCount > 0
+                ? `Current mapping: <strong>${mappedCount}</strong> base station(s). Uncheck all and save to detach.`
+                : 'Sensor is currently detached. Select one or more base stations and save.';
+        } else if (normalizedTargets.length > 1) {
+            hintNode.innerHTML = `Bulk mode for <strong>${normalizedTargets.length}</strong> sensors. Checked items represent common mapping.`;
+        } else {
+            hintNode.textContent = 'Select sensor(s) first.';
+        }
+    }
 }
 
-function detachSensor(eui) {
-    if (!confirm(`Detach sensor ${eui} from all base stations?`)) return;
+function getSensorAttachTargets(sensor) {
+    if (!sensor) return [];
+    const runtimeBases = getRuntimeBaseStations(sensor);
+    const attachedBases = getAttachedBaseStations(sensor);
+    return [...new Set([...runtimeBases, ...attachedBases])];
+}
+
+function rebuildAttachPresenceMap() {
+    const map = new Map();
+    for (const sensorEui of attachTargetSensorEuis) {
+        const sensor = sensorCache.find(item => item.eui === sensorEui);
+        const targets = getSensorAttachTargets(sensor);
+        for (const bsEui of targets) {
+            map.set(bsEui, (map.get(bsEui) || 0) + 1);
+        }
+    }
+    attachPresenceMap = map;
+}
+
+function openAttachSensorModal(eui) {
+    setAttachTargetSensors([eui]);
+    if (!attachModalInstance) {
+        attachModalInstance = new bootstrap.Modal(document.getElementById('attachSensorModal'));
+    }
+    attachModalInstance.show();
+    loadAttachBaseStationsForModal();
+}
+
+function openBulkAttachSensorModal() {
+    const targets = [...selectedSensors];
+    if (targets.length === 0) {
+        showAlert('warning', 'Select at least one sensor first.');
+        return;
+    }
+    setAttachTargetSensors(targets);
+    if (!attachModalInstance) {
+        attachModalInstance = new bootstrap.Modal(document.getElementById('attachSensorModal'));
+    }
+    attachModalInstance.show();
+    loadAttachBaseStationsForModal();
+}
+
+function renderAttachBaseStationOptions(baseStations) {
+    const listNode = document.getElementById('attachBaseStationList');
+    if (!listNode) return;
+    const targetCount = attachTargetSensorEuis.length;
+
+    if (!Array.isArray(baseStations) || baseStations.length === 0) {
+        listNode.innerHTML = '<div class=\"p-3 text-warning small\">No base stations found in active tenant.</div>';
+        updateAttachModalSelectionState();
+        return;
+    }
+
+    listNode.innerHTML = baseStations.map(bs => {
+        const eui = String(bs.eui || '').toUpperCase();
+        const name = String(bs.name || '').trim();
+        const label = name ? escapeHtml(name) : `<code>${escapeHtml(eui)}</code>`;
+        const rawStatus = String(bs.status || '').toLowerCase();
+        const statusText = rawStatus === 'connected'
+            ? 'Connected'
+            : rawStatus === 'connecting'
+                ? 'Connecting'
+                : rawStatus === 'offline'
+                    ? 'Offline (pending attach)'
+                    : escapeHtml(bs.status || 'unknown');
+        const attachedCount = attachPresenceMap.get(eui) || 0;
+        const attachedAllTargets = targetCount > 0 && attachedCount === targetCount;
+        const attachedSomeTargets = attachedCount > 0 && attachedCount < targetCount;
+        const defaultChecked = attachedAllTargets;
+        let mappingState = 'Not attached';
+        if (attachedAllTargets) {
+            mappingState = targetCount > 1 ? 'Attached (all selected)' : 'Attached';
+        } else if (attachedSomeTargets) {
+            mappingState = `Attached (${attachedCount}/${targetCount})`;
+        }
+        return `
+            <label class=\"attach-bs-item ${attachedCount > 0 ? 'attach-bs-item--attached' : ''}\">
+                <input class=\"form-check-input attach-bs-check\" type=\"checkbox\" value=\"${escapeHtml(eui)}\" ${defaultChecked ? 'checked' : ''} onchange=\"updateAttachModalSelectionState()\">
+                <div class=\"attach-bs-main\">
+                    <div class=\"attach-bs-name\">${label}</div>
+                    <div class=\"attach-bs-meta\">${escapeHtml(eui)} · ${statusText} · <span class=\"attach-bs-state ${attachedCount > 0 ? 'attach-bs-state--on' : 'attach-bs-state--off'}\">${escapeHtml(mappingState)}</span></div>
+                </div>
+            </label>
+        `;
+    }).join('');
+
+    updateAttachModalSelectionState();
+}
+
+function loadAttachBaseStationsForModal() {
+    const listNode = document.getElementById('attachBaseStationList');
+    if (listNode) {
+        listNode.innerHTML = '<div class=\"p-3 text-muted small\">Loading base stations...</div>';
+    }
+    apiRequest('/api/base-stations', 'GET')
+        .then(data => {
+            const allBaseStations = Array.isArray(data.base_stations) ? data.base_stations : [];
+            renderAttachBaseStationOptions(allBaseStations);
+        })
+        .catch(error => {
+            if (listNode) {
+                listNode.innerHTML = `<div class=\"p-3 text-danger small\">Failed to load base stations: ${escapeHtml(error.message)}</div>`;
+            }
+            updateAttachModalSelectionState();
+        });
+}
+
+function setAllAttachTargets(selected) {
+    document.querySelectorAll('#attachBaseStationList .attach-bs-check').forEach(input => {
+        input.checked = Boolean(selected);
+    });
+    updateAttachModalSelectionState();
+}
+
+function getSelectedAttachTargets() {
+    return Array.from(document.querySelectorAll('#attachBaseStationList .attach-bs-check:checked'))
+        .map(input => String(input.value || '').trim())
+        .filter(Boolean);
+}
+
+function updateAttachModalSelectionState() {
+    const selected = getSelectedAttachTargets();
+    const countNode = document.getElementById('attachSelectionCount');
+    const confirmBtn = document.getElementById('attachConfirmBtn');
+    const targetCount = attachTargetSensorEuis.length;
+    const mappedCount = Array.from(attachPresenceMap.values()).filter(count => count === targetCount && targetCount > 0).length;
+    if (countNode) {
+        countNode.textContent = `${selected.length} selected · ${mappedCount} currently mapped`;
+    }
+    if (confirmBtn) {
+        confirmBtn.disabled = targetCount === 0;
+        if (selected.length === 0) {
+            confirmBtn.innerHTML = targetCount > 1
+                ? '<i class="fas fa-unlink me-1"></i>Save as detached for selected sensors'
+                : '<i class="fas fa-unlink me-1"></i>Save as detached';
+        } else {
+            confirmBtn.innerHTML = targetCount > 1
+                ? '<i class="fas fa-save me-1"></i>Save mapping for selected sensors'
+                : '<i class="fas fa-save me-1"></i>Save mapping';
+        }
+    }
+}
+
+async function submitAttachSelection() {
+    const targetEuis = Array.isArray(attachTargetSensorEuis) ? [...attachTargetSensorEuis] : [];
+    if (targetEuis.length === 0) {
+        showAlert('warning', 'No sensor selected for attach.');
+        return;
+    }
+    const selectedTargets = getSelectedAttachTargets();
+    if (selectedTargets.length === 0) {
+        const confirmedDetach = await confirmWithModal({
+            title: 'Save as detached',
+            message: targetEuis.length > 1
+                ? `Save mapping as detached for <strong>${targetEuis.length}</strong> selected sensors?`
+                : `Save sensor <code>${escapeHtml(targetEuis[0])}</code> as detached (no base station mapping)?`,
+            confirmText: 'Save detached',
+            confirmClass: 'btn-warning'
+        });
+        if (!confirmedDetach) return;
+    }
+
+    const confirmBtn = document.getElementById('attachConfirmBtn');
+    const originalContent = confirmBtn ? confirmBtn.innerHTML : '';
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class=\"spinner-border spinner-border-sm me-1\" role=\"status\" aria-hidden=\"true\"></span>Saving...';
+    }
+
+    let success = 0;
+    const failures = [];
+    for (const eui of targetEuis) {
+        try {
+            await attachSensor(eui, selectedTargets, { quiet: true });
+            success += 1;
+        } catch (error) {
+            failures.push(`${eui}: ${error.message}`);
+        }
+    }
+
+    if (success > 0) {
+        showAlert('success', `Attachment mapping saved for ${success}/${targetEuis.length} sensor(s).`);
+        loadSensors(true);
+    }
+    if (failures.length > 0) {
+        showAlert('warning', `Save finished with issues.<br><small>${escapeHtml(failures.join(' | '))}</small>`);
+    }
+    if (success === targetEuis.length && attachModalInstance) {
+        attachModalInstance.hide();
+    }
+
+    if (confirmBtn) {
+        confirmBtn.innerHTML = originalContent;
+    }
+    updateAttachModalSelectionState();
+}
+
+async function attachSensor(eui, selectedBaseStations = null, options = {}) {
+    if (!Array.isArray(selectedBaseStations)) {
+        throw new Error('Invalid mapping payload.');
+    }
+    const payload = { base_stations: selectedBaseStations };
+    const quiet = Boolean(options && options.quiet);
+    return apiRequest(`/api/sensors/${eui}/attach`, 'POST', payload)
+        .then(data => {
+            if (!quiet) {
+                showAlert('success', data.message || `Attachment mapping updated for ${eui}.`);
+                loadSensors(true);
+            }
+            return data;
+        })
+        .catch(error => {
+            if (!quiet) {
+                showAlert('danger', `Error updating mapping: ${error.message}`);
+            }
+            throw error;
+        });
+}
+
+async function detachSensor(eui) {
+    const confirmed = await confirmWithModal({
+        title: 'Detach sensor',
+        message: `Detach sensor <code>${escapeHtml(eui)}</code> from all base stations?`,
+        confirmText: 'Detach',
+        confirmClass: 'btn-warning'
+    });
+    if (!confirmed) return;
+
     apiRequest(`/api/sensors/${eui}/detach`, 'POST')
         .then(data => {
             showAlert('success', data.message || `Sensor ${eui} detached.`);
@@ -1291,8 +1900,15 @@ function detachSensor(eui) {
         .catch(error => showAlert('danger', `Error detaching sensor: ${error.message}`));
 }
 
-function deleteSensor(eui) {
-    if (!confirm(`Delete sensor ${eui}? This removes configuration from registry.`)) return;
+async function deleteSensor(eui) {
+    const confirmed = await confirmWithModal({
+        title: 'Delete sensor',
+        message: `Delete sensor <code>${escapeHtml(eui)}</code>? This removes configuration from registry.`,
+        confirmText: 'Delete',
+        confirmClass: 'btn-danger'
+    });
+    if (!confirmed) return;
+
     apiRequest(`/api/sensors/${eui}`, 'DELETE')
         .then(data => {
             selectedSensors.delete(eui);
@@ -1311,18 +1927,15 @@ function reloadSensors() {
         .catch(error => showAlert('danger', `Error reloading sensors: ${error.message}`));
 }
 
-function attachAllSensors() {
-    if (!confirm('Attach all configured sensors to connected base stations?')) return;
-    apiRequest('/api/sensors/attach-all', 'POST')
-        .then(data => {
-            showAlert('success', data.message || 'Attach-all requested.');
-            loadSensors(true);
-        })
-        .catch(error => showAlert('danger', `Error attaching sensors: ${error.message}`));
-}
+async function detachAllSensors() {
+    const confirmed = await confirmWithModal({
+        title: 'Detach all sensors',
+        message: 'Detach all sensors from all base stations?',
+        confirmText: 'Detach all',
+        confirmClass: 'btn-warning'
+    });
+    if (!confirmed) return;
 
-function detachAllSensors() {
-    if (!confirm('Detach all sensors from all base stations?')) return;
     apiRequest('/api/sensors/detach-all', 'POST')
         .then(data => {
             showAlert('success', data.message || 'Detach-all requested.');
@@ -1331,8 +1944,15 @@ function detachAllSensors() {
         .catch(error => showAlert('danger', `Error detaching sensors: ${error.message}`));
 }
 
-function clearAllSensors() {
-    if (!confirm('Clear all sensors, detach them, and remove all configurations? This cannot be undone.')) return;
+async function clearAllSensors() {
+    const confirmed = await confirmWithModal({
+        title: 'Clear all sensors',
+        message: 'Clear all sensors, detach them, and remove all configurations?<br><strong>This cannot be undone.</strong>',
+        confirmText: 'Clear all',
+        confirmClass: 'btn-danger'
+    });
+    if (!confirmed) return;
+
     apiRequest('/api/sensors/clear', 'POST')
         .then(data => {
             selectedSensors.clear();
@@ -1395,7 +2015,18 @@ async function runBulkAction(actionName, actionFn) {
         showAlert('warning', 'Select at least one sensor first.');
         return;
     }
-    if (!confirm(`${actionName} ${targets.length} selected sensor(s)?`)) return;
+    const confirmClassByAction = {
+        Attach: 'btn-success',
+        Detach: 'btn-warning',
+        Delete: 'btn-danger'
+    };
+    const confirmed = await confirmWithModal({
+        title: `${actionName} selected sensors`,
+        message: `${escapeHtml(actionName)} ${targets.length} selected sensor(s)?`,
+        confirmText: actionName,
+        confirmClass: confirmClassByAction[actionName] || 'btn-primary'
+    });
+    if (!confirmed) return;
 
     let success = 0;
     const failures = [];
@@ -1418,7 +2049,7 @@ async function runBulkAction(actionName, actionFn) {
 }
 
 function bulkAttachSelected() {
-    runBulkAction('Attach', eui => apiRequest(`/api/sensors/${eui}/attach`, 'POST'));
+    openBulkAttachSensorModal();
 }
 
 function bulkDetachSelected() {
@@ -1494,11 +2125,75 @@ document.getElementById('viewCompactMode').addEventListener('change', event => {
     applySensorViewPrefs();
 });
 
+function initSensorUnsavedChangesGuards() {
+    const sensorModalEl = document.getElementById('sensorModal');
+    if (sensorModalEl) {
+        sensorModalEl.addEventListener('hide.bs.modal', async (event) => {
+            if (sensorModalCloseBySave) {
+                sensorModalCloseBySave = false;
+                setSensorFormBaseline();
+                return;
+            }
+            if (!isSensorFormDirty()) return;
+            event.preventDefault();
+            const confirmed = await confirmWithModal({
+                title: 'Discard sensor changes',
+                message: 'You have unsaved sensor changes. Close this form without saving?',
+                confirmText: 'Discard',
+                confirmClass: 'btn-warning'
+            });
+            if (!confirmed) return;
+            sensorModalCloseBySave = true;
+            setSensorFormBaseline();
+            const modal = bootstrap.Modal.getInstance(sensorModalEl);
+            if (modal) {
+                modal.hide();
+            }
+        });
+    }
+
+    if (window.AppUI && typeof window.AppUI.unsavedGuard === 'function') {
+        window.AppUI.unsavedGuard({
+            title: 'Unsaved sensor changes',
+            message: 'You have unsaved sensor form changes. Leave this page without saving?',
+            confirmText: 'Leave page',
+            cancelText: 'Stay',
+            variant: 'warning',
+            isDirty: () => {
+                const isModalOpen = sensorModalEl && sensorModalEl.classList.contains('show');
+                return Boolean(isModalOpen && isSensorFormDirty());
+            }
+        });
+    }
+}
+
 loadSensorViewPrefs();
 applySensorViewPrefs();
 sensorPageSize = Math.max(1, Number(document.getElementById('sensorPageSize').value) || 20);
 setAutoRefresh(true);
 loadSensors();
+initSensorUnsavedChangesGuards();
+
+const attachModalEl = document.getElementById('attachSensorModal');
+if (attachModalEl) {
+    attachModalEl.addEventListener('hidden.bs.modal', () => {
+        attachTargetSensorEuis = [];
+        attachPresenceMap = new Map();
+        const labelNode = document.getElementById('attachSensorTargetLabel');
+        if (labelNode) {
+            labelNode.textContent = '-';
+        }
+        const hintNode = document.getElementById('attachSensorStateHint');
+        if (hintNode) {
+            hintNode.textContent = 'Loading current attachment state...';
+        }
+        const listNode = document.getElementById('attachBaseStationList');
+        if (listNode) {
+            listNode.innerHTML = '<div class="p-3 text-muted small">Loading base stations...</div>';
+        }
+        updateAttachModalSelectionState();
+    });
+}
 
 function showSensorDetails(eui) {
     const modal = new bootstrap.Modal(document.getElementById('sensorDetailsModal'));
@@ -1524,233 +2219,223 @@ function showSensorDetails(eui) {
             }
             const detailsName = data.config && data.config.name ? ` - ${data.config.name}` : '';
             document.getElementById('sensorDetailsTitle').textContent = `Sensor ${eui}${detailsName}`;
-            
-            const firstSeen = data.first_seen ? new Date(data.first_seen * 1000).toLocaleDateString() : 'N/A';
-            const lastSeen = data.last_seen ? formatTimeAgo(data.last_seen * 1000) : 'N/A';
-            const sendInterval = data.send_interval > 0 ? Math.round(data.send_interval) + 's' : 'N/A';
-            
-            const signalLabel = getScoreLabel(data.signal_score);
-            
-            // Calculate online status based on send interval
-            const now = Date.now() / 1000;
-            const lastSeenTs = data.last_seen || 0;
-            const timeSinceLastSeen = now - lastSeenTs;
-            const expectedInterval = data.send_interval > 0 ? data.send_interval : 60;
-            const missedIntervals = timeSinceLastSeen / expectedInterval;
-            
-            let deviceStatus = 'Online';
-            let statusColor = '#28a745';
-            let statusIcon = 'check-circle';
-            let statusMessage = 'Device is sending data as expected';
-            
-            if (missedIntervals > 5) {
-                deviceStatus = 'Offline';
-                statusColor = '#dc3545';
-                statusIcon = 'times-circle';
-                statusMessage = `No data received for ${Math.round(timeSinceLastSeen / 60)} minutes (expected every ${Math.round(expectedInterval)}s)`;
-            } else if (missedIntervals > 2) {
-                deviceStatus = 'Warning';
-                statusColor = '#ffc107';
-                statusIcon = 'exclamation-triangle';
-                statusMessage = `Last transmission delayed - ${Math.round(missedIntervals)} intervals missed`;
+
+            const hasTelemetry = Number(data.packets_received || 0) > 0 || Boolean(data.last_seen);
+            const firstSeen = data.first_seen ? new Date(data.first_seen * 1000).toLocaleString() : 'Not yet';
+            const lastSeen = data.last_seen ? formatTimeAgo(data.last_seen * 1000) : 'No traffic yet';
+            const expectedIntervalSec = Number(data.send_interval) > 0 ? Number(data.send_interval) : null;
+            const expectedInterval = expectedIntervalSec ? `${Math.round(expectedIntervalSec)}s` : 'Unknown';
+
+            const nowSec = Date.now() / 1000;
+            const timeSinceLastSeenSec = data.last_seen ? Math.max(0, nowSec - Number(data.last_seen)) : null;
+            const statusBaseline = expectedIntervalSec || 60;
+            const signalScore = Number(data.signal_score || 0);
+            const signalLabel = getScoreLabel(signalScore);
+            const signalColor = getScoreColor(signalScore);
+            const signalProgress = Math.max(0, Math.min(100, (signalScore / 5) * 100));
+            const missedTelegrams = Number(data.packets_lost || 0);
+
+            let statusKey = 'unknown';
+            let statusLabel = 'No telemetry';
+            let statusMessage = 'No uplink traffic received from this sensor yet.';
+            if (hasTelemetry && timeSinceLastSeenSec !== null) {
+                if (timeSinceLastSeenSec <= statusBaseline * 2) {
+                    statusKey = 'online';
+                    statusLabel = 'Online';
+                    statusMessage = 'Sensor is sending data within expected interval.';
+                } else if (timeSinceLastSeenSec <= statusBaseline * 5) {
+                    statusKey = 'warning';
+                    statusLabel = 'Delayed';
+                    statusMessage = `Last uplink is delayed (${formatDurationShort(timeSinceLastSeenSec)} ago).`;
+                } else {
+                    statusKey = 'offline';
+                    statusLabel = 'Offline';
+                    statusMessage = `No recent uplink (${formatDurationShort(timeSinceLastSeenSec)} ago).`;
+                }
             }
-            
+
+            const statusChipVariant = `sensor-status-chip--${statusKey}`;
+            const statusTextClass = statusKey === 'online'
+                ? 'text-success'
+                : statusKey === 'warning'
+                    ? 'text-warning'
+                    : statusKey === 'offline'
+                        ? 'text-danger'
+                        : 'text-secondary';
+
+            const snrAvg = hasTelemetry ? formatMetric(data.avg_snr, 1, ' dB') : 'N/A';
+            const rssiAvg = hasTelemetry ? formatMetric(data.avg_rssi, 1, ' dBm') : 'N/A';
+
+            const coverageEntries = Object.entries(data.receiving_bases_details || {});
+            const coverageTable = coverageEntries.length > 0
+                ? `
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Base station</th>
+                                    <th class="text-center">SNR</th>
+                                    <th class="text-center">RSSI</th>
+                                    <th class="text-center">Messages</th>
+                                    <th class="text-center">Last seen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${coverageEntries.map(([bsEui, bsData]) => {
+                                    const primaryBadge = bsEui === data.primary_gateway
+                                        ? '<span class="badge bg-warning text-dark me-1">Primary</span>'
+                                        : '';
+                                    const snr = formatMetric(bsData && bsData.snr, 1, ' dB');
+                                    const rssi = formatMetric(bsData && bsData.rssi, 1, ' dBm');
+                                    const count = Number(bsData && bsData.count || 0).toLocaleString();
+                                    const seen = bsData && bsData.last_seen ? formatTimeAgo(bsData.last_seen * 1000) : 'N/A';
+                                    return `
+                                        <tr>
+                                            <td>${primaryBadge}<code>${escapeHtml(bsEui)}</code></td>
+                                            <td class="text-center">${snr}</td>
+                                            <td class="text-center">${rssi}</td>
+                                            <td class="text-center">${count}</td>
+                                            <td class="text-center">${seen}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `
+                : '<div class="text-muted">No base station coverage data yet.</div>';
+
             document.getElementById('sensorDetailsBody').innerHTML = `
-                <!-- Header Info Bar -->
-                <div class="d-flex flex-wrap gap-4 p-3 mb-4" style="background: #fff8f0; border-radius: 10px; border-left: 4px solid #ff8c00;">
-                    <div class="text-center">
-                        <small class="text-muted d-block">Endpoint EUI</small>
-                        <strong style="color: #ff8c00;">${data.eui}</strong>
+                <div class="sensor-detail-banner mb-3">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="sensor-status-chip ${statusChipVariant}">
+                                <i class="fas fa-circle" style="font-size: 0.5rem;"></i>${statusLabel}
+                            </span>
+                            <code>${escapeHtml(data.eui || eui)}</code>
+                            ${data.config && data.config.shortAddr ? `<span class="badge bg-light text-dark border">Addr ${escapeHtml(data.config.shortAddr)}</span>` : ''}
+                        </div>
+                        <small class="text-muted">Expected interval: ${expectedInterval}</small>
                     </div>
-                    <div class="text-center">
-                        <small class="text-muted d-block">First Seen</small>
-                        <strong>${firstSeen}</strong>
-                    </div>
-                    <div class="text-center">
-                        <small class="text-muted d-block">Last Seen</small>
-                        <strong style="color: #28a745;">${lastSeen}</strong>
-                    </div>
-                    <div class="text-center">
-                        <small class="text-muted d-block">Current RSSI</small>
-                        <strong>${data.avg_rssi.toFixed(1)} dBm</strong>
-                    </div>
-                    <div class="text-center">
-                        <small class="text-muted d-block">Base Stations</small>
-                        <strong style="color: #ff8c00;">${data.gateway_count}</strong>
-                    </div>
-                    <div class="text-center">
-                        <small class="text-muted d-block">Status</small>
-                        <strong style="color: ${statusColor};">${deviceStatus}</strong>
-                    </div>
-                </div>
-                
-                <!-- Overview Cards -->
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <small class="text-muted">Device Status</small>
-                                <h2 class="mt-2 mb-1" style="color: ${statusColor};">${deviceStatus}</h2>
-                                <small>${missedIntervals > 2 ? Math.round(missedIntervals) + ' intervals missed' : 'Active'}</small>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <div class="sensor-detail-kpi">
+                                <div class="sensor-detail-kpi-label">First Seen</div>
+                                <div class="sensor-detail-kpi-value" style="font-size:1rem;">${firstSeen}</div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <small class="text-muted">Signal Quality</small>
-                                <h2 class="mt-2 mb-1" style="color: ${getScoreColor(data.signal_score)};">${signalLabel}</h2>
-                                <small>RSSI: ${data.avg_rssi.toFixed(1)} dBm, SNR: ${data.avg_snr.toFixed(1)} dB</small>
+                        <div class="col-md-3">
+                            <div class="sensor-detail-kpi">
+                                <div class="sensor-detail-kpi-label">Last Seen</div>
+                                <div class="sensor-detail-kpi-value" style="font-size:1rem;">${lastSeen}</div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <small class="text-muted">Send Interval</small>
-                                <h2 class="mt-2 mb-1">${sendInterval}</h2>
-                                <small>${data.packets_lost} missed telegrams</small>
+                        <div class="col-md-3">
+                            <div class="sensor-detail-kpi">
+                                <div class="sensor-detail-kpi-label">Gateway Coverage</div>
+                                <div class="sensor-detail-kpi-value">${Number(data.gateway_count || 0)}</div>
+                                <div class="sensor-detail-kpi-note">Base stations receiving</div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <small class="text-muted">Base Station Coverage</small>
-                                <h2 class="mt-2 mb-1" style="color: #ff8c00;">${data.gateway_count}</h2>
-                                <small>base stations receiving</small>
+                        <div class="col-md-3">
+                            <div class="sensor-detail-kpi">
+                                <div class="sensor-detail-kpi-label">Packet Loss</div>
+                                <div class="sensor-detail-kpi-value">${formatMetric(data.packet_loss_rate, 2, '%')}</div>
+                                <div class="sensor-detail-kpi-note">${missedTelegrams.toLocaleString()} missed telegrams</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Device Status & Transmission Details -->
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="mb-3" style="color: #ff8c00;">Device Status</h5>
-                                
-                                <!-- Online/Offline Status -->
-                                <div class="alert py-3 mb-3" style="background-color: ${statusColor}20; border-color: ${statusColor}; color: ${statusColor === '#28a745' ? '#155724' : statusColor === '#dc3545' ? '#721c24' : '#856404'};">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-${statusIcon} fa-2x me-3"></i>
-                                        <div>
-                                            <strong>${deviceStatus}</strong>
-                                            <br><small>${statusMessage}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span>Signal Strength</span>
-                                        <span style="color: ${getScoreColor(data.signal_score)};">${signalLabel} (${data.signal_score.toFixed(1)}/5)</span>
-                                    </div>
-                                    <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar" style="width: ${data.signal_score * 20}%; background: linear-gradient(90deg, #dc3545, #ffc107, #28a745);"></div>
-                                    </div>
-                                    <small class="text-muted">${data.signal_score >= 4 ? 'Excellent reception' : data.signal_score >= 3 ? 'Good reception' : 'Weak signal - consider repositioning'}</small>
-                                </div>
-                                
-                                ${data.packets_lost > 0 ? `
-                                <div class="alert alert-warning py-2 mb-0">
-                                    <strong>Missed Telegrams Detected</strong>
-                                    <br><small>${data.packets_lost} telegram(s) were not received. This may indicate interference or device issues.</small>
-                                </div>
-                                ` : `
-                                <div class="alert py-2 mb-0" style="background-color: #d4edda; border-color: #28a745; color: #155724;">
-                                    No missed telegrams detected
-                                </div>
-                                `}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="mb-3" style="color: #ff8c00;">Transmission Details</h5>
-                                
-                                <div class="row">
-                                    <div class="col-6 mb-3">
-                                        <small class="text-muted d-block">Frequency Band</small>
-                                        <strong>${data.frequency_mhz > 0 ? data.frequency_mhz.toFixed(3) : '868'} MHz</strong>
-                                    </div>
-                                    <div class="col-6 mb-3">
-                                        <small class="text-muted d-block">Packet Counter</small>
-                                        <strong>${data.frame_counter.toLocaleString()}</strong>
-                                    </div>
-                                    <div class="col-6 mb-3">
-                                        <small class="text-muted d-block">Telegram Duration</small>
-                                        <strong>${data.last_airtime_ms.toFixed(1)} ms</strong>
-                                    </div>
-                                    <div class="col-6 mb-3">
-                                        <small class="text-muted d-block">Avg Duration</small>
-                                        <strong>${data.avg_airtime_ms.toFixed(1)} ms</strong>
-                                    </div>
-                                    <div class="col-6 mb-3">
-                                        <small class="text-muted d-block">Duty Cycle</small>
-                                        <strong>${data.duty_cycle.toFixed(4)}%</strong>
-                                    </div>
-                                    <div class="col-6 mb-3">
-                                        <small class="text-muted d-block">Telegrams Received</small>
-                                        <strong>${data.packets_received.toLocaleString()}</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Signal Statistics -->
+
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="card">
+                    <div class="col-lg-4">
+                        <div class="card sensor-detail-card">
                             <div class="card-body">
-                                <h5 class="mb-3" style="color: #ff8c00;">SNR Statistics</h5>
-                                <div class="row text-center">
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Min</small>
-                                        <strong>${data.min_snr?.toFixed(1) || '0'} dB</strong>
+                                <h6 class="card-title mb-2"><i class="fas fa-heartbeat me-2"></i>Health</h6>
+                                <div class="mb-2">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="small text-muted">Status</span>
+                                        <span class="${statusTextClass} fw-bold">${statusLabel}</span>
+                                    </div>
+                                    <small class="text-muted">${statusMessage}</small>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small text-muted">Signal score</span>
+                                    <span class="fw-semibold" style="color:${signalColor};">${signalLabel} (${signalScore.toFixed(1)}/5)</span>
+                                </div>
+                                <div class="progress" style="height:8px;">
+                                    <div class="progress-bar" style="width:${signalProgress}%; background:linear-gradient(90deg,#dc3545,#ffc107,#28a745);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card sensor-detail-card">
+                            <div class="card-body">
+                                <h6 class="card-title mb-2"><i class="fas fa-signal me-2"></i>Radio Metrics</h6>
+                                <div class="row text-center g-2">
+                                    <div class="col-6">
+                                        <div class="small text-muted">Avg SNR</div>
+                                        <div class="fw-bold">${snrAvg}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="small text-muted">Avg RSSI</div>
+                                        <div class="fw-bold">${rssiAvg}</div>
                                     </div>
                                     <div class="col-4">
-                                        <small class="text-muted d-block">Avg</small>
-                                        <strong style="color: #28a745;">${data.avg_snr.toFixed(1)} dB</strong>
+                                        <div class="small text-muted">SNR Min</div>
+                                        <div class="fw-semibold">${hasTelemetry ? formatMetric(data.min_snr, 1, ' dB') : 'N/A'}</div>
                                     </div>
                                     <div class="col-4">
-                                        <small class="text-muted d-block">Max</small>
-                                        <strong>${data.max_snr?.toFixed(1) || '0'} dB</strong>
+                                        <div class="small text-muted">SNR Max</div>
+                                        <div class="fw-semibold">${hasTelemetry ? formatMetric(data.max_snr, 1, ' dB') : 'N/A'}</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Frame Cnt</div>
+                                        <div class="fw-semibold">${Number(data.frame_counter || 0).toLocaleString()}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card">
+
+                    <div class="col-lg-4">
+                        <div class="card sensor-detail-card">
                             <div class="card-body">
-                                <h5 class="mb-3" style="color: #ff8c00;">RSSI Statistics</h5>
-                                <div class="row text-center">
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Min</small>
-                                        <strong>${data.min_rssi?.toFixed(1) || '0'} dBm</strong>
-                                    </div>
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Avg</small>
-                                        <strong style="color: #28a745;">${data.avg_rssi.toFixed(1)} dBm</strong>
-                                    </div>
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Max</small>
-                                        <strong>${data.max_rssi?.toFixed(1) || '0'} dBm</strong>
-                                    </div>
+                                <h6 class="card-title mb-2"><i class="fas fa-wave-square me-2"></i>Transmission</h6>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="small text-muted">Frequency</span>
+                                    <strong>${formatMetric(data.frequency_mhz, 3, ' MHz', '868.000 MHz')}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="small text-muted">Telegrams received</span>
+                                    <strong>${Number(data.packets_received || 0).toLocaleString()}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="small text-muted">Last duration</span>
+                                    <strong>${hasTelemetry ? formatMetric(data.last_airtime_ms, 1, ' ms') : 'N/A'}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="small text-muted">Avg duration</span>
+                                    <strong>${hasTelemetry ? formatMetric(data.avg_airtime_ms, 1, ' ms') : 'N/A'}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="small text-muted">Duty cycle</span>
+                                    <strong>${hasTelemetry ? formatMetric(data.duty_cycle, 4, '%') : 'N/A'}</strong>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Base Station Coverage -->
-                ${data.gateway_count > 0 ? '<div class="card mt-3"><div class="card-body"><h5 class="mb-3" style="color: #ff8c00;">Base Station Coverage</h5><div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Base Station</th><th class="text-center">SNR</th><th class="text-center">RSSI</th><th class="text-center">Telegrams</th><th class="text-center">Last Seen</th></tr></thead><tbody>' + Object.entries(data.receiving_bases_details || {}).map(function(entry) { var bsEui = entry[0]; var bsData = entry[1]; var isPrimary = bsEui === data.primary_gateway; var lastSeenAgo = bsData.last_seen ? formatTimeAgo(bsData.last_seen * 1000) : 'N/A'; return '<tr><td>' + (isPrimary ? '<span class="badge me-1" style="background: #ff8c00;">Primary</span>' : '') + '<code>' + bsEui + '</code></td><td class="text-center">' + (bsData.snr ? bsData.snr.toFixed(1) : 'N/A') + ' dB</td><td class="text-center">' + (bsData.rssi ? bsData.rssi.toFixed(1) : 'N/A') + ' dBm</td><td class="text-center">' + (bsData.count ? bsData.count.toLocaleString() : 0) + '</td><td class="text-center">' + lastSeenAgo + '</td></tr>'; }).join('') + '</tbody></table></div></div></div>' : ''}
+
+                <div class="card sensor-detail-card mt-3">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="fas fa-tower-broadcast me-2"></i>Base Station Coverage</h6>
+                        ${coverageTable}
+                    </div>
+                </div>
             `;
         })
         .catch(error => {
@@ -1758,6 +2443,21 @@ function showSensorDetails(eui) {
                 <div class="alert alert-danger">Error loading sensor details: ${error.message}</div>
             `;
         });
+}
+
+function formatMetric(value, digits = 1, unit = '', fallback = 'N/A') {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+    return `${num.toFixed(digits)}${unit}`;
+}
+
+function formatDurationShort(secondsValue) {
+    const totalSeconds = Number(secondsValue);
+    if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return 'N/A';
+    if (totalSeconds < 60) return `${Math.floor(totalSeconds)}s`;
+    if (totalSeconds < 3600) return `${Math.floor(totalSeconds / 60)}m`;
+    if (totalSeconds < 86400) return `${Math.floor(totalSeconds / 3600)}h`;
+    return `${Math.floor(totalSeconds / 86400)}d`;
 }
 
 function formatTimeAgo(timestamp) {

@@ -14,12 +14,15 @@
             --brand-400: #f39e45;
             --brand-500: #e97c13;
             --brand-600: #c96207;
+            --brand-rgb: 233, 124, 19;
             --sidebar-900: #0f172a;
             --sidebar-800: #18243a;
             --sidebar-700: #243450;
             --surface-0: #edf2f8;
             --surface-1: #ffffff;
             --surface-2: #f4f8fd;
+            --bg-glow-a: #ffe4c2;
+            --bg-glow-b: #dceaff;
             --text-900: #0f172a;
             --text-700: #344155;
             --text-500: #617188;
@@ -40,6 +43,38 @@
             --ui-sidebar-pad-x: clamp(0.64rem, 0.8vw, 0.9rem);
         }
 
+        html.ui-theme-azure {
+            --brand-400: #56a6ff;
+            --brand-500: #2f7fd9;
+            --brand-600: #1f63b0;
+            --brand-rgb: 47, 127, 217;
+            --sidebar-900: #10233f;
+            --sidebar-800: #173154;
+            --sidebar-700: #224575;
+            --surface-0: #edf4ff;
+            --surface-1: #ffffff;
+            --surface-2: #f5f9ff;
+            --bg-glow-a: #e1efff;
+            --bg-glow-b: #d8f2ff;
+            --line: #d2e0f2;
+        }
+
+        html.ui-theme-sage {
+            --brand-400: #72ba8f;
+            --brand-500: #4a9a6d;
+            --brand-600: #327750;
+            --brand-rgb: 74, 154, 109;
+            --sidebar-900: #172a24;
+            --sidebar-800: #1f3a32;
+            --sidebar-700: #2a4d41;
+            --surface-0: #eef5f1;
+            --surface-1: #ffffff;
+            --surface-2: #f6fbf8;
+            --bg-glow-a: #e6f3eb;
+            --bg-glow-b: #e1eff8;
+            --line: #d0dfd6;
+        }
+
         html {
             font-size: calc(var(--ui-base-font) * var(--ui-font-scale));
             -webkit-text-size-adjust: 100%;
@@ -54,8 +89,8 @@
             margin: 0;
             min-height: 100vh;
             background:
-                radial-gradient(1100px 480px at 10% -12%, #ffe4c2 0%, transparent 58%),
-                radial-gradient(900px 520px at 100% -15%, #dceaff 0%, transparent 55%),
+                radial-gradient(1100px 480px at 10% -12%, var(--bg-glow-a) 0%, transparent 58%),
+                radial-gradient(900px 520px at 100% -15%, var(--bg-glow-b) 0%, transparent 55%),
                 var(--surface-0);
             color: var(--text-900);
             font-family: "Manrope", "Segoe UI", sans-serif;
@@ -156,15 +191,25 @@
         .side-nav-link.active {
             color: #fff;
             background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%);
-            box-shadow: 0 10px 18px rgba(233, 124, 19, 0.32);
+            box-shadow: 0 10px 18px rgba(var(--brand-rgb), 0.32);
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            display: grid;
+            gap: 0.56rem;
         }
 
         .sidebar-footer {
-            margin-top: auto;
+            margin-top: 0;
             border: 1px solid rgba(255, 255, 255, 0.16);
             border-radius: 0.95rem;
             background: rgba(255, 255, 255, 0.08);
             padding: 0.7rem;
+        }
+
+        .sidebar-doc-entry {
+            margin: 0;
         }
 
         .sidebar-user {
@@ -206,6 +251,87 @@
         .logout-link:focus {
             color: #fff;
             background: rgba(255, 255, 255, 0.14);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 0.38rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.56rem;
+        }
+
+        .sidebar-help-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.34rem;
+            text-decoration: none;
+            color: #e8f2ff;
+            font-size: 0.76rem;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 999px;
+            padding: 0.3rem 0.62rem;
+            transition: all 0.18s ease;
+        }
+
+        .sidebar-help-link:hover,
+        .sidebar-help-link:focus {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .sidebar-help-link.active {
+            color: #ffffff;
+            border-color: rgba(198, 216, 239, 0.78);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.16);
+        }
+
+        .app-toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 2000;
+            display: grid;
+            gap: 0.5rem;
+            max-width: min(420px, calc(100vw - 2rem));
+            pointer-events: none;
+        }
+
+        .app-toast {
+            pointer-events: auto;
+            border: 1px solid #d2dbe8;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .app-toast .toast-body {
+            font-size: 0.82rem;
+            color: #1f2f46;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.62rem 0.72rem;
+        }
+
+        .app-toast-success { border-left: 4px solid #0f9d69; }
+        .app-toast-info { border-left: 4px solid #2f5a92; }
+        .app-toast-warning { border-left: 4px solid #d98512; }
+        .app-toast-danger { border-left: 4px solid #cb3a42; }
+
+        .app-confirm-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #edf3fb;
+            color: #2f5a92;
+            font-size: 0.92rem;
         }
 
         .app-main {
@@ -334,6 +460,14 @@
         .workspace-shell {
             display: grid;
             gap: 0.9rem;
+        }
+
+        .workspace-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.55rem;
         }
 
         .workspace-head {
@@ -511,7 +645,7 @@
         .btn-primary {
             border-color: var(--brand-500);
             background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%);
-            box-shadow: 0 9px 16px rgba(233, 124, 19, 0.28);
+            box-shadow: 0 9px 16px rgba(var(--brand-rgb), 0.28);
         }
 
         .btn-primary:hover,
@@ -696,6 +830,42 @@
             z-index: 34;
         }
 
+        .perf-skeleton {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .perf-skeleton::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(
+                110deg,
+                rgba(255, 255, 255, 0) 8%,
+                rgba(255, 255, 255, 0.55) 18%,
+                rgba(255, 255, 255, 0) 33%
+            );
+            transform: translateX(-140%);
+            animation: perfSkeletonShimmer 1.2s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .perf-skeleton > * {
+            opacity: 0.46;
+            transition: opacity 0.16s ease;
+        }
+
+        .perf-skeleton.perf-skeleton-soft > * {
+            opacity: 0.62;
+        }
+
+        @keyframes perfSkeletonShimmer {
+            100% {
+                transform: translateX(145%);
+            }
+        }
+
         @media (max-width: 1024px) {
             .app-sidebar {
                 position: fixed;
@@ -737,6 +907,10 @@
 
             .workspace-actions {
                 width: 100%;
+                justify-content: flex-start;
+            }
+
+            .workspace-toolbar {
                 justify-content: flex-start;
             }
         }
@@ -793,7 +967,7 @@
                     <span>Base Stations</span>
                 </a>
                 {% endif %}
-                {% if 'oms' in visible_tabs %}
+                {% if 'oms' in visible_tabs and oms_enabled %}
                 <a class="side-nav-link {% if endpoint == 'oms' %}active{% endif %}" href="{{ url_for('oms') }}">
                     <i class="fas fa-water"></i>
                     <span>OMS</span>
@@ -821,6 +995,12 @@
                     <span>Coverage Map</span>
                 </a>
                 {% endif %}
+                {% if 'mqtt' in visible_tabs or 'health' in visible_tabs %}
+                <a class="side-nav-link {% if endpoint == 'mqtt' %}active{% endif %}" href="{{ url_for('mqtt') }}">
+                    <i class="fas fa-wifi"></i>
+                    <span>MQTT</span>
+                </a>
+                {% endif %}
                 {% if 'logs' in visible_tabs %}
                 <a class="side-nav-link {% if endpoint == 'logs' %}active{% endif %}" href="{{ url_for('logs') }}">
                     <i class="fas fa-file-alt"></i>
@@ -831,6 +1011,12 @@
 
             <div class="nav-group">
                 <p class="nav-group-title">Administration</p>
+                {% if 'administration' in visible_tabs or (current_user and current_user.role == 'admin') %}
+                <a class="side-nav-link {% if endpoint == 'administration' %}active{% endif %}" href="{{ url_for('administration') }}">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Access & Tenants</span>
+                </a>
+                {% endif %}
                 {% if 'config' in visible_tabs %}
                 <a class="side-nav-link {% if endpoint == 'config' %}active{% endif %}" href="{{ url_for('config') }}">
                     <i class="fas fa-sliders-h"></i>
@@ -846,15 +1032,23 @@
             </div>
 
             {% if current_user %}
-            <div class="sidebar-footer">
-                <div class="sidebar-user">
-                    <span class="sidebar-user-name">{{ current_user.name }}</span>
-                    <span class="sidebar-user-role">{{ current_user.role }}</span>
+            <div class="sidebar-bottom">
+                <div class="sidebar-doc-entry">
+                    <a class="sidebar-help-link {% if endpoint == 'documentation' %}active{% endif %}" href="{{ url_for('documentation') }}">
+                        <i class="fas fa-book-open"></i>
+                        <span>Documentation</span>
+                    </a>
                 </div>
-                <a class="logout-link" href="{{ url_for('logout') }}">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Log out</span>
-                </a>
+                <div class="sidebar-footer">
+                    <div class="sidebar-user">
+                        <span class="sidebar-user-name">{{ current_user.name }}</span>
+                        <span class="sidebar-user-role">{{ current_user.role }}</span>
+                    </div>
+                    <a class="logout-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Log out</span>
+                    </a>
+                </div>
             </div>
             {% endif %}
         </aside>
@@ -915,6 +1109,15 @@
                         </select>
                         <p class="display-setting-note">Controls how tightly panels and navigation are packed.</p>
                     </section>
+                    <section class="display-setting-card">
+                        <label class="display-setting-title" for="display-theme-select">Color scheme</label>
+                        <select id="display-theme-select" class="form-select form-select-sm">
+                            <option value="default">Default light</option>
+                            <option value="azure">Azure light</option>
+                            <option value="sage">Sage light</option>
+                        </select>
+                        <p class="display-setting-note">Applies a light color palette variant across the interface.</p>
+                    </section>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary btn-sm" id="display-settings-reset">Reset</button>
@@ -924,9 +1127,383 @@
         </div>
     </div>
 
+    <div id="appToastContainer" class="app-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="modal fade" id="appConfirmModal" tabindex="-1" aria-labelledby="appConfirmModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="app-confirm-icon"><i id="appConfirmModalIcon" class="fas fa-circle-question"></i></span>
+                        <h5 class="modal-title mb-0" id="appConfirmModalTitle">Please confirm</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-2">
+                    <p class="mb-0" id="appConfirmModalBody">Are you sure?</p>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="appConfirmModalCancel">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="appConfirmModalAccept">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const DISPLAY_PREFS_KEY = 'service-center.display.v1';
-        const DISPLAY_DEFAULTS = { scale: 100, density: 'auto' };
+        const DISPLAY_THEMES = ['default', 'azure', 'sage'];
+        const DISPLAY_DEFAULTS = { scale: 100, density: 'auto', theme: 'default' };
+
+        const APP_TOAST_ICONS = {
+            success: 'fa-circle-check',
+            info: 'fa-circle-info',
+            warning: 'fa-triangle-exclamation',
+            danger: 'fa-circle-exclamation'
+        };
+
+        function getAppToastContainer() {
+            return document.getElementById('appToastContainer');
+        }
+
+        function appToast(message, type = 'info', options = {}) {
+            const container = getAppToastContainer();
+            if (!container) {
+                return;
+            }
+            const safeType = ['success', 'info', 'warning', 'danger'].includes(type) ? type : 'info';
+            const delay = Number.isFinite(Number(options.delay)) ? Number(options.delay) : 3000;
+            const icon = APP_TOAST_ICONS[safeType] || APP_TOAST_ICONS.info;
+
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast app-toast app-toast-${safeType} align-items-center border-0`;
+            toastEl.setAttribute('role', 'alert');
+            toastEl.setAttribute('aria-live', 'assertive');
+            toastEl.setAttribute('aria-atomic', 'true');
+            toastEl.dataset.bsAutohide = options.autohide === false ? 'false' : 'true';
+            toastEl.dataset.bsDelay = String(delay);
+
+            const body = document.createElement('div');
+            body.className = 'toast-body';
+            const iconNode = document.createElement('i');
+            iconNode.className = `fas ${icon}`;
+            const textNode = document.createElement('span');
+            textNode.textContent = String(message ?? '');
+            body.appendChild(iconNode);
+            body.appendChild(textNode);
+            toastEl.appendChild(body);
+
+            container.appendChild(toastEl);
+            const instance = new bootstrap.Toast(toastEl, {
+                autohide: options.autohide === false ? false : true,
+                delay
+            });
+            toastEl.addEventListener('hidden.bs.toast', () => {
+                toastEl.remove();
+            }, { once: true });
+            instance.show();
+        }
+
+        function appConfirm(options = {}) {
+            const modalEl = document.getElementById('appConfirmModal');
+            const titleEl = document.getElementById('appConfirmModalTitle');
+            const bodyEl = document.getElementById('appConfirmModalBody');
+            const iconEl = document.getElementById('appConfirmModalIcon');
+            const cancelBtn = document.getElementById('appConfirmModalCancel');
+            const acceptBtn = document.getElementById('appConfirmModalAccept');
+
+            if (!modalEl || !titleEl || !bodyEl || !cancelBtn || !acceptBtn) {
+                return Promise.resolve(window.confirm(options.message || 'Are you sure?'));
+            }
+
+            const variant = ['primary', 'danger', 'warning', 'success'].includes(options.variant) ? options.variant : 'primary';
+            titleEl.textContent = options.title || 'Please confirm';
+            bodyEl.textContent = options.message || 'Are you sure?';
+            acceptBtn.textContent = options.confirmText || 'Confirm';
+            cancelBtn.textContent = options.cancelText || 'Cancel';
+            acceptBtn.className = `btn btn-${variant} btn-sm`;
+            cancelBtn.className = 'btn btn-outline-secondary btn-sm';
+            iconEl.className = variant === 'danger' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-question';
+
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static', keyboard: true });
+
+            return new Promise((resolve) => {
+                let resolved = false;
+                const done = (value) => {
+                    if (resolved) return;
+                    resolved = true;
+                    cleanup();
+                    resolve(value);
+                };
+                const onAccept = () => {
+                    modal.hide();
+                    done(true);
+                };
+                const onCancel = () => {
+                    modal.hide();
+                    done(false);
+                };
+                const onHidden = () => done(false);
+                const cleanup = () => {
+                    acceptBtn.removeEventListener('click', onAccept);
+                    cancelBtn.removeEventListener('click', onCancel);
+                    modalEl.removeEventListener('hidden.bs.modal', onHidden);
+                };
+                acceptBtn.addEventListener('click', onAccept);
+                cancelBtn.addEventListener('click', onCancel);
+                modalEl.addEventListener('hidden.bs.modal', onHidden);
+                modal.show();
+            });
+        }
+
+        function createUnsavedChangesGuard(options = {}) {
+            const config = {
+                message: options.message || 'You have unsaved changes. Leave this page without saving?',
+                title: options.title || 'Unsaved changes',
+                confirmText: options.confirmText || 'Leave page',
+                cancelText: options.cancelText || 'Stay',
+                variant: options.variant || 'warning',
+                isDirty: typeof options.isDirty === 'function' ? options.isDirty : () => false,
+            };
+
+            const state = {
+                enabled: true,
+                suppressBeforeUnload: false,
+                navigationInProgress: false,
+            };
+
+            function shouldBypassAnchor(anchor, event) {
+                if (!anchor) return true;
+                if (event && (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) {
+                    return true;
+                }
+                if (anchor.hasAttribute('download')) return true;
+                if (anchor.dataset.skipUnsavedGuard === 'true') return true;
+                const target = String(anchor.getAttribute('target') || '').trim().toLowerCase();
+                if (target === '_blank') return true;
+                const rawHref = String(anchor.getAttribute('href') || '').trim();
+                if (!rawHref || rawHref === '#' || rawHref.startsWith('#')) return true;
+                const lowerHref = rawHref.toLowerCase();
+                if (lowerHref.startsWith('javascript:') || lowerHref.startsWith('mailto:') || lowerHref.startsWith('tel:')) return true;
+                return false;
+            }
+
+            async function confirmLeave() {
+                if (typeof options.confirmLeave === 'function') {
+                    try {
+                        const result = options.confirmLeave();
+                        return result && typeof result.then === 'function' ? await result : Boolean(result);
+                    } catch (error) {
+                        return false;
+                    }
+                }
+                return appConfirm({
+                    title: config.title,
+                    message: config.message,
+                    confirmText: config.confirmText,
+                    cancelText: config.cancelText,
+                    variant: config.variant
+                });
+            }
+
+            function onBeforeUnload(event) {
+                if (!state.enabled || state.suppressBeforeUnload) return;
+                if (!config.isDirty()) return;
+                event.preventDefault();
+                // Browser-native text is restricted by modern browsers.
+                event.returnValue = '';
+            }
+
+            async function onDocumentClick(event) {
+                if (!state.enabled || state.navigationInProgress) return;
+                if (!config.isDirty()) return;
+
+                const anchor = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+                if (!anchor || shouldBypassAnchor(anchor, event)) return;
+
+                let nextUrl;
+                try {
+                    nextUrl = new URL(anchor.href, window.location.href);
+                } catch (error) {
+                    return;
+                }
+                if (nextUrl.href === window.location.href) return;
+
+                event.preventDefault();
+                event.stopPropagation();
+                state.navigationInProgress = true;
+                const confirmed = await confirmLeave();
+                if (confirmed) {
+                    state.suppressBeforeUnload = true;
+                    window.location.assign(nextUrl.href);
+                    return;
+                }
+                state.navigationInProgress = false;
+            }
+
+            window.addEventListener('beforeunload', onBeforeUnload);
+            document.addEventListener('click', onDocumentClick, true);
+
+            return {
+                dispose() {
+                    window.removeEventListener('beforeunload', onBeforeUnload);
+                    document.removeEventListener('click', onDocumentClick, true);
+                },
+                setEnabled(enabled) {
+                    state.enabled = Boolean(enabled);
+                },
+                suppressNextBeforeUnload() {
+                    state.suppressBeforeUnload = true;
+                }
+            };
+        }
+
+        window.AppUI = {
+            toast: appToast,
+            confirm: appConfirm,
+            unsavedGuard: createUnsavedChangesGuard
+        };
+
+        const APP_PERF_CACHE_VERSION = "v1";
+        const APP_PERF_INFLIGHT = new Map();
+
+        function appPerfReadCache(key) {
+            if (!key) return null;
+            try {
+                const raw = sessionStorage.getItem(`perf_cache:${APP_PERF_CACHE_VERSION}:${key}`);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== 'object' || parsed.data === undefined) return null;
+                return parsed;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function appPerfWriteCache(key, data) {
+            if (!key) return;
+            try {
+                sessionStorage.setItem(
+                    `perf_cache:${APP_PERF_CACHE_VERSION}:${key}`,
+                    JSON.stringify({ ts: Date.now(), data })
+                );
+            } catch (error) {
+                // ignore sessionStorage limits
+            }
+        }
+
+        function appPerfSetSkeleton(target, enabled, options = {}) {
+            const el = typeof target === 'string' ? document.querySelector(target) : target;
+            if (!el) return;
+            const isEnabled = Boolean(enabled);
+            el.classList.toggle('perf-skeleton', isEnabled);
+            el.classList.toggle('perf-skeleton-soft', Boolean(options.soft) && isEnabled);
+            el.setAttribute('aria-busy', isEnabled ? 'true' : 'false');
+        }
+
+        function appPerfObserveLazy(target, callback, options = {}) {
+            const el = typeof target === 'string' ? document.querySelector(target) : target;
+            if (!el || typeof callback !== 'function') return () => {};
+
+            let disposed = false;
+            const once = options.once !== false;
+            const run = () => {
+                if (disposed) return;
+                if (once) disposed = true;
+                callback();
+            };
+
+            if (!('IntersectionObserver' in window)) {
+                run();
+                return () => {};
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                const isVisible = entries.some((entry) => entry.isIntersecting || entry.intersectionRatio > 0);
+                if (!isVisible) return;
+                run();
+                if (once) observer.disconnect();
+            }, {
+                root: options.root || null,
+                rootMargin: options.rootMargin || '140px',
+                threshold: options.threshold ?? 0.01
+            });
+            observer.observe(el);
+            return () => {
+                disposed = true;
+                observer.disconnect();
+            };
+        }
+
+        async function appPerfSWR(key, fetcher, options = {}) {
+            if (typeof fetcher !== 'function') {
+                throw new Error('SWR fetcher must be a function');
+            }
+            const ttlMs = Math.max(0, Number(options.ttlMs ?? 15000));
+            const now = Date.now();
+            const force = Boolean(options.force);
+            const cached = key ? appPerfReadCache(key) : null;
+            const cacheAge = cached ? (now - Number(cached.ts || 0)) : Number.POSITIVE_INFINITY;
+            const hasFreshCache = Boolean(cached) && cacheAge <= ttlMs;
+
+            if (cached && typeof options.onCached === 'function') {
+                try {
+                    options.onCached(cached.data, { stale: !hasFreshCache, ts: Number(cached.ts || 0), ageMs: cacheAge });
+                } catch (error) {
+                    console.debug('SWR onCached callback error', error);
+                }
+            }
+
+            if (cached && hasFreshCache && !force) {
+                return { data: cached.data, source: 'cache-fresh', ts: Number(cached.ts || 0), ageMs: cacheAge };
+            }
+
+            const requestKey = key || `anon:${Math.random().toString(36).slice(2)}`;
+            let inflight = APP_PERF_INFLIGHT.get(requestKey);
+            if (!inflight) {
+                inflight = Promise.resolve()
+                    .then(() => fetcher())
+                    .then((data) => {
+                        if (key) appPerfWriteCache(key, data);
+                        return data;
+                    })
+                    .finally(() => {
+                        APP_PERF_INFLIGHT.delete(requestKey);
+                    });
+                APP_PERF_INFLIGHT.set(requestKey, inflight);
+            }
+
+            if (cached && !force) {
+                inflight.then((freshData) => {
+                    if (typeof options.onFresh === 'function') {
+                        options.onFresh(freshData, { stale: false, ts: Date.now(), ageMs: 0 });
+                    }
+                }).catch((error) => {
+                    if (typeof options.onError === 'function') options.onError(error, { hadCache: true });
+                });
+                return { data: cached.data, source: 'cache-stale', ts: Number(cached.ts || 0), ageMs: cacheAge };
+            }
+
+            try {
+                const freshData = await inflight;
+                if (typeof options.onFresh === 'function') {
+                    options.onFresh(freshData, { stale: false, ts: Date.now(), ageMs: 0 });
+                }
+                return { data: freshData, source: 'network', ts: Date.now(), ageMs: 0 };
+            } catch (error) {
+                if (typeof options.onError === 'function') options.onError(error, { hadCache: Boolean(cached) });
+                if (cached) return { data: cached.data, source: 'cache-fallback', ts: Number(cached.ts || 0), ageMs: cacheAge };
+                throw error;
+            }
+        }
+
+        window.AppPerf = {
+            readCache: appPerfReadCache,
+            writeCache: appPerfWriteCache,
+            setSkeleton: appPerfSetSkeleton,
+            observeLazy: appPerfObserveLazy,
+            swr: appPerfSWR
+        };
 
         function clamp(value, min, max, fallback) {
             const num = Number(value);
@@ -943,6 +1520,9 @@
                 prefs.scale = clamp(parsed.scale, 85, 130, DISPLAY_DEFAULTS.scale);
                 if (['auto', 'comfortable', 'compact', 'condensed'].includes(parsed.density)) {
                     prefs.density = parsed.density;
+                }
+                if (DISPLAY_THEMES.includes(parsed.theme)) {
+                    prefs.theme = parsed.theme;
                 }
             } catch (error) {
                 return prefs;
@@ -987,20 +1567,37 @@
             const zoomRange = document.getElementById('display-zoom-range');
             const zoomValue = document.getElementById('display-zoom-value');
             const densitySelect = document.getElementById('display-density-select');
+            const themeSelect = document.getElementById('display-theme-select');
             if (zoomRange) zoomRange.value = String(displayPrefs.scale);
             if (zoomValue) zoomValue.textContent = `${displayPrefs.scale}%`;
             if (densitySelect) densitySelect.value = displayPrefs.density;
+            if (themeSelect) themeSelect.value = displayPrefs.theme;
+        }
+
+        function applyColorTheme() {
+            const root = document.documentElement;
+            root.classList.remove('ui-theme-azure', 'ui-theme-sage');
+            if (displayPrefs.theme === 'azure') {
+                root.classList.add('ui-theme-azure');
+                return;
+            }
+            if (displayPrefs.theme === 'sage') {
+                root.classList.add('ui-theme-sage');
+            }
         }
 
         function applyDisplayPrefs() {
             document.documentElement.style.setProperty('--ui-font-scale', (displayPrefs.scale / 100).toFixed(2));
+            applyColorTheme();
             applyViewportDensity();
             syncDisplayControls();
+            document.dispatchEvent(new CustomEvent('app:display-prefs-changed', { detail: { ...displayPrefs } }));
         }
 
         function initDisplaySettings() {
             const zoomRange = document.getElementById('display-zoom-range');
             const densitySelect = document.getElementById('display-density-select');
+            const themeSelect = document.getElementById('display-theme-select');
             const resetBtn = document.getElementById('display-settings-reset');
 
             if (zoomRange) {
@@ -1020,10 +1617,20 @@
                 });
             }
 
+            if (themeSelect) {
+                themeSelect.addEventListener('change', (event) => {
+                    const nextTheme = event.target.value;
+                    displayPrefs.theme = DISPLAY_THEMES.includes(nextTheme) ? nextTheme : DISPLAY_DEFAULTS.theme;
+                    applyDisplayPrefs();
+                    saveDisplayPrefs(displayPrefs);
+                });
+            }
+
             if (resetBtn) {
                 resetBtn.addEventListener('click', () => {
                     displayPrefs.scale = DISPLAY_DEFAULTS.scale;
                     displayPrefs.density = DISPLAY_DEFAULTS.density;
+                    displayPrefs.theme = DISPLAY_DEFAULTS.theme;
                     applyDisplayPrefs();
                     saveDisplayPrefs(displayPrefs);
                 });
@@ -1042,13 +1649,17 @@
 
         window.addEventListener('resize', function() {
             applyViewportDensity();
+            document.dispatchEvent(new CustomEvent('app:display-prefs-changed', { detail: { ...displayPrefs } }));
             if (window.innerWidth > 1024) {
                 document.body.classList.remove('sidebar-open');
             }
         });
 
         if (window.visualViewport && window.visualViewport.addEventListener) {
-            window.visualViewport.addEventListener('resize', applyViewportDensity);
+            window.visualViewport.addEventListener('resize', () => {
+                applyViewportDensity();
+                document.dispatchEvent(new CustomEvent('app:display-prefs-changed', { detail: { ...displayPrefs } }));
+            });
         }
 
         applyDisplayPrefs();

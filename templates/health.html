@@ -1,130 +1,211 @@
-
 {% extends "base.html" %}
 {% block title %}System Health{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack.min.css">
 <style>
 .health-shell {
     display: grid;
-    gap: 0.9rem;
+    gap: 0.92rem;
 }
 
 .health-head {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 0.85rem;
-    padding: 0.84rem 0.94rem;
-    border: 1px solid #d5deeb;
-    border-radius: 0.95rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    gap: 0.8rem;
+    padding: 0.74rem 0.9rem;
+    border: 1px solid #d6dfec;
+    border-radius: 0.96rem;
+    background: linear-gradient(150deg, #0f2445 0%, #1f4e7d 100%);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+    color: #eff5ff;
+}
+
+.health-head-main {
+    min-width: 0;
+}
+
+.health-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.46rem;
+    flex-wrap: wrap;
 }
 
 .health-kicker {
     margin: 0;
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
+    font-size: 0.63rem;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #5f7088;
+    color: rgba(230, 241, 255, 0.82);
     font-weight: 800;
 }
 
 .health-title {
-    margin: 0.18rem 0 0;
-    font-family: "Sora", "Manrope", sans-serif;
+    margin: 0;
     font-size: 1.24rem;
-    font-weight: 700;
-    color: #0f172a;
+    font-weight: 800;
+    color: #ffffff;
 }
 
 .health-subtitle {
-    margin: 0.24rem 0 0;
-    color: #5f7088;
-    font-size: 0.79rem;
+    margin: 0.16rem 0 0;
+    color: rgba(230, 241, 255, 0.82);
+    font-size: 0.76rem;
 }
 
-.health-controls {
+.health-controls-bar {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    justify-content: flex-end;
-    gap: 0.44rem;
+    justify-content: space-between;
+    gap: 0.7rem;
+    padding: 0.58rem 0.72rem;
+    border: 1px solid #d7e1ef;
+    border-radius: 0.82rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
 }
 
-.health-autorefresh {
+.health-controls-main {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.health-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.28rem 0.5rem;
+    gap: 0.35rem;
+    border: 1px solid #ccdaed;
     border-radius: 999px;
-    border: 1px solid #cfdaea;
-    background: #f6faff;
-    font-size: 0.74rem;
-    font-weight: 700;
-    color: #38506b;
-}
-
-.health-autorefresh .form-check-input {
-    margin-top: 0;
-}
-
-.health-autorefresh select {
-    width: 88px;
-}
-
-.health-last-refresh {
+    padding: 0.18rem 0.48rem;
+    color: #26466e;
+    background: #ffffff;
     font-size: 0.72rem;
-    color: #5f7088;
     font-weight: 700;
 }
 
-.health-kpi-grid {
+.health-interval-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    border: 1px solid #cfdced;
+    border-radius: 999px;
+    padding: 0.18rem;
+    background: #f3f8ff;
+}
+
+.health-interval-btn {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: #406186;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.16rem 0.48rem;
+    line-height: 1.1;
+    cursor: pointer;
+}
+
+.health-interval-btn.active {
+    background: #1f4272;
+    border-color: #1f4272;
+    color: #ffffff;
+}
+
+.health-controls-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.38rem;
+}
+
+.health-controls-updated {
+    margin: 0;
+    font-size: 0.71rem;
+    color: #5c7390;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.health-controls-updated strong {
+    color: #17385f;
+}
+
+.health-controls-cache {
+    margin: 0;
+    border: 1px solid #cfdbeb;
+    border-radius: 999px;
+    padding: 0.14rem 0.46rem;
+    background: #f3f8ff;
+    color: #496285;
+    font-size: 0.7rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.health-embed-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    border: 1px solid #d1ddef;
+    border-radius: 999px;
+    background: #f5f9ff;
+    color: #3d5f86;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.24rem 0.54rem;
+    white-space: nowrap;
+}
+
+.health-controls-bar .btn {
+    border-radius: 0.56rem;
+    padding: 0.24rem 0.56rem;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.health-kpis {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 0.7rem;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .health-kpi {
-    border: 1px solid #d5deeb;
-    border-radius: 0.92rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    border: 1px solid #d6dfec;
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
     padding: 0.76rem 0.82rem;
 }
 
 .health-kpi-label {
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
+    margin: 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: #627790;
     text-transform: uppercase;
-    color: #607089;
     font-weight: 800;
 }
 
 .health-kpi-value {
-    margin-top: 0.32rem;
-    font-size: 1.28rem;
-    line-height: 1.08;
+    margin: 0.24rem 0 0;
+    font-size: 1.18rem;
+    line-height: 1.1;
+    color: #0f2340;
     font-weight: 800;
-    color: #0f172a;
 }
 
 .health-kpi-note {
-    margin-top: 0.14rem;
-    color: #63758d;
-    font-size: 0.72rem;
-}
-
-.health-kpi-rate {
-    margin-top: 0.16rem;
-    font-size: 0.72rem;
-    color: #607089;
-    font-weight: 700;
+    margin: 0.14rem 0 0;
+    color: #607691;
+    font-size: 0.73rem;
 }
 
 .health-panel {
     border: 1px solid #d5deeb;
-    border-radius: 0.98rem;
+    border-radius: 0.95rem;
     background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
     overflow: hidden;
@@ -136,72 +217,382 @@
     justify-content: space-between;
     gap: 0.7rem;
     padding: 0.76rem 0.9rem;
-    border-bottom: 1px solid #dce5f2;
-    background: linear-gradient(150deg, #1b2840 0%, #2a3f60 100%);
-    color: #f8fbff;
+    border-bottom: 1px solid #dfe8f5;
+    background: linear-gradient(140deg, #f8fbff 0%, #eef4fd 100%);
 }
 
 .health-panel-head h5 {
     margin: 0;
-    font-size: 0.88rem;
-    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1b395f;
+    font-weight: 800;
 }
 
 .health-panel-sub {
-    font-size: 0.72rem;
-    color: rgba(238, 245, 255, 0.78);
+    font-size: 0.74rem;
+    color: #5f7692;
     font-weight: 600;
 }
 
 .health-panel-body {
-    padding: 0.84rem;
+    padding: 0.82rem;
 }
 
-.health-stack {
-    display: grid;
-    gap: 0.8rem;
+.range-group {
+    display: inline-flex;
+    border: 1px solid #cad8ea;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #f2f7ff;
+    padding: 0.12rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-.health-section-nav {
+.range-btn {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: #355579;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.24rem 0.56rem;
+    line-height: 1.1;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.range-btn.active {
+    background: #1f4272;
+    border-color: #1f4272;
+    color: #ffffff;
+}
+
+.grafana-workspace-panel {
+    overflow: visible;
+}
+
+.grafana-workspace-head {
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.grafana-workspace-title {
+    min-width: 220px;
+}
+
+.grafana-workspace-sub {
+    margin: 0.18rem 0 0;
+    font-size: 0.73rem;
+    color: #5c7390;
+    font-weight: 600;
+}
+
+.grafana-workspace-controls {
     display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.4rem;
     flex-wrap: wrap;
-    gap: 0.45rem;
+    margin-left: auto;
 }
 
-.health-nav-link {
+.grafana-layout-tools {
     display: inline-flex;
     align-items: center;
-    gap: 0.32rem;
-    padding: 0.34rem 0.62rem;
-    border-radius: 999px;
-    border: 1px solid #d0dcec;
-    background: #f8fbff;
-    color: #334b67;
-    text-decoration: none;
-    font-size: 0.72rem;
-    font-weight: 700;
-    transition: all 0.2s ease;
+    gap: 0.28rem;
 }
 
-.health-nav-link:hover {
-    border-color: #9cb7de;
-    background: #edf4ff;
-    color: #163356;
+.grafana-layout-menu-btn {
+    width: 2.08rem;
+    height: 2.08rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-color: #cad9ee;
+    color: #254971;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(28, 51, 78, 0.08);
+}
+
+.grafana-layout-menu-btn:hover {
+    border-color: #a8bddb;
+    color: #173a63;
+    background: #f8fbff;
+}
+
+.grafana-layout-tools .dropdown-menu {
+    min-width: 220px;
+    border: 1px solid #d8e3f2;
+    border-radius: 0.72rem;
+    padding: 0.3rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+}
+
+.grafana-layout-tools .dropdown-item {
+    border-radius: 0.55rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #26456d;
+    display: flex;
+    align-items: center;
+    gap: 0.46rem;
+}
+
+.grafana-layout-tools .dropdown-item:hover {
+    background: #edf4fd;
+    color: #1f426f;
+}
+
+.grafana-layout-tools .dropdown-item:active {
+    background: #1f4272;
+    color: #ffffff;
+}
+
+.grafana-layout-tools .dropdown-item.active {
+    background: #eef4fd;
+    color: #173d68;
+}
+
+.grafana-edit-banner {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    border: 1px solid #c9d9ee;
+    border-radius: 0.72rem;
+    background: linear-gradient(180deg, #f5f9ff 0%, #edf4fd 100%);
+    padding: 0.48rem 0.62rem;
+    margin-bottom: 0.68rem;
+}
+
+.grafana-edit-banner.visible {
+    display: flex;
+}
+
+.grafana-edit-banner-text {
+    font-size: 0.76rem;
+    color: #24456d;
+    font-weight: 700;
+}
+
+.grafana-edit-banner-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+}
+
+.grafana-edit-banner .btn {
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.56rem;
+}
+
+.grafana-grid {
+    display: block;
+    position: relative;
+    min-height: 280px;
+    border: 0;
+    border-radius: 0.92rem;
+    background: transparent;
+    padding: 0.52rem;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.grafana-grid.layout-ready {
+    opacity: 1;
+}
+
+.grafana-card {
+    min-height: 0;
+    transition: transform 0.2s ease;
+}
+
+.grafana-card-content {
+    border: 0;
+    border-radius: 0.88rem;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
+    box-sizing: border-box;
+}
+
+    .grafana-card-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        position: relative;
+        padding: 0.42rem;
+        background: #f8fbff;
+    }
+
+.analytics-card-title {
+    margin: 0 0 0.3rem;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #2a4d73;
+}
+
+.analytics-chart-wrap {
+    height: calc(100% - 1.3rem);
+    min-height: 120px;
+    border: 1px solid #d7e3f2;
+    border-radius: 0.62rem;
+    background: #ffffff;
+    padding: 0.34rem 0.4rem;
+}
+
+.analytics-chart-wrap canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+.analytics-stat-wrap {
+    height: calc(100% - 1.3rem);
+    min-height: 120px;
+    border: 1px solid #d7e3f2;
+    border-radius: 0.62rem;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.analytics-stat-value {
+    font-size: clamp(2rem, 4.2vw, 3.2rem);
+    line-height: 1;
+    font-weight: 800;
+    color: #1f4272;
+}
+
+.analytics-table-wrap {
+    height: calc(100% - 1.3rem);
+    min-height: 140px;
+    border: 1px solid #d7e3f2;
+    border-radius: 0.62rem;
+    background: #ffffff;
+    overflow: auto;
+}
+
+.analytics-table-wrap table {
+    margin-bottom: 0;
+    font-size: 0.76rem;
+}
+
+.analytics-table-wrap thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f7fbff;
+    box-shadow: inset 0 -1px 0 #dce5f2;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #536c8a;
+}
+
+.grafana-grid.layout-edit .grafana-card {
+    z-index: 1;
+}
+
+.grafana-grid.layout-edit .grafana-card .grafana-card-content {
+    box-shadow: 0 0 0 2px rgba(31, 66, 114, 0.22), 0 12px 24px rgba(17, 35, 58, 0.16);
+}
+
+.grafana-grid.layout-edit .grafana-card-content {
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+}
+
+.grafana-grid.layout-edit .grafana-card-content:active {
+    cursor: grabbing;
+}
+
+.grafana-grid.layout-edit .analytics-chart-wrap canvas,
+.grafana-grid.layout-edit .analytics-table-wrap {
+    pointer-events: none;
+}
+
+.grafana-grid .grid-stack-item.ui-draggable-dragging .grafana-card-content {
+    box-shadow: 0 18px 42px rgba(16, 34, 58, 0.26);
+    border-color: #2e588c;
+    transform: scale(1.01);
+}
+
+.grafana-grid .grid-stack-placeholder > .placeholder-content {
+    border: 2px dashed #6f90b8;
+    border-radius: 0.88rem;
+    background: linear-gradient(140deg, rgba(114, 146, 184, 0.16), rgba(114, 146, 184, 0.08));
+}
+
+.grafana-grid .grid-stack-item > .ui-resizable-handle {
+    display: none !important;
+}
+
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-se {
+    display: block !important;
+    width: 16px;
+    height: 16px;
+    right: 8px;
+    bottom: 8px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    background-image: none !important;
+    transform: none !important;
+    cursor: se-resize;
+    opacity: 0.98;
+    box-shadow: none;
+    z-index: 3;
+}
+
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-e,
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-s,
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-n,
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-w,
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-ne,
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-nw,
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-sw {
+    display: none !important;
+}
+
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-se::before {
+    content: "";
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    width: 11px;
+    height: 11px;
+    border-right: 2px solid #5f7ea6;
+    border-bottom: 2px solid #5f7ea6;
+}
+
+.grafana-grid.layout-edit .grid-stack-item > .ui-resizable-handle.ui-resizable-se::after {
+    content: "";
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid #98acc4;
+    border-bottom: 2px solid #98acc4;
 }
 
 .health-table-scroll {
     overflow: auto;
     border: 1px solid #dbe4f2;
-    border-radius: 0.78rem;
+    border-radius: 0.76rem;
     background: #ffffff;
-}
-
-.health-table-scroll--medium {
-    max-height: 236px;
-}
-
-.health-table-scroll--tall {
-    max-height: 320px;
+    max-height: 340px;
 }
 
 .health-table-scroll table {
@@ -216,76 +607,19 @@
     box-shadow: inset 0 -1px 0 #dce5f2;
 }
 
-.health-metric-table td {
-    font-size: 0.82rem;
-}
-
-.health-metric-table td:first-child {
-    color: #51637c;
-    font-weight: 700;
-}
-
-.health-metric-table td:last-child {
-    font-weight: 800;
-    color: #12253f;
-}
-
-.health-protocol-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.6rem;
-}
-
-.health-protocol-card {
-    border: 1px solid #d9e3f1;
-    border-radius: 0.8rem;
-    background: #f8fbff;
-    padding: 0.6rem;
-    text-align: center;
-}
-
-.health-protocol-value {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #142742;
-}
-
-.health-protocol-label {
-    margin: 0.2rem 0 0;
-    font-size: 0.7rem;
-    color: #5f7088;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 800;
-}
-
-#sensorTable code,
-#bsTable code {
-    font-size: 0.74rem;
-}
-
-.signal-legend {
-    margin-top: 0.7rem;
-    display: grid;
-    gap: 0.3rem;
-}
-
-.signal-legend-item {
-    font-size: 0.72rem;
-    color: #5f7088;
-}
-
-.signal-dot {
+.status-dot {
     display: inline-block;
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    margin-right: 0.34rem;
+    margin-right: 0.36rem;
 }
+
+.status-dot.online { background: #13a56c; }
+.status-dot.offline { background: #b9c6d8; }
 
 @media (max-width: 1399.98px) {
-    .health-kpi-grid {
+    .health-kpis {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
@@ -293,756 +627,1411 @@
 @media (max-width: 991.98px) {
     .health-head {
         flex-direction: column;
+        align-items: stretch;
     }
 
-    .health-controls {
+    .health-controls-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .health-controls-main,
+    .health-controls-secondary {
+        justify-content: flex-start;
+    }
+
+    .health-controls-secondary {
+        flex-wrap: wrap;
+    }
+
+    .health-controls-secondary .btn {
+        width: 100%;
+    }
+
+    .health-controls-updated {
+        width: 100%;
+    }
+
+    .grafana-edit-banner {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .grafana-edit-banner-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grafana-edit-banner .btn {
+        width: 100%;
+    }
+
+    .grafana-workspace-controls {
         width: 100%;
         justify-content: flex-start;
     }
 
-    .health-kpi-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .grafana-grid {
+        min-height: 220px;
     }
 }
 
 @media (max-width: 575.98px) {
-    .health-kpi-grid,
-    .health-protocol-grid {
+    .health-kpis {
         grid-template-columns: 1fr;
-    }
-
-    .health-section-nav {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
     }
 }
 </style>
 
 <div class="health-shell workspace-shell">
-    <div class="health-head workspace-head">
-        <div>
-            <p class="health-kicker workspace-kicker">Runtime Diagnostics</p>
-            <h2 class="health-title workspace-title">System Health</h2>
-            <p class="health-subtitle workspace-subtitle">Live telemetry quality, traffic performance, protocol load and base station health in one workspace.</p>
-        </div>
-        <div class="health-controls workspace-actions">
-            <div class="health-autorefresh">
-                <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked>
-                <label for="autoRefreshToggle" class="mb-0">Auto-refresh</label>
-                <select id="refreshIntervalSelect" class="form-select form-select-sm">
-                    <option value="5000">5s</option>
-                    <option value="10000" selected>10s</option>
-                    <option value="15000">15s</option>
-                    <option value="30000">30s</option>
-                </select>
+    <div id="healthAlert" class="alert d-none" role="alert"></div>
+    {% set can_open_grafana = current_user and current_user.get('role') == 'admin' %}
+    <div class="health-controls-bar">
+        <div class="health-controls-main">
+            <label class="health-toggle" for="autoRefreshToggle">
+                <input class="form-check-input mt-0 me-1" type="checkbox" id="autoRefreshToggle" checked>
+                Auto-refresh
+            </label>
+            <div class="health-interval-group" id="refreshIntervalButtons" aria-label="Refresh interval">
+                <button type="button" class="health-interval-btn" data-interval-ms="5000">5s</button>
+                <button type="button" class="health-interval-btn active" data-interval-ms="10000">10s</button>
+                <button type="button" class="health-interval-btn" data-interval-ms="15000">15s</button>
+                <button type="button" class="health-interval-btn" data-interval-ms="30000">30s</button>
             </div>
-            <button class="btn btn-outline-secondary" onclick="resetMetrics()" title="Reset traffic metrics">
-                <i class="fas fa-eraser me-1"></i>Reset Metrics
+            <button class="btn btn-primary btn-sm" id="refreshHealthBtn">
+                <i class="fas fa-sync-alt me-1"></i>Refresh now
             </button>
-            <button class="btn btn-primary" onclick="refreshAll()">
-                <i class="fas fa-sync-alt me-1"></i>Refresh
-            </button>
-            <span class="health-last-refresh">Updated <span id="lastRefresh">never</span></span>
+        </div>
+        <div class="health-controls-secondary">
+            {% if can_open_grafana %}
+                <a class="btn btn-outline-primary btn-sm" id="openGrafanaDashboardBtn" href="#" target="_blank" rel="noopener">
+                    <i class="fas fa-arrow-up-right-from-square me-1"></i>Open Grafana
+                </a>
+            {% else %}
+                <span class="health-embed-note">
+                    <i class="fas fa-shield-alt"></i>Tenant-scoped telemetry view
+                </span>
+            {% endif %}
+            <p class="health-controls-updated">Updated <strong id="lastRefresh">never</strong></p>
+            <p class="health-controls-cache" id="healthCacheAge">Cache -</p>
         </div>
     </div>
 
-    <div id="alert-container"></div>
-
-    <div class="health-kpi-grid workspace-kpi-grid">
-        <div class="health-kpi workspace-kpi">
-            <div class="health-kpi-label workspace-kpi-label">System Uptime</div>
-            <div class="health-kpi-value text-primary" id="systemUptime">-</div>
-            <div class="health-kpi-note workspace-kpi-note">Service center runtime</div>
-        </div>
-        <div class="health-kpi workspace-kpi">
-            <div class="health-kpi-label workspace-kpi-label">Messages In</div>
-            <div class="health-kpi-value text-success" id="messages-in">0</div>
-            <div class="health-kpi-rate" id="messages-in-rate">0/min</div>
-        </div>
-        <div class="health-kpi workspace-kpi">
-            <div class="health-kpi-label workspace-kpi-label">Messages Out</div>
-            <div class="health-kpi-value text-info" id="messages-out">0</div>
-            <div class="health-kpi-rate" id="messages-out-rate">0/min</div>
-        </div>
-        <div class="health-kpi workspace-kpi">
-            <div class="health-kpi-label workspace-kpi-label">Dropped (Dedup)</div>
-            <div class="health-kpi-value text-warning" id="messages-dropped">0</div>
-            <div class="health-kpi-rate" id="dedup-rate">0% filtered</div>
-        </div>
-        <div class="health-kpi workspace-kpi">
-            <div class="health-kpi-label workspace-kpi-label">Packet Loss</div>
-            <div class="health-kpi-value workspace-kpi-value" id="overallLossRate">0%</div>
-            <div class="health-kpi-note workspace-kpi-note">Across all tracked sensors</div>
-        </div>
-        <div class="health-kpi workspace-kpi">
-            <div class="health-kpi-label workspace-kpi-label">Connected Base Stations</div>
-            <div class="health-kpi-value text-secondary" id="connections">0</div>
-            <div class="health-kpi-note workspace-kpi-note">Current infrastructure links</div>
-        </div>
+    <div class="health-kpis workspace-kpi-grid">
+        <article class="health-kpi workspace-kpi">
+            <p class="health-kpi-label workspace-kpi-label">System Uptime</p>
+            <p class="health-kpi-value workspace-kpi-value" id="kpiUptime">-</p>
+            <p class="health-kpi-note workspace-kpi-note">Service center runtime</p>
+        </article>
+        <article class="health-kpi workspace-kpi">
+            <p class="health-kpi-label workspace-kpi-label">Sensors</p>
+            <p class="health-kpi-value workspace-kpi-value" id="kpiSensors">0 / 0</p>
+            <p class="health-kpi-note workspace-kpi-note">Active / Registered</p>
+        </article>
+        <article class="health-kpi workspace-kpi">
+            <p class="health-kpi-label workspace-kpi-label">Base Stations</p>
+            <p class="health-kpi-value workspace-kpi-value" id="kpiBaseStations">0 / 0</p>
+            <p class="health-kpi-note workspace-kpi-note">Connected / Total</p>
+        </article>
+        <article class="health-kpi workspace-kpi">
+            <p class="health-kpi-label workspace-kpi-label">Uplinks (24h)</p>
+            <p class="health-kpi-value workspace-kpi-value" id="kpiUplinks">0</p>
+            <p class="health-kpi-note workspace-kpi-note">Timescale telemetry volume</p>
+        </article>
+        <article class="health-kpi workspace-kpi">
+            <p class="health-kpi-label workspace-kpi-label">Average SNR</p>
+            <p class="health-kpi-value workspace-kpi-value" id="kpiSnr">0 dB</p>
+            <p class="health-kpi-note workspace-kpi-note">Signal quality baseline</p>
+        </article>
+        <article class="health-kpi workspace-kpi">
+            <p class="health-kpi-label workspace-kpi-label">Packet Loss</p>
+            <p class="health-kpi-value workspace-kpi-value" id="kpiLoss">0%</p>
+            <p class="health-kpi-note workspace-kpi-note">Across tracked sensors</p>
+        </article>
     </div>
 
-    <div class="health-section-nav">
-        <a class="health-nav-link" href="#health-overview"><i class="fas fa-wave-square"></i>Overview</a>
-        <a class="health-nav-link" href="#health-signals"><i class="fas fa-signal"></i>Signals</a>
-        <a class="health-nav-link" href="#health-infrastructure"><i class="fas fa-server"></i>Infrastructure</a>
-        <a class="health-nav-link" href="#health-operations"><i class="fas fa-chart-pie"></i>Operations</a>
-        <a class="health-nav-link" href="#health-packet-loss"><i class="fas fa-exclamation-triangle"></i>Packet Loss</a>
-    </div>
-
-    <div class="row g-3" id="health-overview">
-        <div class="col-xl-6">
-            <div class="health-panel h-100">
-                <div class="health-panel-head workspace-panel-head">
-                    <h5><i class="fas fa-wave-square me-2"></i>Message Throughput (per min)</h5>
-                    <span class="health-panel-sub workspace-panel-sub">In / out / deduplicated delta per sample</span>
+    <section class="health-panel workspace-panel grafana-workspace-panel">
+        <div class="health-panel-head workspace-panel-head grafana-workspace-head">
+            <div class="grafana-workspace-title">
+                <h5><i class="fas fa-chart-line me-2"></i>Telemetry Analytics Workspace</h5>
+                <p class="grafana-workspace-sub">Native charts from Service Center telemetry API (tenant-aware)</p>
+            </div>
+            <div class="grafana-workspace-controls">
+                <div class="range-group" id="timeRangeButtons">
+                    <button class="range-btn" data-minutes="60">1h</button>
+                    <button class="range-btn active" data-minutes="360">6h</button>
+                    <button class="range-btn" data-minutes="1440">24h</button>
+                    <button class="range-btn" data-minutes="10080">7d</button>
                 </div>
-                <div class="health-panel-body workspace-panel-body">
-                    <canvas id="messageChart" height="190"></canvas>
+                <div class="grafana-layout-tools">
+                    <div class="dropdown">
+                        <button
+                            class="btn btn-outline-secondary btn-sm grafana-layout-menu-btn"
+                            type="button"
+                            id="grafanaLayoutMenuBtn"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            title="Layout options"
+                        >
+                            <i class="fas fa-sliders-h"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="grafanaLayoutMenuBtn">
+                            <li>
+                                <button class="dropdown-item" id="toggleGrafanaLayoutEditBtn" type="button">
+                                    <i class="fas fa-grip-vertical"></i><span>Customize layout</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item" id="revertGrafanaLayoutBtn" type="button">
+                                    <i class="fas fa-history"></i><span>Revert to saved</span>
+                                </button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button class="dropdown-item" id="resetGrafanaLayoutBtn" type="button">
+                                    <i class="fas fa-undo"></i><span>Reset to default</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-xl-6">
-            <div class="health-panel h-100">
-                <div class="health-panel-head workspace-panel-head">
-                    <h5><i class="fas fa-link me-2"></i>Sensors & Base Stations (12h)</h5>
-                    <span class="health-panel-sub workspace-panel-sub">Registered, active and infrastructure count</span>
-                </div>
-                <div class="health-panel-body workspace-panel-body">
-                    <canvas id="connectionsChart" height="190"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="health-panel workspace-panel" id="health-signals">
-        <div class="health-panel-head workspace-panel-head">
-            <h5><i class="fas fa-signal me-2"></i>SNR / RSSI History (24h)</h5>
-            <span class="health-panel-sub workspace-panel-sub">Signal trend across all active sensors</span>
         </div>
         <div class="health-panel-body workspace-panel-body">
-            <canvas id="snrRssiChart" height="105"></canvas>
-        </div>
-    </div>
-    <div class="row g-3">
-        <div class="col-xl-5">
-            <div class="health-panel h-100">
-                <div class="health-panel-head workspace-panel-head">
-                    <h5><i class="fas fa-chart-bar me-2"></i>Signal Score Distribution</h5>
-                    <span class="health-panel-sub workspace-panel-sub">Quality buckets by average SNR</span>
+            <div class="grafana-edit-banner" id="grafanaEditBanner">
+                <div class="grafana-edit-banner-text">
+                    Layout edit mode is active. Drag panels or resize from bottom-right corner. Changes are auto-saved on Finish.
                 </div>
-                <div class="health-panel-body workspace-panel-body">
-                    <canvas id="signalDistChart" height="230"></canvas>
-                    <div class="row mt-3 text-center">
-                        <div class="col">
-                            <h4 class="text-success mb-0" id="strongSignalCount">0</h4>
-                            <small class="text-muted">Strong</small>
-                        </div>
-                        <div class="col">
-                            <h4 class="text-warning mb-0" id="fairSignalCount">0</h4>
-                            <small class="text-muted">Fair</small>
-                        </div>
-                        <div class="col">
-                            <h4 class="text-danger mb-0" id="needAttentionCount">0</h4>
-                            <small class="text-muted">Needs Attention</small>
-                        </div>
-                    </div>
-                    <div class="signal-legend">
-                        <div class="signal-legend-item"><span class="signal-dot" style="background:#198754"></span>Excellent >= 10 dB</div>
-                        <div class="signal-legend-item"><span class="signal-dot" style="background:#28a745"></span>Good 5 to 10 dB</div>
-                        <div class="signal-legend-item"><span class="signal-dot" style="background:#ffc107"></span>Fair 0 to 5 dB</div>
-                        <div class="signal-legend-item"><span class="signal-dot" style="background:#fd7e14"></span>Poor -5 to 0 dB</div>
-                        <div class="signal-legend-item"><span class="signal-dot" style="background:#dc3545"></span>Critical < -5 dB</div>
-                    </div>
+                <div class="grafana-edit-banner-actions">
+                    <button class="btn btn-primary btn-sm" id="finishGrafanaLayoutEditBtn" type="button">
+                        <i class="fas fa-check me-1"></i>Finish
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm" id="quickRevertGrafanaLayoutBtn" type="button">
+                        <i class="fas fa-history me-1"></i>Revert
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" id="quickResetGrafanaLayoutBtn" type="button">
+                        <i class="fas fa-undo me-1"></i>Reset to default
+                    </button>
                 </div>
             </div>
+            <div id="grafanaNotice" class="alert alert-info d-none mb-3"></div>
+            <div class="grafana-grid grid-stack" id="grafanaGrid">
+                <article class="grafana-card grid-stack-item" gs-id="throughput" gs-x="0" gs-y="0" gs-w="8" gs-h="9">
+                    <div class="grid-stack-item-content grafana-card-content">
+                        <div class="grafana-card-body">
+                            <p class="analytics-card-title">Uplinks / min</p>
+                            <div class="analytics-chart-wrap">
+                                <canvas id="chartThroughput"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <article class="grafana-card grid-stack-item" gs-id="active_sensors" gs-x="8" gs-y="0" gs-w="4" gs-h="5">
+                    <div class="grid-stack-item-content grafana-card-content">
+                        <div class="grafana-card-body">
+                            <p class="analytics-card-title">Active Sensors</p>
+                            <div class="analytics-stat-wrap">
+                                <div class="analytics-stat-value" id="activeSensorsStat">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <article class="grafana-card grid-stack-item" gs-id="active_base_stations" gs-x="8" gs-y="5" gs-w="4" gs-h="4">
+                    <div class="grid-stack-item-content grafana-card-content">
+                        <div class="grafana-card-body">
+                            <p class="analytics-card-title">Active Base Stations</p>
+                            <div class="analytics-stat-wrap">
+                                <div class="analytics-stat-value" id="activeBaseStationsStat">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <article class="grafana-card grid-stack-item" gs-id="signal" gs-x="0" gs-y="9" gs-w="8" gs-h="9">
+                    <div class="grid-stack-item-content grafana-card-content">
+                        <div class="grafana-card-body">
+                            <p class="analytics-card-title">Signal Quality Trends</p>
+                            <div class="analytics-chart-wrap">
+                                <canvas id="chartSignal"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <article class="grafana-card grid-stack-item" gs-id="top_sensors" gs-x="0" gs-y="18" gs-w="6" gs-h="8">
+                    <div class="grid-stack-item-content grafana-card-content">
+                        <div class="grafana-card-body">
+                            <p class="analytics-card-title">Top Sensors by Uplink Count</p>
+                            <div class="analytics-chart-wrap">
+                                <canvas id="chartTopSensors"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <article class="grafana-card grid-stack-item" gs-id="recent_messages" gs-x="6" gs-y="18" gs-w="6" gs-h="8">
+                    <div class="grid-stack-item-content grafana-card-content">
+                        <div class="grafana-card-body">
+                            <p class="analytics-card-title">Recent Uplink Messages</p>
+                            <div class="analytics-table-wrap">
+                                <table class="table table-sm align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Sensor</th>
+                                            <th>BS</th>
+                                            <th>SNR</th>
+                                            <th>RSSI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentMessagesRows">
+                                        <tr><td colspan="5" class="text-muted">No telemetry data yet.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
         </div>
+    </section>
 
-        <div class="col-xl-7">
-            <div class="health-panel h-100" id="health-infrastructure">
+    <div class="row g-3">
+        <div class="col-xl-6">
+            <section class="health-panel workspace-panel h-100">
                 <div class="health-panel-head workspace-panel-head">
-                    <h5><i class="fas fa-server me-2"></i>Base Station Health</h5>
-                    <span class="health-panel-sub workspace-panel-sub">CPU, memory, duty cycle and uptime</span>
+                    <h5><i class="fas fa-server me-2"></i>Base Station Runtime Health</h5>
+                    <span class="health-panel-sub workspace-panel-sub">CPU, memory, duty cycle, uptime</span>
                 </div>
                 <div class="health-panel-body workspace-panel-body">
-                    <canvas id="bsHealthChart" height="170"></canvas>
-                    <hr class="my-3">
-                    <div class="table-responsive health-table-scroll health-table-scroll--medium">
-                        <table class="table table-sm mb-0">
+                    <div class="health-table-scroll">
+                        <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
-                                    <th>Name/EUI</th>
+                                    <th>Station</th>
+                                    <th>Status</th>
                                     <th>CPU</th>
-                                    <th>Memory</th>
-                                    <th>Duty Cycle</th>
+                                    <th>Mem</th>
+                                    <th>Duty</th>
                                     <th>Uptime</th>
                                 </tr>
                             </thead>
-                            <tbody id="bsTable"></tbody>
+                            <tbody id="runtimeBaseStationsRows">
+                                <tr><td colspan="6" class="text-muted">No base stations in runtime snapshot.</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
-    </div>
-
-    <div class="row g-3">
         <div class="col-xl-6">
-            <div class="health-stack">
-                <div class="health-panel workspace-panel">
-                    <div class="health-panel-head workspace-panel-head">
-                        <h5><i class="fas fa-exchange-alt me-2"></i>Data Transfer</h5>
-                        <span class="health-panel-sub workspace-panel-sub">I/O footprint</span>
-                    </div>
-                    <div class="health-panel-body workspace-panel-body">
-                        <table class="table table-sm mb-0 health-metric-table">
-                            <tr><td>Bytes Received</td><td class="text-end" id="bytes-in">0 B</td></tr>
-                            <tr><td>Bytes Sent (MQTT)</td><td class="text-end" id="bytes-out">0 B</td></tr>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="health-panel workspace-panel">
-                    <div class="health-panel-head workspace-panel-head">
-                        <h5><i class="fas fa-clone me-2"></i>Deduplication</h5>
-                        <span class="health-panel-sub workspace-panel-sub">Filter efficiency</span>
-                    </div>
-                    <div class="health-panel-body workspace-panel-body">
-                        <table class="table table-sm mb-0 health-metric-table">
-                            <tr><td>Total Messages</td><td class="text-end" id="dedup-total">0</td></tr>
-                            <tr><td>Duplicates Filtered</td><td class="text-end" id="dedup-filtered">0</td></tr>
-                            <tr><td>Published</td><td class="text-end" id="dedup-published">0</td></tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-6">
-            <div class="health-panel h-100" id="health-operations">
+            <section class="health-panel workspace-panel h-100">
                 <div class="health-panel-head workspace-panel-head">
-                    <h5><i class="fas fa-microchip me-2"></i>Protocol Operations</h5>
-                    <span class="health-panel-sub workspace-panel-sub">Command counters</span>
+                    <h5><i class="fas fa-signal me-2"></i>Sensor Reliability</h5>
+                    <span class="health-panel-sub workspace-panel-sub">Worst packet-loss links first</span>
                 </div>
                 <div class="health-panel-body workspace-panel-body">
-                    <div class="health-protocol-grid">
-                        <div class="health-protocol-card">
-                            <p class="health-protocol-value" id="attach-requests">0</p>
-                            <p class="health-protocol-label">Attach</p>
-                        </div>
-                        <div class="health-protocol-card">
-                            <p class="health-protocol-value" id="detach-requests">0</p>
-                            <p class="health-protocol-label">Detach</p>
-                        </div>
-                        <div class="health-protocol-card">
-                            <p class="health-protocol-value" id="status-requests">0</p>
-                            <p class="health-protocol-label">Status</p>
-                        </div>
-                        <div class="health-protocol-card">
-                            <p class="health-protocol-value" id="vm-messages">0</p>
-                            <p class="health-protocol-label">VM</p>
-                        </div>
+                    <div class="health-table-scroll">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Sensor</th>
+                                    <th>Received</th>
+                                    <th>Lost</th>
+                                    <th>Loss %</th>
+                                    <th>Avg SNR</th>
+                                    <th>Avg RSSI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="runtimeSensorsRows">
+                                <tr><td colspan="6" class="text-muted">No sensor packet statistics available.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="health-panel workspace-panel" id="health-packet-loss">
-        <div class="health-panel-head workspace-panel-head">
-            <h5><i class="fas fa-exclamation-triangle me-2"></i>Top 10 Sensors by Packet Loss</h5>
-            <span class="health-panel-sub workspace-panel-sub">Worst links first</span>
-        </div>
-        <div class="health-panel-body workspace-panel-body">
-            <div class="table-responsive health-table-scroll health-table-scroll--tall">
-                <table class="table table-sm mb-0" style="table-layout: fixed;">
-                    <thead>
-                        <tr>
-                            <th style="width: 35%;">EUI</th>
-                            <th style="width: 13%;">Received</th>
-                            <th style="width: 13%;">Lost</th>
-                            <th style="width: 13%;">Loss</th>
-                            <th style="width: 13%;">SNR</th>
-                            <th style="width: 13%;">RSSI</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sensorTable"></tbody>
-                </table>
-            </div>
+            </section>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack-all.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-let bsHealthChart = null;
-let snrRssiChart = null;
-let signalDistChart = null;
-let messageChart = null;
-let connectionsChart = null;
-let autoRefreshTimer = null;
+const HEALTH_STATE = {
+    minutes: 360,
+    autoRefresh: true,
+    intervalMs: 10000,
+    timer: null,
+};
 
-function formatUptime(seconds) {
-    const s = Number(seconds || 0);
-    const days = Math.floor(s / 86400);
-    const hours = Math.floor((s % 86400) / 3600);
-    const minutes = Math.floor((s % 3600) / 60);
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
+const ALERT_TIMERS = {
+    health: null,
+    analytics: null,
+};
+
+const GRAFANA_LAYOUT_STATE = {
+    storageKey: "health_grafana_layout_v1",
+    sessionKey: "health_grafana_layout_session_v1",
+    editing: false,
+    grid: null,
+    defaultLayout: [],
+    sessionPersistTimer: null,
+};
+
+const HEALTH_CACHE_STATE = {
+    runtimeKey: "health_runtime_cache_v1",
+    analyticsKey: "health_analytics_cache_v1",
+    ttlMs: 300000,
+};
+
+const HEALTH_SWR_STATE = {
+    runtimeKey: "health_runtime_api_v1",
+    analyticsPrefix: "health_analytics_api_v1",
+    ttlMs: 10000,
+};
+
+let healthRuntimeHydrated = false;
+let healthAnalyticsHydrated = false;
+let healthAnalyticsVisible = false;
+let healthCacheTickTimer = null;
+
+const HEALTH_CACHE_META = {
+    source: "none",
+    ts: 0,
+};
+
+const CHART_STATE = {
+    throughput: null,
+    signal: null,
+    topSensors: null,
+};
+
+function getGrafanaGrid() {
+    return document.getElementById("grafanaGrid");
 }
 
-function getLossColor(rate) {
-    const r = Number(rate || 0);
-    if (r < 1) return '#198754';
-    if (r < 5) return '#ffc107';
-    if (r < 10) return '#fd7e14';
-    return '#dc3545';
+function getGrafanaCards() {
+    const grid = getGrafanaGrid();
+    if (!grid) return [];
+    return Array.from(grid.querySelectorAll(".grid-stack-item"));
 }
 
-function formatTime(timestamp) {
-    if (!timestamp) return '-';
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function normalizeLayoutNodes(nodes) {
+    if (!Array.isArray(nodes)) return [];
+    return nodes
+        .filter((node) => node && node.id !== undefined && node.id !== null)
+        .map((node) => ({
+            id: String(node.id),
+            x: Number(node.x || 0),
+            y: Number(node.y || 0),
+            w: Math.max(1, Number(node.w || 1)),
+            h: Math.max(1, Number(node.h || 1)),
+        }));
 }
 
-function formatBytes(bytes) {
-    const b = Number(bytes || 0);
-    if (b === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(b) / Math.log(k));
-    return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+function hasSavedGrafanaLayout() {
+    try {
+        return Boolean(localStorage.getItem(GRAFANA_LAYOUT_STATE.storageKey));
+    } catch (error) {
+        return false;
+    }
 }
 
-function setLastRefresh() {
-    document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString();
+function writeSessionJson(key, data) {
+    try {
+        sessionStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
+    } catch (error) {
+        console.debug(`Cannot write session cache for ${key}`, error);
+    }
 }
 
-function formatHistoryLabel(timestamp) {
-    if (!timestamp) return '-';
-    return new Date(Number(timestamp) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function readSessionJson(key) {
+    try {
+        const raw = sessionStorage.getItem(key);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object" || !parsed.data) return null;
+        return parsed;
+    } catch (error) {
+        console.debug(`Cannot read session cache for ${key}`, error);
+        return null;
+    }
 }
 
-function buildDeltaSeries(history, key) {
-    return history.map((point, index) => {
-        if (index === 0) return 0;
-        const prev = Number(history[index - 1][key] || 0);
-        const current = Number(point[key] || 0);
-        return Math.max(0, current - prev);
-    });
+function clearSessionJson(key) {
+    try {
+        sessionStorage.removeItem(key);
+    } catch (error) {
+        console.debug(`Cannot clear session cache for ${key}`, error);
+    }
 }
 
-function initTrafficCharts() {
-    const sharedLegend = { legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } } };
+function isFreshSessionEntry(entry, ttlMs = HEALTH_CACHE_STATE.ttlMs) {
+    if (!entry || !entry.ts) return false;
+    return (Date.now() - Number(entry.ts)) <= Number(ttlMs || 0);
+}
 
-    const ctxMessage = document.getElementById('messageChart').getContext('2d');
-    messageChart = new Chart(ctxMessage, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Messages In',
-                data: [],
-                borderColor: '#198754',
-                backgroundColor: 'rgba(25, 135, 84, 0.14)',
-                tension: 0.35,
-                fill: true
-            }, {
-                label: 'Messages Out',
-                data: [],
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13, 110, 253, 0.12)',
-                tension: 0.35,
-                fill: true
-            }, {
-                label: 'Dropped',
-                data: [],
-                borderColor: '#fd7e14',
-                backgroundColor: 'rgba(253, 126, 20, 0.1)',
-                tension: 0.35,
-                fill: true
-            }]
+function readGrafanaLayoutFromStorage(storage) {
+    try {
+        const raw = storage.getItem(storage === sessionStorage ? GRAFANA_LAYOUT_STATE.sessionKey : GRAFANA_LAYOUT_STATE.storageKey);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return normalizeLayoutNodes(parsed);
+    } catch (error) {
+        return [];
+    }
+}
+
+function saveGrafanaLayoutSession(layout) {
+    const nextLayout = Array.isArray(layout) ? layout : captureGrafanaLayout();
+    if (!Array.isArray(nextLayout) || nextLayout.length === 0) return;
+    try {
+        sessionStorage.setItem(GRAFANA_LAYOUT_STATE.sessionKey, JSON.stringify(nextLayout));
+    } catch (error) {
+        console.debug("Cannot persist session grafana layout", error);
+    }
+}
+
+function clearGrafanaLayoutSession() {
+    clearSessionJson(GRAFANA_LAYOUT_STATE.sessionKey);
+}
+
+function updateGrafanaLayoutActionState() {
+    const hasSaved = hasSavedGrafanaLayout();
+    const revertBtn = document.getElementById("revertGrafanaLayoutBtn");
+    const revertQuickBtn = document.getElementById("quickRevertGrafanaLayoutBtn");
+    if (revertBtn) revertBtn.disabled = !hasSaved;
+    if (revertQuickBtn) revertQuickBtn.disabled = !hasSaved;
+}
+
+function captureGrafanaLayout() {
+    if (!GRAFANA_LAYOUT_STATE.grid) return [];
+    return normalizeLayoutNodes(GRAFANA_LAYOUT_STATE.grid.save(false));
+}
+
+function applyGrafanaLayout(layout) {
+    if (!GRAFANA_LAYOUT_STATE.grid) return;
+    if (!Array.isArray(layout) || layout.length === 0) return;
+    GRAFANA_LAYOUT_STATE.grid.load(layout);
+}
+
+function saveGrafanaLayout() {
+    try {
+        const layout = captureGrafanaLayout();
+        localStorage.setItem(GRAFANA_LAYOUT_STATE.storageKey, JSON.stringify(layout));
+        saveGrafanaLayoutSession(layout);
+        setAlert("Layout saved.", "success");
+        updateGrafanaLayoutActionState();
+    } catch (error) {
+        console.error("Failed to save grafana layout:", error);
+        setAlert("Cannot save layout in this browser.", "warning");
+    }
+}
+
+function initGrafanaLayoutEngine() {
+    const gridEl = getGrafanaGrid();
+    if (!gridEl) return;
+
+    if (typeof GridStack === "undefined") {
+        console.error("GridStack library is not available.");
+        setAlert("Layout engine failed to load. Refresh page and verify internet access.", "warning");
+        return;
+    }
+
+    const grid = GridStack.init(
+        {
+            column: 12,
+            float: false,
+            margin: 0,
+            cellHeight: 32,
+            animate: false,
+            disableOneColumnMode: false,
+            draggable: { handle: ".grafana-card-content", scroll: true },
+            resizable: { handles: "se" },
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Messages / sample' }
-                }
-            },
-            plugins: sharedLegend
+        gridEl
+    );
+
+    GRAFANA_LAYOUT_STATE.grid = grid;
+    GRAFANA_LAYOUT_STATE.defaultLayout = normalizeLayoutNodes(grid.save(false));
+    grid.on("change", () => {
+        if (!GRAFANA_LAYOUT_STATE.editing) return;
+        if (GRAFANA_LAYOUT_STATE.sessionPersistTimer) {
+            clearTimeout(GRAFANA_LAYOUT_STATE.sessionPersistTimer);
         }
+        GRAFANA_LAYOUT_STATE.sessionPersistTimer = setTimeout(() => {
+            saveGrafanaLayoutSession();
+            GRAFANA_LAYOUT_STATE.sessionPersistTimer = null;
+        }, 120);
     });
+    grid.disable();
+}
 
-    const ctxConn = document.getElementById('connectionsChart').getContext('2d');
-    connectionsChart = new Chart(ctxConn, {
-        type: 'line',
+function applyDefaultGrafanaLayout() {
+    applyGrafanaLayout(GRAFANA_LAYOUT_STATE.defaultLayout);
+}
+
+function loadGrafanaLayout(preferSavedOnly = false) {
+    if (!GRAFANA_LAYOUT_STATE.grid) return;
+    let loaded = false;
+
+    if (!preferSavedOnly) {
+        const sessionLayout = readGrafanaLayoutFromStorage(sessionStorage);
+        if (sessionLayout.length > 0) {
+            applyGrafanaLayout(sessionLayout);
+            loaded = true;
+        }
+    }
+
+    if (!loaded) {
+        const savedLayout = readGrafanaLayoutFromStorage(localStorage);
+        if (savedLayout.length > 0) {
+            applyGrafanaLayout(savedLayout);
+            loaded = true;
+        }
+    }
+
+    if (!loaded) {
+        applyDefaultGrafanaLayout();
+    }
+
+    updateGrafanaLayoutActionState();
+}
+
+function revertGrafanaLayout() {
+    const hasSaved = hasSavedGrafanaLayout();
+    clearGrafanaLayoutSession();
+    loadGrafanaLayout(true);
+    if (hasSaved) {
+        setAlert("Layout reverted to last saved state.", "info");
+    } else {
+        setAlert("No saved layout found. Default layout loaded.", "warning");
+    }
+}
+
+function resetGrafanaLayout() {
+    try {
+        localStorage.removeItem(GRAFANA_LAYOUT_STATE.storageKey);
+    } catch (error) {
+        console.debug("Cannot clear saved grafana layout", error);
+    }
+    clearGrafanaLayoutSession();
+    loadGrafanaLayout();
+    setAlert("Layout reset to default.", "info");
+    updateGrafanaLayoutActionState();
+}
+
+function setGrafanaLayoutEditMode(enabled) {
+    if (!GRAFANA_LAYOUT_STATE.grid) return;
+    GRAFANA_LAYOUT_STATE.editing = Boolean(enabled);
+    GRAFANA_LAYOUT_STATE.grid[GRAFANA_LAYOUT_STATE.editing ? "enable" : "disable"]();
+    const grid = getGrafanaGrid();
+    if (!grid) return;
+    grid.classList.toggle("layout-edit", GRAFANA_LAYOUT_STATE.editing);
+    const editBanner = document.getElementById("grafanaEditBanner");
+    if (editBanner) {
+        editBanner.classList.toggle("visible", GRAFANA_LAYOUT_STATE.editing);
+    }
+    const toggleBtn = document.getElementById("toggleGrafanaLayoutEditBtn");
+    if (toggleBtn) {
+        toggleBtn.classList.toggle("active", GRAFANA_LAYOUT_STATE.editing);
+        toggleBtn.innerHTML = GRAFANA_LAYOUT_STATE.editing
+            ? '<i class="fas fa-check"></i><span>Finish customizing</span>'
+            : '<i class="fas fa-grip-vertical"></i><span>Customize layout</span>';
+    }
+    const menuBtn = document.getElementById("grafanaLayoutMenuBtn");
+    if (menuBtn) {
+        menuBtn.classList.toggle("btn-primary", GRAFANA_LAYOUT_STATE.editing);
+        menuBtn.classList.toggle("btn-outline-secondary", !GRAFANA_LAYOUT_STATE.editing);
+    }
+}
+
+function finishGrafanaLayoutEditing() {
+    if (!GRAFANA_LAYOUT_STATE.editing) return;
+    saveGrafanaLayout();
+    setGrafanaLayoutEditMode(false);
+}
+
+function formatNumber(value) {
+    const num = Number(value || 0);
+    return Number.isFinite(num) ? num.toLocaleString() : "0";
+}
+
+function formatPercent(value) {
+    const num = Number(value || 0);
+    return `${Number.isFinite(num) ? num.toFixed(2) : "0.00"}%`;
+}
+
+function formatRuntime(seconds) {
+    const total = Math.max(0, Number(seconds || 0));
+    const d = Math.floor(total / 86400);
+    const h = Math.floor((total % 86400) / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = Math.floor(total % 60);
+    if (d > 0) return `${d}d ${h}h ${m}m`;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
+function clearAlertTimer(kind) {
+    if (!ALERT_TIMERS[kind]) return;
+    clearTimeout(ALERT_TIMERS[kind]);
+    ALERT_TIMERS[kind] = null;
+}
+
+function setAlert(message, level = "info") {
+    const el = document.getElementById("healthAlert");
+    if (!el) return;
+    clearAlertTimer("health");
+    if (!message) {
+        el.className = "alert d-none";
+        el.textContent = "";
+        return;
+    }
+    el.className = `alert alert-${level}`;
+    el.textContent = message;
+    if (level === "info" || level === "success") {
+        ALERT_TIMERS.health = setTimeout(() => {
+            if (el.textContent === message) {
+                el.className = "alert d-none";
+                el.textContent = "";
+            }
+            ALERT_TIMERS.health = null;
+        }, 3000);
+    }
+}
+
+function setHealthSectionSkeleton(targetSelector, enabled, soft = false) {
+    if (window.AppPerf && typeof window.AppPerf.setSkeleton === "function") {
+        window.AppPerf.setSkeleton(targetSelector, Boolean(enabled), { soft: Boolean(soft) });
+        return;
+    }
+    const target = document.querySelector(targetSelector);
+    if (!target) return;
+    target.style.opacity = enabled ? "0.65" : "1";
+}
+
+function updateLastRefresh(timestamp = Date.now()) {
+    const target = document.getElementById("lastRefresh");
+    if (!target) return;
+    const now = new Date(Number(timestamp) || Date.now());
+    target.textContent = now.toLocaleTimeString();
+}
+
+function setHealthCacheMeta(meta = {}) {
+    HEALTH_CACHE_META.source = String(meta?.source || "network").toLowerCase();
+    HEALTH_CACHE_META.ts = Number(meta?.ts || Date.now());
+    renderHealthCacheBadge();
+}
+
+function renderHealthCacheBadge() {
+    const el = document.getElementById("healthCacheAge");
+    if (!el) return;
+    if (!HEALTH_CACHE_META.ts) {
+        el.textContent = "Cache -";
+        return;
+    }
+
+    const source = HEALTH_CACHE_META.source;
+    if (source === "cache" || source === "session" || source === "cache-fresh" || source === "cache-stale" || source === "cache-fallback") {
+        const ageSeconds = Math.max(0, Math.round((Date.now() - HEALTH_CACHE_META.ts) / 1000));
+        el.textContent = `Cache ${ageSeconds}s`;
+        return;
+    }
+
+    el.textContent = "Live";
+}
+
+function updateKpis(healthPayload) {
+    const system = healthPayload.system || {};
+    const timescale = healthPayload.timescale || {};
+    const runtimeUplinks = Number(system.total_packets_received || 0);
+    const timescaleUplinks = Number(timescale.uplink_total || 0);
+    const uplinks = timescale && timescale.success ? timescaleUplinks : runtimeUplinks;
+
+    document.getElementById("kpiUptime").textContent = formatRuntime(system.uptime || 0);
+    document.getElementById("kpiSensors").textContent = `${formatNumber(system.active_sensors)} / ${formatNumber(system.total_sensors)}`;
+    document.getElementById("kpiBaseStations").textContent = `${formatNumber(system.connected_base_stations)} / ${formatNumber(system.total_base_stations)}`;
+    document.getElementById("kpiUplinks").textContent = formatNumber(uplinks);
+    document.getElementById("kpiSnr").textContent = `${Number(system.avg_snr || 0).toFixed(2)} dB`;
+    document.getElementById("kpiLoss").textContent = formatPercent(system.overall_packet_loss_rate || 0);
+
+}
+
+function renderBaseStations(rows) {
+    const body = document.getElementById("runtimeBaseStationsRows");
+    if (!body) return;
+    if (!Array.isArray(rows) || rows.length === 0) {
+        body.innerHTML = '<tr><td colspan="6" class="text-muted">No base stations in runtime snapshot.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = rows.map((row) => {
+        const name = row.name || row.eui || "unknown";
+        const status = String(row.status || "unknown").toLowerCase();
+        const dot = status === "connected" ? "online" : "offline";
+        return `
+            <tr>
+                <td><strong>${name}</strong><div class="text-muted small">${row.eui || "-"}</div></td>
+                <td><span class="status-dot ${dot}"></span>${status}</td>
+                <td>${Number(row.cpu || 0).toFixed(1)}%</td>
+                <td>${Number(row.memory || 0).toFixed(1)}%</td>
+                <td>${Number(row.duty_cycle || 0).toFixed(1)}%</td>
+                <td>${formatRuntime(row.uptime || 0)}</td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function renderSensors(rows) {
+    const body = document.getElementById("runtimeSensorsRows");
+    if (!body) return;
+    if (!Array.isArray(rows) || rows.length === 0) {
+        body.innerHTML = '<tr><td colspan="6" class="text-muted">No sensor packet statistics available.</td></tr>';
+        return;
+    }
+
+    const topRows = [...rows]
+        .sort((a, b) => Number(b.packet_loss_rate || 0) - Number(a.packet_loss_rate || 0))
+        .slice(0, 25);
+
+    body.innerHTML = topRows.map((row) => `
+        <tr>
+            <td><code>${row.eui || "-"}</code></td>
+            <td>${formatNumber(row.packets_received || 0)}</td>
+            <td>${formatNumber(row.packets_lost || 0)}</td>
+            <td>${formatPercent(row.packet_loss_rate || 0)}</td>
+            <td>${Number(row.avg_snr || 0).toFixed(2)}</td>
+            <td>${Number(row.avg_rssi || 0).toFixed(2)}</td>
+        </tr>
+    `).join("");
+}
+
+function updateGrafanaNotice(message, level = "info") {
+    const el = document.getElementById("grafanaNotice");
+    if (!el) return;
+    clearAlertTimer("analytics");
+    if (!message) {
+        el.className = "alert d-none mb-3";
+        el.textContent = "";
+        return;
+    }
+    el.className = `alert alert-${level} mb-3`;
+    el.textContent = message;
+    if (level === "info" || level === "success") {
+        ALERT_TIMERS.analytics = setTimeout(() => {
+            if (el.textContent === message) {
+                el.className = "alert d-none mb-3";
+                el.textContent = "";
+            }
+            ALERT_TIMERS.analytics = null;
+        }, 3000);
+    }
+}
+
+function formatShortClock(value) {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function formatMetricNumber(value, digits = 2) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return "-";
+    return num.toFixed(digits);
+}
+
+function destroyChart(instance) {
+    if (!instance) return null;
+    try {
+        instance.destroy();
+    } catch (error) {
+        console.debug("Chart destroy skipped:", error);
+    }
+    return null;
+}
+
+function buildThroughputChart(series) {
+    const canvas = document.getElementById("chartThroughput");
+    if (!canvas || typeof Chart === "undefined") return;
+    const rows = Array.isArray(series) ? series : [];
+    const labels = rows.map((row) => formatShortClock((row.timestamp || 0) * 1000));
+    const values = rows.map((row) => Number(row.uplinks || 0));
+
+    CHART_STATE.throughput = destroyChart(CHART_STATE.throughput);
+    CHART_STATE.throughput = new Chart(canvas.getContext("2d"), {
+        type: "line",
         data: {
-            labels: [],
+            labels,
             datasets: [{
-                label: 'Registered Sensors',
-                data: [],
-                borderColor: '#16a34a',
-                backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                tension: 0.35,
-                fill: false,
-                yAxisID: 'y'
-            }, {
-                label: 'Active Sensors (hour)',
-                data: [],
-                borderColor: '#0ea5e9',
-                backgroundColor: 'rgba(14, 165, 233, 0.12)',
-                tension: 0.35,
-                fill: false,
-                yAxisID: 'y'
-            }, {
-                label: 'Base Stations',
-                data: [],
-                borderColor: '#f59e0b',
-                backgroundColor: 'rgba(245, 158, 11, 0.12)',
-                tension: 0.35,
-                fill: false,
-                yAxisID: 'y1'
-            }]
+                label: "Uplinks/min",
+                data: values,
+                borderColor: "#1f5fa3",
+                backgroundColor: "rgba(31, 95, 163, 0.15)",
+                fill: true,
+                tension: 0.25,
+                pointRadius: 0,
+                borderWidth: 2,
+            }],
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+            },
             scales: {
+                x: {
+                    ticks: { maxTicksLimit: 8, color: "#587191", font: { size: 10 } },
+                    grid: { color: "rgba(145, 162, 186, 0.18)" },
+                },
                 y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
                     beginAtZero: true,
-                    title: { display: true, text: 'Sensors' }
+                    ticks: { precision: 0, color: "#587191", font: { size: 10 } },
+                    grid: { color: "rgba(145, 162, 186, 0.18)" },
+                },
+            },
+        },
+    });
+}
+
+function buildSignalChart(series) {
+    const canvas = document.getElementById("chartSignal");
+    if (!canvas || typeof Chart === "undefined") return;
+    const rows = Array.isArray(series) ? series : [];
+    const labels = rows.map((row) => formatShortClock((row.timestamp || 0) * 1000));
+    const snr = rows.map((row) => row.avg_snr === null || row.avg_snr === undefined ? null : Number(row.avg_snr));
+    const rssi = rows.map((row) => row.avg_rssi === null || row.avg_rssi === undefined ? null : Number(row.avg_rssi));
+
+    CHART_STATE.signal = destroyChart(CHART_STATE.signal);
+    CHART_STATE.signal = new Chart(canvas.getContext("2d"), {
+        type: "line",
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: "Avg SNR (dB)",
+                    data: snr,
+                    borderColor: "#0f8f62",
+                    backgroundColor: "rgba(15, 143, 98, 0.12)",
+                    tension: 0.25,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    spanGaps: true,
+                    yAxisID: "y",
+                },
+                {
+                    label: "Avg RSSI (dBm)",
+                    data: rssi,
+                    borderColor: "#cf7a12",
+                    backgroundColor: "rgba(207, 122, 18, 0.12)",
+                    tension: 0.25,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    spanGaps: true,
+                    yAxisID: "y1",
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true } },
+            },
+            interaction: { mode: "index", intersect: false },
+            scales: {
+                x: {
+                    ticks: { maxTicksLimit: 8, color: "#587191", font: { size: 10 } },
+                    grid: { color: "rgba(145, 162, 186, 0.18)" },
+                },
+                y: {
+                    position: "left",
+                    ticks: { color: "#587191", font: { size: 10 } },
+                    grid: { color: "rgba(145, 162, 186, 0.18)" },
+                    title: { display: true, text: "SNR (dB)" },
                 },
                 y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    beginAtZero: true,
-                    title: { display: true, text: 'Base Stations' },
-                    grid: { drawOnChartArea: false }
-                }
+                    position: "right",
+                    ticks: { color: "#587191", font: { size: 10 } },
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: "RSSI (dBm)" },
+                },
             },
-            plugins: sharedLegend
-        }
+        },
     });
 }
 
-function loadHealth() {
-    return fetch('/api/health')
-        .then(r => r.json())
-        .then(data => {
-            if (!data.success) return;
-
-            document.getElementById('systemUptime').textContent = formatUptime(data.system.uptime);
-
-            const lossRate = Number(data.system.overall_packet_loss_rate || 0);
-            const lossEl = document.getElementById('overallLossRate');
-            lossEl.textContent = lossRate.toFixed(2) + '%';
-            lossEl.className = lossRate < 1 ? 'health-kpi-value text-success' : lossRate < 5 ? 'health-kpi-value text-warning' : 'health-kpi-value text-danger';
-
-            updateSnrRssiChart(data.snr_rssi_history || []);
-            updateSignalDistChart(data.signal_distribution || {});
-            updateBsHealthChart(data.base_stations || []);
-            updateBsTable(data.base_stations || []);
-            updateSensorTable((data.sensors || []).slice(0, 10));
-        })
-        .catch(error => {
-            console.error('Error loading health:', error);
-        });
-}
-
-function loadTraffic() {
-    return fetch('/api/traffic/metrics')
-        .then(r => r.json())
-        .then(data => {
-            if (!data.success) return;
-            const m = data.metrics || {};
-
-            document.getElementById('messages-in').textContent = Number(m.messages_in || 0).toLocaleString();
-            document.getElementById('messages-out').textContent = Number(m.messages_out || 0).toLocaleString();
-            document.getElementById('messages-dropped').textContent = Number(m.messages_dropped || 0).toLocaleString();
-            document.getElementById('connections').textContent = Number(data.connections || 0).toLocaleString();
-
-            const uptime = Math.floor(Date.now() / 1000 - Number(m.start_time || 0));
-            const uptimeMinutes = uptime / 60;
-            if (uptimeMinutes > 0) {
-                document.getElementById('messages-in-rate').textContent = (Number(m.messages_in || 0) / uptimeMinutes).toFixed(1) + '/min';
-                document.getElementById('messages-out-rate').textContent = (Number(m.messages_out || 0) / uptimeMinutes).toFixed(1) + '/min';
-            } else {
-                document.getElementById('messages-in-rate').textContent = '0/min';
-                document.getElementById('messages-out-rate').textContent = '0/min';
-            }
-
-            if (Number(m.messages_in || 0) > 0) {
-                document.getElementById('dedup-rate').textContent = ((Number(m.messages_dropped || 0) / Number(m.messages_in || 0)) * 100).toFixed(1) + '% filtered';
-            } else {
-                document.getElementById('dedup-rate').textContent = '0% filtered';
-            }
-
-            document.getElementById('bytes-in').textContent = formatBytes(m.bytes_in);
-            document.getElementById('bytes-out').textContent = formatBytes(m.bytes_out);
-            document.getElementById('attach-requests').textContent = Number(m.attach_requests || 0).toLocaleString();
-            document.getElementById('detach-requests').textContent = Number(m.detach_requests || 0).toLocaleString();
-            document.getElementById('status-requests').textContent = Number(m.status_requests || 0).toLocaleString();
-            document.getElementById('vm-messages').textContent = Number(m.vm_messages || 0).toLocaleString();
-
-            if (data.dedup_stats) {
-                document.getElementById('dedup-total').textContent = Number(data.dedup_stats.total_messages || 0).toLocaleString();
-                document.getElementById('dedup-filtered').textContent = Number(data.dedup_stats.duplicate_messages || 0).toLocaleString();
-                document.getElementById('dedup-published').textContent = Number(data.dedup_stats.published_messages || 0).toLocaleString();
-            }
-
-            if (Array.isArray(data.history) && data.history.length > 0) {
-                updateTrafficCharts(data.history);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching traffic:', error);
-        });
-}
-
-function updateTrafficCharts(history) {
-    if (!messageChart || !connectionsChart) return;
-    const points = history
-        .slice()
-        .sort((a, b) => Number(a.timestamp || 0) - Number(b.timestamp || 0))
-        .slice(-180);
-    const labels = points.map(h => formatHistoryLabel(h.timestamp));
-
-    messageChart.data.labels = labels;
-    messageChart.data.datasets[0].data = buildDeltaSeries(points, 'messages_in');
-    messageChart.data.datasets[1].data = buildDeltaSeries(points, 'messages_out');
-    messageChart.data.datasets[2].data = buildDeltaSeries(points, 'messages_dropped');
-    messageChart.update('none');
-
-    connectionsChart.data.labels = labels;
-    connectionsChart.data.datasets[0].data = points.map(h => Number(h.sensors_registered || h.sensors || 0));
-    connectionsChart.data.datasets[1].data = points.map(h => Number(h.sensors_active || 0));
-    connectionsChart.data.datasets[2].data = points.map(h => Number(h.base_stations || 0));
-    connectionsChart.update('none');
-}
-
-function updateSignalDistChart(dist) {
-    const ctx = document.getElementById('signalDistChart').getContext('2d');
-    if (signalDistChart) signalDistChart.destroy();
-
-    const excellent = Number(dist.excellent || 0);
-    const good = Number(dist.good || 0);
-    const fair = Number(dist.fair || 0);
-    const poor = Number(dist.poor || 0);
-    const critical = Number(dist.critical || 0);
-
-    document.getElementById('strongSignalCount').textContent = (excellent + good).toLocaleString();
-    document.getElementById('fairSignalCount').textContent = fair.toLocaleString();
-    document.getElementById('needAttentionCount').textContent = (poor + critical).toLocaleString();
-
-    signalDistChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Excellent', 'Good', 'Fair', 'Poor', 'Critical'],
-            datasets: [{
-                label: 'Devices',
-                data: [excellent, good, fair, poor, critical],
-                backgroundColor: ['#198754', '#28a745', '#ffc107', '#fd7e14', '#dc3545']
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
+function buildTopSensorsChart(topSensors) {
+    const canvas = document.getElementById("chartTopSensors");
+    if (!canvas || typeof Chart === "undefined") return;
+    const rows = (Array.isArray(topSensors) ? topSensors : []).slice(0, 12);
+    const labels = rows.map((row) => {
+        const eui = String(row.sensor_eui || "").toUpperCase();
+        return eui.length > 12 ? `${eui.slice(0, 12)}...` : eui || "n/a";
     });
-}
+    const values = rows.map((row) => Number(row.uplinks || 0));
 
-function updateSnrRssiChart(history) {
-    const ctx = document.getElementById('snrRssiChart').getContext('2d');
-    if (snrRssiChart) snrRssiChart.destroy();
-
-    const labels = (history || []).map(h => formatTime(h.timestamp));
-    const snrValues = (history || []).map(h => Number(h.avg_snr || 0));
-    const rssiValues = (history || []).map(h => Number(h.avg_rssi || 0));
-
-    snrRssiChart = new Chart(ctx, {
-        type: 'line',
+    CHART_STATE.topSensors = destroyChart(CHART_STATE.topSensors);
+    CHART_STATE.topSensors = new Chart(canvas.getContext("2d"), {
+        type: "bar",
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: 'Avg SNR (dB)',
-                data: snrValues,
-                borderColor: '#0ea5e9',
-                backgroundColor: 'rgba(14, 165, 233, 0.12)',
-                fill: true,
-                tension: 0.3,
-                yAxisID: 'y'
-            }, {
-                label: 'Avg RSSI (dBm)',
-                data: rssiValues,
-                borderColor: '#64748b',
-                backgroundColor: 'rgba(100, 116, 139, 0.12)',
-                fill: true,
-                tension: 0.3,
-                yAxisID: 'y1'
-            }]
+                label: "Uplinks",
+                data: values,
+                backgroundColor: "rgba(31, 95, 163, 0.82)",
+                borderColor: "#1f5fa3",
+                borderWidth: 1,
+                borderRadius: 4,
+                barThickness: 12,
+                maxBarThickness: 16,
+            }],
         },
         options: {
+            indexAxis: "y",
             responsive: true,
-            interaction: { mode: 'index', intersect: false },
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+            },
             scales: {
-                y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'SNR (dB)' } },
-                y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'RSSI (dBm)' }, grid: { drawOnChartArea: false } }
-            }
-        }
-    });
-}
-
-function updateBsHealthChart(baseStations) {
-    const ctx = document.getElementById('bsHealthChart').getContext('2d');
-    if (bsHealthChart) bsHealthChart.destroy();
-
-    const labels = (baseStations || []).map(bs => bs.name || (bs.eui || '').substring(0, 8));
-    const cpu = (baseStations || []).map(bs => Number(bs.cpu || 0));
-    const memory = (baseStations || []).map(bs => Number(bs.memory || 0));
-    const duty = (baseStations || []).map(bs => Number(bs.duty_cycle || 0));
-
-    bsHealthChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                { label: 'CPU %', data: cpu, backgroundColor: '#f59e0b' },
-                { label: 'Memory %', data: memory, backgroundColor: '#0ea5e9' },
-                { label: 'Duty Cycle %', data: duty, backgroundColor: '#64748b' }
-            ]
+                x: {
+                    beginAtZero: true,
+                    ticks: { precision: 0, color: "#587191", font: { size: 10 } },
+                    grid: { color: "rgba(145, 162, 186, 0.18)" },
+                },
+                y: {
+                    ticks: { color: "#587191", font: { size: 10 } },
+                    grid: { display: false },
+                },
+            },
         },
-        options: {
-            responsive: true,
-            scales: { y: { beginAtZero: true, max: 100 } },
-            plugins: { legend: { position: 'bottom' } }
+    });
+}
+
+function renderRecentMessages(rows) {
+    const body = document.getElementById("recentMessagesRows");
+    if (!body) return;
+    const list = Array.isArray(rows) ? rows : [];
+    if (list.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" class="text-muted">No telemetry data yet.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = list.slice(0, 200).map((item) => `
+        <tr>
+            <td>${formatShortClock(item.ts)}</td>
+            <td><code>${escapeHtml((item.sensor_eui || "-").toUpperCase())}</code></td>
+            <td><code>${escapeHtml((item.base_station_eui || "-").toUpperCase())}</code></td>
+            <td>${formatMetricNumber(item.snr, 2)}</td>
+            <td>${formatMetricNumber(item.rssi, 2)}</td>
+        </tr>
+    `).join("");
+}
+
+function applyGrafanaPanels(payload) {
+    const activeSensorsStat = document.getElementById("activeSensorsStat");
+    const activeBaseStationsStat = document.getElementById("activeBaseStationsStat");
+
+    if (!payload || !payload.success) {
+        updateGrafanaNotice(`Telemetry workspace unavailable: ${payload?.error || "Unknown error"}`, "warning");
+        if (activeSensorsStat) activeSensorsStat.textContent = "0";
+        if (activeBaseStationsStat) activeBaseStationsStat.textContent = "0";
+        renderRecentMessages([]);
+        buildThroughputChart([]);
+        buildSignalChart([]);
+        buildTopSensorsChart([]);
+        return;
+    }
+
+    updateGrafanaNotice("", "info");
+    const series = Array.isArray(payload.series) ? payload.series : [];
+    const topSensors = Array.isArray(payload.top_sensors) ? payload.top_sensors : [];
+    const recentMessages = Array.isArray(payload.recent_messages) ? payload.recent_messages : [];
+
+    if (activeSensorsStat) activeSensorsStat.textContent = formatNumber(payload.sensor_count || 0);
+    if (activeBaseStationsStat) activeBaseStationsStat.textContent = formatNumber(payload.base_station_count || 0);
+
+    buildThroughputChart(series);
+    buildSignalChart(series);
+    buildTopSensorsChart(topSensors);
+    renderRecentMessages(recentMessages);
+}
+
+async function loadGrafanaDashboardLink() {
+    const openBtn = document.getElementById("openGrafanaDashboardBtn");
+    if (!openBtn) return;
+    try {
+        const payload = await fetchJson("/api/grafana/dashboard-url");
+        if (payload && payload.success && payload.url) {
+            openBtn.href = payload.url;
+            openBtn.classList.remove("disabled");
+        } else {
+            openBtn.href = "#";
+            openBtn.classList.add("disabled");
         }
-    });
+    } catch (error) {
+        openBtn.href = "#";
+        openBtn.classList.add("disabled");
+    }
 }
 
-function updateBsTable(baseStations) {
-    const rows = (baseStations || []).map(bs => `
-        <tr>
-            <td>${bs.name ? bs.name : `<code>${(bs.eui || '').substring(0, 12)}</code>`}</td>
-            <td>${Number(bs.cpu || 0).toFixed(1)}%</td>
-            <td>${Number(bs.memory || 0).toFixed(1)}%</td>
-            <td>${Number(bs.duty_cycle || 0).toFixed(1)}%</td>
-            <td>${formatUptime(bs.uptime)}</td>
-        </tr>
-    `).join('');
-
-    document.getElementById('bsTable').innerHTML = rows || '<tr><td colspan="5" class="text-center text-muted py-3">No base station data available.</td></tr>';
+async function fetchJson(url) {
+    const response = await fetch(url);
+    const payload = await response.json();
+    if (!response.ok) {
+        throw new Error(payload.error || payload.message || `HTTP ${response.status}`);
+    }
+    return payload;
 }
 
-function updateSensorTable(sensors) {
-    const rows = (sensors || []).map(s => `
-        <tr>
-            <td><code style="font-size: 0.82em;">${s.eui}</code></td>
-            <td>${Number(s.packets_received || 0).toLocaleString()}</td>
-            <td>${Number(s.packets_lost || 0).toLocaleString()}</td>
-            <td style="color: ${getLossColor(s.packet_loss_rate)}; font-weight: 700;">${Number(s.packet_loss_rate || 0).toFixed(2)}%</td>
-            <td>${Number(s.avg_snr || 0).toFixed(2)} dB</td>
-            <td>${Number(s.avg_rssi || 0).toFixed(2)} dBm</td>
-        </tr>
-    `).join('');
+async function refreshRuntimeOnly(options = {}) {
+    const force = Boolean(options.force);
+    if (!healthRuntimeHydrated) {
+        setHealthSectionSkeleton(".health-kpis", true, true);
+        setHealthSectionSkeleton("#runtimeBaseStationsRows", true, true);
+        setHealthSectionSkeleton("#runtimeSensorsRows", true, true);
+    }
 
-    document.getElementById('sensorTable').innerHTML = rows || '<tr><td colspan="6" class="text-center text-muted py-3">No sensor packet statistics available.</td></tr>';
-}
+    const applyRuntimePayload = (healthPayload, meta = {}) => {
+        if (!healthPayload || !healthPayload.success) {
+            throw new Error(healthPayload?.error || "Failed to load health data");
+        }
+        updateKpis(healthPayload);
+        renderBaseStations(healthPayload.base_stations || []);
+        renderSensors(healthPayload.sensors || []);
+        writeSessionJson(HEALTH_CACHE_STATE.runtimeKey, healthPayload);
+        updateLastRefresh(Number(meta?.ts) || Date.now());
+        setHealthCacheMeta(meta);
+        healthRuntimeHydrated = true;
+        setHealthSectionSkeleton(".health-kpis", false);
+        setHealthSectionSkeleton("#runtimeBaseStationsRows", false);
+        setHealthSectionSkeleton("#runtimeSensorsRows", false);
+    };
 
-function resetMetrics() {
-    if (!confirm('Are you sure you want to reset all traffic metrics?')) return;
-
-    fetch('/api/traffic/reset', { method: 'POST' })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('success', 'Traffic metrics reset successfully.');
-                refreshAll();
-            } else {
-                showAlert('danger', data.message || 'Failed to reset metrics.');
+    if (window.AppPerf && typeof window.AppPerf.swr === "function") {
+        const result = await window.AppPerf.swr(
+            HEALTH_SWR_STATE.runtimeKey,
+            async () => {
+                const payload = await fetchJson("/api/health");
+                if (!payload?.success) {
+                    throw new Error(payload?.error || "Failed to load health data");
+                }
+                return payload;
+            },
+            {
+                ttlMs: HEALTH_SWR_STATE.ttlMs,
+                force,
+                onCached: (payload, meta) => applyRuntimePayload(payload, { ...(meta || {}), source: "cache" }),
+                onFresh: (payload, meta) => applyRuntimePayload(payload, { ...(meta || {}), source: "network" }),
+                onError: () => {
+                    setHealthSectionSkeleton(".health-kpis", false);
+                    setHealthSectionSkeleton("#runtimeBaseStationsRows", false);
+                    setHealthSectionSkeleton("#runtimeSensorsRows", false);
+                }
             }
-        })
-        .catch(error => showAlert('danger', 'Error: ' + error.message));
+        );
+        if (result && result.data && !healthRuntimeHydrated) {
+            applyRuntimePayload(result.data, {
+                ts: result.ts,
+                source: result.source && String(result.source).startsWith("cache") ? "cache" : "network",
+            });
+        }
+        return;
+    }
+
+    const directPayload = await fetchJson("/api/health");
+    applyRuntimePayload(directPayload, { ts: Date.now(), source: "network" });
 }
 
-function showAlert(type, message) {
-    const container = document.getElementById('alert-container');
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-    container.appendChild(alert);
-    setTimeout(() => alert.remove(), 5000);
+async function refreshGrafanaWorkspace(options = {}) {
+    const force = Boolean(options.force);
+    if (!healthAnalyticsHydrated) {
+        setHealthSectionSkeleton("#grafanaGrid", true, true);
+    }
+
+    const bucketSeconds =
+        HEALTH_STATE.minutes <= 120 ? 60 :
+        HEALTH_STATE.minutes <= 1440 ? 300 :
+        HEALTH_STATE.minutes <= 10080 ? 900 : 1800;
+
+    const analyticsKey = `${HEALTH_SWR_STATE.analyticsPrefix}:${HEALTH_STATE.minutes}:${bucketSeconds}`;
+    const endpoint = `/api/timescale/telemetry?minutes=${encodeURIComponent(HEALTH_STATE.minutes)}&bucket_seconds=${encodeURIComponent(bucketSeconds)}&top=25`;
+
+    const applyAnalyticsPayload = (analyticsPayload) => {
+        applyGrafanaPanels(analyticsPayload);
+        writeSessionJson(HEALTH_CACHE_STATE.analyticsKey, analyticsPayload);
+        healthAnalyticsHydrated = true;
+        setHealthSectionSkeleton("#grafanaGrid", false);
+    };
+
+    if (window.AppPerf && typeof window.AppPerf.swr === "function") {
+        const result = await window.AppPerf.swr(
+            analyticsKey,
+            () => fetchJson(endpoint),
+            {
+                ttlMs: HEALTH_SWR_STATE.ttlMs,
+                force,
+                onCached: (payload) => applyAnalyticsPayload(payload),
+                onFresh: (payload) => applyAnalyticsPayload(payload),
+                onError: () => setHealthSectionSkeleton("#grafanaGrid", false)
+            }
+        );
+        if (result && result.data && !healthAnalyticsHydrated) {
+            applyAnalyticsPayload(result.data);
+        }
+        return;
+    }
+
+    const analyticsPayload = await fetchJson(endpoint);
+    applyAnalyticsPayload(analyticsPayload);
 }
 
-function refreshAll() {
-    Promise.all([loadHealth(), loadTraffic()]).finally(() => {
-        setLastRefresh();
-    });
+function hydrateWorkspaceFromSessionCache() {
+    const runtimeEntry = readSessionJson(HEALTH_CACHE_STATE.runtimeKey);
+    const analyticsEntry = readSessionJson(HEALTH_CACHE_STATE.analyticsKey);
+    let hydrated = false;
+    let runtimeHydrated = false;
+    let analyticsHydrated = false;
+    let newestTs = 0;
+
+    if (runtimeEntry && runtimeEntry.data) {
+        const runtimePayload = runtimeEntry.data;
+        updateKpis(runtimePayload);
+        renderBaseStations(runtimePayload.base_stations || []);
+        renderSensors(runtimePayload.sensors || []);
+        hydrated = true;
+        runtimeHydrated = true;
+        newestTs = Math.max(newestTs, Number(runtimeEntry.ts || 0));
+    }
+
+    if (analyticsEntry && analyticsEntry.data) {
+        applyGrafanaPanels(analyticsEntry.data);
+        hydrated = true;
+        analyticsHydrated = true;
+        newestTs = Math.max(newestTs, Number(analyticsEntry.ts || 0));
+    }
+
+    if (hydrated) {
+        updateLastRefresh(newestTs || Date.now());
+        setHealthCacheMeta({ source: "session", ts: newestTs || Date.now() });
+    }
+
+    return {
+        hydrated,
+        runtimeHydrated,
+        analyticsHydrated,
+        runtimeFresh: isFreshSessionEntry(runtimeEntry),
+        analyticsFresh: isFreshSessionEntry(analyticsEntry),
+    };
 }
 
-function stopAutoRefresh() {
-    if (autoRefreshTimer) {
-        clearInterval(autoRefreshTimer);
-        autoRefreshTimer = null;
+async function refreshWorkspace() {
+    try {
+        const jobs = [refreshRuntimeOnly({ force: true })];
+        if (healthAnalyticsVisible) {
+            jobs.push(refreshGrafanaWorkspace({ force: true }));
+        }
+        await Promise.all(jobs);
+        setAlert("", "info");
+    } catch (error) {
+        console.error("Health workspace refresh failed:", error);
+        setAlert(`Unable to refresh System Health: ${error.message}`, "danger");
     }
 }
 
-function startAutoRefresh() {
-    stopAutoRefresh();
-    const enabled = document.getElementById('autoRefreshToggle').checked;
-    if (!enabled) return;
-
-    const interval = parseInt(document.getElementById('refreshIntervalSelect').value, 10) || 10000;
-    autoRefreshTimer = setInterval(refreshAll, interval);
+function resetRefreshTimer() {
+    if (HEALTH_STATE.timer) {
+        clearInterval(HEALTH_STATE.timer);
+        HEALTH_STATE.timer = null;
+    }
+    if (!HEALTH_STATE.autoRefresh) return;
+    HEALTH_STATE.timer = setInterval(async () => {
+        try {
+            const jobs = [refreshRuntimeOnly()];
+            if (healthAnalyticsVisible) {
+                jobs.push(refreshGrafanaWorkspace());
+            }
+            await Promise.all(jobs);
+        } catch (error) {
+            console.error("Health refresh failed:", error);
+            setAlert(`Auto refresh failed: ${error.message}`, "warning");
+        }
+    }, HEALTH_STATE.intervalMs);
 }
 
-function initRefreshControls() {
-    const toggle = document.getElementById('autoRefreshToggle');
-    const intervalSelect = document.getElementById('refreshIntervalSelect');
+document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("autoRefreshToggle");
+    const intervalButtons = Array.from(document.querySelectorAll(".health-interval-btn"));
+    const refreshBtn = document.getElementById("refreshHealthBtn");
+    const layoutToggleBtn = document.getElementById("toggleGrafanaLayoutEditBtn");
+    const layoutRevertBtn = document.getElementById("revertGrafanaLayoutBtn");
+    const layoutResetBtn = document.getElementById("resetGrafanaLayoutBtn");
+    const layoutFinishQuickBtn = document.getElementById("finishGrafanaLayoutEditBtn");
+    const layoutRevertQuickBtn = document.getElementById("quickRevertGrafanaLayoutBtn");
+    const layoutResetQuickBtn = document.getElementById("quickResetGrafanaLayoutBtn");
+    const allowedIntervals = [5000, 10000, 15000, 30000];
 
-    const savedEnabled = localStorage.getItem('health_auto_refresh_enabled');
-    const savedInterval = localStorage.getItem('health_auto_refresh_interval');
-
-    if (savedEnabled !== null) {
-        toggle.checked = savedEnabled === 'true';
+    try {
+        const storedAuto = localStorage.getItem("health_workspace_auto_refresh");
+        const storedInterval = localStorage.getItem("health_workspace_interval");
+        const storedMinutes = localStorage.getItem("health_workspace_minutes");
+        if (storedAuto !== null) HEALTH_STATE.autoRefresh = storedAuto === "true";
+        if (storedInterval) HEALTH_STATE.intervalMs = Number(storedInterval) || HEALTH_STATE.intervalMs;
+        if (storedMinutes) HEALTH_STATE.minutes = Number(storedMinutes) || HEALTH_STATE.minutes;
+    } catch (error) {
+        console.debug("Cannot read local health workspace settings", error);
     }
 
-    if (savedInterval && ['5000', '10000', '15000', '30000'].includes(savedInterval)) {
-        intervalSelect.value = savedInterval;
+    if (!allowedIntervals.includes(Number(HEALTH_STATE.intervalMs))) {
+        HEALTH_STATE.intervalMs = 10000;
     }
 
-    toggle.addEventListener('change', () => {
-        localStorage.setItem('health_auto_refresh_enabled', String(toggle.checked));
-        startAutoRefresh();
+    healthCacheTickTimer = setInterval(renderHealthCacheBadge, 1000);
+
+    const updateIntervalButtons = () => {
+        intervalButtons.forEach((btn) => {
+            const value = Number(btn.dataset.intervalMs || "0");
+            btn.classList.toggle("active", value === Number(HEALTH_STATE.intervalMs));
+        });
+    };
+
+    if (toggle) toggle.checked = HEALTH_STATE.autoRefresh;
+    updateIntervalButtons();
+    setHealthSectionSkeleton(".health-kpis", true, true);
+    setHealthSectionSkeleton("#runtimeBaseStationsRows", true, true);
+    setHealthSectionSkeleton("#runtimeSensorsRows", true, true);
+    setHealthSectionSkeleton("#grafanaGrid", true, true);
+
+    document.querySelectorAll(".range-btn").forEach((btn) => {
+        const buttonMinutes = Number(btn.dataset.minutes || "0");
+        btn.classList.toggle("active", buttonMinutes === HEALTH_STATE.minutes);
+        btn.addEventListener("click", () => {
+            HEALTH_STATE.minutes = buttonMinutes || 360;
+            document.querySelectorAll(".range-btn").forEach((other) => other.classList.remove("active"));
+            btn.classList.add("active");
+            try {
+                localStorage.setItem("health_workspace_minutes", String(HEALTH_STATE.minutes));
+            } catch (error) {
+                console.debug("Cannot persist health range", error);
+            }
+            refreshGrafanaWorkspace().catch((error) => {
+                console.error("Telemetry workspace refresh failed:", error);
+                setAlert(`Telemetry workspace refresh failed: ${error.message}`, "warning");
+            });
+        });
     });
 
-    intervalSelect.addEventListener('change', () => {
-        localStorage.setItem('health_auto_refresh_interval', intervalSelect.value);
-        startAutoRefresh();
+    if (toggle) {
+        toggle.addEventListener("change", () => {
+            HEALTH_STATE.autoRefresh = Boolean(toggle.checked);
+            try {
+                localStorage.setItem("health_workspace_auto_refresh", String(HEALTH_STATE.autoRefresh));
+            } catch (error) {
+                console.debug("Cannot persist auto refresh toggle", error);
+            }
+            resetRefreshTimer();
+        });
+    }
+
+    intervalButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const nextInterval = Number(btn.dataset.intervalMs || "10000");
+            if (!allowedIntervals.includes(nextInterval)) return;
+            HEALTH_STATE.intervalMs = nextInterval;
+            try {
+                localStorage.setItem("health_workspace_interval", String(HEALTH_STATE.intervalMs));
+            } catch (error) {
+                console.debug("Cannot persist refresh interval", error);
+            }
+            updateIntervalButtons();
+            resetRefreshTimer();
+            refreshGrafanaWorkspace().catch((error) => {
+                console.error("Telemetry workspace refresh failed:", error);
+                setAlert(`Telemetry workspace refresh failed: ${error.message}`, "warning");
+            });
+        });
     });
 
-    startAutoRefresh();
-}
+    if (refreshBtn) refreshBtn.addEventListener("click", refreshWorkspace);
+    if (layoutToggleBtn) {
+        layoutToggleBtn.addEventListener("click", () => {
+            if (GRAFANA_LAYOUT_STATE.editing) {
+                finishGrafanaLayoutEditing();
+                return;
+            }
+            setGrafanaLayoutEditMode(true);
+        });
+    }
+    if (layoutRevertBtn) layoutRevertBtn.addEventListener("click", revertGrafanaLayout);
+    if (layoutResetBtn) layoutResetBtn.addEventListener("click", resetGrafanaLayout);
+    if (layoutFinishQuickBtn) {
+        layoutFinishQuickBtn.addEventListener("click", finishGrafanaLayoutEditing);
+    }
+    if (layoutRevertQuickBtn) layoutRevertQuickBtn.addEventListener("click", revertGrafanaLayout);
+    if (layoutResetQuickBtn) layoutResetQuickBtn.addEventListener("click", resetGrafanaLayout);
 
-document.addEventListener('DOMContentLoaded', () => {
-    initTrafficCharts();
-    initRefreshControls();
-    refreshAll();
-});
+    initGrafanaLayoutEngine();
+    loadGrafanaLayout();
+    setGrafanaLayoutEditMode(false);
+    updateGrafanaLayoutActionState();
+    const grafanaGridEl = getGrafanaGrid();
+    if (grafanaGridEl) {
+        requestAnimationFrame(() => grafanaGridEl.classList.add("layout-ready"));
+    }
 
-window.addEventListener('beforeunload', () => {
-    stopAutoRefresh();
+    loadGrafanaDashboardLink();
+    const cacheState = hydrateWorkspaceFromSessionCache();
+    healthRuntimeHydrated = Boolean(cacheState.runtimeHydrated);
+    healthAnalyticsHydrated = Boolean(cacheState.analyticsHydrated);
+    if (healthRuntimeHydrated) {
+        setHealthSectionSkeleton(".health-kpis", false);
+        setHealthSectionSkeleton("#runtimeBaseStationsRows", false);
+        setHealthSectionSkeleton("#runtimeSensorsRows", false);
+    }
+    if (healthAnalyticsHydrated) {
+        setHealthSectionSkeleton("#grafanaGrid", false);
+    }
+
+    if (window.AppPerf && typeof window.AppPerf.observeLazy === "function") {
+        window.AppPerf.observeLazy("#grafanaGrid", () => {
+            healthAnalyticsVisible = true;
+            if (!cacheState.analyticsFresh) {
+                refreshGrafanaWorkspace().catch((error) => {
+                    console.error("Telemetry workspace lazy refresh failed:", error);
+                    setAlert(`Telemetry workspace refresh failed: ${error.message}`, "warning");
+                });
+            }
+        }, { rootMargin: "180px" });
+    } else {
+        healthAnalyticsVisible = true;
+    }
+
+    if (!cacheState.runtimeFresh) {
+        refreshRuntimeOnly().catch((error) => {
+            console.error("Runtime refresh failed:", error);
+            setAlert(`Runtime refresh failed: ${error.message}`, "warning");
+        });
+    }
+    if (!cacheState.analyticsFresh && healthAnalyticsVisible) {
+        refreshGrafanaWorkspace().catch((error) => {
+            console.error("Telemetry workspace refresh failed:", error);
+            setAlert(`Telemetry workspace refresh failed: ${error.message}`, "warning");
+        });
+    }
+    resetRefreshTimer();
 });
 </script>
 {% endblock %}
-

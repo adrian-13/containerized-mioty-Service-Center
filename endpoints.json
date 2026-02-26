@@ -8,8 +8,12 @@
         "tags": [
             "test"
         ],
-        "gps_lat": 48.769244,
-        "gps_lng": 18.636525
+        "gps_lat": 48.769216,
+        "gps_lng": 18.636943,
+        "tenant_id": "default",
+        "attached_base_stations": [
+            "129AF3FFFE01F124"
+        ]
     },
     {
         "eui": "00124B001CBCE175",
@@ -19,6 +23,20 @@
         "tags": [
             "test"
         ],
-        "bidi": true
+        "bidi": true,
+        "tenant_id": "default",
+        "gps_lat": 48.768767,
+        "gps_lng": 18.637635
+    },
+    {
+        "eui": "11124B001CBCE171",
+        "nwKey": "",
+        "shortAddr": "0000",
+        "name": "",
+        "tags": [],
+        "bidi": false,
+        "gps_lat": null,
+        "gps_lng": null,
+        "tenant_id": "default"
     }
 ]

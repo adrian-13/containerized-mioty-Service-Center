@@ -1,6 +1,4 @@
 
-version: '3.8'
-
 services:
   bssci-service-center:
     build: .
@@ -27,20 +25,101 @@ services:
       - PUID=1000
       - PGID=1000
       - BASE_STATION_CONFIG_FILE=/app/data/base_stations.json
+      - TIMESCALE_ENABLED=${TIMESCALE_ENABLED:-false}
+      - TIMESCALE_HOST=${TIMESCALE_HOST:-timescaledb}
+      - TIMESCALE_PORT=${TIMESCALE_PORT:-5432}
+      - TIMESCALE_DB=${TIMESCALE_DB:-bssci}
+      - TIMESCALE_USER=${TIMESCALE_USER:-bssci_user}
+      - TIMESCALE_PASSWORD=${TIMESCALE_PASSWORD:-change_me}
+      - TIMESCALE_SSLMODE=${TIMESCALE_SSLMODE:-disable}
+      - TIMESCALE_DEFAULT_TENANT=${TIMESCALE_DEFAULT_TENANT:-default}
+      - TIMESCALE_INVENTORY_WRITE_ENABLED=${TIMESCALE_INVENTORY_WRITE_ENABLED:-true}
+      - TIMESCALE_TELEMETRY_WRITE_ENABLED=${TIMESCALE_TELEMETRY_WRITE_ENABLED:-true}
+      - TIMESCALE_SNAPSHOT_ENABLED=${TIMESCALE_SNAPSHOT_ENABLED:-true}
+      - TIMESCALE_SNAPSHOT_INTERVAL_SECONDS=${TIMESCALE_SNAPSHOT_INTERVAL_SECONDS:-60}
+      - TIMESCALE_RETENTION_ENABLED=${TIMESCALE_RETENTION_ENABLED:-true}
+      - TIMESCALE_TELEMETRY_RETENTION_DAYS=${TIMESCALE_TELEMETRY_RETENTION_DAYS:-90}
+      - TIMESCALE_INVENTORY_RETENTION_DAYS=${TIMESCALE_INVENTORY_RETENTION_DAYS:-365}
+      - TIMESCALE_COMPRESSION_ENABLED=${TIMESCALE_COMPRESSION_ENABLED:-true}
+      - TIMESCALE_COMPRESSION_AFTER_DAYS=${TIMESCALE_COMPRESSION_AFTER_DAYS:-7}
+      - GRAFANA_URL=${GRAFANA_URL:-http://localhost:3000}
+      - GRAFANA_INTERNAL_URL=${GRAFANA_INTERNAL_URL:-http://grafana:3000}
+      - GRAFANA_DASHBOARD_UID=${GRAFANA_DASHBOARD_UID:-service-center-overview}
+      - GRAFANA_DASHBOARD_SLUG=${GRAFANA_DASHBOARD_SLUG:-service-center-overview}
+      - GRAFANA_ORG_ID=${GRAFANA_ORG_ID:-1}
+      - GRAFANA_EMBED_ENABLED=${GRAFANA_EMBED_ENABLED:-true}
+      - GRAFANA_ANONYMOUS_ENABLED=${GRAFANA_ANONYMOUS_ENABLED:-true}
+      - GRAFANA_ANONYMOUS_ORG_ROLE=${GRAFANA_ANONYMOUS_ORG_ROLE:-Viewer}
+      - GRAFANA_PROXY_ENABLED=${GRAFANA_PROXY_ENABLED:-true}
+      - GRAFANA_PROXY_TIMEOUT_SECONDS=${GRAFANA_PROXY_TIMEOUT_SECONDS:-20}
+      - GRAFANA_HEALTH_PANEL_MAP=${GRAFANA_HEALTH_PANEL_MAP:-throughput:1,signal:2,active_sensors:3,active_base_stations:4,top_sensors:5,recent_messages:6}
     networks:
       - bssci-network
+    depends_on:
+      timescaledb:
+        condition: service_healthy
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "python", "-c", "import socket; s1 = socket.create_connection(('localhost', 16018), timeout=5); s2 = socket.create_connection(('localhost', 5000), timeout=5); s1.close(); s2.close()"]
+      test: ["CMD", "python", "-c", "import socket,bssci_config as c; s1=socket.create_connection(('localhost', int(getattr(c,'LISTEN_PORT',16018))), timeout=5); s2=socket.create_connection(('localhost', int(getattr(c,'WEB_PORT',5000))), timeout=5); s1.close(); s2.close()"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
+  timescaledb:
+    image: timescale/timescaledb:2.17.2-pg16
+    container_name: bssci-timescaledb
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${TIMESCALE_DB:-bssci}
+      - POSTGRES_USER=${TIMESCALE_USER:-bssci_user}
+      - POSTGRES_PASSWORD=${TIMESCALE_PASSWORD:-change_me}
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./timescaledb/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - bssci-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALE_USER:-bssci_user} -d ${TIMESCALE_DB:-bssci}"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+
+  grafana:
+    image: grafana/grafana-oss:11.1.4
+    container_name: bssci-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ALLOW_EMBEDDING=${GRAFANA_EMBED_ENABLED:-true}
+      - GF_AUTH_ANONYMOUS_ENABLED=${GRAFANA_ANONYMOUS_ENABLED:-true}
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=${GRAFANA_ANONYMOUS_ORG_ROLE:-Viewer}
+      - POSTGRES_DB=${TIMESCALE_DB:-bssci}
+      - POSTGRES_USER=${TIMESCALE_USER:-bssci_user}
+      - POSTGRES_PASSWORD=${TIMESCALE_PASSWORD:-change_me}
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - bssci-network
+
 networks:
   bssci-network:
     driver: bridge
+
+volumes:
+  timescaledb_data:
+  grafana_data:

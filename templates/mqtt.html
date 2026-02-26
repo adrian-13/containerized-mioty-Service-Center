@@ -1,0 +1,1052 @@
+{% extends "base.html" %}
+{% block title %}MQTT{% endblock %}
+
+{% block content %}
+<style>
+.mqtt-shell {
+    display: grid;
+    gap: 0.86rem;
+}
+
+.mqtt-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.mqtt-head-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #10223b;
+}
+
+.mqtt-head-sub {
+    margin: 0.2rem 0 0;
+    font-size: 0.72rem;
+    color: #5e7190;
+    font-weight: 600;
+}
+
+.mqtt-controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.68rem;
+    flex-wrap: wrap;
+    margin-top: 0.62rem;
+    padding: 0.56rem 0.62rem;
+    border: 1px solid #d8e2ef;
+    border-radius: 0.82rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+}
+
+.mqtt-controls-main {
+    display: flex;
+    align-items: center;
+    gap: 0.44rem;
+    flex-wrap: wrap;
+}
+
+.mqtt-controls-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.42rem;
+    flex-wrap: wrap;
+}
+
+.mqtt-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    border: 1px solid #cfdbec;
+    border-radius: 999px;
+    background: #ffffff;
+    padding: 0.21rem 0.5rem;
+    color: #2b476c;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.mqtt-interval-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+    border: 1px solid #d0dceb;
+    border-radius: 999px;
+    padding: 0.18rem;
+    background: #f3f8ff;
+}
+
+.mqtt-interval-btn {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: #406186;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.16rem 0.48rem;
+    line-height: 1.1;
+    cursor: pointer;
+}
+
+.mqtt-interval-btn.active {
+    background: #1f4272;
+    border-color: #1f4272;
+    color: #ffffff;
+}
+
+.mqtt-updated {
+    margin: 0;
+    font-size: 0.71rem;
+    color: #5c7390;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.mqtt-updated strong {
+    color: #17385f;
+}
+
+.mqtt-status-row {
+    display: grid;
+    gap: 0.55rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.mqtt-health-grid {
+    display: grid;
+    gap: 0.55rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.mqtt-health-card {
+    border: 1px solid #d5deeb;
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    padding: 0.62rem 0.72rem;
+}
+
+.mqtt-health-card.good {
+    border-color: #bde8cf;
+    background: linear-gradient(180deg, #f5fcf8 0%, #ebfaf3 100%);
+}
+
+.mqtt-health-card.warning {
+    border-color: #f2ddab;
+    background: linear-gradient(180deg, #fffbf1 0%, #fff6df 100%);
+}
+
+.mqtt-health-card.critical {
+    border-color: #f1c4cb;
+    background: linear-gradient(180deg, #fff5f6 0%, #ffecee 100%);
+}
+
+.mqtt-health-card.neutral {
+    border-color: #d7e2f1;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.mqtt-health-note {
+    margin: 0.16rem 0 0;
+    font-size: 0.69rem;
+    color: #5f7693;
+    font-weight: 700;
+}
+
+.mqtt-alert-list {
+    margin: 0.56rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.42rem;
+}
+
+.mqtt-alert-item {
+    border: 1px solid #d7e2f1;
+    border-radius: 0.68rem;
+    background: #f8fbff;
+    color: #2a4465;
+    font-size: 0.73rem;
+    font-weight: 700;
+    padding: 0.42rem 0.56rem;
+}
+
+.mqtt-alert-item.good {
+    border-color: #bde8cf;
+    background: #edf9f2;
+    color: #1b6b44;
+}
+
+.mqtt-alert-item.warning {
+    border-color: #f3dfb3;
+    background: #fff6df;
+    color: #8a6113;
+}
+
+.mqtt-alert-item.critical {
+    border-color: #f1c7cc;
+    background: #fff0f2;
+    color: #9b2b34;
+}
+
+.mqtt-status-card {
+    border: 1px solid #d5deeb;
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    padding: 0.64rem 0.74rem;
+}
+
+.mqtt-label {
+    margin: 0;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #60738e;
+}
+
+.mqtt-value {
+    margin: 0.24rem 0 0;
+    font-size: 1rem;
+    line-height: 1.2;
+    font-weight: 800;
+    color: #13263f;
+}
+
+.mqtt-note {
+    margin: 0.16rem 0 0;
+    font-size: 0.72rem;
+    color: #5d7290;
+    font-weight: 600;
+}
+
+.mqtt-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    border-radius: 999px;
+    border: 1px solid #cbd9ea;
+    padding: 0.14rem 0.46rem;
+    font-size: 0.71rem;
+    font-weight: 800;
+}
+
+.mqtt-status-pill.online {
+    background: #ebfaf3;
+    border-color: #bde8cf;
+    color: #127548;
+}
+
+.mqtt-status-pill.offline {
+    background: #fff3f4;
+    border-color: #f1c7cc;
+    color: #a52831;
+}
+
+.mqtt-grid {
+    display: grid;
+    gap: 0.78rem;
+    grid-template-columns: 1.25fr 1.25fr 1fr;
+}
+
+.mqtt-publish-panel {
+    border: 1px solid #d7e1ef;
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    padding: 0.72rem;
+}
+
+.mqtt-publish-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    margin-bottom: 0.54rem;
+}
+
+.mqtt-publish-title {
+    margin: 0;
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: #1c3557;
+}
+
+.mqtt-publish-note {
+    margin: 0;
+    font-size: 0.68rem;
+    color: #607792;
+    font-weight: 700;
+}
+
+.mqtt-publish-form .form-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #5f7390;
+    margin-bottom: 0.24rem;
+}
+
+.mqtt-publish-form .form-control,
+.mqtt-publish-form .form-select {
+    font-size: 0.8rem;
+}
+
+.mqtt-guide-panel .workspace-panel-body {
+    display: grid;
+    gap: 0.72rem;
+}
+
+.mqtt-guide-intro {
+    margin: 0;
+    font-size: 0.74rem;
+    color: #536b88;
+    font-weight: 600;
+}
+
+.mqtt-guide-grid {
+    display: grid;
+    gap: 0.62rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mqtt-guide-item {
+    border: 1px solid #dbe6f3;
+    border-radius: 0.76rem;
+    background: #f9fcff;
+    padding: 0.58rem 0.66rem;
+}
+
+.mqtt-guide-item h6 {
+    margin: 0 0 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #1f385b;
+}
+
+.mqtt-guide-item p {
+    margin: 0;
+    font-size: 0.71rem;
+    color: #58708d;
+    line-height: 1.4;
+}
+
+.mqtt-guide-code {
+    margin: 0.3rem 0 0;
+    padding: 0.45rem 0.5rem;
+    border: 1px solid #d6e1ef;
+    border-radius: 0.58rem;
+    background: #f4f8ff;
+    color: #1e3758;
+    font-family: "JetBrains Mono", "Consolas", "Courier New", monospace;
+    font-size: 0.66rem;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.mqtt-stream {
+    border: 1px solid #dae4f2;
+    border-radius: 0.86rem;
+    background: #fff;
+    overflow: hidden;
+}
+
+.mqtt-stream-head {
+    padding: 0.58rem 0.7rem;
+    border-bottom: 1px solid #e2e9f4;
+    background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+}
+
+.mqtt-stream-head h6 {
+    margin: 0;
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #1e3758;
+}
+
+.mqtt-stream-meta {
+    font-size: 0.68rem;
+    color: #627792;
+    font-weight: 700;
+}
+
+.mqtt-stream-body {
+    max-height: 360px;
+    overflow: auto;
+}
+
+.mqtt-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mqtt-table th,
+.mqtt-table td {
+    border-bottom: 1px solid #edf2f8;
+    padding: 0.44rem 0.62rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.mqtt-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f8fbff;
+    font-size: 0.64rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #637790;
+    font-weight: 800;
+}
+
+.mqtt-table td {
+    font-size: 0.7rem;
+    color: #253c5b;
+}
+
+.mqtt-mono {
+    font-family: "JetBrains Mono", "Consolas", "Courier New", monospace;
+    font-size: 0.68rem;
+    color: #1a3557;
+    word-break: break-all;
+}
+
+.mqtt-empty {
+    padding: 1.1rem 0.8rem;
+    color: #6d819c;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.mqtt-error-text {
+    color: #9b2934;
+    font-weight: 700;
+}
+
+@media (max-width: 1240px) {
+    .mqtt-status-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mqtt-health-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mqtt-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mqtt-guide-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .mqtt-controls-bar {
+        align-items: flex-start;
+    }
+
+    .mqtt-controls-secondary {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+</style>
+
+<div class="mqtt-shell">
+    <section class="workspace-panel">
+        <div class="workspace-panel-body">
+            <div class="mqtt-head">
+                <div>
+                    <h2 class="mqtt-head-title">MQTT Broker Monitoring</h2>
+                    <p class="mqtt-head-sub">Live broker runtime telemetry and publish diagnostics</p>
+                </div>
+            </div>
+            <div class="mqtt-controls-bar">
+                <div class="mqtt-controls-main">
+                    <label class="mqtt-toggle mb-0" for="mqttAutoRefresh">
+                        <input class="form-check-input mt-0 me-1" type="checkbox" id="mqttAutoRefresh" checked>
+                        Auto-refresh
+                    </label>
+                    <div class="mqtt-interval-group" id="mqttIntervalButtons" aria-label="Refresh interval">
+                        <button type="button" class="mqtt-interval-btn" data-interval-sec="2">2s</button>
+                        <button type="button" class="mqtt-interval-btn active" data-interval-sec="5">5s</button>
+                        <button type="button" class="mqtt-interval-btn" data-interval-sec="10">10s</button>
+                        <button type="button" class="mqtt-interval-btn" data-interval-sec="30">30s</button>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="mqttBtnRefresh">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh now
+                    </button>
+                </div>
+                <div class="mqtt-controls-secondary">
+                    <p class="mqtt-updated">Updated <strong id="mqttUpdatedLabel">--:--:--</strong></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mqtt-status-row">
+        <article class="mqtt-status-card">
+            <p class="mqtt-label">Connection</p>
+            <div class="mqtt-value">
+                <span id="mqttConnectionPill" class="mqtt-status-pill offline">Offline</span>
+            </div>
+            <p class="mqtt-note" id="mqttConnectionMeta">Waiting for data...</p>
+        </article>
+        <article class="mqtt-status-card">
+            <p class="mqtt-label">Broker</p>
+            <p class="mqtt-value" id="mqttBrokerValue">--</p>
+            <p class="mqtt-note" id="mqttTopicValue">Topic: --</p>
+        </article>
+        <article class="mqtt-status-card">
+            <p class="mqtt-label">Input Queue</p>
+            <p class="mqtt-value" id="mqttInQueueValue">0</p>
+            <p class="mqtt-note">Incoming commands/config</p>
+        </article>
+        <article class="mqtt-status-card">
+            <p class="mqtt-label">Output Queue</p>
+            <p class="mqtt-value" id="mqttOutQueueValue">0</p>
+            <p class="mqtt-note">Outgoing publishes/acks</p>
+        </article>
+    </section>
+
+    <section class="workspace-panel">
+        <div class="workspace-panel-head">
+            <h5><i class="fas fa-bell me-2"></i>Monitoring + Alerting</h5>
+            <small class="workspace-panel-sub">Queue depth, retry failures, DB latency and MQTT reconnect behavior</small>
+        </div>
+        <div class="workspace-panel-body">
+            <div class="mqtt-health-grid">
+                <article class="mqtt-health-card neutral" id="mqttHealthQueueCard">
+                    <p class="mqtt-label">Queue Depth</p>
+                    <p class="mqtt-value" id="mqttHealthQueueValue">0.0%</p>
+                    <p class="mqtt-health-note" id="mqttHealthQueueNote">MQTT in/out and DB queue utilization</p>
+                </article>
+                <article class="mqtt-health-card neutral" id="mqttHealthRetryCard">
+                    <p class="mqtt-label">Retry Fail Rate</p>
+                    <p class="mqtt-value" id="mqttHealthRetryValue">0.00%</p>
+                    <p class="mqtt-health-note" id="mqttHealthRetryNote">Publish and DB write retries</p>
+                </article>
+                <article class="mqtt-health-card neutral" id="mqttHealthLatencyCard">
+                    <p class="mqtt-label">DB Write Latency</p>
+                    <p class="mqtt-value" id="mqttHealthLatencyValue">N/A</p>
+                    <p class="mqtt-health-note" id="mqttHealthLatencyNote">Timescale write time</p>
+                </article>
+                <article class="mqtt-health-card neutral" id="mqttHealthReconnectCard">
+                    <p class="mqtt-label">MQTT Reconnect Count</p>
+                    <p class="mqtt-value" id="mqttHealthReconnectValue">0/h</p>
+                    <p class="mqtt-health-note" id="mqttHealthReconnectNote">Reconnect frequency (last hour)</p>
+                </article>
+            </div>
+            <ul class="mqtt-alert-list" id="mqttAlertsList">
+                <li class="mqtt-alert-item good">No critical runtime signals detected.</li>
+            </ul>
+        </div>
+    </section>
+
+    {% if user_permissions.get('can_edit_config', False) %}
+    <section class="mqtt-publish-panel">
+        <div class="mqtt-publish-head">
+            <div>
+                <h6 class="mqtt-publish-title">MQTT Publish Test</h6>
+                <p class="mqtt-publish-note" id="mqttBaseTopicNote">Base topic: --</p>
+            </div>
+            <div class="mqtt-publish-note">Admin tool</div>
+        </div>
+        <form id="mqttPublishForm" class="mqtt-publish-form">
+            <div class="row g-2">
+                <div class="col-12 col-lg-6">
+                    <label class="form-label" for="mqttPublishTopic">Topic suffix</label>
+                    <input class="form-control form-control-sm" id="mqttPublishTopic" type="text" placeholder="ep/00124B001CBCE171/cmd" required>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label class="form-label" for="mqttPublishMode">Payload</label>
+                    <select class="form-select form-select-sm" id="mqttPublishMode">
+                        <option value="text">Text</option>
+                        <option value="json">JSON</option>
+                    </select>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label class="form-label" for="mqttPublishQos">QoS</label>
+                    <select class="form-select form-select-sm" id="mqttPublishQos">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-2 d-flex align-items-end">
+                    <label class="mqtt-toggle mb-0">
+                        <input class="form-check-input mt-0" id="mqttPublishRetain" type="checkbox">
+                        Retain
+                    </label>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="mqttPublishPayload">Payload</label>
+                    <textarea class="form-control form-control-sm mqtt-mono" id="mqttPublishPayload" rows="3" placeholder='Example JSON: {"command":"status"}'></textarea>
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button class="btn btn-sm btn-primary" type="submit" id="mqttPublishBtn">
+                        <i class="fas fa-paper-plane me-1"></i>Queue publish
+                    </button>
+                </div>
+            </div>
+        </form>
+    </section>
+    {% endif %}
+
+    <section class="workspace-panel mqtt-guide-panel">
+        <div class="workspace-panel-head">
+            <h5><i class="fas fa-book-open me-2"></i>MQTT Test Guide</h5>
+            <small class="workspace-panel-sub">How to test topics and payloads safely</small>
+        </div>
+        <div class="workspace-panel-body">
+            <p class="mqtt-guide-intro">
+                Use <strong>Topic suffix</strong> (without base topic), choose payload mode, then queue message.
+                In this deployment only users with admin/config permissions can publish test messages.
+            </p>
+
+            <div class="mqtt-guide-grid">
+                <article class="mqtt-guide-item">
+                    <h6>1) Sensor command - text payload</h6>
+                    <p>Quick command to one sensor endpoint.</p>
+                    <pre class="mqtt-guide-code">Topic suffix: ep/00124B001CBCE171/cmd
+Payload mode: text
+Payload: status</pre>
+                </article>
+
+                <article class="mqtt-guide-item">
+                    <h6>2) Sensor command - JSON payload</h6>
+                    <p>Attach sensor to selected base station(s).</p>
+                    <pre class="mqtt-guide-code">Topic suffix: ep/00124B001CBCE171/cmd
+Payload mode: json
+Payload: {"command":"attach","baseStations":["129AF3FFFE01F124"]}</pre>
+                </article>
+
+                <article class="mqtt-guide-item">
+                    <h6>3) Legacy register payload</h6>
+                    <p>Register/configure endpoint through legacy register topic.</p>
+                    <pre class="mqtt-guide-code">Topic suffix: ep/00124B001CBCE171/register
+Payload mode: json
+Payload: {"nwKey":"00112233445566778899AABBCCDDEEFF","shortAddr":"A171"}</pre>
+                </article>
+
+                <article class="mqtt-guide-item">
+                    <h6>4) What to verify after publish</h6>
+                    <p>Check that message appears in outgoing topics and that ACK/response is returned on response topic.</p>
+                    <pre class="mqtt-guide-code">Expected ACK topic:
+ep/&lt;EUI&gt;/response
+
+Watch:
+- Recent Outgoing Topics
+- Recent Incoming Topics
+- Recent Errors</pre>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="workspace-panel">
+        <div class="workspace-panel-head">
+            <h5><i class="fas fa-chart-line me-2"></i>Runtime Counters</h5>
+            <small class="workspace-panel-sub">Incoming, queueing and publish throughput</small>
+        </div>
+        <div class="workspace-panel-body">
+            <div class="row g-2">
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="mqtt-status-card">
+                        <p class="mqtt-label">Incoming Total</p>
+                        <p class="mqtt-value" id="mqttIncomingTotal">0</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="mqtt-status-card">
+                        <p class="mqtt-label">Incoming Queued</p>
+                        <p class="mqtt-value" id="mqttIncomingQueued">0</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="mqtt-status-card">
+                        <p class="mqtt-label">Incoming Failed</p>
+                        <p class="mqtt-value" id="mqttIncomingFailed">0</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="mqtt-status-card">
+                        <p class="mqtt-label">Published</p>
+                        <p class="mqtt-value" id="mqttOutgoingPublished">0</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="mqtt-status-card">
+                        <p class="mqtt-label">Publish Failed</p>
+                        <p class="mqtt-value" id="mqttOutgoingFailed">0</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="mqtt-status-card">
+                        <p class="mqtt-label">Recent Errors</p>
+                        <p class="mqtt-value" id="mqttRecentErrorsCount">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mqtt-grid">
+        <article class="mqtt-stream">
+            <div class="mqtt-stream-head">
+                <h6>Recent Incoming Topics</h6>
+                <span class="mqtt-stream-meta" id="mqttIncomingCount">0 items</span>
+            </div>
+            <div class="mqtt-stream-body">
+                <table class="mqtt-table" id="mqttIncomingTable"></table>
+            </div>
+        </article>
+        <article class="mqtt-stream">
+            <div class="mqtt-stream-head">
+                <h6>Recent Outgoing Topics</h6>
+                <span class="mqtt-stream-meta" id="mqttOutgoingCount">0 items</span>
+            </div>
+            <div class="mqtt-stream-body">
+                <table class="mqtt-table" id="mqttOutgoingTable"></table>
+            </div>
+        </article>
+        <article class="mqtt-stream">
+            <div class="mqtt-stream-head">
+                <h6>Recent Errors</h6>
+                <span class="mqtt-stream-meta" id="mqttErrorsCount">0 items</span>
+            </div>
+            <div class="mqtt-stream-body">
+                <table class="mqtt-table" id="mqttErrorsTable"></table>
+            </div>
+        </article>
+    </section>
+</div>
+
+<script>
+(function() {
+    let autoTimer = null;
+    let refreshIntervalSeconds = 5;
+
+    function notify(message, type = 'info') {
+        if (window.AppUI && typeof window.AppUI.toast === 'function') {
+            window.AppUI.toast(message, type);
+            return;
+        }
+        if (type === 'danger') {
+            console.error(message);
+        }
+    }
+
+    function esc(value) {
+        const text = String(value == null ? '' : value);
+        return text
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function formatClock(ts) {
+        const num = Number(ts || 0);
+        if (!num) return '--:--:--';
+        const date = new Date(num * 1000);
+        if (Number.isNaN(date.getTime())) return '--:--:--';
+        return date.toLocaleTimeString();
+    }
+
+    function formatAgo(seconds) {
+        const s = Number(seconds || 0);
+        if (!s || s < 1) return 'just now';
+        if (s < 60) return `${s}s`;
+        if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`;
+        return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+    }
+
+    function setText(id, value) {
+        const node = document.getElementById(id);
+        if (node) node.textContent = String(value == null ? '' : value);
+    }
+
+    function asNumber(value, fallback = 0) {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : fallback;
+    }
+
+    function formatPct(value, precision = 2) {
+        return `${asNumber(value, 0).toFixed(precision)}%`;
+    }
+
+    function setHealthLevel(cardId, level) {
+        const card = document.getElementById(cardId);
+        if (!card) return;
+        card.classList.remove('good', 'warning', 'critical', 'neutral');
+        card.classList.add(level || 'neutral');
+    }
+
+    function renderIncoming(rows) {
+        const table = document.getElementById('mqttIncomingTable');
+        const items = Array.isArray(rows) ? rows : [];
+        setText('mqttIncomingCount', `${items.length} items`);
+        if (!table) return;
+        if (!items.length) {
+            table.innerHTML = `<tbody><tr><td class="mqtt-empty">No incoming MQTT messages recorded yet.</td></tr></tbody>`;
+            return;
+        }
+        const body = items.slice().reverse().map((item) => `
+            <tr>
+                <td class="mqtt-mono">${esc(item.topic || '')}</td>
+                <td>${esc(formatClock(item.timestamp))}</td>
+            </tr>
+        `).join('');
+        table.innerHTML = `
+            <thead><tr><th>Topic</th><th>Time</th></tr></thead>
+            <tbody>${body}</tbody>
+        `;
+    }
+
+    function renderOutgoing(rows) {
+        const table = document.getElementById('mqttOutgoingTable');
+        const items = Array.isArray(rows) ? rows : [];
+        setText('mqttOutgoingCount', `${items.length} items`);
+        if (!table) return;
+        if (!items.length) {
+            table.innerHTML = `<tbody><tr><td class="mqtt-empty">No outgoing MQTT publishes recorded yet.</td></tr></tbody>`;
+            return;
+        }
+        const body = items.slice().reverse().map((item) => `
+            <tr>
+                <td class="mqtt-mono">${esc(item.topic || '')}</td>
+                <td>${esc(item.qos == null ? 0 : item.qos)}</td>
+                <td>${item.retain ? 'yes' : 'no'}</td>
+                <td>${esc(formatClock(item.timestamp))}</td>
+            </tr>
+        `).join('');
+        table.innerHTML = `
+            <thead><tr><th>Topic</th><th>QoS</th><th>Retain</th><th>Time</th></tr></thead>
+            <tbody>${body}</tbody>
+        `;
+    }
+
+    function renderErrors(rows) {
+        const table = document.getElementById('mqttErrorsTable');
+        const items = Array.isArray(rows) ? rows : [];
+        setText('mqttErrorsCount', `${items.length} items`);
+        setText('mqttRecentErrorsCount', items.length);
+        if (!table) return;
+        if (!items.length) {
+            table.innerHTML = `<tbody><tr><td class="mqtt-empty">No MQTT errors captured.</td></tr></tbody>`;
+            return;
+        }
+        const body = items.slice().reverse().map((item) => `
+            <tr>
+                <td>${esc(item.source || '-')}</td>
+                <td class="mqtt-error-text">${esc(item.error || '')}</td>
+                <td>${esc(formatClock(item.timestamp))}</td>
+            </tr>
+        `).join('');
+        table.innerHTML = `
+            <thead><tr><th>Source</th><th>Error</th><th>Time</th></tr></thead>
+            <tbody>${body}</tbody>
+        `;
+    }
+
+    function renderStatus(status) {
+        const connected = Boolean(status.connected);
+        const pill = document.getElementById('mqttConnectionPill');
+        if (pill) {
+            pill.className = `mqtt-status-pill ${connected ? 'online' : 'offline'}`;
+            pill.textContent = connected ? 'Connected' : 'Offline';
+        }
+
+        setText('mqttConnectionMeta', connected ? `Connected for ${formatAgo(status.connected_seconds)}` : `Disconnected since ${formatClock(status.disconnected_since)}`);
+        setText('mqttBrokerValue', `${status.broker_host || '--'}:${status.broker_port || '--'}`);
+        setText('mqttTopicValue', `Topic: ${status.base_topic || '--'}`);
+        setText('mqttBaseTopicNote', `Base topic: ${status.base_topic || '--'}`);
+        setText('mqttInQueueValue', (status.queue || {}).in_size || 0);
+        setText('mqttOutQueueValue', (status.queue || {}).out_size || 0);
+
+        const stats = status.stats || {};
+        setText('mqttIncomingTotal', stats.incoming_total || 0);
+        setText('mqttIncomingQueued', stats.incoming_queued || 0);
+        setText('mqttIncomingFailed', stats.incoming_failed || 0);
+        setText('mqttOutgoingPublished', stats.outgoing_published || 0);
+        setText('mqttOutgoingFailed', stats.outgoing_failed || 0);
+
+        renderIncoming(status.recent_incoming_topics || []);
+        renderOutgoing(status.recent_outgoing_topics || []);
+        renderErrors(status.recent_errors || []);
+    }
+
+    function renderInsights(insights) {
+        const metrics = (insights && insights.metrics) || {};
+        const queue = metrics.queue_depth || {};
+        const retry = metrics.retry_fail_rate || {};
+        const latency = metrics.db_write_latency || {};
+        const reconnect = metrics.mqtt_reconnect_count || {};
+
+        setHealthLevel('mqttHealthQueueCard', queue.level || 'neutral');
+        setText('mqttHealthQueueValue', formatPct(queue.value_pct, 1));
+        setText(
+            'mqttHealthQueueNote',
+            `MQTT in ${formatPct(queue.mqtt_in_pct, 1)}, out ${formatPct(queue.mqtt_out_pct, 1)}, DB ${formatPct(queue.db_queue_pct, 1)}`
+        );
+
+        setHealthLevel('mqttHealthRetryCard', retry.level || 'neutral');
+        setText('mqttHealthRetryValue', formatPct(retry.value_pct, 2));
+        setText(
+            'mqttHealthRetryNote',
+            `MQTT ${formatPct(retry.mqtt_retry_fail_rate_pct, 2)}, DB ${formatPct(retry.db_retry_fail_rate_pct, 2)}`
+        );
+
+        setHealthLevel('mqttHealthLatencyCard', latency.level || 'neutral');
+        if (latency.value_ms == null) {
+            setText('mqttHealthLatencyValue', 'N/A');
+            setText('mqttHealthLatencyNote', 'No DB writes sampled yet');
+        } else {
+            setText('mqttHealthLatencyValue', `${asNumber(latency.value_ms, 0).toFixed(1)} ms`);
+            setText(
+                'mqttHealthLatencyNote',
+                `avg ${asNumber(latency.avg_ms, 0).toFixed(1)} ms, max ${asNumber(latency.max_ms, 0).toFixed(1)} ms`
+            );
+        }
+
+        setHealthLevel('mqttHealthReconnectCard', reconnect.level || 'neutral');
+        setText('mqttHealthReconnectValue', `${asNumber(reconnect.value_per_hour, 0).toFixed(0)}/h`);
+        setText('mqttHealthReconnectNote', `Total reconnects ${asNumber(reconnect.total, 0).toFixed(0)}`);
+
+        const alertsNode = document.getElementById('mqttAlertsList');
+        if (!alertsNode) return;
+        const alerts = Array.isArray(insights && insights.alerts) ? insights.alerts : [];
+        if (!alerts.length) {
+            alertsNode.innerHTML = `<li class="mqtt-alert-item good">No critical runtime signals detected.</li>`;
+            return;
+        }
+        alertsNode.innerHTML = alerts.map((alert) => `
+            <li class="mqtt-alert-item ${esc(alert.level || 'good')}">${esc(alert.text || '')}</li>
+        `).join('');
+    }
+
+    async function refreshMqttStatus() {
+        try {
+            const resp = await fetch('/api/mqtt/monitor');
+            const data = await resp.json();
+            if (!data || !data.success) {
+                throw new Error((data && data.error) || 'Unable to load MQTT runtime state');
+            }
+
+            setText('mqttUpdatedLabel', new Date().toLocaleTimeString());
+            if (!data.available) {
+                renderStatus({
+                    connected: false,
+                    broker_host: '--',
+                    broker_port: '--',
+                    base_topic: '--',
+                    queue: { in_size: 0, out_size: 0 },
+                    stats: {},
+                    recent_incoming_topics: [],
+                    recent_outgoing_topics: [],
+                    recent_errors: data.status && data.status.message ? [{ source: 'init', error: data.status.message, timestamp: Date.now() / 1000 }] : [],
+                    disconnected_since: Date.now() / 1000,
+                    connected_seconds: 0
+                });
+                renderInsights(data.insights || null);
+                return;
+            }
+            renderStatus(data.status || {});
+            renderInsights(data.insights || null);
+        } catch (err) {
+            console.error('MQTT monitor refresh failed:', err);
+        }
+    }
+
+    async function queuePublishTest(event) {
+        event.preventDefault();
+        const btn = document.getElementById('mqttPublishBtn');
+        if (btn) btn.disabled = true;
+        try {
+            const topic = (document.getElementById('mqttPublishTopic')?.value || '').trim();
+            const payload = document.getElementById('mqttPublishPayload')?.value || '';
+            const payloadMode = document.getElementById('mqttPublishMode')?.value || 'text';
+            const qos = Number(document.getElementById('mqttPublishQos')?.value || 0);
+            const retain = Boolean(document.getElementById('mqttPublishRetain')?.checked);
+
+            const response = await fetch('/api/mqtt/publish-test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic,
+                    payload,
+                    payload_mode: payloadMode,
+                    qos,
+                    retain
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error((data && data.error) || 'Failed to queue MQTT publish');
+            }
+
+            notify(`Queued: ${data.topic}`, 'success');
+            await refreshMqttStatus();
+        } catch (err) {
+            notify(err.message || 'Failed to queue MQTT publish', 'danger');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    function setActiveIntervalButton(seconds) {
+        const interval = Math.max(1, Number(seconds) || 5);
+        refreshIntervalSeconds = interval;
+        document.querySelectorAll('#mqttIntervalButtons .mqtt-interval-btn').forEach((btn) => {
+            const buttonInterval = Number(btn.dataset.intervalSec || 0);
+            btn.classList.toggle('active', buttonInterval === interval);
+        });
+    }
+
+    function bindIntervalButtons() {
+        document.querySelectorAll('#mqttIntervalButtons .mqtt-interval-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const nextInterval = Number(btn.dataset.intervalSec || 5);
+                setActiveIntervalButton(nextInterval);
+                restartAutoTimer();
+            });
+        });
+    }
+
+    function restartAutoTimer() {
+        if (autoTimer) {
+            clearInterval(autoTimer);
+            autoTimer = null;
+        }
+        const enabled = document.getElementById('mqttAutoRefresh')?.checked;
+        if (!enabled) return;
+        autoTimer = setInterval(refreshMqttStatus, Math.max(1, refreshIntervalSeconds) * 1000);
+    }
+
+    document.getElementById('mqttBtnRefresh')?.addEventListener('click', refreshMqttStatus);
+    document.getElementById('mqttAutoRefresh')?.addEventListener('change', restartAutoTimer);
+    document.getElementById('mqttPublishForm')?.addEventListener('submit', queuePublishTest);
+    bindIntervalButtons();
+    setActiveIntervalButton(refreshIntervalSeconds);
+
+    refreshMqttStatus();
+    restartAutoTimer();
+})();
+</script>
+{% endblock %}

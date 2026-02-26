@@ -3,17 +3,54 @@
     "admin": {
       "password": "admin123",
       "role": "admin",
-      "name": "Administrator"
+      "name": "Administrator",
+      "tenant_id": "",
+      "admin_permissions": {
+        "manage_users": true,
+        "manage_tenants": true,
+        "manage_configuration": true,
+        "manage_system": true,
+        "manage_certificates": true,
+        "view_admin_audit": true,
+        "export_admin_audit": true,
+        "clear_admin_audit": true,
+        "clear_service_logs": true
+      }
     },
     "user": {
       "password": "user123",
       "role": "user",
-      "name": "Benutzer"
+      "name": "Benutzer",
+      "tenant_id": "acme-test"
     },
     "viewer": {
       "password": "viewer123",
       "role": "viewer",
-      "name": "Betrachter"
+      "name": "Betrachter",
+      "tenant_id": "default"
+    },
+    "test": {
+      "password": "test",
+      "role": "user",
+      "name": "test",
+      "tenant_id": "kinet"
+    },
+    "lolofon16": {
+      "password": "lolofon16",
+      "role": "admin",
+      "name": "lolofon16",
+      "tenant_id": "",
+      "admin_permissions": {
+        "manage_users": true,
+        "manage_tenants": true,
+        "manage_configuration": true,
+        "manage_system": true,
+        "manage_certificates": true,
+        "view_admin_audit": true,
+        "export_admin_audit": true,
+        "clear_admin_audit": true,
+        "clear_service_logs": true
+      }
     }
   },
   "role_permissions": {
@@ -23,7 +60,18 @@
       "can_edit_config": true,
       "can_manage_certificates": true,
       "can_update_system": true,
-      "visible_tabs": ["dashboard", "sensors", "base_stations", "health", "network", "traffic", "oms", "logs", "config", "certificates"]
+      "visible_tabs": [
+        "dashboard",
+        "sensors",
+        "base_stations",
+        "health",
+        "network",
+        "traffic",
+        "oms",
+        "logs",
+        "config",
+        "certificates"
+      ]
     },
     "user": {
       "can_view_all": true,
@@ -31,7 +79,16 @@
       "can_edit_config": false,
       "can_manage_certificates": false,
       "can_update_system": false,
-      "visible_tabs": ["dashboard", "sensors", "base_stations", "health", "network", "traffic", "oms", "logs"]
+      "visible_tabs": [
+        "dashboard",
+        "sensors",
+        "base_stations",
+        "health",
+        "network",
+        "traffic",
+        "oms",
+        "logs"
+      ]
     },
     "viewer": {
       "can_view_all": false,
@@ -39,7 +96,13 @@
       "can_edit_config": false,
       "can_manage_certificates": false,
       "can_update_system": false,
-      "visible_tabs": ["dashboard", "health", "network", "traffic", "oms"]
+      "visible_tabs": [
+        "dashboard",
+        "health",
+        "network",
+        "traffic",
+        "oms"
+      ]
     }
   }
 }

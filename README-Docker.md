@@ -22,9 +22,13 @@ docker-compose up -d --build
 
 The service will be available at:
 - Web UI: http://localhost:5056
-- TLS Server: localhost:16019
+- TLS Server: localhost:8000
+- TimescaleDB: localhost:5432
+- Grafana: http://localhost:3000
 
 ### Production Deployment
+
+If you maintain your own production override file, run:
 
 ```bash
 # Use production configuration
@@ -32,8 +36,7 @@ docker-compose -f docker-compose.prod.yml up -d --build
 ```
 
 The service will be available at:
-- Web UI: http://localhost:5000
-- TLS Server: localhost:16018
+- Depends on your `docker-compose.prod.yml` port mappings
 
 ## Configuration
 
@@ -93,6 +96,91 @@ Manual one-time sync trigger:
 curl -X POST http://localhost:5056/api/influx/sync-inventory
 ```
 
+### TimescaleDB + Grafana Integration (Operational Store)
+
+Service Center can also write operational inventory events/snapshots into TimescaleDB
+and expose them in Grafana.
+
+Add to `.env`:
+
+```bash
+TIMESCALE_ENABLED=true
+TIMESCALE_HOST=timescaledb
+TIMESCALE_PORT=5432
+TIMESCALE_DB=bssci
+TIMESCALE_USER=bssci_user
+TIMESCALE_PASSWORD=change_me
+TIMESCALE_SSLMODE=disable
+TIMESCALE_DEFAULT_TENANT=default
+TIMESCALE_INVENTORY_WRITE_ENABLED=true
+TIMESCALE_TELEMETRY_WRITE_ENABLED=true
+TIMESCALE_SNAPSHOT_ENABLED=true
+TIMESCALE_SNAPSHOT_INTERVAL_SECONDS=60
+TIMESCALE_RETENTION_ENABLED=true
+TIMESCALE_TELEMETRY_RETENTION_DAYS=90
+TIMESCALE_INVENTORY_RETENTION_DAYS=365
+TIMESCALE_COMPRESSION_ENABLED=true
+TIMESCALE_COMPRESSION_AFTER_DAYS=7
+
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=admin
+GRAFANA_URL=http://localhost:3000
+GRAFANA_INTERNAL_URL=http://grafana:3000
+GRAFANA_DASHBOARD_UID=service-center-overview
+GRAFANA_DASHBOARD_SLUG=service-center-overview
+GRAFANA_ORG_ID=1
+GRAFANA_EMBED_ENABLED=true
+GRAFANA_ANONYMOUS_ENABLED=true
+GRAFANA_ANONYMOUS_ORG_ROLE=Viewer
+GRAFANA_PROXY_ENABLED=true
+GRAFANA_PROXY_TIMEOUT_SECONDS=20
+GRAFANA_PROXY_BEARER_TOKEN=
+GRAFANA_PROXY_BASIC_USER=admin
+GRAFANA_PROXY_BASIC_PASSWORD=admin
+GRAFANA_HEALTH_PANEL_MAP=throughput:1,signal:2,active_sensors:3,active_base_stations:4,top_sensors:5,recent_messages:6
+```
+
+To avoid extra login prompts in embedded System Health panels, keep `GRAFANA_ANONYMOUS_ENABLED=true`
+and restart Grafana after config change. System Health now uses Grafana panel self-refresh
+(`refresh=...`) and relative range (`from=now-...`) to avoid iframe reload stutter.
+
+For tenant-safe embedding without creating every app user in Grafana, keep `GRAFANA_PROXY_ENABLED=true`.
+The app serves Grafana through `/grafana-proxy/*` and enforces tenant context from current session.
+If anonymous is disabled or unstable, set proxy auth (`GRAFANA_PROXY_BEARER_TOKEN` or
+`GRAFANA_PROXY_BASIC_USER` + `GRAFANA_PROXY_BASIC_PASSWORD`) so embedded queries stay authenticated.
+Use `GRAFANA_INTERNAL_URL` as container-to-container address (usually `http://grafana:3000`) and
+`GRAFANA_URL` as external/admin URL.
+
+What is created automatically:
+- Timescale extension and schema from `timescaledb/init/001_schema.sql`
+- Grafana datasource from `grafana/provisioning/datasources/timescaledb.yml`
+
+Quick checks:
+
+```bash
+# Timescale connectivity check through Service Center API
+curl http://localhost:5056/api/timescale/status
+
+# Force one-time inventory snapshot sync to Timescale
+curl -X POST http://localhost:5056/api/timescale/sync-inventory
+
+# Telemetry summary (last 60 min, 60s buckets)
+curl "http://localhost:5056/api/timescale/telemetry?minutes=60&bucket_seconds=60"
+
+# Re-apply retention/compression policies after config changes
+curl -X POST http://localhost:5056/api/timescale/policies/apply
+
+# Export/import one tenant dataset (inventory + optional Timescale data)
+curl "http://localhost:5056/api/tenants/export?tenant_id=default" -o tenant_default.json
+curl -X POST -F "file=@tenant_default.json" "http://localhost:5056/api/tenants/import?tenant_id=default&merge=true"
+```
+
+Grafana access:
+- URL: `http://localhost:3000`
+- Login: values from `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD`
+- Default datasource: `TimescaleDB`
+- Tenant-aware dashboard variable: use `var-tenant=<tenant_id>` in URL (for example `...?var-tenant=default`)
+
 ### Volumes
 
 The following directories are mounted as volumes:
@@ -101,6 +189,8 @@ The following directories are mounted as volumes:
 - `./endpoints.json` - Sensor configuration
 - `./bssci_config.py` - Service configuration
 - `./logs` - Application logs
+- `timescaledb_data` - TimescaleDB persistent data
+- `grafana_data` - Grafana persistent data
 
 ### Certificates
 
@@ -134,9 +224,92 @@ docker-compose pull && docker-compose up -d
 docker-compose down -v
 ```
 
+## Backup / Restore Playbook (Timescale + Config + Certs + Tenants/Users)
+
+This repository now includes PowerShell scripts:
+
+- `scripts/backup.ps1`
+- `scripts/restore.ps1`
+
+They are designed for this stack and backup/restore:
+- TimescaleDB (`bssci-timescaledb`)
+- runtime config files (`.env`, `bssci_config.py`, `endpoints.json`, `base_stations.json`, `coverage_positions.json`, `coverage_floorplan.txt`, `docker-compose.yml`)
+- identity and tenant files (`users.json`, `tenants.json`)
+- certificates (`certs/`)
+
+### Create backup
+
+From project root:
+
+```powershell
+pwsh .\scripts\backup.ps1
+```
+
+Output:
+- Folder: `.\backups\bssci_backup_YYYYMMDD_HHMMSS\`
+- Archive: `.\backups\bssci_backup_YYYYMMDD_HHMMSS.zip`
+- Metadata: `manifest.json`
+- Integrity file: `checksums.sha256`
+
+Optional:
+
+```powershell
+# Keep only folder (no zip archive)
+pwsh .\scripts\backup.ps1 -NoArchive
+
+# Custom output location
+pwsh .\scripts\backup.ps1 -OutputRoot D:\bssci-backups
+```
+
+### Restore backup
+
+Restore from folder or zip:
+
+```powershell
+# From zip
+pwsh .\scripts\restore.ps1 -BackupPath .\backups\bssci_backup_YYYYMMDD_HHMMSS.zip
+
+# From extracted folder
+pwsh .\scripts\restore.ps1 -BackupPath .\backups\bssci_backup_YYYYMMDD_HHMMSS
+```
+
+What restore does:
+1. Verifies checksums (if `checksums.sha256` exists)
+2. Creates safety copy in `.\backups\pre_restore_YYYYMMDD_HHMMSS\`
+3. Stops `bssci-service-center` (if running)
+4. Restores files + certs
+5. Restores Timescale dump into configured DB
+6. Starts `bssci-service-center` again (unless `-NoStart`)
+
+Optional restore modes:
+
+```powershell
+# Restore only files/certs (skip DB)
+pwsh .\scripts\restore.ps1 -BackupPath .\backups\bssci_backup_*.zip -SkipDb
+
+# Restore only DB (skip files/certs)
+pwsh .\scripts\restore.ps1 -BackupPath .\backups\bssci_backup_*.zip -SkipFiles
+
+# Non-interactive restore
+pwsh .\scripts\restore.ps1 -BackupPath .\backups\bssci_backup_*.zip -Force
+```
+
+### Post-restore checks
+
+```bash
+docker-compose ps
+curl http://localhost:5056/api/timescale/status
+```
+
+If retention/compression settings changed, re-apply policies:
+
+```bash
+curl -X POST http://localhost:5056/api/timescale/policies/apply
+```
+
 ## Health Check
 
-The container includes a health check that verifies both the TLS server (port 16018) and Web UI (port 5000) are responding.
+The container includes a health check that verifies both TLS and Web UI using the active configured ports (`LISTEN_PORT`, `WEB_PORT`) from runtime config.
 
 Check health status:
 ```bash
@@ -175,7 +348,7 @@ If ports are already in use, modify the port mappings in `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "16020:16018"  # Change external port
+  - "16020:8000"   # Change external TLS port
   - "5057:5000"    # Change external port
 ```
 

@@ -2,7 +2,15 @@ import asyncio
 import logging
 
 import bssci_config
-from bssci_config import SENSOR_CONFIG_FILE, LISTEN_HOST, LISTEN_PORT, MQTT_BROKER, MQTT_PORT
+from bssci_config import (
+    SENSOR_CONFIG_FILE,
+    LISTEN_HOST,
+    LISTEN_PORT,
+    MQTT_BROKER,
+    MQTT_PORT,
+    MQTT_IN_QUEUE_MAXSIZE,
+    MQTT_OUT_QUEUE_MAXSIZE,
+)
 from mqtt_interface import MQTTClient
 from TLSServer import TLSServer
 
@@ -46,11 +54,18 @@ tls_server_instance = None
 
 async def main() -> None:
     global tls_server_instance
-    mqtt_out_queue: asyncio.Queue[dict[str, str]] = asyncio.Queue()
-    mqtt_in_queue: asyncio.Queue[dict[str, str]] = asyncio.Queue()
+    out_queue_maxsize = max(0, int(MQTT_OUT_QUEUE_MAXSIZE))
+    in_queue_maxsize = max(0, int(MQTT_IN_QUEUE_MAXSIZE))
+    mqtt_out_queue: asyncio.Queue[dict[str, str]] = asyncio.Queue(maxsize=out_queue_maxsize)
+    mqtt_in_queue: asyncio.Queue[dict[str, str]] = asyncio.Queue(maxsize=in_queue_maxsize)
 
     logger.info("Initializing BSSCI Service Center...")
     logger.info(f"Config: TLS Port {LISTEN_PORT}, MQTT Broker {MQTT_BROKER}:{MQTT_PORT}")
+    logger.info(
+        "MQTT queue limits: out_maxsize=%s in_maxsize=%s",
+        out_queue_maxsize if out_queue_maxsize > 0 else "unbounded",
+        in_queue_maxsize if in_queue_maxsize > 0 else "unbounded",
+    )
 
     # Setup queue logging to monitor queue usage
     from queue_logger import setup_queue_logging, log_all_queue_stats
@@ -77,6 +92,12 @@ async def main() -> None:
     tls_server = tls_server_instance
     mqtt_client = MQTTClient(mqtt_out_queue, mqtt_in_queue)
 
+    try:
+        import web_main
+        web_main.set_mqtt_client(mqtt_client)
+    except ImportError:
+        pass
+
     logger.info("🔍 Queue Assignment Verification:")
     logger.info(f"   TLS Server mqtt_out_queue: Connected")
     logger.info(f"   TLS Server mqtt_in_queue: Connected")
@@ -101,7 +122,6 @@ async def main() -> None:
             tls_server.start_server(),
             tls_server.process_mqtt_messages(),
             mqtt_client.start(),
-            return_exceptions=True
         )
     except KeyboardInterrupt:
         logger.info("Shutting down BSSCI Service Center...")

@@ -1,0 +1,16 @@
+{
+  "tenants": [
+    {
+      "id": "acme-test",
+      "name": "acme-test",
+      "description": "",
+      "created_at": "2026-02-19T10:11:01.669445+00:00"
+    },
+    {
+      "id": "default",
+      "name": "Default",
+      "description": "Default tenant namespace",
+      "created_at": "2026-01-01T00:00:00+00:00"
+    }
+  ]
+}

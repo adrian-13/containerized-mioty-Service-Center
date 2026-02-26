@@ -6,7 +6,7 @@ import os
 import ssl
 import msgpack
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Set
+from typing import Any, Callable, Dict, Optional, Set
 
 import bssci_config
 import messages
@@ -120,6 +120,9 @@ class TLSServer:
         # VM periodic status query settings
         self.vm_periodic_status_enabled = True  # Enable by default
         self.vm_periodic_status_interval = 60   # Query every 60 seconds
+        self._timescale_telemetry_sink: Optional[Callable[..., Any]] = None
+        self._timescale_sink_resolved = False
+        self._timescale_sink_last_error = 0.0
 
         # Start the deduplication task
         asyncio.create_task(self.process_deduplication_buffer())
@@ -161,6 +164,61 @@ class TLSServer:
             utc_time = datetime.now(timezone.utc)
             local_time = utc_time + timedelta(hours=1)
         return local_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+
+    def _resolve_timescale_telemetry_sink(self):
+        if self._timescale_sink_resolved:
+            return self._timescale_telemetry_sink
+        self._timescale_sink_resolved = True
+        try:
+            import web_ui
+            sink = getattr(web_ui, "record_runtime_uplink_telemetry", None)
+            if callable(sink):
+                self._timescale_telemetry_sink = sink
+                logger.info("✅ Timescale telemetry sink connected")
+        except Exception:
+            self._timescale_telemetry_sink = None
+        return self._timescale_telemetry_sink
+
+    def _current_packet_loss_pct(self, eui: str) -> float:
+        stats = self.sensor_packet_stats.get(str(eui or "").upper(), {})
+        received = int(stats.get("packets_received", 0) or 0)
+        lost = int(stats.get("packets_lost", 0) or 0)
+        total = received + lost
+        if total <= 0:
+            return 0.0
+        return round((lost / total) * 100.0, 4)
+
+    def _emit_timescale_telemetry(self, sensor_eui: str, base_station_eui: str, snr: float, rssi: float, packet_cnt=None, payload=None, msg_type: str = "ul", ts=None):
+        sink = self._resolve_timescale_telemetry_sink()
+        if not sink:
+            return
+        try:
+            ok, err = sink(
+                sensor_eui=str(sensor_eui or "").lower(),
+                base_station_eui=str(base_station_eui or "").lower(),
+                snr=snr,
+                rssi=rssi,
+                packet_loss_pct=self._current_packet_loss_pct(sensor_eui),
+                packet_cnt=packet_cnt,
+                payload=payload or {},
+                msg_type=msg_type,
+                ts=ts if ts is not None else datetime.now(timezone.utc).timestamp(),
+            )
+            if not ok:
+                now = datetime.now(timezone.utc).timestamp()
+                if now - self._timescale_sink_last_error > 5:
+                    self._timescale_sink_last_error = now
+                    logger.warning(
+                        "Timescale telemetry dropped for sensor=%s bs=%s reason=%s",
+                        str(sensor_eui or "").upper(),
+                        str(base_station_eui or "").upper(),
+                        err or "unknown",
+                    )
+        except Exception as exc:
+            now = datetime.now(timezone.utc).timestamp()
+            if now - self._timescale_sink_last_error > 30:
+                self._timescale_sink_last_error = now
+                logger.warning("Timescale telemetry emit failed: %s", exc)
 
     def _extract_protocol_messages(self, rx_buffer: bytearray) -> list[dict[str, Any]]:
         """Extract complete BSSCI protocol frames from a streaming TCP buffer."""
@@ -429,6 +487,7 @@ class TLSServer:
 
     async def attach_file(self, writer: asyncio.streams.StreamWriter) -> None:
         bs_eui = self.connected_base_stations.get(writer, "unknown")
+        bs_eui_upper = str(bs_eui or "").strip().upper()
         logger.info(f"🔗 BATCH SENSOR ATTACHMENT started for base station {bs_eui}")
         logger.info(f"   Total sensors to process: {len(self.sensor_config)}")
 
@@ -442,6 +501,20 @@ class TLSServer:
                     logger.warning(f"   ⚠️ Writer no longer in connected base stations - aborting batch attach for {bs_eui}")
                     break
 
+                mapped_targets_raw = sensor.get('attached_base_stations', [])
+                if isinstance(mapped_targets_raw, str):
+                    mapped_targets_raw = [mapped_targets_raw]
+                elif not isinstance(mapped_targets_raw, (list, tuple, set)):
+                    mapped_targets_raw = []
+                mapped_targets = {
+                    str(item or '').strip().upper()
+                    for item in mapped_targets_raw
+                    if str(item or '').strip()
+                }
+                if mapped_targets and bs_eui_upper not in mapped_targets:
+                    skipped_attachments += 1
+                    logger.debug(f"   Sensor {sensor.get('eui', 'unknown')} not mapped to {bs_eui_upper} - skipping")
+                    continue
                 eui_upper = sensor['eui'].upper()
                 if eui_upper in self.registered_sensors:
                     reg_info = self.registered_sensors[eui_upper]
@@ -662,59 +735,110 @@ class TLSServer:
             logger.error(f"❌ Error in sync detach all: {e}")
             return 0
 
-    def attach_sensor_sync(self, sensor_eui: str) -> int:
-        """Synchronous wrapper for attaching a sensor to all connected base stations"""
+    def _resolve_attach_targets(
+        self, requested_base_stations: Optional[list[str]] = None
+    ) -> tuple[list[tuple[Any, str]], list[str]]:
+        """Resolve attach target base stations from currently connected stations."""
+        connected_items = list(self.connected_base_stations.items())
+        if not connected_items:
+            return [], []
+
+        if not requested_base_stations:
+            return [(writer, bs_eui) for writer, bs_eui in connected_items], []
+
+        normalized_requested: list[str] = []
+        seen: set[str] = set()
+        for raw_eui in requested_base_stations:
+            normalized = str(raw_eui or "").strip().upper()
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                normalized_requested.append(normalized)
+
+        if not normalized_requested:
+            return [], []
+
+        connected_by_eui: Dict[str, tuple[Any, str]] = {}
+        for writer, bs_eui in connected_items:
+            normalized = str(bs_eui or "").strip().upper()
+            if normalized and normalized not in connected_by_eui:
+                connected_by_eui[normalized] = (writer, bs_eui)
+
+        targets: list[tuple[Any, str]] = []
+        missing: list[str] = []
+        for requested in normalized_requested:
+            resolved = connected_by_eui.get(requested)
+            if resolved is None:
+                missing.append(requested)
+            else:
+                targets.append(resolved)
+
+        return targets, missing
+
+    def attach_sensor_sync(
+        self,
+        sensor_eui: str,
+        target_base_stations: Optional[list[str]] = None,
+    ) -> int:
+        """Synchronous wrapper for attaching a sensor to selected connected base stations."""
         try:
-            logger.info(f"🔗 SYNC ATTACHING SENSOR {sensor_eui} to ALL base stations")
-            
+            logger.info(f"SYNC ATTACHING SENSOR {sensor_eui}")
+
             if not self.connected_base_stations:
-                logger.warning("   ⚠️  No base stations connected")
+                logger.warning("No base stations connected")
                 return 0
-            
-            # Find sensor in configuration
+
             sensor_config = None
             for sensor in self.sensor_config:
                 if sensor['eui'].upper() == sensor_eui.upper():
                     sensor_config = sensor
                     break
-            
+
             if not sensor_config:
-                logger.error(f"   ❌ Sensor {sensor_eui} not found in configuration")
+                logger.error(f"Sensor {sensor_eui} not found in configuration")
                 return 0
-            
-            logger.info(f"   Found sensor config: {sensor_config['eui']}")
-            logger.info(f"   Target base stations: {len(self.connected_base_stations)}")
-            
-            # Create new event loop for sync call
+
+            target_writers, missing_targets = self._resolve_attach_targets(target_base_stations)
+
+            if target_base_stations:
+                logger.info(f"Requested target base stations: {len(target_base_stations)}")
+                if missing_targets:
+                    logger.warning(
+                        f"Requested base stations not connected: {', '.join(missing_targets)}"
+                    )
+            logger.info(f"Resolved target base stations: {len(target_writers)}")
+
+            if not target_writers:
+                logger.warning("No matching connected base stations available for attach")
+                return 0
+
             import asyncio
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            
+
             success_count = 0
             try:
                 async def send_attaches():
                     nonlocal success_count
-                    for writer in list(self.connected_base_stations.keys()):
+                    for writer, bs_eui in target_writers:
                         try:
                             await self.send_attach_request(writer, sensor_config)
                             success_count += 1
-                            logger.info(f"   ✅ Attach request sent to {self.connected_base_stations[writer]}")
+                            logger.info(f"Attach request sent to {bs_eui}")
                         except Exception as e:
-                            logger.error(f"   ❌ Failed to send attach to {self.connected_base_stations.get(writer, 'unknown')}: {e}")
-                
+                            logger.error(f"Failed to send attach to {bs_eui}: {e}")
+
                 loop.run_until_complete(send_attaches())
             finally:
                 loop.close()
-            
-            logger.info(f"✅ SYNC SENSOR ATTACH completed for {sensor_eui}")
-            logger.info(f"   Successful attachments: {success_count}/{len(self.connected_base_stations)} base stations")
-            
+
+            logger.info(f"SYNC SENSOR ATTACH completed for {sensor_eui}")
+            logger.info(f"Successful attachments: {success_count}/{len(target_writers)} base stations")
             return success_count
-            
+
         except Exception as e:
-            logger.error(f"❌ Error in sync attach for {sensor_eui}: {e}")
+            logger.error(f"Error in sync attach for {sensor_eui}: {e}")
             return 0
-    
+
     def attach_all_sensors_sync(self) -> int:
         """Synchronous wrapper for attaching all sensors to all connected base stations"""
         try:
@@ -1693,7 +1817,31 @@ class TLSServer:
                         identifier = eui.upper() if eui else (meter_id or f"vm_{op_id}")
                         if eui:
                             self.sensor_last_seen[eui.upper()] = asyncio.get_event_loop().time()
-                        
+
+                        telemetry_sensor_id = (eui or (f"oms_{meter_id}" if meter_id else identifier)).lower()
+                        self._emit_timescale_telemetry(
+                            sensor_eui=telemetry_sensor_id,
+                            base_station_eui=bs_eui,
+                            snr=snr,
+                            rssi=rssi,
+                            packet_cnt=op_id,
+                            payload={
+                                "mac_type": mac_type,
+                                "trx_time": trx_time,
+                                "sys_time": sys_time,
+                                "freq_off": freq_off,
+                                "eq_snr": eq_snr,
+                                "carr_space": carr_space,
+                                "patt_grp": patt_grp,
+                                "patt_num": patt_num,
+                                "port": port,
+                                "data_hex": data_hex,
+                                "meter_id": meter_id,
+                            },
+                            msg_type="vm_ul",
+                            ts=trx_time if trx_time else None,
+                        )
+
                         # Increment VM message counter
                         self.traffic_metrics['vm_messages'] += 1
                         
@@ -1841,6 +1989,16 @@ class TLSServer:
 
                 mqtt_topic = f"ep/{eui.upper()}/ul"
                 payload_json = json.dumps(data_dict)
+                self._emit_timescale_telemetry(
+                    sensor_eui=eui,
+                    base_station_eui=bs_eui,
+                    snr=snr,
+                    rssi=message.get("rssi"),
+                    packet_cnt=packet_cnt,
+                    payload=data_dict,
+                    msg_type="ul",
+                    ts=message.get("rxTime"),
+                )
 
                 logger.info(f"📤 PUBLISHING DEDUPLICATED MESSAGE")
                 logger.info("   =====================================")
@@ -3120,35 +3278,49 @@ class TLSServer:
                 logger.info(f"✅ DETACH command processed for {eui}, success: {success}")
 
             elif action == 'attach':
-                # Find sensor in config and attach
+                requested_base_stations = None
+                raw_base_stations = command.get('base_stations')
+                if isinstance(raw_base_stations, list):
+                    requested_base_stations = [str(item or '').strip() for item in raw_base_stations if str(item or '').strip()]
+                elif isinstance(raw_base_stations, str):
+                    requested_base_stations = [part.strip() for part in raw_base_stations.split(',') if part.strip()]
+
                 sensor_config = None
                 for sensor in self.sensor_config:
                     if sensor['eui'].upper() == eui.upper():
                         sensor_config = sensor
                         break
 
+                success_count = 0
+                missing_targets: list[str] = []
                 if sensor_config:
-                    # Attach to all connected base stations
-                    success_count = 0
-                    for writer in list(self.connected_base_stations.keys()):
+                    target_writers, missing_targets = self._resolve_attach_targets(requested_base_stations)
+
+                    if requested_base_stations and missing_targets:
+                        logger.warning(
+                            f"Attach command for {eui}: requested base stations not connected: {', '.join(missing_targets)}"
+                        )
+
+                    for writer, bs_eui in target_writers:
                         try:
                             await self.send_attach_request(writer, sensor_config)
                             success_count += 1
                             await asyncio.sleep(0.1)
                         except Exception as e:
-                            logger.error(f"Failed to attach {eui} to base station: {e}")
+                            logger.error(f"Failed to attach {eui} to base station {bs_eui}: {e}")
 
                     success = success_count > 0
                 else:
                     logger.error(f"Sensor {eui} not found in configuration")
                     success = False
 
-                # Send response
                 response_payload = {
                     "action": "attach_response",
                     "sensor_eui": eui,
                     "success": success,
-                    "attached_to": success_count if success else 0,
+                    "attached_to": success_count,
+                    "requested_base_stations": requested_base_stations or [],
+                    "missing_base_stations": missing_targets,
                     "timestamp": asyncio.get_event_loop().time()
                 }
 
@@ -3157,8 +3329,7 @@ class TLSServer:
                     "payload": json.dumps(response_payload)
                 })
 
-                logger.info(f"✅ ATTACH command processed for {eui}, success: {success}")
-
+                logger.info(f"ATTACH command processed for {eui}, success: {success}, targets: {success_count}")
             elif action == 'status':
                 # Get sensor status
                 eui_key = eui.upper()  # Use upper for consistency
@@ -3271,3 +3442,4 @@ class TLSServer:
                     logger.error(f"Failed to send attach request for {eui} to {bs_eui}: {e}")
         else:
             logger.warning(f"⚠️  No base stations connected, attach request for {eui} will be sent when they connect.")
+

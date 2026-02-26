@@ -1,0 +1,1467 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Administration{% endblock %}
+
+{% block content %}
+<style>
+.admin-shell { display: grid; gap: 0.9rem; }
+.admin-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.9rem;
+    padding: 1rem 1.05rem;
+    border: 1px solid #dce5f2;
+    border-radius: 1rem;
+    background: linear-gradient(150deg, #0f2445 0%, #224e7e 100%);
+    color: #edf5ff;
+}
+.admin-kicker {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(230, 240, 255, 0.85);
+}
+.admin-title {
+    margin: 0.2rem 0 0;
+    font-size: 1.46rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+.admin-subtitle {
+    margin: 0.34rem 0 0;
+    font-size: 0.86rem;
+    color: rgba(230, 240, 255, 0.82);
+}
+.admin-head .btn-light { font-weight: 700; }
+.admin-kpis {
+    display: grid;
+    gap: 0.7rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.admin-kpi {
+    border: 1px solid #d8e3f4;
+    border-radius: 0.86rem;
+    background: linear-gradient(160deg, #ffffff 0%, #f5f8fe 100%);
+    padding: 0.62rem 0.75rem;
+}
+.admin-kpi-label {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: #637898;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+.admin-kpi-value {
+    margin: 0.12rem 0 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #122c4f;
+}
+.admin-tabs {
+    display: inline-flex;
+    gap: 0.46rem;
+    background: #f3f7fd;
+    border: 1px solid #d8e3f4;
+    border-radius: 999px;
+    padding: 0.26rem;
+}
+.admin-tabs .btn {
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border-color: transparent;
+}
+.admin-tabs .btn.active {
+    background: #1f4272;
+    color: #fff;
+    box-shadow: 0 7px 16px rgba(31, 66, 114, 0.28);
+}
+.admin-panel.d-none { display: none !important; }
+.admin-card {
+    border: 1px solid #dce5f2;
+    border-radius: 0.95rem;
+    overflow: hidden;
+}
+.admin-card .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    background: linear-gradient(140deg, #f8fbff 0%, #edf3fc 100%);
+    border-bottom: 1px solid #dfe8f5;
+}
+.admin-card .card-header h5 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: #1a3c63;
+}
+.tenant-admin-status {
+    font-size: 0.8rem;
+}
+.tenant-compact-control {
+    min-height: 2.15rem;
+}
+.tenant-toolbar {
+    display: grid;
+    gap: 0.52rem;
+    grid-template-columns: minmax(240px, 1.4fr) repeat(2, minmax(150px, 1fr));
+    margin-bottom: 0.7rem;
+}
+.tenant-role-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 68px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.18rem 0.52rem;
+    border: 1px solid transparent;
+}
+.tenant-role-admin { color: #7f1d1d; background: #fef2f2; border-color: #fecaca; }
+.tenant-role-user { color: #1e3a8a; background: #eff6ff; border-color: #bfdbfe; }
+.tenant-role-viewer { color: #334155; background: #f1f5f9; border-color: #cbd5e1; }
+.tenant-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.74rem;
+    font-weight: 700;
+    border: 1px solid #cddbf0;
+    border-radius: 0.6rem;
+    padding: 0.12rem 0.42rem;
+    color: #324a68;
+    background: #f4f8ff;
+}
+.tenant-chip-global {
+    color: #374151;
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+.table-admin thead th {
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #607694;
+}
+.table-admin tbody tr:nth-child(odd) { background: rgba(236, 244, 254, 0.4); }
+.form-mode-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #38577a;
+    background: #eef5ff;
+    border: 1px solid #cad8ec;
+    border-radius: 999px;
+    padding: 0.18rem 0.52rem;
+}
+.tenant-form-grid {
+    display: grid;
+    gap: 0.56rem;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+.tenant-form-grid .span-3 { grid-column: span 3; }
+.tenant-form-grid .span-4 { grid-column: span 4; }
+.tenant-form-grid .span-5 { grid-column: span 5; }
+.tenant-form-grid .span-6 { grid-column: span 6; }
+.tenant-form-grid .span-12 { grid-column: span 12; }
+.tenant-meta-note {
+    color: #5e7593;
+    font-size: 0.76rem;
+}
+.admin-modal .modal-content {
+    border-radius: 0.95rem;
+    border: 1px solid #dce5f2;
+}
+.admin-modal .modal-header {
+    background: linear-gradient(140deg, #f8fbff 0%, #edf3fc 100%);
+    border-bottom: 1px solid #dfe8f5;
+}
+.admin-modal .modal-title {
+    color: #1a3c63;
+    font-weight: 800;
+}
+.admin-modal .modal-header,
+.admin-modal .modal-body,
+.admin-modal .modal-footer {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+}
+.admin-modal .modal-body {
+    padding-top: 1rem;
+    padding-bottom: 1.15rem;
+}
+.admin-modal-section {
+    border: 1px solid #d9e4f4;
+    border-radius: 0.85rem;
+    padding: 0.75rem 0.8rem 0.85rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+}
+.admin-modal-section + .admin-modal-section {
+    margin-top: 0.72rem;
+}
+.admin-modal-section-title {
+    margin: 0 0 0.62rem;
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: #496386;
+}
+.admin-modal .form-label {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #374a67;
+}
+.admin-modal .modal-footer {
+    border-top: 1px solid #dfe8f5;
+    background: #fbfdff;
+    padding-top: 0.75rem;
+    padding-bottom: 0.85rem;
+}
+.scope-badges {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 0.3rem;
+}
+.scope-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.14rem 0.54rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+.scope-badge-role {
+    color: #1d4f91;
+    background: #eef4ff;
+    border-color: #c9daf8;
+}
+.scope-badge-global {
+    color: #1f5131;
+    background: #ecfdf3;
+    border-color: #b8ebce;
+}
+.scope-badge-tenant {
+    color: #374151;
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+.admin-scope-grid {
+    display: grid;
+    gap: 0.45rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.admin-scope-item {
+    border: 1px solid #d8e3f4;
+    border-radius: 0.72rem;
+    padding: 0.52rem 0.6rem;
+    background: #f8fbff;
+}
+.admin-scope-item.is-locked {
+    opacity: 0.78;
+    background: #f5f7fb;
+}
+.admin-scope-title {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1f3f68;
+}
+.admin-scope-desc {
+    margin: 0.2rem 0 0;
+    font-size: 0.72rem;
+    color: #5b6f8d;
+}
+.admin-scope-lock {
+    font-size: 0.69rem;
+    color: #7b8799;
+    margin-top: 0.22rem;
+    display: block;
+}
+@media (max-width: 1199.98px) {
+    .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 991.98px) {
+    .admin-head { flex-direction: column; }
+    .tenant-toolbar { grid-template-columns: 1fr; }
+    .tenant-form-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .tenant-form-grid .span-3,
+    .tenant-form-grid .span-4,
+    .tenant-form-grid .span-5,
+    .tenant-form-grid .span-6,
+    .tenant-form-grid .span-12 { grid-column: span 6; }
+    .admin-scope-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 575.98px) {
+    .admin-kpis { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="admin-shell workspace-shell">
+    <div class="admin-kpis">
+        <article class="admin-kpi">
+            <p class="admin-kpi-label">Users</p>
+            <p class="admin-kpi-value" id="adminKpiUsers">0</p>
+        </article>
+        <article class="admin-kpi">
+            <p class="admin-kpi-label">Tenants</p>
+            <p class="admin-kpi-value" id="adminKpiTenants">0</p>
+        </article>
+        <article class="admin-kpi">
+            <p class="admin-kpi-label">Administrators</p>
+            <p class="admin-kpi-value" id="adminKpiAdmins">0</p>
+        </article>
+        <article class="admin-kpi">
+            <p class="admin-kpi-label">Default Tenant</p>
+            <p class="admin-kpi-value" id="adminKpiDefaultTenant">default</p>
+        </article>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between gap-2">
+        <div class="admin-tabs" id="adminTabs">
+            <button type="button" class="btn btn-outline-secondary active" data-admin-tab-btn="users">
+                <i class="fas fa-users me-1"></i>User Management
+            </button>
+            <button type="button" class="btn btn-outline-secondary" data-admin-tab-btn="tenants">
+                <i class="fas fa-building me-1"></i>Tenant Management
+            </button>
+        </div>
+        <small class="tenant-meta-note">Admin-only operations. Changes apply immediately.</small>
+    </div>
+
+    <section id="adminPanelUsers" class="admin-panel">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card admin-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-users me-2"></i>Users and Tenant Assignment</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="tenant-chip" id="tenantUserCount">0 shown</span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openTenantUserModal('create')">
+                                <i class="fas fa-user-plus me-1"></i>New User
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="tenantAdminStatus" class="alert alert-info py-2 mb-3 tenant-admin-status">
+                            Load users and tenants from backend.
+                        </div>
+
+                        <div class="tenant-toolbar">
+                            <input type="text" class="form-control tenant-compact-control" id="tenantUserSearch" placeholder="Search username, name or tenant">
+                            <select class="form-control tenant-compact-control" id="tenantRoleFilter"></select>
+                            <select class="form-control tenant-compact-control" id="tenantTenantFilter"></select>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle table-admin">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Scope</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tenantUserRows">
+                                    <tr>
+                                        <td colspan="5" class="text-muted">No users loaded yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="adminPanelTenants" class="admin-panel d-none">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card admin-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-building me-2"></i>Tenant Registry</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="tenant-chip" id="tenantRegistryCount">0 tenants</span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openTenantEntityModal('create')">
+                                <i class="fas fa-plus-circle me-1"></i>New Tenant
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="tenantMgmtStatus" class="alert alert-info py-2 mb-3 tenant-admin-status">
+                            Manage tenant records and data operations.
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle table-admin mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Tenant</th>
+                                        <th>Name</th>
+                                        <th class="text-end">Users</th>
+                                        <th class="text-end">Sensors</th>
+                                        <th class="text-end">BS</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tenantManageRows">
+                                    <tr><td colspan="6" class="text-muted">No tenants loaded.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade admin-modal" id="tenantUserModal" tabindex="-1" aria-labelledby="tenantUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="tenantUserModalLabel"><i class="fas fa-user-edit me-2"></i>User</h5>
+                        <span class="form-mode-badge" id="tenantFormModeBadge">Create mode</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="tenantUserMode" value="create">
+                    <input type="hidden" id="tenantUserOriginalUsername" value="">
+                    <section class="admin-modal-section">
+                        <p class="admin-modal-section-title">Identity</p>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <label for="tenantUserUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantUserUsername" placeholder="acme_user">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="tenantUserName" class="form-label">Display Name</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantUserName" placeholder="ACME Operator">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="tenantUserPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control tenant-compact-control" id="tenantUserPassword" placeholder="required for create">
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="admin-modal-section">
+                        <p class="admin-modal-section-title">Access Scope</p>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label for="tenantUserRole" class="form-label">Role</label>
+                                <select class="form-control tenant-compact-control" id="tenantUserRole"></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tenantUserTenant" class="form-label">Tenant ID</label>
+                                <select class="form-control tenant-compact-control" id="tenantUserTenant"></select>
+                            </div>
+                            <div class="col-12">
+                                <small class="tenant-meta-note" id="tenantUserTenantHint">User is restricted to this tenant.</small>
+                                <div class="scope-badges" id="tenantUserScopeBadges"></div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="admin-modal-section d-none" id="tenantAdminScopesSection">
+                        <p class="admin-modal-section-title">Admin Permissions</p>
+                        <small class="tenant-meta-note d-block mb-2">Granular admin rights for this account.</small>
+                        <div id="tenantAdminScopeEditor" class="admin-scope-grid"></div>
+                    </section>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetTenantUserForm()">Reset</button>
+                    <button type="button" class="btn btn-primary" id="tenantSaveUserBtn" onclick="saveTenantUser()">
+                        <i class="fas fa-save me-1"></i>Save User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade admin-modal" id="tenantEntityModal" tabindex="-1" aria-labelledby="tenantEntityModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="tenantEntityModalLabel"><i class="fas fa-building me-2"></i>Tenant</h5>
+                        <span class="form-mode-badge" id="tenantEntityModeBadge">Create mode</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="tenantEntityMode" value="create">
+                    <input type="hidden" id="tenantEntityOriginalId" value="">
+                    <section class="admin-modal-section">
+                        <p class="admin-modal-section-title">Tenant Profile</p>
+                        <div class="tenant-form-grid">
+                            <div class="span-3">
+                                <label for="tenantEntityId" class="form-label">Tenant ID</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantEntityId" placeholder="acme">
+                            </div>
+                            <div class="span-4">
+                                <label for="tenantEntityName" class="form-label">Display Name</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantEntityName" placeholder="ACME s.r.o.">
+                            </div>
+                            <div class="span-5">
+                                <label for="tenantEntityDescription" class="form-label">Description (optional)</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantEntityDescription" placeholder="Customer tenant for ACME operations">
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetTenantEntityForm()">Reset</button>
+                    <button type="button" class="btn btn-primary" id="tenantEntitySaveBtn" onclick="saveTenantEntity()">
+                        <i class="fas fa-save me-1"></i>Save Tenant
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let tenantAdminUsers = [];
+let tenantAdminRoles = ['admin', 'user', 'viewer'];
+let tenantAdminTenants = [];
+let tenantKnownTenantChoices = [];
+let tenantAdminDefaultTenant = 'default';
+let tenantAdminScopeDefinitions = [];
+let tenantCurrentAdminPermissions = {};
+let tenantUserDraftAdminPermissions = {};
+let tenantUserFormBaseline = null;
+let tenantEntityFormBaseline = null;
+let tenantUserModalCloseBySave = false;
+let tenantEntityModalCloseBySave = false;
+const TENANT_PAGE_ADMIN_SCOPES = {{ (current_user.admin_permissions if current_user and current_user.role == 'admin' else {})|tojson }};
+
+const TENANT_USER_FIELDS = [
+    'tenantUserMode',
+    'tenantUserOriginalUsername',
+    'tenantUserUsername',
+    'tenantUserName',
+    'tenantUserPassword',
+    'tenantUserRole',
+    'tenantUserTenant'
+];
+
+const TENANT_ENTITY_FIELDS = [
+    'tenantEntityMode',
+    'tenantEntityOriginalId',
+    'tenantEntityId',
+    'tenantEntityName',
+    'tenantEntityDescription'
+];
+
+function canCurrentAdminScope(scopeId) {
+    const normalized = String(scopeId || '').trim();
+    if (!normalized) return false;
+    return Boolean((TENANT_PAGE_ADMIN_SCOPES || {})[normalized]);
+}
+
+function getFormSnapshot(fieldIds) {
+    const snapshot = {};
+    (fieldIds || []).forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === 'checkbox') {
+            snapshot[id] = !!el.checked;
+        } else {
+            snapshot[id] = String(el.value ?? '');
+        }
+    });
+    document.querySelectorAll('#tenantAdminScopeEditor input[type="checkbox"][data-admin-scope]').forEach((checkbox) => {
+        const scopeId = String(checkbox.getAttribute('data-admin-scope') || '').trim();
+        if (!scopeId) return;
+        snapshot[`scope:${scopeId}`] = !!checkbox.checked;
+    });
+    return snapshot;
+}
+
+function setTenantUserBaseline() {
+    tenantUserFormBaseline = JSON.stringify(getFormSnapshot(TENANT_USER_FIELDS));
+}
+
+function setTenantEntityBaseline() {
+    tenantEntityFormBaseline = JSON.stringify(getFormSnapshot(TENANT_ENTITY_FIELDS));
+}
+
+function isTenantUserFormDirty() {
+    if (!tenantUserFormBaseline) return false;
+    return JSON.stringify(getFormSnapshot(TENANT_USER_FIELDS)) !== tenantUserFormBaseline;
+}
+
+function isTenantEntityFormDirty() {
+    if (!tenantEntityFormBaseline) return false;
+    return JSON.stringify(getFormSnapshot(TENANT_ENTITY_FIELDS)) !== tenantEntityFormBaseline;
+}
+
+function tenantEscapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function tenantNormalize(value, fallback = 'default') {
+    const base = (fallback || 'default').toString().trim().toLowerCase();
+    const raw = (value || '').toString().trim().toLowerCase();
+    const sanitized = raw.replace(/[^a-z0-9:_-]+/g, '-').replace(/^[-_:]+|[-_:]+$/g, '');
+    return sanitized || base || 'default';
+}
+
+function tenantSanitizeStrict(value) {
+    const raw = (value || '').toString().trim().toLowerCase();
+    const sanitized = raw.replace(/[^a-z0-9:_-]+/g, '-').replace(/^[-_:]+|[-_:]+$/g, '');
+    return sanitized ? sanitized.slice(0, 64) : '';
+}
+
+function roleBadgeClass(role) {
+    const normalized = String(role || '').toLowerCase();
+    if (normalized === 'admin') return 'tenant-role-admin';
+    if (normalized === 'user') return 'tenant-role-user';
+    return 'tenant-role-viewer';
+}
+
+function getDefaultAdminScopeMap() {
+    const defaults = {};
+    (tenantAdminScopeDefinitions || []).forEach((scope) => {
+        const scopeId = String(scope?.id || '').trim();
+        if (!scopeId) return;
+        defaults[scopeId] = Boolean(scope?.default_enabled);
+    });
+    return defaults;
+}
+
+function normalizeAdminScopeMap(raw) {
+    const defaults = getDefaultAdminScopeMap();
+    const out = { ...defaults };
+    if (raw && typeof raw === 'object') {
+        Object.keys(defaults).forEach((scopeId) => {
+            if (Object.prototype.hasOwnProperty.call(raw, scopeId)) {
+                out[scopeId] = Boolean(raw[scopeId]);
+            }
+        });
+    }
+    return out;
+}
+
+function collectAdminScopePayload() {
+    const normalized = normalizeAdminScopeMap(tenantUserDraftAdminPermissions);
+    document.querySelectorAll('#tenantAdminScopeEditor input[type="checkbox"][data-admin-scope]').forEach((checkbox) => {
+        const scopeId = String(checkbox.getAttribute('data-admin-scope') || '').trim();
+        if (!scopeId) return;
+        normalized[scopeId] = !!checkbox.checked;
+    });
+    tenantUserDraftAdminPermissions = { ...normalized };
+    return normalized;
+}
+
+function renderAdminScopeEditor(rawPermissions) {
+    const section = document.getElementById('tenantAdminScopesSection');
+    const editor = document.getElementById('tenantAdminScopeEditor');
+    const role = String(document.getElementById('tenantUserRole')?.value || 'viewer').toLowerCase();
+    if (!section || !editor) return;
+
+    if (role !== 'admin') {
+        section.classList.add('d-none');
+        editor.innerHTML = '';
+        return;
+    }
+
+    const merged = normalizeAdminScopeMap(rawPermissions || tenantUserDraftAdminPermissions);
+    tenantUserDraftAdminPermissions = { ...merged };
+    section.classList.remove('d-none');
+
+    if (!tenantAdminScopeDefinitions.length) {
+        editor.innerHTML = '<div class="tenant-meta-note">No admin scope definitions available.</div>';
+        return;
+    }
+
+    editor.innerHTML = tenantAdminScopeDefinitions.map((scope) => {
+        const scopeId = String(scope.id || '').trim();
+        const label = scope.label || scopeId;
+        const description = scope.description || '';
+        const checked = Boolean(merged[scopeId]);
+        const grantable = Boolean(tenantCurrentAdminPermissions?.[scopeId]);
+        const lockHint = grantable ? '' : '<small class="admin-scope-lock"><i class="fas fa-lock me-1"></i>You cannot grant/revoke this scope.</small>';
+        return `
+            <label class="admin-scope-item ${grantable ? '' : 'is-locked'}">
+                <div class="form-check m-0">
+                    <input class="form-check-input" type="checkbox" data-admin-scope="${tenantEscapeHtml(scopeId)}" ${checked ? 'checked' : ''} ${grantable ? '' : 'disabled'}>
+                    <span class="admin-scope-title ms-1">${tenantEscapeHtml(label)}</span>
+                </div>
+                <p class="admin-scope-desc">${tenantEscapeHtml(description)}</p>
+                ${lockHint}
+            </label>
+        `;
+    }).join('');
+
+    editor.querySelectorAll('input[type="checkbox"][data-admin-scope]').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+            const scopeId = String(checkbox.getAttribute('data-admin-scope') || '').trim();
+            if (!scopeId) return;
+            tenantUserDraftAdminPermissions[scopeId] = !!checkbox.checked;
+            updateUserScopeBadges();
+        });
+    });
+}
+
+function showStatus(targetId, message, level = 'info') {
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    el.className = `alert py-2 mb-3 tenant-admin-status alert-${level}`;
+    el.textContent = message;
+}
+
+function getModalInstance(modalId) {
+    const modalEl = document.getElementById(modalId);
+    if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+        return null;
+    }
+    return bootstrap.Modal.getOrCreateInstance(modalEl);
+}
+
+function showModal(modalId) {
+    const modal = getModalInstance(modalId);
+    if (modal) modal.show();
+}
+
+function hideModal(modalId) {
+    const modal = getModalInstance(modalId);
+    if (modal) modal.hide();
+}
+
+function setAdminTab(tabName) {
+    const canManageUsers = canCurrentAdminScope('manage_users');
+    const canManageTenants = canCurrentAdminScope('manage_tenants');
+    let nextTab = tabName === 'tenants' ? 'tenants' : 'users';
+    if (nextTab === 'users' && !canManageUsers) nextTab = 'tenants';
+    if (nextTab === 'tenants' && !canManageTenants) nextTab = 'users';
+    const usersPanel = document.getElementById('adminPanelUsers');
+    const tenantsPanel = document.getElementById('adminPanelTenants');
+    if (usersPanel) usersPanel.classList.toggle('d-none', nextTab !== 'users');
+    if (tenantsPanel) tenantsPanel.classList.toggle('d-none', nextTab !== 'tenants');
+
+    document.querySelectorAll('[data-admin-tab-btn]').forEach(btn => {
+        const active = btn.getAttribute('data-admin-tab-btn') === nextTab;
+        btn.classList.toggle('active', active);
+    });
+
+    try {
+        localStorage.setItem('administration_active_tab_v1', nextTab);
+    } catch (err) {
+        console.debug('Cannot store admin tab state', err);
+    }
+}
+
+function initAdminTabs() {
+    const canManageUsers = canCurrentAdminScope('manage_users');
+    const canManageTenants = canCurrentAdminScope('manage_tenants');
+    document.querySelectorAll('[data-admin-tab-btn]').forEach(btn => {
+        const tabName = btn.getAttribute('data-admin-tab-btn');
+        if (tabName === 'users' && !canManageUsers) {
+            btn.classList.add('d-none');
+            return;
+        }
+        if (tabName === 'tenants' && !canManageTenants) {
+            btn.classList.add('d-none');
+            return;
+        }
+        btn.addEventListener('click', () => setAdminTab(tabName));
+    });
+    let initial = 'users';
+    try {
+        initial = localStorage.getItem('administration_active_tab_v1') || 'users';
+    } catch (err) {
+        console.debug('Cannot read admin tab state', err);
+    }
+    if (initial === 'users' && !canManageUsers) initial = 'tenants';
+    if (initial === 'tenants' && !canManageTenants) initial = 'users';
+    if (!canManageUsers && !canManageTenants) initial = 'users';
+    setAdminTab(initial);
+}
+
+function updateKpis() {
+    const users = tenantAdminUsers.length;
+    const tenants = tenantAdminTenants.length;
+    const admins = tenantAdminUsers.filter(user => String(user.role || '').toLowerCase() === 'admin').length;
+
+    const usersEl = document.getElementById('adminKpiUsers');
+    const tenantsEl = document.getElementById('adminKpiTenants');
+    const adminsEl = document.getElementById('adminKpiAdmins');
+    const defaultTenantEl = document.getElementById('adminKpiDefaultTenant');
+
+    if (usersEl) usersEl.textContent = String(users);
+    if (tenantsEl) tenantsEl.textContent = String(tenants);
+    if (adminsEl) adminsEl.textContent = String(admins);
+    if (defaultTenantEl) defaultTenantEl.textContent = tenantAdminDefaultTenant || 'default';
+}
+
+function getFilteredUsers() {
+    const search = String(document.getElementById('tenantUserSearch')?.value || '').trim().toLowerCase();
+    const roleFilter = String(document.getElementById('tenantRoleFilter')?.value || 'all').toLowerCase();
+    const tenantFilter = String(document.getElementById('tenantTenantFilter')?.value || 'all').toLowerCase();
+
+    return tenantAdminUsers.filter(user => {
+        const username = String(user.username || '').toLowerCase();
+        const name = String(user.name || '').toLowerCase();
+        const role = String(user.role || 'viewer').toLowerCase();
+        const tenant = role === 'admin'
+            ? '__global__'
+            : String(user.tenant_id || tenantAdminDefaultTenant).toLowerCase();
+
+        if (roleFilter !== 'all' && role !== roleFilter) return false;
+        if (tenantFilter !== 'all' && tenant !== tenantFilter) return false;
+        if (!search) return true;
+        return username.includes(search) || name.includes(search) || tenant.includes(search) || role.includes(search);
+    });
+}
+
+function populateTenantUiOptions() {
+    const tenantInput = document.getElementById('tenantUserTenant');
+    const tenantFilter = document.getElementById('tenantTenantFilter');
+    const tenantNames = Array.from(new Set([
+        ...(tenantAdminTenants || []).map(t => t.tenant_id),
+        ...(tenantKnownTenantChoices || []),
+        tenantAdminDefaultTenant
+    ].filter(Boolean))).sort();
+
+    if (tenantFilter) {
+        const currentFilter = tenantFilter.value || 'all';
+        tenantFilter.innerHTML = '<option value="all">All tenants</option><option value="__global__">Global admins</option>' + tenantNames
+            .map(tenant => `<option value="${tenantEscapeHtml(tenant)}">${tenantEscapeHtml(tenant)}</option>`)
+            .join('');
+        if (currentFilter === 'all' || currentFilter === '__global__' || tenantNames.includes(currentFilter)) {
+            tenantFilter.value = currentFilter;
+        } else {
+            tenantFilter.value = 'all';
+        }
+    }
+
+    if (tenantInput) {
+        const currentTenant = tenantInput.value || tenantInput.dataset.lastTenant || tenantAdminDefaultTenant;
+        tenantInput.innerHTML = tenantAdminTenants
+            .map(tenant => `<option value="${tenantEscapeHtml(tenant.tenant_id)}">${tenantEscapeHtml(tenant.tenant_id)}</option>`)
+            .join('');
+        if (!tenantInput.innerHTML.trim()) {
+            tenantInput.innerHTML = `<option value="${tenantEscapeHtml(tenantAdminDefaultTenant)}">${tenantEscapeHtml(tenantAdminDefaultTenant)}</option>`;
+        }
+        const available = tenantAdminTenants.map(t => t.tenant_id);
+        if (available.includes(currentTenant)) {
+            tenantInput.value = currentTenant;
+        } else if (available.length > 0) {
+            tenantInput.value = available[0];
+        } else {
+            tenantInput.value = tenantAdminDefaultTenant;
+        }
+    }
+}
+
+function populateRoleOptions() {
+    const roleSelect = document.getElementById('tenantUserRole');
+    const roleFilter = document.getElementById('tenantRoleFilter');
+    if (!roleSelect) return;
+
+    const selectedRole = roleSelect.value || 'user';
+    roleSelect.innerHTML = tenantAdminRoles
+        .map(role => `<option value="${tenantEscapeHtml(role)}">${tenantEscapeHtml(role)}</option>`)
+        .join('');
+    roleSelect.value = tenantAdminRoles.includes(selectedRole) ? selectedRole : (tenantAdminRoles[0] || 'user');
+
+    if (roleFilter) {
+        const selectedFilter = roleFilter.value || 'all';
+        roleFilter.innerHTML = '<option value="all">All roles</option>' + tenantAdminRoles
+            .map(role => `<option value="${tenantEscapeHtml(role)}">${tenantEscapeHtml(role)}</option>`)
+            .join('');
+        if (selectedFilter === 'all' || tenantAdminRoles.includes(selectedFilter)) {
+            roleFilter.value = selectedFilter;
+        } else {
+            roleFilter.value = 'all';
+        }
+    }
+}
+
+function renderTenantUsersTable() {
+    const body = document.getElementById('tenantUserRows');
+    const countEl = document.getElementById('tenantUserCount');
+    if (!body) return;
+
+    const filteredUsers = getFilteredUsers();
+    if (countEl) {
+        countEl.textContent = `${filteredUsers.length} shown / ${tenantAdminUsers.length} total`;
+    }
+
+    if (!filteredUsers.length) {
+        body.innerHTML = '<tr><td colspan="5" class="text-muted">No users match current filters.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = filteredUsers.map(user => {
+        const encodedUsername = encodeURIComponent(String(user.username || ''));
+        const role = String(user.role || 'viewer').toLowerCase();
+        const tenantDisplay = role === 'admin'
+            ? `<span class="tenant-chip tenant-chip-global">All tenants</span>
+               <div class="tenant-meta-note mt-1">Scopes ${(Object.values(user.admin_permissions || {}).filter(Boolean).length)}/${Math.max(tenantAdminScopeDefinitions.length, 1)}</div>`
+            : `<span class="tenant-chip">${tenantEscapeHtml(user.tenant_id || tenantAdminDefaultTenant)}</span>`;
+        return `
+        <tr>
+            <td><strong>${tenantEscapeHtml(user.username)}</strong></td>
+            <td>${tenantEscapeHtml(user.name || '')}</td>
+            <td><span class="tenant-role-badge ${roleBadgeClass(role)}">${tenantEscapeHtml(role)}</span></td>
+            <td>${tenantDisplay}</td>
+            <td class="text-end">
+                <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editTenantUser(decodeURIComponent('${encodedUsername}'))">Edit</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTenantUser(decodeURIComponent('${encodedUsername}'))">Delete</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+function renderTenantManagementTable() {
+    const body = document.getElementById('tenantManageRows');
+    const registryCount = document.getElementById('tenantRegistryCount');
+    if (registryCount) {
+        registryCount.textContent = `${tenantAdminTenants.length} tenants`;
+    }
+    if (!body) return;
+    if (!tenantAdminTenants.length) {
+        body.innerHTML = '<tr><td colspan="6" class="text-muted">No tenants loaded.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = tenantAdminTenants.map(tenant => {
+        const encodedId = encodeURIComponent(String(tenant.tenant_id || ''));
+        const canDelete = Boolean(tenant.can_delete);
+        const deleteBtnClass = canDelete ? 'btn-outline-danger' : 'btn-outline-secondary';
+        const deleteDisabled = canDelete ? '' : 'disabled';
+        return `
+        <tr>
+            <td><span class="tenant-chip">${tenantEscapeHtml(tenant.tenant_id)}</span></td>
+            <td>${tenantEscapeHtml(tenant.name || tenant.tenant_id)}</td>
+            <td class="text-end">${tenantEscapeHtml(tenant.user_count ?? 0)}</td>
+            <td class="text-end">${tenantEscapeHtml(tenant.sensor_count ?? 0)}</td>
+            <td class="text-end">${tenantEscapeHtml(tenant.base_station_count ?? 0)}</td>
+            <td class="text-end">
+                <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editTenantEntity(decodeURIComponent('${encodedId}'))">Edit</button>
+                <button type="button" class="btn btn-sm ${deleteBtnClass}" ${deleteDisabled} onclick="deleteTenantEntity(decodeURIComponent('${encodedId}'))">Delete</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+function setUserFormMode(mode) {
+    const nextMode = mode === 'edit' ? 'edit' : 'create';
+    const badge = document.getElementById('tenantFormModeBadge');
+    const saveBtn = document.getElementById('tenantSaveUserBtn');
+    const titleEl = document.getElementById('tenantUserModalLabel');
+    if (badge) badge.textContent = nextMode === 'edit' ? 'Edit mode' : 'Create mode';
+    if (titleEl) {
+        titleEl.innerHTML = nextMode === 'edit'
+            ? '<i class="fas fa-user-pen me-2"></i>Edit User'
+            : '<i class="fas fa-user-plus me-2"></i>Create User';
+    }
+    if (saveBtn) {
+        saveBtn.innerHTML = nextMode === 'edit'
+            ? '<i class="fas fa-save me-1"></i>Update User'
+            : '<i class="fas fa-save me-1"></i>Save User';
+    }
+}
+
+function setTenantEntityMode(mode) {
+    const nextMode = mode === 'edit' ? 'edit' : 'create';
+    const badge = document.getElementById('tenantEntityModeBadge');
+    const saveBtn = document.getElementById('tenantEntitySaveBtn');
+    const idInput = document.getElementById('tenantEntityId');
+    const titleEl = document.getElementById('tenantEntityModalLabel');
+    if (badge) badge.textContent = nextMode === 'edit' ? 'Edit mode' : 'Create mode';
+    if (titleEl) {
+        titleEl.innerHTML = nextMode === 'edit'
+            ? '<i class="fas fa-building-flag me-2"></i>Edit Tenant'
+            : '<i class="fas fa-building-circle-plus me-2"></i>Create Tenant';
+    }
+    if (saveBtn) {
+        saveBtn.innerHTML = nextMode === 'edit'
+            ? '<i class="fas fa-save me-1"></i>Update Tenant'
+            : '<i class="fas fa-save me-1"></i>Save Tenant';
+    }
+    if (idInput) {
+        idInput.disabled = nextMode === 'edit';
+    }
+}
+
+function syncUserTenantFieldState() {
+    const role = String(document.getElementById('tenantUserRole')?.value || 'viewer').toLowerCase();
+    const tenantInput = document.getElementById('tenantUserTenant');
+    const tenantHint = document.getElementById('tenantUserTenantHint');
+    if (!tenantInput) return;
+    if (role === 'admin') {
+        tenantInput.dataset.lastTenant = tenantInput.value || tenantAdminDefaultTenant;
+        tenantInput.innerHTML = '<option value="">All tenants (global admin)</option>';
+        tenantInput.value = '';
+        tenantInput.disabled = true;
+        if (tenantHint) tenantHint.textContent = 'Admin is global and can see all tenants.';
+    } else {
+        const previousTenant = tenantInput.value || tenantInput.dataset.lastTenant || tenantAdminDefaultTenant;
+        tenantInput.disabled = false;
+        populateTenantUiOptions();
+        const allowed = Array.from(tenantInput.options || []).map(opt => String(opt.value || ''));
+        const fallbackTenant = tenantAdminDefaultTenant;
+        if (allowed.includes(previousTenant)) {
+            tenantInput.value = previousTenant;
+        } else if (allowed.includes(fallbackTenant)) {
+            tenantInput.value = fallbackTenant;
+        } else if (allowed.length > 0) {
+            tenantInput.value = allowed[0];
+        } else {
+            tenantInput.value = tenantAdminDefaultTenant;
+        }
+        tenantInput.dataset.lastTenant = tenantInput.value || tenantAdminDefaultTenant;
+        if (tenantHint) tenantHint.textContent = 'User is restricted to this tenant.';
+    }
+    renderAdminScopeEditor(tenantUserDraftAdminPermissions);
+    updateUserScopeBadges();
+}
+
+function updateUserScopeBadges() {
+    const badgesEl = document.getElementById('tenantUserScopeBadges');
+    if (!badgesEl) return;
+    const role = String(document.getElementById('tenantUserRole')?.value || 'viewer').toLowerCase();
+    const tenantValue = String(document.getElementById('tenantUserTenant')?.value || '').trim();
+    const normalizedRole = role || 'viewer';
+    const tenantLabel = normalizedRole === 'admin'
+        ? 'All tenants'
+        : (tenantValue || tenantAdminDefaultTenant || 'default');
+    const tenantBadgeClass = normalizedRole === 'admin' ? 'scope-badge-global' : 'scope-badge-tenant';
+    let adminScopeBadge = '';
+    if (normalizedRole === 'admin') {
+        const scopePayload = collectAdminScopePayload();
+        const granted = Object.values(scopePayload || {}).filter(Boolean).length;
+        const total = Math.max(tenantAdminScopeDefinitions.length, 1);
+        adminScopeBadge = `<span class="scope-badge scope-badge-role">Admin scopes: ${granted}/${total}</span>`;
+    }
+    badgesEl.innerHTML = `
+        <span class="scope-badge scope-badge-role">Role: ${tenantEscapeHtml(normalizedRole)}</span>
+        <span class="scope-badge ${tenantBadgeClass}">Scope: ${tenantEscapeHtml(tenantLabel)}</span>
+        ${adminScopeBadge}
+    `;
+}
+
+function resetTenantUserForm() {
+    document.getElementById('tenantUserMode').value = 'create';
+    document.getElementById('tenantUserOriginalUsername').value = '';
+    document.getElementById('tenantUserUsername').value = '';
+    document.getElementById('tenantUserUsername').disabled = false;
+    document.getElementById('tenantUserName').value = '';
+    document.getElementById('tenantUserPassword').value = '';
+    document.getElementById('tenantUserRole').value = tenantAdminRoles.includes('user') ? 'user' : (tenantAdminRoles[0] || 'viewer');
+    document.getElementById('tenantUserTenant').value = tenantAdminDefaultTenant;
+    tenantUserDraftAdminPermissions = getDefaultAdminScopeMap();
+    setUserFormMode('create');
+    syncUserTenantFieldState();
+    setTenantUserBaseline();
+    tenantUserModalCloseBySave = false;
+}
+
+function openTenantUserModal(mode = 'create', username = '') {
+    if (mode === 'edit' && username) {
+        editTenantUser(username);
+        return;
+    }
+    resetTenantUserForm();
+    setAdminTab('users');
+    showModal('tenantUserModal');
+}
+
+function editTenantUser(username) {
+    const user = tenantAdminUsers.find(item => item.username === username);
+    if (!user) return;
+    document.getElementById('tenantUserMode').value = 'edit';
+    document.getElementById('tenantUserOriginalUsername').value = user.username;
+    document.getElementById('tenantUserUsername').value = user.username;
+    document.getElementById('tenantUserUsername').disabled = true;
+    document.getElementById('tenantUserName').value = user.name || '';
+    document.getElementById('tenantUserPassword').value = '';
+    document.getElementById('tenantUserRole').value = user.role || 'viewer';
+    document.getElementById('tenantUserTenant').value = user.tenant_id || tenantAdminDefaultTenant;
+    tenantUserDraftAdminPermissions = normalizeAdminScopeMap(user.admin_permissions || {});
+    setUserFormMode('edit');
+    syncUserTenantFieldState();
+    setTenantUserBaseline();
+    tenantUserModalCloseBySave = false;
+    setAdminTab('users');
+    showModal('tenantUserModal');
+}
+async function saveTenantUser() {
+    const mode = document.getElementById('tenantUserMode').value;
+    const username = document.getElementById('tenantUserUsername').value.trim();
+    const name = document.getElementById('tenantUserName').value.trim();
+    const password = document.getElementById('tenantUserPassword').value;
+    const role = String(document.getElementById('tenantUserRole').value || 'viewer').toLowerCase();
+    const tenantId = role === 'admin'
+        ? ''
+        : tenantNormalize(document.getElementById('tenantUserTenant').value, tenantAdminDefaultTenant);
+
+    if (!username) {
+        showStatus('tenantAdminStatus', 'Username is required.', 'warning');
+        return;
+    }
+    if (mode === 'create' && !password) {
+        showStatus('tenantAdminStatus', 'Password is required for new user.', 'warning');
+        return;
+    }
+
+    const payload = {
+        username,
+        name: name || username,
+        role: role || 'viewer',
+        tenant_id: tenantId
+    };
+    if (role === 'admin') {
+        payload.admin_permissions = collectAdminScopePayload();
+    }
+    if (password) payload.password = password;
+
+    const method = mode === 'edit' ? 'PUT' : 'POST';
+    try {
+        showStatus('tenantAdminStatus', mode === 'edit' ? 'Updating user...' : 'Creating user...', 'info');
+        const response = await fetch('/api/users', {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || result.message || 'Operation failed');
+        }
+        tenantUserModalCloseBySave = true;
+        setTenantUserBaseline();
+        resetTenantUserForm();
+        hideModal('tenantUserModal');
+        await fetchTenantAdminData();
+        showStatus('tenantAdminStatus', mode === 'edit' ? `User '${username}' updated.` : `User '${username}' created.`, 'success');
+    } catch (error) {
+        showStatus('tenantAdminStatus', `Save failed: ${error.message}`, 'danger');
+    }
+}
+
+async function deleteTenantUser(username) {
+    if (!confirm(`Delete user '${username}'?`)) return;
+    try {
+        showStatus('tenantAdminStatus', `Deleting user '${username}'...`, 'info');
+        const response = await fetch('/api/users', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || result.message || 'Delete failed');
+        await fetchTenantAdminData();
+        showStatus('tenantAdminStatus', `User '${username}' deleted.`, 'success');
+    } catch (error) {
+        showStatus('tenantAdminStatus', `Delete failed: ${error.message}`, 'danger');
+    }
+}
+
+function resetTenantEntityForm() {
+    document.getElementById('tenantEntityMode').value = 'create';
+    document.getElementById('tenantEntityOriginalId').value = '';
+    document.getElementById('tenantEntityId').value = '';
+    document.getElementById('tenantEntityName').value = '';
+    document.getElementById('tenantEntityDescription').value = '';
+    setTenantEntityMode('create');
+    setTenantEntityBaseline();
+    tenantEntityModalCloseBySave = false;
+}
+
+function openTenantEntityModal(mode = 'create', tenantId = '') {
+    if (mode === 'edit' && tenantId) {
+        editTenantEntity(tenantId);
+        return;
+    }
+    resetTenantEntityForm();
+    setAdminTab('tenants');
+    showModal('tenantEntityModal');
+}
+
+function editTenantEntity(tenantId) {
+    const tenant = tenantAdminTenants.find(item => item.tenant_id === tenantId);
+    if (!tenant) return;
+    document.getElementById('tenantEntityMode').value = 'edit';
+    document.getElementById('tenantEntityOriginalId').value = tenant.tenant_id;
+    document.getElementById('tenantEntityId').value = tenant.tenant_id;
+    document.getElementById('tenantEntityName').value = tenant.name || tenant.tenant_id;
+    document.getElementById('tenantEntityDescription').value = tenant.description || '';
+    setTenantEntityMode('edit');
+    setTenantEntityBaseline();
+    tenantEntityModalCloseBySave = false;
+    setAdminTab('tenants');
+    showModal('tenantEntityModal');
+}
+
+async function saveTenantEntity() {
+    const mode = document.getElementById('tenantEntityMode').value;
+    const tenantIdInput = document.getElementById('tenantEntityId');
+    const rawTenantId = tenantIdInput ? tenantIdInput.value : '';
+    const tenantId = tenantSanitizeStrict(rawTenantId);
+    const tenantName = document.getElementById('tenantEntityName').value.trim();
+    const tenantDescription = document.getElementById('tenantEntityDescription').value.trim();
+
+    if (!tenantId) {
+        showStatus('tenantMgmtStatus', 'Tenant ID is required.', 'warning');
+        return;
+    }
+
+    const payload = {
+        tenant_id: tenantId,
+        name: tenantName || tenantId,
+        description: tenantDescription,
+    };
+
+    const method = mode === 'edit' ? 'PUT' : 'POST';
+    try {
+        showStatus('tenantMgmtStatus', mode === 'edit' ? 'Updating tenant...' : 'Creating tenant...', 'info');
+        const response = await fetch('/api/tenants', {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || result.message || 'Tenant operation failed');
+        }
+
+        tenantEntityModalCloseBySave = true;
+        setTenantEntityBaseline();
+        resetTenantEntityForm();
+        hideModal('tenantEntityModal');
+        await fetchTenantAdminData();
+        showStatus('tenantMgmtStatus', mode === 'edit' ? `Tenant '${tenantId}' updated.` : `Tenant '${tenantId}' created.`, 'success');
+    } catch (error) {
+        showStatus('tenantMgmtStatus', `Tenant save failed: ${error.message}`, 'danger');
+    }
+}
+
+async function deleteTenantEntity(tenantId) {
+    if (!confirm(`Delete tenant '${tenantId}'?`)) return;
+
+    const doDelete = async (forceDelete) => {
+        const response = await fetch('/api/tenants', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tenant_id: tenantId, force: Boolean(forceDelete) })
+        });
+        return response.json().then(result => ({ ok: response.ok, result }));
+    };
+
+    try {
+        showStatus('tenantMgmtStatus', `Deleting tenant '${tenantId}'...`, 'info');
+        let attempt = await doDelete(false);
+        if (!attempt.ok && attempt.result && attempt.result.usage) {
+            const usage = attempt.result.usage;
+            const forceMsg = `Tenant '${tenantId}' has data (users:${usage.users}, sensors:${usage.sensors}, BS:${usage.base_stations}, events:${usage.inventory_events}, telemetry:${usage.telemetry_points}).\n\nForce delete and purge historical data?`;
+            if (confirm(forceMsg)) {
+                attempt = await doDelete(true);
+            }
+        }
+
+        if (!attempt.ok || !attempt.result.success) {
+            throw new Error(attempt.result.error || attempt.result.message || 'Delete failed');
+        }
+
+        resetTenantEntityForm();
+        await fetchTenantAdminData();
+        showStatus('tenantMgmtStatus', `Tenant '${tenantId}' deleted.`, 'success');
+    } catch (error) {
+        showStatus('tenantMgmtStatus', `Delete failed: ${error.message}`, 'danger');
+    }
+}
+
+async function fetchTenantAdminData() {
+    const canManageUsers = canCurrentAdminScope('manage_users');
+    const canManageTenants = canCurrentAdminScope('manage_tenants');
+    try {
+        showStatus('tenantAdminStatus', 'Loading administration data...', 'info');
+
+        let usersData = {};
+        if (canManageUsers) {
+            const usersResp = await fetch('/api/users');
+            usersData = await usersResp.json();
+            if (!usersResp.ok || !usersData.users) {
+                throw new Error(usersData.error || usersData.message || 'Failed to load users');
+            }
+            tenantAdminUsers = usersData.users || [];
+            tenantAdminRoles = usersData.roles || ['admin', 'user', 'viewer'];
+            tenantAdminScopeDefinitions = usersData.admin_scopes || [];
+            tenantCurrentAdminPermissions = usersData.current_admin_permissions || {};
+            tenantKnownTenantChoices = usersData.tenant_choices || [];
+        } else {
+            tenantAdminUsers = [];
+            tenantAdminRoles = ['admin', 'user', 'viewer'];
+            tenantAdminScopeDefinitions = [];
+            tenantCurrentAdminPermissions = {};
+            tenantKnownTenantChoices = [];
+        }
+
+        let tenantsData = {};
+        if (canManageTenants) {
+            const tenantsResp = await fetch('/api/tenants');
+            tenantsData = await tenantsResp.json();
+            if (!tenantsResp.ok || !tenantsData.tenants) {
+                throw new Error(tenantsData.error || tenantsData.message || 'Failed to load tenants');
+            }
+            tenantAdminTenants = (tenantsData.tenants || []).map(tenant => ({
+                tenant_id: tenant.tenant_id,
+                name: tenant.name || tenant.tenant_id,
+                description: tenant.description || '',
+                sensor_count: tenant.sensor_count || 0,
+                base_station_count: tenant.base_station_count || 0,
+                user_count: tenant.user_count || 0,
+                can_delete: Boolean(tenant.can_delete),
+            }));
+        } else {
+            tenantAdminTenants = (tenantKnownTenantChoices || []).map((tenantId) => ({
+                tenant_id: tenantId,
+                name: tenantId,
+                description: '',
+                sensor_count: 0,
+                base_station_count: 0,
+                user_count: 0,
+                can_delete: false,
+            }));
+        }
+
+        tenantAdminDefaultTenant =
+            tenantsData.default_tenant ||
+            usersData.default_tenant ||
+            tenantAdminDefaultTenant ||
+            'default';
+
+        populateRoleOptions();
+        populateTenantUiOptions();
+        syncUserTenantFieldState();
+        renderTenantUsersTable();
+        renderTenantManagementTable();
+        updateKpis();
+        setTenantUserBaseline();
+        setTenantEntityBaseline();
+        if (canManageUsers) {
+            showStatus('tenantAdminStatus', `Loaded ${tenantAdminUsers.length} users and ${tenantAdminTenants.length} tenants.`, 'success');
+        } else {
+            showStatus('tenantAdminStatus', 'User management disabled for your admin scope.', 'warning');
+        }
+        if (canManageTenants) {
+            showStatus('tenantMgmtStatus', 'Tenant data loaded.', 'success');
+        } else {
+            showStatus('tenantMgmtStatus', 'Tenant management disabled for your admin scope.', 'warning');
+        }
+    } catch (error) {
+        showStatus('tenantAdminStatus', `Load failed: ${error.message}`, 'danger');
+        showStatus('tenantMgmtStatus', `Load failed: ${error.message}`, 'danger');
+    }
+}
+
+function confirmAdminUnsaved(message) {
+    if (window.AppUI && typeof window.AppUI.confirm === 'function') {
+        return window.AppUI.confirm({
+            title: 'Unsaved changes',
+            message,
+            confirmText: 'Discard',
+            cancelText: 'Stay',
+            variant: 'warning'
+        });
+    }
+    return Promise.resolve(window.confirm(message));
+}
+
+function initAdministrationUnsavedGuards() {
+    const userModalEl = document.getElementById('tenantUserModal');
+    const tenantModalEl = document.getElementById('tenantEntityModal');
+
+    if (userModalEl) {
+        userModalEl.addEventListener('hide.bs.modal', async (event) => {
+            if (tenantUserModalCloseBySave) {
+                tenantUserModalCloseBySave = false;
+                setTenantUserBaseline();
+                return;
+            }
+            if (!isTenantUserFormDirty()) return;
+            event.preventDefault();
+            const confirmed = await confirmAdminUnsaved('You have unsaved user changes. Close this form without saving?');
+            if (!confirmed) return;
+            tenantUserModalCloseBySave = true;
+            setTenantUserBaseline();
+            const modal = bootstrap.Modal.getInstance(userModalEl);
+            if (modal) modal.hide();
+        });
+    }
+
+    if (tenantModalEl) {
+        tenantModalEl.addEventListener('hide.bs.modal', async (event) => {
+            if (tenantEntityModalCloseBySave) {
+                tenantEntityModalCloseBySave = false;
+                setTenantEntityBaseline();
+                return;
+            }
+            if (!isTenantEntityFormDirty()) return;
+            event.preventDefault();
+            const confirmed = await confirmAdminUnsaved('You have unsaved tenant changes. Close this form without saving?');
+            if (!confirmed) return;
+            tenantEntityModalCloseBySave = true;
+            setTenantEntityBaseline();
+            const modal = bootstrap.Modal.getInstance(tenantModalEl);
+            if (modal) modal.hide();
+        });
+    }
+
+    if (window.AppUI && typeof window.AppUI.unsavedGuard === 'function') {
+        window.AppUI.unsavedGuard({
+            title: 'Unsaved administration changes',
+            message: 'You have unsaved user/tenant form changes. Leave this page without saving?',
+            confirmText: 'Leave page',
+            cancelText: 'Stay',
+            variant: 'warning',
+            isDirty: () => {
+                const userDirty = Boolean(userModalEl && userModalEl.classList.contains('show') && isTenantUserFormDirty());
+                const tenantDirty = Boolean(tenantModalEl && tenantModalEl.classList.contains('show') && isTenantEntityFormDirty());
+                return userDirty || tenantDirty;
+            }
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    const userSearch = document.getElementById('tenantUserSearch');
+    const roleFilter = document.getElementById('tenantRoleFilter');
+    const tenantFilter = document.getElementById('tenantTenantFilter');
+    const userRole = document.getElementById('tenantUserRole');
+    const userTenant = document.getElementById('tenantUserTenant');
+
+    if (userSearch) userSearch.addEventListener('input', renderTenantUsersTable);
+    if (roleFilter) roleFilter.addEventListener('change', renderTenantUsersTable);
+    if (tenantFilter) tenantFilter.addEventListener('change', renderTenantUsersTable);
+    if (userRole) userRole.addEventListener('change', syncUserTenantFieldState);
+    if (userTenant) userTenant.addEventListener('change', updateUserScopeBadges);
+
+    initAdminTabs();
+    resetTenantUserForm();
+    resetTenantEntityForm();
+    await fetchTenantAdminData();
+    initAdministrationUnsavedGuards();
+});
+</script>
+{% endblock %}

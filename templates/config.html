@@ -3,51 +3,86 @@
 
 {% block content %}
 <style>
-.config-shell { display: grid; gap: 0.9rem; }
-.config-head {
+.config-shell {
+    display: grid;
+    gap: 0.78rem;
+    width: 100%;
+}
+.config-header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 0.8rem;
-    padding: 0.8rem 0.9rem;
-    border: 1px solid #d5deeb;
-    border-radius: 0.95rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    gap: 0.7rem;
+    padding: 0.62rem 0.72rem;
+    border: 1px solid #d9e3f1;
+    border-radius: 0.86rem;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
-.config-kicker {
-    margin: 0;
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #5f7088;
-    font-weight: 800;
+.config-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
-.config-title {
-    margin: 0.18rem 0 0;
-    font-family: "Sora", "Manrope", sans-serif;
-    font-size: 1.24rem;
+.config-dirty-badge {
+    font-size: 0.7rem;
     font-weight: 700;
-    color: #0f172a;
+    border-radius: 999px;
+    border: 1px solid #d4deed;
+    padding: 0.22rem 0.58rem;
+    color: #617792;
+    background: #f7fbff;
 }
-.config-subtitle {
-    margin: 0.26rem 0 0;
-    font-size: 0.79rem;
-    color: #5f7088;
+.config-dirty-badge.is-dirty {
+    color: #8d5b08;
+    border-color: #f0d396;
+    background: #fff8e9;
+}
+.config-dirty-badge.has-errors {
+    color: #a1282e;
+    border-color: #efb8be;
+    background: #fff1f3;
+}
+.config-header-copy {
+    display: grid;
+    gap: 0.1rem;
+}
+.config-header-title {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: #173556;
+}
+.config-header-subtitle {
+    margin: 0;
+    font-size: 0.74rem;
+    color: #607896;
+}
+.config-main {
+    border: 1px solid #d9e3f1;
+    border-radius: 0.92rem;
+    background: linear-gradient(180deg, #f7faff 0%, #eef4fb 100%);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+}
+.config-main > .card-body {
+    padding: 0.66rem;
 }
 .config-tabbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
-    padding: 0.62rem 0.72rem;
-    border-bottom: 1px solid #dce5f2;
-    background: #f8fbff;
+    gap: 0.36rem;
+    padding: 0.45rem;
+    border: 1px solid #d5e0ef;
+    border-radius: 0.72rem;
+    background: #ffffff;
 }
 .config-tabbar .btn {
     border-radius: 999px;
     font-weight: 700;
-    font-size: 0.78rem;
-    padding: 0.34rem 0.7rem;
+    font-size: 0.75rem;
+    padding: 0.28rem 0.64rem;
+    min-width: 130px;
 }
 .config-tabbar .btn.active {
     color: #fff;
@@ -55,36 +90,230 @@
     background: linear-gradient(145deg, #1f3b63 0%, #2f5a92 100%);
     box-shadow: 0 8px 14px rgba(31, 59, 99, 0.26);
 }
+.config-tabbar-spacer {
+    flex: 1 1 auto;
+}
+.config-advanced-toggle {
+    min-width: 0 !important;
+    padding-inline: 0.56rem !important;
+}
+.config-tabbar .btn.config-advanced-toggle.active {
+    color: #7b5208;
+    border-color: #f0d396;
+    background: #fff8e9;
+    box-shadow: none;
+}
+.config-form {
+    display: grid;
+    gap: 0.72rem;
+}
+.config-form .row {
+    --bs-gutter-x: 0.66rem;
+    --bs-gutter-y: 0.66rem;
+}
+.config-panel {
+    border: 1px solid #d5e0ef;
+    border-radius: 0.82rem;
+    background: #ffffff;
+    padding: 0.66rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    height: 100%;
+}
+.config-panel h5,
+.config-panel h6 {
+    margin: 0 0 0.55rem;
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: #1f3f65;
+}
+.config-panel hr {
+    margin: 0.62rem 0;
+    border-color: #dbe5f3;
+    opacity: 1;
+}
+.config-helper-note {
+    border: 1px solid #d5e0ef;
+    border-radius: 0.58rem;
+    background: #f7faff;
+    padding: 0.52rem 0.56rem;
+    margin-top: 0.5rem;
+}
+.config-helper-note p {
+    margin: 0;
+    font-size: 0.7rem;
+    color: #5f7692;
+}
+.config-panel .form-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #48607f;
+    margin-bottom: 0.14rem;
+}
+.config-panel .form-control,
+.config-panel .form-select {
+    font-size: 0.78rem;
+    border: 1px solid #c8d6e8;
+    border-radius: 0.54rem;
+    min-height: 1.96rem;
+    padding: 0.25rem 0.5rem;
+}
+.config-panel textarea.form-control {
+    min-height: 4.6rem;
+}
+.config-panel .form-control:focus,
+.config-panel .form-select:focus {
+    border-color: #3b6fb3;
+    box-shadow: 0 0 0 0.14rem rgba(59, 111, 179, 0.14);
+}
+.config-panel .form-control.is-invalid,
+.config-panel .form-select.is-invalid {
+    border-color: #cb3a42;
+    box-shadow: 0 0 0 0.14rem rgba(203, 58, 66, 0.15);
+}
+.config-panel .mb-3 {
+    margin-bottom: 0.48rem !important;
+}
+.config-panel .form-check {
+    margin-bottom: 0;
+    min-height: auto;
+}
+.config-panel .form-check-input {
+    margin-top: 0.15rem;
+}
+.config-panel .form-text {
+    font-size: 0.67rem;
+    color: #6c829c;
+    margin-top: 0.14rem;
+}
+.config-card-title {
+    margin: 0 0 0.46rem;
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: #1f3f65;
+}
+.config-subsection-title {
+    margin: 0.1rem 0 0.22rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #5f7694;
+}
+#configSectionInflux .card {
+    border: 1px solid #d5e0ef;
+    border-radius: 0.82rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+#configSectionInflux .card-body {
+    padding: 0.66rem;
+}
+#configSectionInflux .row.g-3 {
+    --bs-gutter-x: 0.62rem;
+    --bs-gutter-y: 0.52rem;
+}
+#configSectionInflux .form-control,
+#configSectionInflux .form-select {
+    font-size: 0.78rem;
+    border: 1px solid #c8d6e8;
+    border-radius: 0.54rem;
+    min-height: 1.96rem;
+    padding: 0.25rem 0.5rem;
+    max-width: 360px;
+}
+#configSectionInflux .form-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #48607f;
+    margin-bottom: 0.14rem;
+}
+#configSectionInflux .form-control:focus,
+#configSectionInflux .form-select:focus {
+    border-color: #3b6fb3;
+    box-shadow: 0 0 0 0.14rem rgba(59, 111, 179, 0.14);
+}
+#configSectionInflux .form-text {
+    font-size: 0.67rem;
+    color: #6c829c;
+    margin-top: 0.14rem;
+}
+#configSectionInflux .btn {
+    border-radius: 0.54rem;
+    font-weight: 700;
+    font-size: 0.76rem;
+    padding: 0.32rem 0.62rem;
+}
+#configSectionInflux .col-12 .form-control,
+#configSectionInflux .col-12 .form-select,
+#configSectionInflux .col-md-8 .form-control,
+#configSectionInflux .col-md-8 .form-select {
+    max-width: 100%;
+}
+#configSectionActions .btn {
+    border-radius: 0.54rem;
+    font-weight: 700;
+    font-size: 0.76rem;
+    padding: 0.32rem 0.62rem;
+}
+.config-action-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.56rem;
+}
 @media (max-width: 991.98px) {
-    .config-head { flex-direction: column; }
+    .config-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .config-header-actions {
+        justify-content: space-between;
+    }
+    .config-tabbar .btn {
+        min-width: 0;
+        flex: 1 1 calc(50% - 0.36rem);
+    }
+    .config-tabbar-spacer {
+        display: none;
+    }
+    .config-advanced-toggle {
+        flex: 1 1 100% !important;
+    }
+    .config-action-row {
+        grid-template-columns: 1fr;
+    }
+    #configSectionInflux .form-control,
+    #configSectionInflux .form-select {
+        max-width: 100%;
+    }
 }
 </style>
 
 <div class="config-shell workspace-shell">
-<div class="config-head workspace-head">
-    <div>
-        <p class="config-kicker workspace-kicker">System Setup</p>
-        <h2 class="config-title workspace-title">Configuration</h2>
-        <p class="config-subtitle workspace-subtitle">Nastavenia su rozdelene do zaloziek pre rychlu orientaciu.</p>
+<div class="config-header">
+    <div class="config-header-copy">
+        <h2 class="config-header-title">Configuration Workspace</h2>
+        <p class="config-header-subtitle">Edit runtime, MQTT, telemetry storage and maintenance options.</p>
     </div>
-    <button type="button" class="btn btn-primary" onclick="saveConfig()"><i class="fas fa-save"></i> Save Configuration</button>
+    <div class="config-header-actions">
+        <span id="configDirtyBadge" class="config-dirty-badge">No changes</span>
+        <button type="button" class="btn btn-primary" id="configSaveBtnTop" onclick="saveConfig()"><i class="fas fa-save me-1"></i>Save Configuration</button>
+    </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">Service Center Settings</h5>
-    </div>
+<div class="card config-main">
     <div class="card-body">
         <div class="config-tabbar" id="configTabbar">
             <button type="button" class="btn btn-outline-secondary active" data-config-tab-btn="general"><i class="fas fa-server me-1"></i>General</button>
-            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="policy"><i class="fas fa-unlink me-1"></i>Auto-Detach</button>
-            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="influx"><i class="fas fa-database me-1"></i>InfluxDB</button>
+            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="influx"><i class="fas fa-database me-1"></i>Storage</button>
             <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="maintenance"><i class="fas fa-tools me-1"></i>Maintenance</button>
+            <span class="config-tabbar-spacer"></span>
+            <button type="button" class="btn btn-outline-secondary config-advanced-toggle" id="toggleAdvancedConfigBtn">
+                <i class="fas fa-sliders-h me-1"></i>Advanced: Off
+            </button>
         </div>
-        <form id="configForm">
-            <div class="row mt-3" id="configSectionGeneral">
-                <div class="col-md-6">
-                    <h6>Server Configuration</h6>
+        <form id="configForm" class="config-form">
+            <div class="row mt-3 g-3" id="configSectionGeneral">
+                <div class="col-md-6 config-panel">
+                    <h6><i class="fas fa-server me-1"></i>Server Configuration</h6>
                     <div class="mb-3">
                         <label for="LISTEN_HOST" class="form-label">Listen Host</label>
                         <input type="text" class="form-control" id="LISTEN_HOST" value="{{ config.LISTEN_HOST }}">
@@ -119,8 +348,8 @@
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <h6>MQTT Configuration</h6>
+                <div class="col-md-6 config-panel">
+                    <h6><i class="fas fa-broadcast-tower me-1"></i>MQTT Configuration</h6>
                     <div class="mb-3">
                         <label for="MQTT_BROKER" class="form-label">MQTT Broker</label>
                         <input type="text" class="form-control" id="MQTT_BROKER" value="{{ config.MQTT_BROKER }}">
@@ -144,9 +373,9 @@
                 </div>
             </div>
 
-            <div class="row mt-4 d-none" id="configSectionRowTwo">
-                <div class="col-md-6" id="configSectionPolicy">
-                    <h5>Auto-Detach Configuration</h5>
+            <div class="row mt-2 g-3 d-none" id="configSectionRowTwo">
+                <div class="col-md-6 config-panel" id="configSectionPolicy">
+                    <h5><i class="fas fa-unlink me-1"></i>Auto-Detach Configuration</h5>
                     <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="AUTO_DETACH_ENABLED" {% if config.AUTO_DETACH_ENABLED %}checked{% endif %}>
@@ -176,11 +405,28 @@
                     </div>
                 </div>
 
+                <div class="col-md-6 config-panel" id="configSectionOptional">
+                    <h6 class="mb-2"><i class="fas fa-puzzle-piece me-1"></i>Optional Modules</h6>
+                    <div class="mb-1">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="OMS_ENABLED" {% if config.OMS_ENABLED %}checked{% endif %}>
+                            <label class="form-check-label" for="OMS_ENABLED">
+                                Show OMS module in navigation
+                            </label>
+                        </div>
+                        <div class="form-text">Hide OMS page and API endpoints if your deployment does not use OMS meters.</div>
+                    </div>
+
+                    <div class="config-helper-note">
+                        <p><strong>Tip:</strong> Keep OMS enabled only when OMS/W-MBus meters are part of your deployment.</p>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="row mt-4 d-none" id="configSectionInflux">
+            <div class="row mt-2 d-none" id="configSectionInflux">
                 <div class="col-12">
-                    <h5>InfluxDB Telemetry</h5>
+                    <h5 class="config-card-title"><i class="fas fa-database me-1"></i>Storage and Telemetry</h5>
                     <div class="card">
                         <div class="card-body">
                             <div class="row g-3">
@@ -266,21 +512,187 @@
                                     <textarea class="form-control" id="INFLUX_UPTIME_QUERY" rows="3">{{ config.INFLUX_UPTIME_QUERY }}</textarea>
                                     <div class="form-text">If empty, default uptime query is generated automatically.</div>
                                 </div>
+
+                                <div class="col-12 mt-2">
+                                    <p class="config-subsection-title">TimescaleDB / PostgreSQL (Multi-tenant Operational Store)</p>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_ENABLED" class="form-label">Timescale</label>
+                                    <select class="form-control" id="TIMESCALE_ENABLED">
+                                        <option value="true" {% if config.TIMESCALE_ENABLED %}selected{% endif %}>enabled</option>
+                                        <option value="false" {% if not config.TIMESCALE_ENABLED %}selected{% endif %}>disabled</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="TIMESCALE_HOST" class="form-label">Host</label>
+                                    <input type="text" class="form-control" id="TIMESCALE_HOST" value="{{ config.TIMESCALE_HOST }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_PORT" class="form-label">Port</label>
+                                    <input type="number" class="form-control" id="TIMESCALE_PORT" value="{{ config.TIMESCALE_PORT }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_DB" class="form-label">Database</label>
+                                    <input type="text" class="form-control" id="TIMESCALE_DB" value="{{ config.TIMESCALE_DB }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="TIMESCALE_USER" class="form-label">User</label>
+                                    <input type="text" class="form-control" id="TIMESCALE_USER" value="{{ config.TIMESCALE_USER }}">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="TIMESCALE_PASSWORD" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="TIMESCALE_PASSWORD" value="{{ config.TIMESCALE_PASSWORD }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_SSLMODE" class="form-label">SSL Mode</label>
+                                    <select class="form-control" id="TIMESCALE_SSLMODE">
+                                        <option value="disable" {% if config.TIMESCALE_SSLMODE == 'disable' %}selected{% endif %}>disable</option>
+                                        <option value="allow" {% if config.TIMESCALE_SSLMODE == 'allow' %}selected{% endif %}>allow</option>
+                                        <option value="prefer" {% if config.TIMESCALE_SSLMODE == 'prefer' %}selected{% endif %}>prefer</option>
+                                        <option value="require" {% if config.TIMESCALE_SSLMODE == 'require' %}selected{% endif %}>require</option>
+                                        <option value="verify-ca" {% if config.TIMESCALE_SSLMODE == 'verify-ca' %}selected{% endif %}>verify-ca</option>
+                                        <option value="verify-full" {% if config.TIMESCALE_SSLMODE == 'verify-full' %}selected{% endif %}>verify-full</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_DEFAULT_TENANT" class="form-label">Default Tenant</label>
+                                    <input type="text" class="form-control" id="TIMESCALE_DEFAULT_TENANT" value="{{ config.TIMESCALE_DEFAULT_TENANT }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_INVENTORY_WRITE_ENABLED" class="form-label">Event Writes</label>
+                                    <select class="form-control" id="TIMESCALE_INVENTORY_WRITE_ENABLED">
+                                        <option value="true" {% if config.TIMESCALE_INVENTORY_WRITE_ENABLED %}selected{% endif %}>enabled</option>
+                                        <option value="false" {% if not config.TIMESCALE_INVENTORY_WRITE_ENABLED %}selected{% endif %}>disabled</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_TELEMETRY_WRITE_ENABLED" class="form-label">Telemetry Writes</label>
+                                    <select class="form-control" id="TIMESCALE_TELEMETRY_WRITE_ENABLED">
+                                        <option value="true" {% if config.TIMESCALE_TELEMETRY_WRITE_ENABLED %}selected{% endif %}>enabled</option>
+                                        <option value="false" {% if not config.TIMESCALE_TELEMETRY_WRITE_ENABLED %}selected{% endif %}>disabled</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_SNAPSHOT_ENABLED" class="form-label">Snapshots</label>
+                                    <select class="form-control" id="TIMESCALE_SNAPSHOT_ENABLED">
+                                        <option value="true" {% if config.TIMESCALE_SNAPSHOT_ENABLED %}selected{% endif %}>enabled</option>
+                                        <option value="false" {% if not config.TIMESCALE_SNAPSHOT_ENABLED %}selected{% endif %}>disabled</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_SNAPSHOT_INTERVAL_SECONDS" class="form-label">Snapshot Interval (s)</label>
+                                    <input type="number" min="15" class="form-control" id="TIMESCALE_SNAPSHOT_INTERVAL_SECONDS" value="{{ config.TIMESCALE_SNAPSHOT_INTERVAL_SECONDS }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_RETENTION_ENABLED" class="form-label">Retention</label>
+                                    <select class="form-control" id="TIMESCALE_RETENTION_ENABLED">
+                                        <option value="true" {% if config.TIMESCALE_RETENTION_ENABLED %}selected{% endif %}>enabled</option>
+                                        <option value="false" {% if not config.TIMESCALE_RETENTION_ENABLED %}selected{% endif %}>disabled</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_TELEMETRY_RETENTION_DAYS" class="form-label">Telemetry Retention (days)</label>
+                                    <input type="number" min="1" class="form-control" id="TIMESCALE_TELEMETRY_RETENTION_DAYS" value="{{ config.TIMESCALE_TELEMETRY_RETENTION_DAYS }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_INVENTORY_RETENTION_DAYS" class="form-label">Inventory Retention (days)</label>
+                                    <input type="number" min="1" class="form-control" id="TIMESCALE_INVENTORY_RETENTION_DAYS" value="{{ config.TIMESCALE_INVENTORY_RETENTION_DAYS }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_COMPRESSION_ENABLED" class="form-label">Compression</label>
+                                    <select class="form-control" id="TIMESCALE_COMPRESSION_ENABLED">
+                                        <option value="true" {% if config.TIMESCALE_COMPRESSION_ENABLED %}selected{% endif %}>enabled</option>
+                                        <option value="false" {% if not config.TIMESCALE_COMPRESSION_ENABLED %}selected{% endif %}>disabled</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="TIMESCALE_COMPRESSION_AFTER_DAYS" class="form-label">Compress After (days)</label>
+                                    <input type="number" min="1" class="form-control" id="TIMESCALE_COMPRESSION_AFTER_DAYS" value="{{ config.TIMESCALE_COMPRESSION_AFTER_DAYS }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="GRAFANA_URL" class="form-label">Grafana URL</label>
+                                    <input type="text" class="form-control" id="GRAFANA_URL" value="{{ config.GRAFANA_URL }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="GRAFANA_DASHBOARD_UID" class="form-label">Grafana Dashboard UID</label>
+                                    <input type="text" class="form-control" id="GRAFANA_DASHBOARD_UID" value="{{ config.GRAFANA_DASHBOARD_UID }}">
+                                </div>
+
+                                <div class="col-12 mt-2">
+                                    <p class="config-subsection-title">Monitoring Alert Thresholds</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="MONITOR_QUEUE_WARN_PCT" class="form-label">Queue Warn (%)</label>
+                                    <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_QUEUE_WARN_PCT" value="{{ config.MONITOR_QUEUE_WARN_PCT }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="MONITOR_QUEUE_CRIT_PCT" class="form-label">Queue Critical (%)</label>
+                                    <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_QUEUE_CRIT_PCT" value="{{ config.MONITOR_QUEUE_CRIT_PCT }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="MONITOR_RETRY_FAIL_WARN_PCT" class="form-label">Retry Fail Warn (%)</label>
+                                    <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_RETRY_FAIL_WARN_PCT" value="{{ config.MONITOR_RETRY_FAIL_WARN_PCT }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="MONITOR_RETRY_FAIL_CRIT_PCT" class="form-label">Retry Fail Critical (%)</label>
+                                    <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_RETRY_FAIL_CRIT_PCT" value="{{ config.MONITOR_RETRY_FAIL_CRIT_PCT }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="MONITOR_DB_WRITE_LATENCY_WARN_MS" class="form-label">DB Latency Warn (ms)</label>
+                                    <input type="number" min="0" step="1" class="form-control" id="MONITOR_DB_WRITE_LATENCY_WARN_MS" value="{{ config.MONITOR_DB_WRITE_LATENCY_WARN_MS }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="MONITOR_DB_WRITE_LATENCY_CRIT_MS" class="form-label">DB Latency Critical (ms)</label>
+                                    <input type="number" min="0" step="1" class="form-control" id="MONITOR_DB_WRITE_LATENCY_CRIT_MS" value="{{ config.MONITOR_DB_WRITE_LATENCY_CRIT_MS }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="MONITOR_MQTT_RECONNECT_WARN_PER_HOUR" class="form-label">Reconnect Warn (/h)</label>
+                                    <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_MQTT_RECONNECT_WARN_PER_HOUR" value="{{ config.MONITOR_MQTT_RECONNECT_WARN_PER_HOUR }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR" class="form-label">Reconnect Critical (/h)</label>
+                                    <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR" value="{{ config.MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR }}">
+                                </div>
+
+                                <div class="col-12 mt-2">
+                                    <p class="config-subsection-title">Operational Tools</p>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-secondary w-100" onclick="checkTimescaleStatus()">
+                                        <i class="fas fa-heartbeat me-1"></i>Check Timescale Status
+                                    </button>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-primary w-100" onclick="syncTimescaleNow()">
+                                        <i class="fas fa-database me-1"></i>Sync Inventory to Timescale
+                                    </button>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-success w-100" onclick="applyTimescalePolicies()">
+                                        <i class="fas fa-layer-group me-1"></i>Apply Timescale Policies
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-3 d-none" id="configSectionActions">
-                <button type="button" class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
-                <button type="button" class="btn btn-warning ms-2" onclick="restartService(event)">Restart Service</button>
-                <button type="button" class="btn btn-danger ms-2" onclick="restartContainer(event)">Restart Container</button>
+            <div class="mt-2 d-none" id="configSectionActions">
+                <div class="config-panel">
+                <h5><i class="fas fa-tools me-1"></i>Maintenance</h5>
+                <div class="config-action-row">
+                    <button type="button" class="btn btn-primary" id="configSaveBtnMaintenance" onclick="saveConfig()"><i class="fas fa-save me-1"></i>Save Configuration</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="restartService(event)"><i class="fas fa-sync-alt me-1"></i>Restart Service</button>
+                    <button type="button" class="btn btn-outline-danger" onclick="restartContainer(event)"><i class="fas fa-power-off me-1"></i>Restart Container</button>
+                </div>
                 <div class="alert alert-info mt-3 mb-0">
                     <small><strong>Note:</strong> Auto-update is disabled for this customized deployment. Apply updates through your Git workflow and rebuild container images.</small>
                 </div>
-                <div class="alert alert-warning mt-3">
+                <div class="alert alert-warning mt-3 mb-0">
                     <small><strong>Note:</strong> Configuration changes require a restart to take effect. Use "Restart Service" for quick process restart, or "Restart Container" for full environment reload (recommended after changing MQTT credentials or other .env variables).</small>
+                </div>
                 </div>
             </div>
         </form>
@@ -291,153 +703,537 @@
 
 {% block scripts %}
 <script>
-function saveConfig() {
-    const configData = {
-        LISTEN_HOST: document.getElementById('LISTEN_HOST').value,
-        LISTEN_PORT: parseInt(document.getElementById('LISTEN_PORT').value),
-        MQTT_BROKER: document.getElementById('MQTT_BROKER').value,
-        MQTT_PORT: parseInt(document.getElementById('MQTT_PORT').value),
-        MQTT_USERNAME: document.getElementById('MQTT_USERNAME').value,
-        MQTT_PASSWORD: document.getElementById('MQTT_PASSWORD').value,
-        BASE_TOPIC: document.getElementById('BASE_TOPIC').value,
-        STATUS_INTERVAL: parseInt(document.getElementById('STATUS_INTERVAL').value),
-        DEDUPLICATION_DELAY: parseFloat(document.getElementById('DEDUPLICATION_DELAY').value),
-        AUTO_DETACH_ENABLED: document.getElementById('AUTO_DETACH_ENABLED').checked,
-        AUTO_DETACH_TIMEOUT: parseInt(document.getElementById('AUTO_DETACH_TIMEOUT').value) * 3600,
-        AUTO_DETACH_WARNING_TIMEOUT: parseInt(document.getElementById('AUTO_DETACH_WARNING_TIMEOUT').value) * 3600,
-        AUTO_DETACH_CHECK_INTERVAL: parseInt(document.getElementById('AUTO_DETACH_CHECK_INTERVAL').value) * 3600,
-        TIMEZONE: document.getElementById('TIMEZONE').value,
-        TELEMETRY_SOURCE: document.getElementById('TELEMETRY_SOURCE').value,
-        INFLUXDB_URL: document.getElementById('INFLUXDB_URL').value,
-        INFLUXDB_ORG: document.getElementById('INFLUXDB_ORG').value,
-        INFLUXDB_BUCKET: document.getElementById('INFLUXDB_BUCKET').value,
-        INFLUXDB_TOKEN: document.getElementById('INFLUXDB_TOKEN').value,
-        INFLUXDB_VERIFY_SSL: document.getElementById('INFLUXDB_VERIFY_SSL').value === 'true',
-        INFLUX_UPTIME_MEASUREMENT: document.getElementById('INFLUX_UPTIME_MEASUREMENT').value,
-        INFLUX_UPTIME_FIELD: document.getElementById('INFLUX_UPTIME_FIELD').value,
-        INFLUX_UPTIME_EUI_TAG: document.getElementById('INFLUX_UPTIME_EUI_TAG').value,
-        INFLUX_UPTIME_QUERY: document.getElementById('INFLUX_UPTIME_QUERY').value,
-        INFLUX_INVENTORY_WRITE_ENABLED: document.getElementById('INFLUX_INVENTORY_WRITE_ENABLED').value === 'true',
-        INFLUX_INVENTORY_MEASUREMENT: document.getElementById('INFLUX_INVENTORY_MEASUREMENT').value,
-        INFLUX_SNAPSHOT_ENABLED: document.getElementById('INFLUX_SNAPSHOT_ENABLED').value === 'true',
-        INFLUX_SNAPSHOT_INTERVAL_SECONDS: parseInt(document.getElementById('INFLUX_SNAPSHOT_INTERVAL_SECONDS').value),
-        INFLUX_SNAPSHOT_MEASUREMENT: document.getElementById('INFLUX_SNAPSHOT_MEASUREMENT').value
+const CONFIG_FIELD_IDS = [
+    'LISTEN_HOST', 'LISTEN_PORT', 'MQTT_BROKER', 'MQTT_PORT', 'MQTT_USERNAME', 'MQTT_PASSWORD', 'BASE_TOPIC',
+    'STATUS_INTERVAL', 'DEDUPLICATION_DELAY', 'AUTO_DETACH_ENABLED', 'AUTO_DETACH_TIMEOUT',
+    'AUTO_DETACH_WARNING_TIMEOUT', 'AUTO_DETACH_CHECK_INTERVAL', 'OMS_ENABLED', 'TIMEZONE', 'TELEMETRY_SOURCE',
+    'INFLUXDB_URL', 'INFLUXDB_ORG', 'INFLUXDB_BUCKET', 'INFLUXDB_TOKEN', 'INFLUXDB_VERIFY_SSL',
+    'INFLUX_UPTIME_MEASUREMENT', 'INFLUX_UPTIME_FIELD', 'INFLUX_UPTIME_EUI_TAG', 'INFLUX_UPTIME_QUERY',
+    'INFLUX_INVENTORY_WRITE_ENABLED', 'INFLUX_INVENTORY_MEASUREMENT', 'INFLUX_SNAPSHOT_ENABLED',
+    'INFLUX_SNAPSHOT_INTERVAL_SECONDS', 'INFLUX_SNAPSHOT_MEASUREMENT', 'TIMESCALE_ENABLED', 'TIMESCALE_HOST',
+    'TIMESCALE_PORT', 'TIMESCALE_DB', 'TIMESCALE_USER', 'TIMESCALE_PASSWORD', 'TIMESCALE_SSLMODE',
+    'TIMESCALE_DEFAULT_TENANT', 'TIMESCALE_INVENTORY_WRITE_ENABLED', 'TIMESCALE_TELEMETRY_WRITE_ENABLED',
+    'TIMESCALE_SNAPSHOT_ENABLED', 'TIMESCALE_SNAPSHOT_INTERVAL_SECONDS', 'TIMESCALE_RETENTION_ENABLED',
+    'TIMESCALE_TELEMETRY_RETENTION_DAYS', 'TIMESCALE_INVENTORY_RETENTION_DAYS', 'TIMESCALE_COMPRESSION_ENABLED',
+    'TIMESCALE_COMPRESSION_AFTER_DAYS', 'GRAFANA_URL', 'GRAFANA_DASHBOARD_UID',
+    'MONITOR_QUEUE_WARN_PCT', 'MONITOR_QUEUE_CRIT_PCT', 'MONITOR_RETRY_FAIL_WARN_PCT', 'MONITOR_RETRY_FAIL_CRIT_PCT',
+    'MONITOR_DB_WRITE_LATENCY_WARN_MS', 'MONITOR_DB_WRITE_LATENCY_CRIT_MS',
+    'MONITOR_MQTT_RECONNECT_WARN_PER_HOUR', 'MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR'
+];
+
+const configState = {
+    initialSignature: '',
+    dirty: false,
+    valid: true,
+    saving: false,
+    activeTab: 'general',
+    showAdvanced: false
+};
+
+const unsavedGuardState = {
+    suppressBeforeUnload: false,
+    navigationInProgress: false
+};
+
+function notify(message, type = 'info', options = {}) {
+    if (window.AppUI && typeof window.AppUI.toast === 'function') {
+        window.AppUI.toast(message, type, options);
+        return;
+    }
+    console.log(`[${type}] ${message}`);
+}
+
+function askConfirm(options) {
+    if (window.AppUI && typeof window.AppUI.confirm === 'function') {
+        return window.AppUI.confirm(options);
+    }
+    return Promise.resolve(window.confirm((options && options.message) || 'Are you sure?'));
+}
+
+function hasUnsavedConfigChanges() {
+    return !!configState.dirty && !configState.saving;
+}
+
+function shouldSkipUnsavedGuardForAnchor(anchor, event) {
+    if (!anchor) return true;
+    if (event && (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) {
+        return true;
+    }
+
+    const rawHref = String(anchor.getAttribute('href') || '').trim();
+    if (!rawHref) return true;
+    if (anchor.hasAttribute('download')) return true;
+    if (String(anchor.getAttribute('target') || '').trim().toLowerCase() === '_blank') return true;
+    if (anchor.dataset.skipUnsavedGuard === 'true') return true;
+
+    const hrefLower = rawHref.toLowerCase();
+    if (rawHref === '#' || rawHref.startsWith('#')) return true;
+    if (hrefLower.startsWith('javascript:') || hrefLower.startsWith('mailto:') || hrefLower.startsWith('tel:')) return true;
+
+    return false;
+}
+
+function initUnsavedChangesGuard() {
+    window.addEventListener('beforeunload', (event) => {
+        if (unsavedGuardState.suppressBeforeUnload || !hasUnsavedConfigChanges()) return;
+        event.preventDefault();
+        // Required for browser-native confirmation dialog.
+        event.returnValue = '';
+    });
+
+    document.addEventListener('click', async (event) => {
+        if (!hasUnsavedConfigChanges()) return;
+
+        const anchor = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+        if (!anchor || shouldSkipUnsavedGuardForAnchor(anchor, event)) return;
+
+        let nextUrl;
+        try {
+            nextUrl = new URL(anchor.href, window.location.href);
+        } catch (err) {
+            return;
+        }
+
+        if (nextUrl.href === window.location.href) return;
+        if (unsavedGuardState.navigationInProgress) {
+            event.preventDefault();
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        unsavedGuardState.navigationInProgress = true;
+
+        const confirmed = await askConfirm({
+            title: 'Unsaved changes',
+            message: 'You have unsaved configuration changes. Leave this page without saving?',
+            confirmText: 'Leave page',
+            cancelText: 'Stay',
+            variant: 'warning'
+        });
+
+        if (confirmed) {
+            unsavedGuardState.suppressBeforeUnload = true;
+            window.location.assign(nextUrl.href);
+            return;
+        }
+
+        unsavedGuardState.navigationInProgress = false;
+    }, true);
+}
+
+function getFieldEl(id) {
+    return document.getElementById(id);
+}
+
+function getFieldValueForSnapshot(id) {
+    const el = getFieldEl(id);
+    if (!el) return null;
+    if (el.type === 'checkbox') return !!el.checked;
+    return String(el.value ?? '');
+}
+
+function getConfigSnapshot() {
+    const snapshot = {};
+    CONFIG_FIELD_IDS.forEach((id) => {
+        snapshot[id] = getFieldValueForSnapshot(id);
+    });
+    return snapshot;
+}
+
+function getSnapshotSignature() {
+    return JSON.stringify(getConfigSnapshot());
+}
+
+function clearValidationErrors() {
+    document.querySelectorAll('#configForm .is-invalid').forEach((el) => el.classList.remove('is-invalid'));
+    document.querySelectorAll('.config-invalid-feedback').forEach((el) => el.remove());
+}
+
+function setFieldInvalid(id, message) {
+    const el = getFieldEl(id);
+    if (!el) return;
+    el.classList.add('is-invalid');
+    const existing = el.parentElement ? el.parentElement.querySelector(`.config-invalid-feedback[data-field="${id}"]`) : null;
+    if (existing) {
+        existing.textContent = message;
+        return;
+    }
+    const feedback = document.createElement('div');
+    feedback.className = 'invalid-feedback d-block config-invalid-feedback';
+    feedback.dataset.field = id;
+    feedback.textContent = message;
+    el.insertAdjacentElement('afterend', feedback);
+}
+
+function parseIntField(id) {
+    const value = Number.parseInt((getFieldEl(id)?.value || '').trim(), 10);
+    return Number.isFinite(value) ? value : NaN;
+}
+
+function parseFloatField(id) {
+    const value = Number.parseFloat((getFieldEl(id)?.value || '').trim());
+    return Number.isFinite(value) ? value : NaN;
+}
+
+function textFieldValue(id) {
+    return (getFieldEl(id)?.value || '').trim();
+}
+
+function boolSelectValue(id) {
+    return (getFieldEl(id)?.value || '').trim() === 'true';
+}
+
+function validateConfig({ silent = true } = {}) {
+    clearValidationErrors();
+    const errors = [];
+    const addError = (id, message) => {
+        setFieldInvalid(id, message);
+        errors.push(message);
     };
 
-    fetch('/api/config', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(configData)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert('Configuration saved successfully! Please restart the service for changes to take effect.');
-        } else {
-            alert('Error: ' + result.message);
+    if (!textFieldValue('LISTEN_HOST')) addError('LISTEN_HOST', 'Listen host is required.');
+    const listenPort = parseIntField('LISTEN_PORT');
+    if (!Number.isFinite(listenPort) || listenPort < 1 || listenPort > 65535) addError('LISTEN_PORT', 'Listen port must be between 1 and 65535.');
+    if (!textFieldValue('MQTT_BROKER')) addError('MQTT_BROKER', 'MQTT broker is required.');
+    const mqttPort = parseIntField('MQTT_PORT');
+    if (!Number.isFinite(mqttPort) || mqttPort < 1 || mqttPort > 65535) addError('MQTT_PORT', 'MQTT port must be between 1 and 65535.');
+    if (!textFieldValue('BASE_TOPIC')) addError('BASE_TOPIC', 'Base topic is required.');
+
+    const statusInterval = parseIntField('STATUS_INTERVAL');
+    if (!Number.isFinite(statusInterval) || statusInterval < 1) addError('STATUS_INTERVAL', 'Status interval must be at least 1 second.');
+    const dedupDelay = parseFloatField('DEDUPLICATION_DELAY');
+    if (!Number.isFinite(dedupDelay) || dedupDelay < 0.5 || dedupDelay > 10) addError('DEDUPLICATION_DELAY', 'Deduplication delay must be in range 0.5 to 10 seconds.');
+
+    const detachTimeout = parseIntField('AUTO_DETACH_TIMEOUT');
+    const detachWarn = parseIntField('AUTO_DETACH_WARNING_TIMEOUT');
+    const detachCheck = parseIntField('AUTO_DETACH_CHECK_INTERVAL');
+    if (!Number.isFinite(detachTimeout) || detachTimeout < 1) addError('AUTO_DETACH_TIMEOUT', 'Auto-detach timeout must be at least 1 hour.');
+    if (!Number.isFinite(detachWarn) || detachWarn < 1) addError('AUTO_DETACH_WARNING_TIMEOUT', 'Warning timeout must be at least 1 hour.');
+    if (Number.isFinite(detachWarn) && Number.isFinite(detachTimeout) && detachWarn > detachTimeout) {
+        addError('AUTO_DETACH_WARNING_TIMEOUT', 'Warning timeout must be less than or equal to auto-detach timeout.');
+    }
+    if (!Number.isFinite(detachCheck) || detachCheck < 1) addError('AUTO_DETACH_CHECK_INTERVAL', 'Check interval must be at least 1 hour.');
+
+    const telemetrySource = textFieldValue('TELEMETRY_SOURCE');
+    if (telemetrySource === 'influx') {
+        if (!textFieldValue('INFLUXDB_URL')) addError('INFLUXDB_URL', 'Influx URL is required when telemetry source is InfluxDB.');
+        if (!textFieldValue('INFLUXDB_ORG')) addError('INFLUXDB_ORG', 'Influx organization is required when telemetry source is InfluxDB.');
+        if (!textFieldValue('INFLUXDB_BUCKET')) addError('INFLUXDB_BUCKET', 'Influx bucket is required when telemetry source is InfluxDB.');
+    }
+
+    const influxSnapshotInterval = parseIntField('INFLUX_SNAPSHOT_INTERVAL_SECONDS');
+    if (!Number.isFinite(influxSnapshotInterval) || influxSnapshotInterval < 15) {
+        addError('INFLUX_SNAPSHOT_INTERVAL_SECONDS', 'Influx snapshot interval must be at least 15 seconds.');
+    }
+
+    const timescaleEnabled = boolSelectValue('TIMESCALE_ENABLED');
+    if (timescaleEnabled) {
+        if (!textFieldValue('TIMESCALE_HOST')) addError('TIMESCALE_HOST', 'Timescale host is required when Timescale is enabled.');
+        const timescalePort = parseIntField('TIMESCALE_PORT');
+        if (!Number.isFinite(timescalePort) || timescalePort < 1 || timescalePort > 65535) addError('TIMESCALE_PORT', 'Timescale port must be between 1 and 65535.');
+        if (!textFieldValue('TIMESCALE_DB')) addError('TIMESCALE_DB', 'Timescale database is required when Timescale is enabled.');
+        if (!textFieldValue('TIMESCALE_USER')) addError('TIMESCALE_USER', 'Timescale user is required when Timescale is enabled.');
+        if (!textFieldValue('TIMESCALE_DEFAULT_TENANT')) addError('TIMESCALE_DEFAULT_TENANT', 'Default tenant is required when Timescale is enabled.');
+        const tsSnapshot = parseIntField('TIMESCALE_SNAPSHOT_INTERVAL_SECONDS');
+        if (!Number.isFinite(tsSnapshot) || tsSnapshot < 15) addError('TIMESCALE_SNAPSHOT_INTERVAL_SECONDS', 'Timescale snapshot interval must be at least 15 seconds.');
+        const tsTelemetryRetention = parseIntField('TIMESCALE_TELEMETRY_RETENTION_DAYS');
+        if (!Number.isFinite(tsTelemetryRetention) || tsTelemetryRetention < 1) addError('TIMESCALE_TELEMETRY_RETENTION_DAYS', 'Telemetry retention must be at least 1 day.');
+        const tsInventoryRetention = parseIntField('TIMESCALE_INVENTORY_RETENTION_DAYS');
+        if (!Number.isFinite(tsInventoryRetention) || tsInventoryRetention < 1) addError('TIMESCALE_INVENTORY_RETENTION_DAYS', 'Inventory retention must be at least 1 day.');
+        const tsCompressionAfter = parseIntField('TIMESCALE_COMPRESSION_AFTER_DAYS');
+        if (!Number.isFinite(tsCompressionAfter) || tsCompressionAfter < 1) addError('TIMESCALE_COMPRESSION_AFTER_DAYS', 'Compression window must be at least 1 day.');
+    }
+
+    const validateThresholdPair = (warnId, critId, label) => {
+        const warn = parseFloatField(warnId);
+        const crit = parseFloatField(critId);
+        if (!Number.isFinite(warn) || warn < 0) addError(warnId, `${label} warning must be a non-negative number.`);
+        if (!Number.isFinite(crit) || crit < 0) addError(critId, `${label} critical must be a non-negative number.`);
+        if (Number.isFinite(warn) && Number.isFinite(crit) && crit < warn) {
+            addError(critId, `${label} critical must be greater than or equal to warning.`);
         }
-    })
-    .catch(error => {
-        alert('Error saving configuration: ' + error);
+    };
+
+    validateThresholdPair('MONITOR_QUEUE_WARN_PCT', 'MONITOR_QUEUE_CRIT_PCT', 'Queue threshold');
+    validateThresholdPair('MONITOR_RETRY_FAIL_WARN_PCT', 'MONITOR_RETRY_FAIL_CRIT_PCT', 'Retry failure threshold');
+    validateThresholdPair('MONITOR_DB_WRITE_LATENCY_WARN_MS', 'MONITOR_DB_WRITE_LATENCY_CRIT_MS', 'DB write latency threshold');
+    validateThresholdPair('MONITOR_MQTT_RECONNECT_WARN_PER_HOUR', 'MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR', 'Reconnect threshold');
+
+    configState.valid = errors.length === 0;
+    updateConfigStateBadge();
+    updateSaveButtonsState();
+    if (!silent && errors.length > 0) {
+        notify(errors[0], 'danger');
+    }
+    return { valid: configState.valid, errors };
+}
+
+function updateDirtyState() {
+    configState.dirty = getSnapshotSignature() !== configState.initialSignature;
+    updateConfigStateBadge();
+    updateSaveButtonsState();
+}
+
+function updateConfigStateBadge() {
+    const badge = document.getElementById('configDirtyBadge');
+    if (!badge) return;
+    badge.classList.remove('is-dirty', 'has-errors');
+
+    if (configState.saving) {
+        badge.textContent = 'Saving...';
+        return;
+    }
+    if (!configState.valid) {
+        badge.classList.add('has-errors');
+        badge.textContent = 'Fix validation errors';
+        return;
+    }
+    if (configState.dirty) {
+        badge.classList.add('is-dirty');
+        badge.textContent = 'Unsaved changes';
+        return;
+    }
+    badge.textContent = 'No changes';
+}
+
+function getSaveButtons() {
+    return ['configSaveBtnTop', 'configSaveBtnMaintenance']
+        .map((id) => document.getElementById(id))
+        .filter(Boolean);
+}
+
+function updateSaveButtonsState() {
+    const disabled = configState.saving || !configState.valid || !configState.dirty;
+    getSaveButtons().forEach((btn) => {
+        if (!btn.dataset.defaultHtml) {
+            btn.dataset.defaultHtml = btn.innerHTML;
+        }
+        btn.disabled = disabled;
+        btn.innerHTML = configState.saving ? '<i class="fas fa-spinner fa-spin me-1"></i>Saving...' : btn.dataset.defaultHtml;
     });
 }
 
-function syncInfluxNow() {
-    fetch('/api/influx/sync-inventory', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
+function collectConfigData() {
+    return {
+        LISTEN_HOST: textFieldValue('LISTEN_HOST'),
+        LISTEN_PORT: parseIntField('LISTEN_PORT'),
+        MQTT_BROKER: textFieldValue('MQTT_BROKER'),
+        MQTT_PORT: parseIntField('MQTT_PORT'),
+        MQTT_USERNAME: textFieldValue('MQTT_USERNAME'),
+        MQTT_PASSWORD: getFieldEl('MQTT_PASSWORD')?.value || '',
+        BASE_TOPIC: textFieldValue('BASE_TOPIC'),
+        STATUS_INTERVAL: parseIntField('STATUS_INTERVAL'),
+        DEDUPLICATION_DELAY: parseFloatField('DEDUPLICATION_DELAY'),
+        AUTO_DETACH_ENABLED: !!getFieldEl('AUTO_DETACH_ENABLED')?.checked,
+        AUTO_DETACH_TIMEOUT: parseIntField('AUTO_DETACH_TIMEOUT') * 3600,
+        AUTO_DETACH_WARNING_TIMEOUT: parseIntField('AUTO_DETACH_WARNING_TIMEOUT') * 3600,
+        AUTO_DETACH_CHECK_INTERVAL: parseIntField('AUTO_DETACH_CHECK_INTERVAL') * 3600,
+        OMS_ENABLED: !!getFieldEl('OMS_ENABLED')?.checked,
+        TIMEZONE: textFieldValue('TIMEZONE'),
+        TELEMETRY_SOURCE: textFieldValue('TELEMETRY_SOURCE'),
+        INFLUXDB_URL: textFieldValue('INFLUXDB_URL'),
+        INFLUXDB_ORG: textFieldValue('INFLUXDB_ORG'),
+        INFLUXDB_BUCKET: textFieldValue('INFLUXDB_BUCKET'),
+        INFLUXDB_TOKEN: getFieldEl('INFLUXDB_TOKEN')?.value || '',
+        INFLUXDB_VERIFY_SSL: boolSelectValue('INFLUXDB_VERIFY_SSL'),
+        INFLUX_UPTIME_MEASUREMENT: textFieldValue('INFLUX_UPTIME_MEASUREMENT'),
+        INFLUX_UPTIME_FIELD: textFieldValue('INFLUX_UPTIME_FIELD'),
+        INFLUX_UPTIME_EUI_TAG: textFieldValue('INFLUX_UPTIME_EUI_TAG'),
+        INFLUX_UPTIME_QUERY: getFieldEl('INFLUX_UPTIME_QUERY')?.value || '',
+        INFLUX_INVENTORY_WRITE_ENABLED: boolSelectValue('INFLUX_INVENTORY_WRITE_ENABLED'),
+        INFLUX_INVENTORY_MEASUREMENT: textFieldValue('INFLUX_INVENTORY_MEASUREMENT'),
+        INFLUX_SNAPSHOT_ENABLED: boolSelectValue('INFLUX_SNAPSHOT_ENABLED'),
+        INFLUX_SNAPSHOT_INTERVAL_SECONDS: parseIntField('INFLUX_SNAPSHOT_INTERVAL_SECONDS'),
+        INFLUX_SNAPSHOT_MEASUREMENT: textFieldValue('INFLUX_SNAPSHOT_MEASUREMENT'),
+        TIMESCALE_ENABLED: boolSelectValue('TIMESCALE_ENABLED'),
+        TIMESCALE_HOST: textFieldValue('TIMESCALE_HOST'),
+        TIMESCALE_PORT: parseIntField('TIMESCALE_PORT'),
+        TIMESCALE_DB: textFieldValue('TIMESCALE_DB'),
+        TIMESCALE_USER: textFieldValue('TIMESCALE_USER'),
+        TIMESCALE_PASSWORD: getFieldEl('TIMESCALE_PASSWORD')?.value || '',
+        TIMESCALE_SSLMODE: textFieldValue('TIMESCALE_SSLMODE'),
+        TIMESCALE_DEFAULT_TENANT: textFieldValue('TIMESCALE_DEFAULT_TENANT'),
+        TIMESCALE_INVENTORY_WRITE_ENABLED: boolSelectValue('TIMESCALE_INVENTORY_WRITE_ENABLED'),
+        TIMESCALE_TELEMETRY_WRITE_ENABLED: boolSelectValue('TIMESCALE_TELEMETRY_WRITE_ENABLED'),
+        TIMESCALE_SNAPSHOT_ENABLED: boolSelectValue('TIMESCALE_SNAPSHOT_ENABLED'),
+        TIMESCALE_SNAPSHOT_INTERVAL_SECONDS: parseIntField('TIMESCALE_SNAPSHOT_INTERVAL_SECONDS'),
+        TIMESCALE_RETENTION_ENABLED: boolSelectValue('TIMESCALE_RETENTION_ENABLED'),
+        TIMESCALE_TELEMETRY_RETENTION_DAYS: parseIntField('TIMESCALE_TELEMETRY_RETENTION_DAYS'),
+        TIMESCALE_INVENTORY_RETENTION_DAYS: parseIntField('TIMESCALE_INVENTORY_RETENTION_DAYS'),
+        TIMESCALE_COMPRESSION_ENABLED: boolSelectValue('TIMESCALE_COMPRESSION_ENABLED'),
+        TIMESCALE_COMPRESSION_AFTER_DAYS: parseIntField('TIMESCALE_COMPRESSION_AFTER_DAYS'),
+        GRAFANA_URL: textFieldValue('GRAFANA_URL'),
+        GRAFANA_DASHBOARD_UID: textFieldValue('GRAFANA_DASHBOARD_UID'),
+        MONITOR_QUEUE_WARN_PCT: parseFloatField('MONITOR_QUEUE_WARN_PCT'),
+        MONITOR_QUEUE_CRIT_PCT: parseFloatField('MONITOR_QUEUE_CRIT_PCT'),
+        MONITOR_RETRY_FAIL_WARN_PCT: parseFloatField('MONITOR_RETRY_FAIL_WARN_PCT'),
+        MONITOR_RETRY_FAIL_CRIT_PCT: parseFloatField('MONITOR_RETRY_FAIL_CRIT_PCT'),
+        MONITOR_DB_WRITE_LATENCY_WARN_MS: parseFloatField('MONITOR_DB_WRITE_LATENCY_WARN_MS'),
+        MONITOR_DB_WRITE_LATENCY_CRIT_MS: parseFloatField('MONITOR_DB_WRITE_LATENCY_CRIT_MS'),
+        MONITOR_MQTT_RECONNECT_WARN_PER_HOUR: parseFloatField('MONITOR_MQTT_RECONNECT_WARN_PER_HOUR'),
+        MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR: parseFloatField('MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR')
+    };
+}
+
+async function saveConfig() {
+    const validation = validateConfig({ silent: false });
+    if (!validation.valid) return;
+    if (!configState.dirty || configState.saving) return;
+
+    configState.saving = true;
+    updateConfigStateBadge();
+    updateSaveButtonsState();
+
+    try {
+        const response = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(collectConfigData())
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || 'Unable to save configuration.');
         }
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert(`Influx sync OK: ${result.line_count} points written (${result.sensor_points} sensors, ${result.base_station_points} base stations).`);
-        } else {
-            alert('Influx sync failed: ' + (result.message || result.error || 'unknown error'));
+        notify('Configuration saved. Restart service if runtime values changed.', 'success');
+        configState.initialSignature = getSnapshotSignature();
+        updateDirtyState();
+    } catch (error) {
+        notify(`Save failed: ${error.message || error}`, 'danger');
+    } finally {
+        configState.saving = false;
+        updateConfigStateBadge();
+        updateSaveButtonsState();
+    }
+}
+
+async function syncInfluxNow() {
+    try {
+        const response = await fetch('/api/influx/sync-inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || result.error || 'unknown error');
         }
-    })
-    .catch(error => {
-        alert('Influx sync error: ' + error);
+        notify(`Influx sync complete: ${result.line_count} points (${result.sensor_points} sensors, ${result.base_station_points} base stations).`, 'success');
+    } catch (error) {
+        notify(`Influx sync failed: ${error.message || error}`, 'danger');
+    }
+}
+
+async function checkTimescaleStatus() {
+    try {
+        const response = await fetch('/api/timescale/status');
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'not available');
+        }
+        const worker = result.telemetry_worker || {};
+        notify(`Timescale online (${result.host}/${result.database}) | queue ${worker.queue_size || 0}, written ${worker.written || 0}, dropped ${worker.dropped || 0}.`, 'info');
+    } catch (error) {
+        notify(`Timescale status failed: ${error.message || error}`, 'danger');
+    }
+}
+
+async function syncTimescaleNow() {
+    try {
+        const response = await fetch('/api/timescale/sync-inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || result.error || 'unknown error');
+        }
+        notify(`Timescale sync complete: ${result.line_count} records (${result.sensor_points} sensors, ${result.base_station_points} base stations).`, 'success');
+    } catch (error) {
+        notify(`Timescale sync failed: ${error.message || error}`, 'danger');
+    }
+}
+
+async function applyTimescalePolicies() {
+    try {
+        const response = await fetch('/api/timescale/policies/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || result.message || 'unknown error');
+        }
+        notify('Timescale retention/compression policies applied.', 'success');
+    } catch (error) {
+        notify(`Apply policies failed: ${error.message || error}`, 'danger');
+    }
+}
+
+async function runActionButton(evt, runningLabel, action) {
+    const button = (evt && (evt.currentTarget || evt.target)) || null;
+    if (!button) return;
+    const original = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i>${runningLabel}`;
+    try {
+        await action();
+    } finally {
+        button.disabled = false;
+        button.innerHTML = original;
+    }
+}
+
+async function restartService(evt) {
+    const confirmed = await askConfirm({
+        title: 'Restart service',
+        message: 'Restart BSSCI service now? Connections will be interrupted briefly.',
+        confirmText: 'Restart service',
+        variant: 'warning'
+    });
+    if (!confirmed) return;
+
+    await runActionButton(evt, 'Restarting...', async () => {
+        try {
+            const response = await fetch('/api/service/restart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Restart failed.');
+            }
+            notify('Service restart initiated successfully.', 'success');
+        } catch (error) {
+            notify(`Service restart failed: ${error.message || error}`, 'danger');
+        }
     });
 }
 
-function restartService(evt) {
-    if (confirm('Are you sure you want to restart the BSSCI service? This will briefly interrupt connections.')) {
-        const button = (evt && (evt.currentTarget || evt.target)) || null;
-        if (!button) {
-            return;
+async function restartContainer(evt) {
+    const confirmed = await askConfirm({
+        title: 'Restart container',
+        message: 'Restart entire container? Full reload takes about 10-15 seconds.',
+        confirmText: 'Restart container',
+        variant: 'danger'
+    });
+    if (!confirmed) return;
+
+    await runActionButton(evt, 'Restarting...', async () => {
+        try {
+            const response = await fetch('/api/container/restart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Container restart failed.');
+            }
+            notify('Container restart initiated. Page will reconnect automatically.', 'warning', { delay: 4500 });
+        } catch (error) {
+            notify('Container restart initiated. Page will reconnect automatically.', 'warning', { delay: 4500 });
         }
-        const originalText = button.textContent;
-        button.disabled = true;
-        button.textContent = 'Restarting...';
-
-        fetch('/api/service/restart', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert('Service restart initiated successfully! Please wait a few seconds for the service to come back online.');
-            } else {
-                alert('Error restarting service: ' + result.message);
-            }
-        })
-        .catch(error => {
-            alert('Error restarting service: ' + error);
-        })
-        .finally(() => {
-            button.disabled = false;
-            button.textContent = originalText;
-        });
-    }
-}
-
-function restartContainer(evt) {
-    if (confirm('Are you sure you want to restart the entire container? This will fully restart the application and reload all environment variables. The service will be unavailable for about 10-15 seconds.')) {
-        const button = (evt && (evt.currentTarget || evt.target)) || null;
-        if (!button) {
-            return;
-        }
-        const originalText = button.textContent;
-        button.disabled = true;
-        button.textContent = 'Restarting Container...';
-
-        fetch('/api/container/restart', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert('Container restart initiated successfully! The page will reload automatically in 15 seconds to reconnect.');
-                // Reload the page after 15 seconds to reconnect
-                setTimeout(() => {
-                    window.location.reload();
-                }, 15000);
-            } else {
-                alert('Error restarting container: ' + result.message);
-            }
-        })
-        .catch(error => {
-            alert('Container restart initiated. The page will reload in 15 seconds.');
-            // Even if the fetch fails (expected since container is restarting), reload the page
-            setTimeout(() => {
-                window.location.reload();
-            }, 15000);
-        })
-        .finally(() => {
-            button.disabled = false;
-            button.textContent = originalText;
-        });
-    }
+        setTimeout(() => window.location.reload(), 15000);
+    });
 }
 
 function applyConfigTab(tabName) {
@@ -445,33 +1241,26 @@ function applyConfigTab(tabName) {
     const sectionGeneral = document.getElementById('configSectionGeneral');
     const sectionRowTwo = document.getElementById('configSectionRowTwo');
     const sectionPolicy = document.getElementById('configSectionPolicy');
+    const sectionOptional = document.getElementById('configSectionOptional');
     const sectionInflux = document.getElementById('configSectionInflux');
     const sectionActions = document.getElementById('configSectionActions');
 
-    [sectionGeneral, sectionRowTwo, sectionPolicy, sectionInflux, sectionActions]
+    [sectionGeneral, sectionRowTwo, sectionInflux, sectionActions]
         .filter(Boolean)
         .forEach(el => el.classList.add('d-none'));
-
-    if (sectionPolicy) {
-        sectionPolicy.classList.remove('col-12');
-        sectionPolicy.classList.add('col-md-6');
-    }
 
     if (configTab === 'general') {
         if (sectionGeneral) {
             sectionGeneral.classList.remove('d-none');
         }
-        return;
-    }
-
-    if (configTab === 'policy') {
-        if (sectionRowTwo) {
+        if (sectionRowTwo && configState.showAdvanced) {
             sectionRowTwo.classList.remove('d-none');
         }
         if (sectionPolicy) {
             sectionPolicy.classList.remove('d-none');
-            sectionPolicy.classList.remove('col-md-6');
-            sectionPolicy.classList.add('col-12');
+        }
+        if (sectionOptional) {
+            sectionOptional.classList.remove('d-none');
         }
         return;
     }
@@ -491,8 +1280,9 @@ function applyConfigTab(tabName) {
 }
 
 function switchConfigTab(tabName) {
-    const allowedTabs = ['general', 'policy', 'influx', 'maintenance'];
+    const allowedTabs = ['general', 'influx', 'maintenance'];
     const nextTab = allowedTabs.includes(tabName) ? tabName : 'general';
+    configState.activeTab = nextTab;
     document.querySelectorAll('[data-config-tab-btn]').forEach(btn => {
         const isActive = btn.getAttribute('data-config-tab-btn') === nextTab;
         btn.classList.toggle('active', isActive);
@@ -503,6 +1293,40 @@ function switchConfigTab(tabName) {
     } catch (err) {
         console.debug('Unable to persist config tab:', err);
     }
+}
+
+function setAdvancedConfigVisibility(visible, persist = true) {
+    configState.showAdvanced = Boolean(visible);
+    const btn = document.getElementById('toggleAdvancedConfigBtn');
+    if (btn) {
+        btn.classList.toggle('active', configState.showAdvanced);
+        btn.innerHTML = configState.showAdvanced
+            ? '<i class="fas fa-sliders-h me-1"></i>Advanced: On'
+            : '<i class="fas fa-sliders-h me-1"></i>Advanced: Off';
+    }
+    if (persist) {
+        try {
+            localStorage.setItem('config_show_advanced_v1', configState.showAdvanced ? '1' : '0');
+        } catch (err) {
+            console.debug('Unable to persist advanced visibility:', err);
+        }
+    }
+    applyConfigTab(configState.activeTab);
+}
+
+function initConfigAdvancedToggle() {
+    const btn = document.getElementById('toggleAdvancedConfigBtn');
+    if (!btn) return;
+    let showAdvanced = false;
+    try {
+        showAdvanced = localStorage.getItem('config_show_advanced_v1') === '1';
+    } catch (err) {
+        console.debug('Unable to load advanced visibility:', err);
+    }
+    setAdvancedConfigVisibility(showAdvanced, false);
+    btn.addEventListener('click', () => {
+        setAdvancedConfigVisibility(!configState.showAdvanced, true);
+    });
 }
 
 function initConfigTabs() {
@@ -520,9 +1344,32 @@ function initConfigTabs() {
     switchConfigTab(savedTab);
 }
 
-// Initialize tabs when page loads
+function bindConfigFormEvents() {
+    CONFIG_FIELD_IDS.forEach((id) => {
+        const el = getFieldEl(id);
+        if (!el) return;
+        const eventName = (el.tagName === 'SELECT' || el.type === 'checkbox') ? 'change' : 'input';
+        el.addEventListener(eventName, () => {
+            validateConfig({ silent: true });
+            updateDirtyState();
+        });
+        if (eventName !== 'change') {
+            el.addEventListener('change', () => {
+                validateConfig({ silent: true });
+                updateDirtyState();
+            });
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    bindConfigFormEvents();
+    configState.initialSignature = getSnapshotSignature();
+    validateConfig({ silent: true });
+    updateDirtyState();
+    initConfigAdvancedToggle();
     initConfigTabs();
+    initUnsavedChangesGuard();
 });
 </script>
 {% endblock %}

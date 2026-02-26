@@ -60,8 +60,9 @@ except Exception as e:
 
 logger = logging.getLogger(__name__)
 
-# Global reference for TLS server instance
+# Global references for runtime service instances
 tls_server_instance = None
+mqtt_client_instance = None
 
 def fix_env_file_permissions():
     """Ensure .env file has proper permissions for configuration updates"""
@@ -70,22 +71,22 @@ def fix_env_file_permissions():
         if os.path.exists(env_file):
             # Check if file is writable
             if not os.access(env_file, os.W_OK):
-                logger.info("🔧 Fixing .env file permissions...")
+                logger.info("đź”§ Fixing .env file permissions...")
                 # Try to make it writable
                 current_mode = os.stat(env_file).st_mode
                 os.chmod(env_file, current_mode | 0o666)
-                logger.info("✅ .env file permissions fixed")
+                logger.info("âś… .env file permissions fixed")
             else:
-                logger.info("✅ .env file permissions OK")
+                logger.info("âś… .env file permissions OK")
         else:
             # Create .env file if it doesn't exist
-            logger.info("📁 Creating .env file...")
+            logger.info("đź“ Creating .env file...")
             with open(env_file, 'a'):
                 pass
             os.chmod(env_file, 0o666)
-            logger.info("✅ .env file created with proper permissions")
+            logger.info("âś… .env file created with proper permissions")
     except Exception as e:
-        logger.warning(f"⚠️  Warning: Could not fix .env permissions: {e}")
+        logger.warning(f"âš ď¸Ź  Warning: Could not fix .env permissions: {e}")
         logger.warning("   Configuration updates may fail in some environments")
 
 def run_web_ui():
@@ -113,14 +114,29 @@ def set_tls_server(server):
     try:
         import web_ui
         web_ui.set_tls_server(tls_server_instance)
-        logger.info(f"✅ TLS server instance passed to web UI successfully")
+        logger.info(f"âś… TLS server instance passed to web UI successfully")
         logger.info(f"   TLS server ID: {id(tls_server_instance)}")
         if hasattr(tls_server_instance, 'connected_base_stations'):
             logger.info(f"   Connected base stations count: {len(tls_server_instance.connected_base_stations)}")
     except ImportError as e:
-        logger.error(f"❌ Failed to import web_ui: {e}")
+        logger.error(f"âťŚ Failed to import web_ui: {e}")
     except Exception as e:
-        logger.error(f"❌ Failed to set TLS server in web_ui: {e}")
+        logger.error(f"âťŚ Failed to set TLS server in web_ui: {e}")
+
+
+def set_mqtt_client(client):
+    """Set the MQTT client instance and expose it to web_ui."""
+    global mqtt_client_instance
+    mqtt_client_instance = client
+
+    try:
+        import web_ui
+        web_ui.set_mqtt_client(mqtt_client_instance)
+        logger.info("MQTT client instance passed to web UI successfully")
+    except ImportError as e:
+        logger.error(f"Failed to import web_ui: {e}")
+    except Exception as e:
+        logger.error(f"Failed to set MQTT client in web_ui: {e}")
 
 
 if __name__ == "__main__":
@@ -142,3 +158,4 @@ if __name__ == "__main__":
         run_bssci_service()
     except KeyboardInterrupt:
         logger.info("Shutting down...")
+

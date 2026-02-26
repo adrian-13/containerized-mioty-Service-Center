@@ -1,48 +1,56 @@
 {
-  "positions": {
-    "bs_129AF3FFFE01F124": {
-      "deviceType": "bs",
-      "eui": "129AF3FFFE01F124",
-      "lat": 48.767140328962135,
-      "lng": 18.635736675034117,
-      "type": "osm"
-    },
-    "bs_70B3D59CD00009F6": {
-      "deviceType": "bs",
-      "eui": "70B3D59CD00009F6",
-      "type": "floorplan",
-      "x": 4046.1206896551726,
-      "y": 536.4722521551724
-    },
-    "sensor_00124B001CBCE171": {
-      "deviceType": "sensor",
-      "eui": "00124B001CBCE171",
-      "lat": 48.769244,
-      "lng": 18.636525,
-      "type": "osm"
-    },
-    "sensor_TEST1234567890AB": {
-      "deviceType": "sensor",
-      "eui": "TEST1234567890AB",
-      "type": "floorplan",
-      "x": 3930.5172413793107,
-      "y": 1415.0584590517242
-    },
-    "sensor_TEST1234567890GH": {
-      "deviceType": "sensor",
-      "eui": "TEST1234567890GH",
-      "type": "floorplan",
-      "x": 1078.9655172413793,
-      "y": 914.1101831896552
-    }
-  },
   "floorplanZoom": 0.12639821029082773,
   "locked": true,
   "osmView": {
     "center": [
-      48.76679737594039,
-      18.637296767064157
+      48.766860999995316,
+      18.636594414711002
     ],
-    "zoom": 16
-  }
+    "zoom": 17
+  },
+  "positions": {
+    "bs_70B3D59CD00009F6": {
+      "type": "floorplan",
+      "deviceType": "bs",
+      "eui": "70B3D59CD00009F6",
+      "x": 4046.1206896551726,
+      "y": 536.4722521551724
+    },
+    "sensor_TEST1234567890AB": {
+      "type": "floorplan",
+      "deviceType": "sensor",
+      "eui": "TEST1234567890AB",
+      "x": 3930.5172413793107,
+      "y": 1415.0584590517242
+    },
+    "sensor_TEST1234567890GH": {
+      "type": "floorplan",
+      "deviceType": "sensor",
+      "eui": "TEST1234567890GH",
+      "x": 1078.9655172413793,
+      "y": 914.1101831896552
+    },
+    "bs_129AF3FFFE01F124": {
+      "type": "osm",
+      "deviceType": "bs",
+      "eui": "129AF3FFFE01F124",
+      "lat": 48.767193,
+      "lng": 18.636599
+    },
+    "sensor_00124B001CBCE171": {
+      "type": "osm",
+      "deviceType": "sensor",
+      "eui": "00124B001CBCE171",
+      "lat": 48.769216,
+      "lng": 18.636943
+    },
+    "sensor_00124B001CBCE175": {
+      "type": "osm",
+      "deviceType": "sensor",
+      "eui": "00124B001CBCE175",
+      "lat": 48.768767,
+      "lng": 18.637635
+    }
+  },
+  "savedAt": 1772097669276
 }
