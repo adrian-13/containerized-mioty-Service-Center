@@ -25,3 +25,6 @@ dist/
 build/
 .DS_Store
 Thumbs.db
+node-red-data/
+node_modules/
+**/node_modules/

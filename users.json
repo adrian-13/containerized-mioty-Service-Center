@@ -14,7 +14,8 @@
         "view_admin_audit": true,
         "export_admin_audit": true,
         "clear_admin_audit": true,
-        "clear_service_logs": true
+        "clear_service_logs": true,
+        "view_service_logs": true
       }
     },
     "user": {
@@ -49,7 +50,8 @@
         "view_admin_audit": true,
         "export_admin_audit": true,
         "clear_admin_audit": true,
-        "clear_service_logs": true
+        "clear_service_logs": true,
+        "view_service_logs": true
       }
     }
   },

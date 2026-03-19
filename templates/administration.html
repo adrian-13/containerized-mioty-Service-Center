@@ -283,6 +283,65 @@
     margin-top: 0.22rem;
     display: block;
 }
+.tenant-bs-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    margin-bottom: 0.55rem;
+}
+.tenant-bs-picker {
+    display: grid;
+    gap: 0.45rem;
+    max-height: 280px;
+    overflow: auto;
+    padding-right: 0.2rem;
+}
+.tenant-bs-option {
+    display: grid;
+    gap: 0.18rem;
+    border: 1px solid #d8e3f4;
+    border-radius: 0.78rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+    padding: 0.62rem 0.72rem;
+}
+.tenant-bs-option-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+}
+.tenant-bs-name {
+    font-size: 0.87rem;
+    font-weight: 800;
+    color: #1f3f68;
+}
+.tenant-bs-meta {
+    font-size: 0.76rem;
+    color: #5f7390;
+}
+.tenant-bs-tenant {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    border-radius: 999px;
+    padding: 0.14rem 0.46rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border: 1px solid #cddbf0;
+    color: #375378;
+    background: #f2f7ff;
+}
+.tenant-bs-tenant.is-current {
+    color: #1f5131;
+    background: #ecfdf3;
+    border-color: #b8ebce;
+}
+.tenant-bs-empty {
+    padding: 0.8rem 0.1rem 0.35rem;
+    color: #64748b;
+    font-size: 0.78rem;
+}
 @media (max-width: 1199.98px) {
     .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -305,19 +364,19 @@
 <div class="admin-shell workspace-shell">
     <div class="admin-kpis">
         <article class="admin-kpi">
-            <p class="admin-kpi-label">Users</p>
+            <p class="admin-kpi-label">{{ t('admin.users', 'Users') }}</p>
             <p class="admin-kpi-value" id="adminKpiUsers">0</p>
         </article>
         <article class="admin-kpi">
-            <p class="admin-kpi-label">Tenants</p>
+            <p class="admin-kpi-label">{{ t('admin.tenants', 'Tenants') }}</p>
             <p class="admin-kpi-value" id="adminKpiTenants">0</p>
         </article>
         <article class="admin-kpi">
-            <p class="admin-kpi-label">Administrators</p>
+            <p class="admin-kpi-label">{{ t('admin.administrators', 'Administrators') }}</p>
             <p class="admin-kpi-value" id="adminKpiAdmins">0</p>
         </article>
         <article class="admin-kpi">
-            <p class="admin-kpi-label">Default Tenant</p>
+            <p class="admin-kpi-label">{{ t('admin.default_tenant', 'Default Tenant') }}</p>
             <p class="admin-kpi-value" id="adminKpiDefaultTenant">default</p>
         </article>
     </div>
@@ -325,13 +384,13 @@
     <div class="d-flex align-items-center justify-content-between gap-2">
         <div class="admin-tabs" id="adminTabs">
             <button type="button" class="btn btn-outline-secondary active" data-admin-tab-btn="users">
-                <i class="fas fa-users me-1"></i>User Management
+                <i class="fas fa-users me-1"></i>{{ t('admin.user_management', 'User Management') }}
             </button>
             <button type="button" class="btn btn-outline-secondary" data-admin-tab-btn="tenants">
-                <i class="fas fa-building me-1"></i>Tenant Management
+                <i class="fas fa-building me-1"></i>{{ t('admin.tenant_management', 'Tenant Management') }}
             </button>
         </div>
-        <small class="tenant-meta-note">Admin-only operations. Changes apply immediately.</small>
+        <small class="tenant-meta-note">{{ t('admin.admin_only_operations', 'Admin-only operations. Changes apply immediately.') }}</small>
     </div>
 
     <section id="adminPanelUsers" class="admin-panel">
@@ -339,21 +398,21 @@
             <div class="col-12">
                 <div class="card admin-card">
                     <div class="card-header">
-                        <h5><i class="fas fa-users me-2"></i>Users and Tenant Assignment</h5>
+                        <h5><i class="fas fa-users me-2"></i>{{ t('admin.users_tenant_assignment', 'Users and Tenant Assignment') }}</h5>
                         <div class="d-flex align-items-center gap-2">
                             <span class="tenant-chip" id="tenantUserCount">0 shown</span>
                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="openTenantUserModal('create')">
-                                <i class="fas fa-user-plus me-1"></i>New User
+                                <i class="fas fa-user-plus me-1"></i>{{ t('admin.new_user', 'New User') }}
                             </button>
                         </div>
                     </div>
                     <div class="card-body">
                         <div id="tenantAdminStatus" class="alert alert-info py-2 mb-3 tenant-admin-status">
-                            Load users and tenants from backend.
+                            {{ t('admin.load_users_tenants_note', 'Load users and tenants from backend.') }}
                         </div>
 
                         <div class="tenant-toolbar">
-                            <input type="text" class="form-control tenant-compact-control" id="tenantUserSearch" placeholder="Search username, name or tenant">
+                            <input type="text" class="form-control tenant-compact-control" id="tenantUserSearch" placeholder="{{ t('admin.search_username_name_tenant', 'Search username, name or tenant') }}">
                             <select class="form-control tenant-compact-control" id="tenantRoleFilter"></select>
                             <select class="form-control tenant-compact-control" id="tenantTenantFilter"></select>
                         </div>
@@ -362,16 +421,16 @@
                             <table class="table table-sm align-middle table-admin">
                                 <thead>
                                     <tr>
-                                        <th>Username</th>
-                                        <th>Name</th>
-                                        <th>Role</th>
-                                        <th>Scope</th>
-                                        <th class="text-end">Actions</th>
+                                        <th>{{ t('login.username', 'Username') }}</th>
+                                        <th>{{ t('admin.name', 'Name') }}</th>
+                                        <th>{{ t('admin.role', 'Role') }}</th>
+                                        <th>{{ t('admin.scope', 'Scope') }}</th>
+                                        <th class="text-end">{{ t('admin.actions', 'Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tenantUserRows">
                                     <tr>
-                                        <td colspan="5" class="text-muted">No users loaded yet.</td>
+                                        <td colspan="5" class="text-muted">{{ t('admin.no_users_loaded', 'No users loaded yet.') }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -387,32 +446,32 @@
             <div class="col-12">
                 <div class="card admin-card">
                     <div class="card-header">
-                        <h5><i class="fas fa-building me-2"></i>Tenant Registry</h5>
+                        <h5><i class="fas fa-building me-2"></i>{{ t('admin.tenant_registry', 'Tenant Registry') }}</h5>
                         <div class="d-flex align-items-center gap-2">
                             <span class="tenant-chip" id="tenantRegistryCount">0 tenants</span>
                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="openTenantEntityModal('create')">
-                                <i class="fas fa-plus-circle me-1"></i>New Tenant
+                                <i class="fas fa-plus-circle me-1"></i>{{ t('admin.new_tenant', 'New Tenant') }}
                             </button>
                         </div>
                     </div>
                     <div class="card-body">
                         <div id="tenantMgmtStatus" class="alert alert-info py-2 mb-3 tenant-admin-status">
-                            Manage tenant records and data operations.
+                            {{ t('admin.manage_tenant_records', 'Manage tenant records and data operations.') }}
                         </div>
                         <div class="table-responsive">
                             <table class="table table-sm align-middle table-admin mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Tenant</th>
-                                        <th>Name</th>
-                                        <th class="text-end">Users</th>
-                                        <th class="text-end">Sensors</th>
+                                        <th>{{ t('admin.tenant', 'Tenant') }}</th>
+                                        <th>{{ t('admin.name', 'Name') }}</th>
+                                        <th class="text-end">{{ t('admin.users', 'Users') }}</th>
+                                        <th class="text-end">{{ t('nav.sensors', 'Sensors') }}</th>
                                         <th class="text-end">BS</th>
-                                        <th class="text-end">Actions</th>
+                                        <th class="text-end">{{ t('admin.actions', 'Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tenantManageRows">
-                                    <tr><td colspan="6" class="text-muted">No tenants loaded.</td></tr>
+                                    <tr><td colspan="6" class="text-muted">{{ t('admin.no_tenants_loaded', 'No tenants loaded.') }}</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -427,59 +486,59 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <div>
-                        <h5 class="modal-title" id="tenantUserModalLabel"><i class="fas fa-user-edit me-2"></i>User</h5>
-                        <span class="form-mode-badge" id="tenantFormModeBadge">Create mode</span>
+                        <h5 class="modal-title" id="tenantUserModalLabel"><i class="fas fa-user-edit me-2"></i>{{ t('common.user', 'User') }}</h5>
+                        <span class="form-mode-badge" id="tenantFormModeBadge">{{ t('admin.create_mode', 'Create mode') }}</span>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('common.close', 'Close') }}"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="tenantUserMode" value="create">
                     <input type="hidden" id="tenantUserOriginalUsername" value="">
                     <section class="admin-modal-section">
-                        <p class="admin-modal-section-title">Identity</p>
+                        <p class="admin-modal-section-title">{{ t('common.identity', 'Identity') }}</p>
                         <div class="row g-2">
                             <div class="col-md-4">
-                                <label for="tenantUserUsername" class="form-label">Username</label>
-                                <input type="text" class="form-control tenant-compact-control" id="tenantUserUsername" placeholder="acme_user">
+                                <label for="tenantUserUsername" class="form-label">{{ t('common.username', 'Username') }}</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantUserUsername" placeholder="{{ t('admin.username_placeholder', 'acme_user') }}">
                             </div>
                             <div class="col-md-4">
-                                <label for="tenantUserName" class="form-label">Display Name</label>
-                                <input type="text" class="form-control tenant-compact-control" id="tenantUserName" placeholder="ACME Operator">
+                                <label for="tenantUserName" class="form-label">{{ t('admin.display_name', 'Display Name') }}</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantUserName" placeholder="{{ t('admin.display_name_placeholder', 'ACME Operator') }}">
                             </div>
                             <div class="col-md-4">
-                                <label for="tenantUserPassword" class="form-label">Password</label>
-                                <input type="password" class="form-control tenant-compact-control" id="tenantUserPassword" placeholder="required for create">
+                                <label for="tenantUserPassword" class="form-label">{{ t('common.password', 'Password') }}</label>
+                                <input type="password" class="form-control tenant-compact-control" id="tenantUserPassword" placeholder="{{ t('admin.password_required_create', 'required for create') }}">
                             </div>
                         </div>
                     </section>
 
                     <section class="admin-modal-section">
-                        <p class="admin-modal-section-title">Access Scope</p>
+                        <p class="admin-modal-section-title">{{ t('admin.access_scope', 'Access Scope') }}</p>
                         <div class="row g-2">
                             <div class="col-md-6">
-                                <label for="tenantUserRole" class="form-label">Role</label>
+                                <label for="tenantUserRole" class="form-label">{{ t('admin.role', 'Role') }}</label>
                                 <select class="form-control tenant-compact-control" id="tenantUserRole"></select>
                             </div>
                             <div class="col-md-6">
-                                <label for="tenantUserTenant" class="form-label">Tenant ID</label>
+                                <label for="tenantUserTenant" class="form-label">{{ t('admin.tenant_id', 'Tenant ID') }}</label>
                                 <select class="form-control tenant-compact-control" id="tenantUserTenant"></select>
                             </div>
                             <div class="col-12">
-                                <small class="tenant-meta-note" id="tenantUserTenantHint">User is restricted to this tenant.</small>
+                                <small class="tenant-meta-note" id="tenantUserTenantHint">{{ t('admin.user_restricted_to_tenant', 'User is restricted to this tenant.') }}</small>
                                 <div class="scope-badges" id="tenantUserScopeBadges"></div>
                             </div>
                         </div>
                     </section>
                     <section class="admin-modal-section d-none" id="tenantAdminScopesSection">
-                        <p class="admin-modal-section-title">Admin Permissions</p>
-                        <small class="tenant-meta-note d-block mb-2">Granular admin rights for this account.</small>
+                        <p class="admin-modal-section-title">{{ t('admin.admin_permissions', 'Admin Permissions') }}</p>
+                        <small class="tenant-meta-note d-block mb-2">{{ t('admin.granular_admin_rights', 'Granular admin rights for this account.') }}</small>
                         <div id="tenantAdminScopeEditor" class="admin-scope-grid"></div>
                     </section>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" onclick="resetTenantUserForm()">Reset</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetTenantUserForm()">{{ t('common.reset', 'Reset') }}</button>
                     <button type="button" class="btn btn-primary" id="tenantSaveUserBtn" onclick="saveTenantUser()">
-                        <i class="fas fa-save me-1"></i>Save User
+                        <i class="fas fa-save me-1"></i>{{ t('admin.save_user', 'Save User') }}
                     </button>
                 </div>
             </div>
@@ -491,36 +550,51 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <div>
-                        <h5 class="modal-title" id="tenantEntityModalLabel"><i class="fas fa-building me-2"></i>Tenant</h5>
-                        <span class="form-mode-badge" id="tenantEntityModeBadge">Create mode</span>
+                        <h5 class="modal-title" id="tenantEntityModalLabel"><i class="fas fa-building me-2"></i>{{ t('common.tenant', 'Tenant') }}</h5>
+                        <span class="form-mode-badge" id="tenantEntityModeBadge">{{ t('admin.create_mode', 'Create mode') }}</span>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('common.close', 'Close') }}"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="tenantEntityMode" value="create">
                     <input type="hidden" id="tenantEntityOriginalId" value="">
                     <section class="admin-modal-section">
-                        <p class="admin-modal-section-title">Tenant Profile</p>
+                        <p class="admin-modal-section-title">{{ t('admin.tenant_profile', 'Tenant Profile') }}</p>
                         <div class="tenant-form-grid">
                             <div class="span-3">
-                                <label for="tenantEntityId" class="form-label">Tenant ID</label>
-                                <input type="text" class="form-control tenant-compact-control" id="tenantEntityId" placeholder="acme">
+                                <label for="tenantEntityId" class="form-label">{{ t('admin.tenant_id', 'Tenant ID') }}</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantEntityId" placeholder="{{ t('admin.tenant_id_placeholder', 'acme') }}">
                             </div>
                             <div class="span-4">
-                                <label for="tenantEntityName" class="form-label">Display Name</label>
-                                <input type="text" class="form-control tenant-compact-control" id="tenantEntityName" placeholder="ACME s.r.o.">
+                                <label for="tenantEntityName" class="form-label">{{ t('admin.display_name', 'Display Name') }}</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantEntityName" placeholder="{{ t('admin.tenant_name_placeholder', 'ACME s.r.o.') }}">
                             </div>
                             <div class="span-5">
-                                <label for="tenantEntityDescription" class="form-label">Description (optional)</label>
-                                <input type="text" class="form-control tenant-compact-control" id="tenantEntityDescription" placeholder="Customer tenant for ACME operations">
+                                <label for="tenantEntityDescription" class="form-label">{{ t('common.description_optional', 'Description (optional)') }}</label>
+                                <input type="text" class="form-control tenant-compact-control" id="tenantEntityDescription" placeholder="{{ t('admin.tenant_description_placeholder', 'Customer tenant for ACME operations') }}">
                             </div>
+                        </div>
+                    </section>
+                    <section class="admin-modal-section">
+                        <div class="tenant-bs-toolbar">
+                            <div>
+                                <p class="admin-modal-section-title mb-1">{{ t('admin.assigned_base_stations', 'Priradené základňové stanice') }}</p>
+                                <small class="tenant-meta-note">{{ t('admin.assigned_base_stations_note', 'Vyberte, ktoré nakonfigurované základňové stanice patria tomuto tenantovi. Opätovným výberom sa základňová stanica presunie k tomuto tenantovi.') }}</small>
+                            </div>
+                            <span class="tenant-chip" id="tenantEntityBsCount">0 {{ t('common.selected', 'vybrané') }}</span>
+                        </div>
+                        <div class="mb-2">
+                            <input type="text" class="form-control tenant-compact-control" id="tenantBaseStationSearch" placeholder="{{ t('admin.search_base_stations', 'Hľadať základňové stanice podľa EUI, názvu alebo IP') }}">
+                        </div>
+                        <div id="tenantBaseStationPicker" class="tenant-bs-picker">
+                            <div class="tenant-bs-empty">{{ t('runtime.loading_base_stations', 'Loading base stations...') }}</div>
                         </div>
                     </section>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" onclick="resetTenantEntityForm()">Reset</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetTenantEntityForm()">{{ t('common.reset', 'Reset') }}</button>
                     <button type="button" class="btn btn-primary" id="tenantEntitySaveBtn" onclick="saveTenantEntity()">
-                        <i class="fas fa-save me-1"></i>Save Tenant
+                        <i class="fas fa-save me-1"></i>{{ t('admin.save_tenant', 'Save Tenant') }}
                     </button>
                 </div>
             </div>
@@ -539,11 +613,30 @@ let tenantAdminDefaultTenant = 'default';
 let tenantAdminScopeDefinitions = [];
 let tenantCurrentAdminPermissions = {};
 let tenantUserDraftAdminPermissions = {};
+let tenantBaseStationCatalog = [];
+let tenantSelectedBaseStations = new Set();
 let tenantUserFormBaseline = null;
 let tenantEntityFormBaseline = null;
 let tenantUserModalCloseBySave = false;
 let tenantEntityModalCloseBySave = false;
 const TENANT_PAGE_ADMIN_SCOPES = {{ (current_user.admin_permissions if current_user and current_user.role == 'admin' else {})|tojson }};
+
+function tenantScopeLabel(tenantId) {
+    const normalized = tenantNormalize(tenantId || '', tenantAdminDefaultTenant);
+    if (normalized === tenantAdminDefaultTenant) {
+        return appTranslate('common.super_admin', 'Super admin');
+    }
+    return normalized;
+}
+
+function tenantScopeName(entry) {
+    if (entry && entry.display_name) return String(entry.display_name);
+    return tenantScopeLabel(entry && entry.tenant_id ? entry.tenant_id : '');
+}
+
+function isReservedSuperAdminScope(tenantId) {
+    return tenantNormalize(tenantId || '', tenantAdminDefaultTenant) === tenantAdminDefaultTenant;
+}
 
 const TENANT_USER_FIELDS = [
     'tenantUserMode',
@@ -571,6 +664,8 @@ function canCurrentAdminScope(scopeId) {
 
 function getFormSnapshot(fieldIds) {
     const snapshot = {};
+    const includeAdminScopes = Array.isArray(fieldIds) && fieldIds.includes('tenantUserMode');
+    const includeTenantBaseStations = Array.isArray(fieldIds) && fieldIds.includes('tenantEntityMode');
     (fieldIds || []).forEach((id) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -580,11 +675,20 @@ function getFormSnapshot(fieldIds) {
             snapshot[id] = String(el.value ?? '');
         }
     });
-    document.querySelectorAll('#tenantAdminScopeEditor input[type="checkbox"][data-admin-scope]').forEach((checkbox) => {
-        const scopeId = String(checkbox.getAttribute('data-admin-scope') || '').trim();
-        if (!scopeId) return;
-        snapshot[`scope:${scopeId}`] = !!checkbox.checked;
-    });
+    if (includeAdminScopes) {
+        document.querySelectorAll('#tenantAdminScopeEditor input[type="checkbox"][data-admin-scope]').forEach((checkbox) => {
+            const scopeId = String(checkbox.getAttribute('data-admin-scope') || '').trim();
+            if (!scopeId) return;
+            snapshot[`scope:${scopeId}`] = !!checkbox.checked;
+        });
+    }
+    if (includeTenantBaseStations) {
+        document.querySelectorAll('#tenantBaseStationPicker input[type="checkbox"][data-tenant-bs]').forEach((checkbox) => {
+            const eui = String(checkbox.getAttribute('data-tenant-bs') || '').trim().toUpperCase();
+            if (!eui) return;
+            snapshot[`tenant-bs:${eui}`] = !!checkbox.checked;
+        });
+    }
     return snapshot;
 }
 
@@ -686,7 +790,7 @@ function renderAdminScopeEditor(rawPermissions) {
     section.classList.remove('d-none');
 
     if (!tenantAdminScopeDefinitions.length) {
-        editor.innerHTML = '<div class="tenant-meta-note">No admin scope definitions available.</div>';
+        editor.innerHTML = `<div class="tenant-meta-note">${appTranslate('admin.no_scope_definitions', 'No admin scope definitions available.')}</div>`;
         return;
     }
 
@@ -696,7 +800,7 @@ function renderAdminScopeEditor(rawPermissions) {
         const description = scope.description || '';
         const checked = Boolean(merged[scopeId]);
         const grantable = Boolean(tenantCurrentAdminPermissions?.[scopeId]);
-        const lockHint = grantable ? '' : '<small class="admin-scope-lock"><i class="fas fa-lock me-1"></i>You cannot grant/revoke this scope.</small>';
+        const lockHint = grantable ? '' : `<small class="admin-scope-lock"><i class="fas fa-lock me-1"></i>${appTranslate('admin.cannot_grant_scope', 'You cannot grant/revoke this scope.')}</small>`;
         return `
             <label class="admin-scope-item ${grantable ? '' : 'is-locked'}">
                 <div class="form-check m-0">
@@ -807,7 +911,7 @@ function updateKpis() {
     if (usersEl) usersEl.textContent = String(users);
     if (tenantsEl) tenantsEl.textContent = String(tenants);
     if (adminsEl) adminsEl.textContent = String(admins);
-    if (defaultTenantEl) defaultTenantEl.textContent = tenantAdminDefaultTenant || 'default';
+    if (defaultTenantEl) defaultTenantEl.textContent = appTranslate('common.super_admin', 'Super admin');
 }
 
 function getFilteredUsers() {
@@ -836,13 +940,12 @@ function populateTenantUiOptions() {
     const tenantNames = Array.from(new Set([
         ...(tenantAdminTenants || []).map(t => t.tenant_id),
         ...(tenantKnownTenantChoices || []),
-        tenantAdminDefaultTenant
     ].filter(Boolean))).sort();
 
     if (tenantFilter) {
         const currentFilter = tenantFilter.value || 'all';
-        tenantFilter.innerHTML = '<option value="all">All tenants</option><option value="__global__">Global admins</option>' + tenantNames
-            .map(tenant => `<option value="${tenantEscapeHtml(tenant)}">${tenantEscapeHtml(tenant)}</option>`)
+        tenantFilter.innerHTML = `<option value="all">${appTranslate('admin.all_tenants', 'All tenants')}</option><option value="__global__">${appTranslate('admin.global_admins', 'Global admins')}</option>` + tenantNames
+            .map(tenant => `<option value="${tenantEscapeHtml(tenant)}">${tenantEscapeHtml(tenantScopeLabel(tenant))}</option>`)
             .join('');
         if (currentFilter === 'all' || currentFilter === '__global__' || tenantNames.includes(currentFilter)) {
             tenantFilter.value = currentFilter;
@@ -853,19 +956,23 @@ function populateTenantUiOptions() {
 
     if (tenantInput) {
         const currentTenant = tenantInput.value || tenantInput.dataset.lastTenant || tenantAdminDefaultTenant;
-        tenantInput.innerHTML = tenantAdminTenants
-            .map(tenant => `<option value="${tenantEscapeHtml(tenant.tenant_id)}">${tenantEscapeHtml(tenant.tenant_id)}</option>`)
+        const visibleTenants = tenantAdminTenants.filter((tenant) => {
+            const tenantId = tenantNormalize(tenant.tenant_id || '', tenantAdminDefaultTenant);
+            return tenantId !== tenantAdminDefaultTenant || tenantId === currentTenant;
+        });
+        tenantInput.innerHTML = visibleTenants
+            .map(tenant => `<option value="${tenantEscapeHtml(tenant.tenant_id)}">${tenantEscapeHtml(tenantScopeName(tenant))}</option>`)
             .join('');
         if (!tenantInput.innerHTML.trim()) {
-            tenantInput.innerHTML = `<option value="${tenantEscapeHtml(tenantAdminDefaultTenant)}">${tenantEscapeHtml(tenantAdminDefaultTenant)}</option>`;
+            tenantInput.innerHTML = `<option value="">${tenantEscapeHtml(appTranslate('common.not_available', 'Not available'))}</option>`;
         }
-        const available = tenantAdminTenants.map(t => t.tenant_id);
+        const available = visibleTenants.map(t => t.tenant_id);
         if (available.includes(currentTenant)) {
             tenantInput.value = currentTenant;
         } else if (available.length > 0) {
             tenantInput.value = available[0];
         } else {
-            tenantInput.value = tenantAdminDefaultTenant;
+            tenantInput.value = '';
         }
     }
 }
@@ -883,7 +990,7 @@ function populateRoleOptions() {
 
     if (roleFilter) {
         const selectedFilter = roleFilter.value || 'all';
-        roleFilter.innerHTML = '<option value="all">All roles</option>' + tenantAdminRoles
+        roleFilter.innerHTML = `<option value="all">${appTranslate('admin.all_roles', 'All roles')}</option>` + tenantAdminRoles
             .map(role => `<option value="${tenantEscapeHtml(role)}">${tenantEscapeHtml(role)}</option>`)
             .join('');
         if (selectedFilter === 'all' || tenantAdminRoles.includes(selectedFilter)) {
@@ -905,7 +1012,7 @@ function renderTenantUsersTable() {
     }
 
     if (!filteredUsers.length) {
-        body.innerHTML = '<tr><td colspan="5" class="text-muted">No users match current filters.</td></tr>';
+        body.innerHTML = `<tr><td colspan="5" class="text-muted">${appTranslate('admin.no_users_match_filters', 'No users match current filters.')}</td></tr>`;
         return;
     }
 
@@ -913,9 +1020,9 @@ function renderTenantUsersTable() {
         const encodedUsername = encodeURIComponent(String(user.username || ''));
         const role = String(user.role || 'viewer').toLowerCase();
         const tenantDisplay = role === 'admin'
-            ? `<span class="tenant-chip tenant-chip-global">All tenants</span>
+            ? `<span class="tenant-chip tenant-chip-global">${appTranslate('common.super_admin', 'Super admin')}</span>
                <div class="tenant-meta-note mt-1">Scopes ${(Object.values(user.admin_permissions || {}).filter(Boolean).length)}/${Math.max(tenantAdminScopeDefinitions.length, 1)}</div>`
-            : `<span class="tenant-chip">${tenantEscapeHtml(user.tenant_id || tenantAdminDefaultTenant)}</span>`;
+            : `<span class="tenant-chip">${tenantEscapeHtml(user.tenant_scope_label || tenantScopeLabel(user.tenant_id || tenantAdminDefaultTenant))}</span>`;
         return `
         <tr>
             <td><strong>${tenantEscapeHtml(user.username)}</strong></td>
@@ -939,24 +1046,25 @@ function renderTenantManagementTable() {
     }
     if (!body) return;
     if (!tenantAdminTenants.length) {
-        body.innerHTML = '<tr><td colspan="6" class="text-muted">No tenants loaded.</td></tr>';
+        body.innerHTML = `<tr><td colspan="6" class="text-muted">${appTranslate('admin.no_tenants_loaded', 'No tenants loaded.')}</td></tr>`;
         return;
     }
 
     body.innerHTML = tenantAdminTenants.map(tenant => {
         const encodedId = encodeURIComponent(String(tenant.tenant_id || ''));
         const canDelete = Boolean(tenant.can_delete);
+        const canEdit = tenant.can_edit !== false;
         const deleteBtnClass = canDelete ? 'btn-outline-danger' : 'btn-outline-secondary';
         const deleteDisabled = canDelete ? '' : 'disabled';
         return `
         <tr>
-            <td><span class="tenant-chip">${tenantEscapeHtml(tenant.tenant_id)}</span></td>
-            <td>${tenantEscapeHtml(tenant.name || tenant.tenant_id)}</td>
+            <td><span class="tenant-chip ${tenant.is_reserved ? 'tenant-chip-global' : ''}">${tenantEscapeHtml(tenantScopeLabel(tenant.tenant_id))}</span></td>
+            <td>${tenantEscapeHtml(tenantScopeName(tenant))}</td>
             <td class="text-end">${tenantEscapeHtml(tenant.user_count ?? 0)}</td>
             <td class="text-end">${tenantEscapeHtml(tenant.sensor_count ?? 0)}</td>
             <td class="text-end">${tenantEscapeHtml(tenant.base_station_count ?? 0)}</td>
             <td class="text-end">
-                <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editTenantEntity(decodeURIComponent('${encodedId}'))">Edit</button>
+                <button type="button" class="btn btn-sm btn-outline-primary me-1" ${canEdit ? '' : 'disabled'} onclick="editTenantEntity(decodeURIComponent('${encodedId}'))">Edit</button>
                 <button type="button" class="btn btn-sm ${deleteBtnClass}" ${deleteDisabled} onclick="deleteTenantEntity(decodeURIComponent('${encodedId}'))">Delete</button>
             </td>
         </tr>
@@ -964,21 +1072,101 @@ function renderTenantManagementTable() {
     }).join('');
 }
 
+function getSelectedTenantBaseStations() {
+    return Array.from(tenantSelectedBaseStations).sort();
+}
+
+function updateTenantBaseStationSummary() {
+    const summary = document.getElementById('tenantEntityBsCount');
+    if (summary) {
+        summary.textContent = `${getSelectedTenantBaseStations().length} ${appTranslate('common.selected', 'vybrané')}`;
+    }
+}
+
+function renderTenantBaseStationPicker() {
+    const picker = document.getElementById('tenantBaseStationPicker');
+    const search = String(document.getElementById('tenantBaseStationSearch')?.value || '').trim().toLowerCase();
+    const activeTenantId = tenantSanitizeStrict(
+        document.getElementById('tenantEntityId')?.value
+        || document.getElementById('tenantEntityOriginalId')?.value
+        || ''
+    ) || tenantAdminDefaultTenant;
+    if (!picker) return;
+
+    const visibleItems = (tenantBaseStationCatalog || []).filter((entry) => {
+        if (!search) return true;
+        return [
+            entry.eui,
+            entry.name,
+            entry.configured_ip,
+            ...(Array.isArray(entry.tags) ? entry.tags : []),
+            entry.tenant_id,
+        ].join(' ').toLowerCase().includes(search);
+    });
+
+    if (!visibleItems.length) {
+        picker.innerHTML = `<div class="tenant-bs-empty">${tenantEscapeHtml(appTranslate('admin.no_base_stations_match_filters', 'Žiadne základňové stanice nezodpovedajú aktuálnemu filtru.'))}</div>`;
+        updateTenantBaseStationSummary();
+        return;
+    }
+
+    picker.innerHTML = visibleItems.map((entry) => {
+        const eui = String(entry.eui || '').trim().toUpperCase();
+        const assignedTenant = tenantNormalize(entry.tenant_id || tenantAdminDefaultTenant, tenantAdminDefaultTenant);
+        const isCurrentTenant = assignedTenant === activeTenantId;
+        const checked = tenantSelectedBaseStations.has(eui);
+        const tenantBadgeLabel = checked && !isCurrentTenant
+            ? appTranslate('admin.will_move_from_tenant_label', 'Presunie sa z tenanta: {tenant}', { tenant: tenantScopeLabel(assignedTenant) })
+            : isCurrentTenant
+                ? appTranslate('admin.assigned_to_current_tenant', 'Priradené tomuto tenantovi')
+                : appTranslate('admin.assigned_to_tenant_label', 'Priradené tenantovi: {tenant}', { tenant: tenantScopeLabel(assignedTenant) });
+        const tenantBadgeClass = isCurrentTenant ? 'tenant-bs-tenant is-current' : 'tenant-bs-tenant';
+        const displayName = String(entry.name || '').trim() || eui;
+        const ipLine = entry.configured_ip
+            ? `${appTranslate('common.ip_address', 'IP Address')}: ${entry.configured_ip}`
+            : appTranslate('common.ip_address_not_set', 'IP adresa nie je nastavená');
+        return `
+            <label class="tenant-bs-option">
+                <div class="tenant-bs-option-head">
+                    <div class="form-check m-0">
+                        <input class="form-check-input" type="checkbox" data-tenant-bs="${tenantEscapeHtml(eui)}" ${checked ? 'checked' : ''}>
+                        <span class="tenant-bs-name ms-1">${tenantEscapeHtml(displayName)}</span>
+                    </div>
+                    <span class="${tenantBadgeClass}">${tenantEscapeHtml(tenantBadgeLabel)}</span>
+                </div>
+                <div class="tenant-bs-meta">${tenantEscapeHtml(eui)} &middot; ${tenantEscapeHtml(ipLine)}</div>
+            </label>
+        `;
+    }).join('');
+
+    picker.querySelectorAll('input[type="checkbox"][data-tenant-bs]').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+            const eui = String(checkbox.getAttribute('data-tenant-bs') || '').trim().toUpperCase();
+            if (!eui) return;
+            if (checkbox.checked) tenantSelectedBaseStations.add(eui);
+            else tenantSelectedBaseStations.delete(eui);
+            updateTenantBaseStationSummary();
+        });
+    });
+
+    updateTenantBaseStationSummary();
+}
+
 function setUserFormMode(mode) {
     const nextMode = mode === 'edit' ? 'edit' : 'create';
     const badge = document.getElementById('tenantFormModeBadge');
     const saveBtn = document.getElementById('tenantSaveUserBtn');
     const titleEl = document.getElementById('tenantUserModalLabel');
-    if (badge) badge.textContent = nextMode === 'edit' ? 'Edit mode' : 'Create mode';
+        if (badge) badge.textContent = nextMode === 'edit' ? appTranslate('common.edit_mode', 'Edit mode') : appTranslate('admin.create_mode', 'Create mode');
     if (titleEl) {
         titleEl.innerHTML = nextMode === 'edit'
-            ? '<i class="fas fa-user-pen me-2"></i>Edit User'
-            : '<i class="fas fa-user-plus me-2"></i>Create User';
+            ? `<i class="fas fa-user-pen me-2"></i>${appTranslate('admin.edit_user', 'Edit User')}`
+            : `<i class="fas fa-user-plus me-2"></i>${appTranslate('admin.create_user', 'Create User')}`;
     }
     if (saveBtn) {
         saveBtn.innerHTML = nextMode === 'edit'
-            ? '<i class="fas fa-save me-1"></i>Update User'
-            : '<i class="fas fa-save me-1"></i>Save User';
+            ? `<i class="fas fa-save me-1"></i>${appTranslate('admin.update_user', 'Update User')}`
+            : `<i class="fas fa-save me-1"></i>${appTranslate('admin.save_user', 'Save User')}`;
     }
 }
 
@@ -988,16 +1176,16 @@ function setTenantEntityMode(mode) {
     const saveBtn = document.getElementById('tenantEntitySaveBtn');
     const idInput = document.getElementById('tenantEntityId');
     const titleEl = document.getElementById('tenantEntityModalLabel');
-    if (badge) badge.textContent = nextMode === 'edit' ? 'Edit mode' : 'Create mode';
+    if (badge) badge.textContent = nextMode === 'edit' ? appTranslate('common.edit_mode', 'Edit mode') : appTranslate('admin.create_mode', 'Create mode');
     if (titleEl) {
         titleEl.innerHTML = nextMode === 'edit'
-            ? '<i class="fas fa-building-flag me-2"></i>Edit Tenant'
-            : '<i class="fas fa-building-circle-plus me-2"></i>Create Tenant';
+            ? `<i class="fas fa-building-flag me-2"></i>${appTranslate('admin.edit_tenant', 'Edit Tenant')}`
+            : `<i class="fas fa-building-circle-plus me-2"></i>${appTranslate('admin.create_tenant', 'Create Tenant')}`;
     }
     if (saveBtn) {
         saveBtn.innerHTML = nextMode === 'edit'
-            ? '<i class="fas fa-save me-1"></i>Update Tenant'
-            : '<i class="fas fa-save me-1"></i>Save Tenant';
+            ? `<i class="fas fa-save me-1"></i>${appTranslate('admin.update_tenant', 'Update Tenant')}`
+            : `<i class="fas fa-save me-1"></i>${appTranslate('admin.save_tenant', 'Save Tenant')}`;
     }
     if (idInput) {
         idInput.disabled = nextMode === 'edit';
@@ -1011,10 +1199,10 @@ function syncUserTenantFieldState() {
     if (!tenantInput) return;
     if (role === 'admin') {
         tenantInput.dataset.lastTenant = tenantInput.value || tenantAdminDefaultTenant;
-        tenantInput.innerHTML = '<option value="">All tenants (global admin)</option>';
+        tenantInput.innerHTML = `<option value="">${appTranslate('admin.all_tenants_global_admin', 'All tenants (global admin)')}</option>`;
         tenantInput.value = '';
         tenantInput.disabled = true;
-        if (tenantHint) tenantHint.textContent = 'Admin is global and can see all tenants.';
+        if (tenantHint) tenantHint.textContent = appTranslate('admin.admin_global_can_see_all', 'Admin is global and can see all tenants.');
     } else {
         const previousTenant = tenantInput.value || tenantInput.dataset.lastTenant || tenantAdminDefaultTenant;
         tenantInput.disabled = false;
@@ -1031,7 +1219,7 @@ function syncUserTenantFieldState() {
             tenantInput.value = tenantAdminDefaultTenant;
         }
         tenantInput.dataset.lastTenant = tenantInput.value || tenantAdminDefaultTenant;
-        if (tenantHint) tenantHint.textContent = 'User is restricted to this tenant.';
+        if (tenantHint) tenantHint.textContent = appTranslate('admin.user_restricted_to_tenant', 'User is restricted to this tenant.');
     }
     renderAdminScopeEditor(tenantUserDraftAdminPermissions);
     updateUserScopeBadges();
@@ -1044,8 +1232,8 @@ function updateUserScopeBadges() {
     const tenantValue = String(document.getElementById('tenantUserTenant')?.value || '').trim();
     const normalizedRole = role || 'viewer';
     const tenantLabel = normalizedRole === 'admin'
-        ? 'All tenants'
-        : (tenantValue || tenantAdminDefaultTenant || 'default');
+        ? appTranslate('common.super_admin', 'Super admin')
+        : tenantScopeLabel(tenantValue || tenantAdminDefaultTenant || 'default');
     const tenantBadgeClass = normalizedRole === 'admin' ? 'scope-badge-global' : 'scope-badge-tenant';
     let adminScopeBadge = '';
     if (normalizedRole === 'admin') {
@@ -1183,7 +1371,11 @@ function resetTenantEntityForm() {
     document.getElementById('tenantEntityId').value = '';
     document.getElementById('tenantEntityName').value = '';
     document.getElementById('tenantEntityDescription').value = '';
+    const tenantBsSearch = document.getElementById('tenantBaseStationSearch');
+    if (tenantBsSearch) tenantBsSearch.value = '';
     setTenantEntityMode('create');
+    tenantSelectedBaseStations = new Set();
+    renderTenantBaseStationPicker();
     setTenantEntityBaseline();
     tenantEntityModalCloseBySave = false;
 }
@@ -1201,12 +1393,20 @@ function openTenantEntityModal(mode = 'create', tenantId = '') {
 function editTenantEntity(tenantId) {
     const tenant = tenantAdminTenants.find(item => item.tenant_id === tenantId);
     if (!tenant) return;
+    if (tenant.is_reserved) {
+        showStatus('tenantMgmtStatus', appTranslate('admin.reserved_super_admin_scope', 'Reserved global scope for super admin.'), 'info');
+        return;
+    }
     document.getElementById('tenantEntityMode').value = 'edit';
     document.getElementById('tenantEntityOriginalId').value = tenant.tenant_id;
     document.getElementById('tenantEntityId').value = tenant.tenant_id;
     document.getElementById('tenantEntityName').value = tenant.name || tenant.tenant_id;
     document.getElementById('tenantEntityDescription').value = tenant.description || '';
+    const tenantBsSearch = document.getElementById('tenantBaseStationSearch');
+    if (tenantBsSearch) tenantBsSearch.value = '';
     setTenantEntityMode('edit');
+    tenantSelectedBaseStations = new Set((tenant.assigned_base_station_euis || []).map((value) => String(value || '').trim().toUpperCase()).filter(Boolean));
+    renderTenantBaseStationPicker();
     setTenantEntityBaseline();
     tenantEntityModalCloseBySave = false;
     setAdminTab('tenants');
@@ -1230,6 +1430,7 @@ async function saveTenantEntity() {
         tenant_id: tenantId,
         name: tenantName || tenantId,
         description: tenantDescription,
+        base_station_euis: getSelectedTenantBaseStations(),
     };
 
     const method = mode === 'edit' ? 'PUT' : 'POST';
@@ -1257,6 +1458,10 @@ async function saveTenantEntity() {
 }
 
 async function deleteTenantEntity(tenantId) {
+    if (isReservedSuperAdminScope(tenantId)) {
+        showStatus('tenantMgmtStatus', appTranslate('admin.reserved_super_admin_scope', 'Reserved global scope for super admin.'), 'info');
+        return;
+    }
     if (!confirm(`Delete tenant '${tenantId}'?`)) return;
 
     const doDelete = async (forceDelete) => {
@@ -1326,12 +1531,23 @@ async function fetchTenantAdminData() {
             }
             tenantAdminTenants = (tenantsData.tenants || []).map(tenant => ({
                 tenant_id: tenant.tenant_id,
+                display_name: tenant.display_name || tenant.name || tenant.tenant_id,
                 name: tenant.name || tenant.tenant_id,
                 description: tenant.description || '',
                 sensor_count: tenant.sensor_count || 0,
                 base_station_count: tenant.base_station_count || 0,
+                assigned_base_station_euis: tenant.assigned_base_station_euis || [],
                 user_count: tenant.user_count || 0,
+                is_reserved: Boolean(tenant.is_reserved),
+                can_edit: tenant.can_edit !== false,
                 can_delete: Boolean(tenant.can_delete),
+            }));
+            tenantBaseStationCatalog = (tenantsData.base_stations_catalog || []).map((item) => ({
+                eui: String(item.eui || '').trim().toUpperCase(),
+                name: item.name || '',
+                tenant_id: tenantNormalize(item.tenant_id || tenantAdminDefaultTenant, tenantAdminDefaultTenant),
+                configured_ip: item.configured_ip || '',
+                tags: Array.isArray(item.tags) ? item.tags : [],
             }));
         } else {
             tenantAdminTenants = (tenantKnownTenantChoices || []).map((tenantId) => ({
@@ -1340,9 +1556,11 @@ async function fetchTenantAdminData() {
                 description: '',
                 sensor_count: 0,
                 base_station_count: 0,
+                assigned_base_station_euis: [],
                 user_count: 0,
                 can_delete: false,
             }));
+            tenantBaseStationCatalog = [];
         }
 
         tenantAdminDefaultTenant =
@@ -1356,6 +1574,7 @@ async function fetchTenantAdminData() {
         syncUserTenantFieldState();
         renderTenantUsersTable();
         renderTenantManagementTable();
+        renderTenantBaseStationPicker();
         updateKpis();
         setTenantUserBaseline();
         setTenantEntityBaseline();
@@ -1378,10 +1597,10 @@ async function fetchTenantAdminData() {
 function confirmAdminUnsaved(message) {
     if (window.AppUI && typeof window.AppUI.confirm === 'function') {
         return window.AppUI.confirm({
-            title: 'Unsaved changes',
+            title: tr('admin.unsaved_changes_title', 'Unsaved administration changes'),
             message,
-            confirmText: 'Discard',
-            cancelText: 'Stay',
+            confirmText: tr('runtime.discard', 'Discard'),
+            cancelText: tr('guard.stay', 'Stay'),
             variant: 'warning'
         });
     }
@@ -1401,7 +1620,7 @@ function initAdministrationUnsavedGuards() {
             }
             if (!isTenantUserFormDirty()) return;
             event.preventDefault();
-            const confirmed = await confirmAdminUnsaved('You have unsaved user changes. Close this form without saving?');
+            const confirmed = await confirmAdminUnsaved(tr('admin.unsaved_user_changes_message', 'You have unsaved user changes. Close this form without saving?'));
             if (!confirmed) return;
             tenantUserModalCloseBySave = true;
             setTenantUserBaseline();
@@ -1419,7 +1638,7 @@ function initAdministrationUnsavedGuards() {
             }
             if (!isTenantEntityFormDirty()) return;
             event.preventDefault();
-            const confirmed = await confirmAdminUnsaved('You have unsaved tenant changes. Close this form without saving?');
+            const confirmed = await confirmAdminUnsaved(tr('admin.unsaved_tenant_changes_message', 'You have unsaved tenant changes. Close this form without saving?'));
             if (!confirmed) return;
             tenantEntityModalCloseBySave = true;
             setTenantEntityBaseline();
@@ -1430,10 +1649,10 @@ function initAdministrationUnsavedGuards() {
 
     if (window.AppUI && typeof window.AppUI.unsavedGuard === 'function') {
         window.AppUI.unsavedGuard({
-            title: 'Unsaved administration changes',
-            message: 'You have unsaved user/tenant form changes. Leave this page without saving?',
-            confirmText: 'Leave page',
-            cancelText: 'Stay',
+            title: tr('admin.unsaved_changes_title', 'Unsaved administration changes'),
+            message: tr('admin.unsaved_forms_leave_message', 'You have unsaved user/tenant form changes. Leave this page without saving?'),
+            confirmText: tr('guard.leave_page', 'Leave page'),
+            cancelText: tr('guard.stay', 'Stay'),
             variant: 'warning',
             isDirty: () => {
                 const userDirty = Boolean(userModalEl && userModalEl.classList.contains('show') && isTenantUserFormDirty());
@@ -1450,12 +1669,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     const tenantFilter = document.getElementById('tenantTenantFilter');
     const userRole = document.getElementById('tenantUserRole');
     const userTenant = document.getElementById('tenantUserTenant');
+    const tenantBaseStationSearch = document.getElementById('tenantBaseStationSearch');
+    const tenantEntityId = document.getElementById('tenantEntityId');
 
     if (userSearch) userSearch.addEventListener('input', renderTenantUsersTable);
     if (roleFilter) roleFilter.addEventListener('change', renderTenantUsersTable);
     if (tenantFilter) tenantFilter.addEventListener('change', renderTenantUsersTable);
     if (userRole) userRole.addEventListener('change', syncUserTenantFieldState);
     if (userTenant) userTenant.addEventListener('change', updateUserScopeBadges);
+    if (tenantBaseStationSearch) tenantBaseStationSearch.addEventListener('input', renderTenantBaseStationPicker);
+    if (tenantEntityId) tenantEntityId.addEventListener('input', renderTenantBaseStationPicker);
 
     initAdminTabs();
     resetTenantUserForm();

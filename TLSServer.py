@@ -1,9 +1,12 @@
 import asyncio
+import copy
+from collections import deque
 import hashlib
 import json
 import logging
 import os
 import ssl
+import threading
 import msgpack
 from datetime import datetime, timezone, timedelta
 from typing import Any, Callable, Dict, Optional, Set
@@ -15,6 +18,261 @@ from protocol import encode_message
 logger = logging.getLogger(__name__)
 
 IDENTIFIER = bytes("MIOTYB01", "utf-8")
+
+_CUSTOM_PAYLOAD_PROFILE_CACHE: Dict[str, Any] = {
+    "path": None,
+    "mtime": None,
+    "profiles": [],
+    "map": {},
+}
+
+
+def _custom_payload_profiles_file() -> str:
+    raw_path = str(getattr(bssci_config, "CUSTOM_PAYLOAD_PROFILES_FILE", "custom_payload_profiles.json") or "custom_payload_profiles.json").strip()
+    return raw_path or "custom_payload_profiles.json"
+
+
+def _slugify_payload_profile_id(value: Any) -> str:
+    raw = str(value or "").strip().lower()
+    raw = raw.replace("-", "_")
+    cleaned = []
+    for char in raw:
+        if char.isalnum() or char == "_":
+            cleaned.append(char)
+    profile_id = "".join(cleaned).strip("_")
+    return profile_id[:64]
+
+
+def _normalize_custom_payload_field(field: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(field, dict):
+        raise ValueError("Each custom payload field must be an object.")
+    key = _slugify_payload_profile_id(field.get("key") or field.get("name"))
+    if not key:
+        raise ValueError("Each custom payload field requires a key.")
+    try:
+        bits = int(field.get("bits", 0))
+    except Exception as exc:
+        raise ValueError(f"Field '{key}' has invalid bit length.") from exc
+    if bits <= 0 or bits > 64:
+        raise ValueError(f"Field '{key}' bit length must be between 1 and 64.")
+    raw_type = str(field.get("type", "uint") or "uint").strip().lower()
+    if raw_type in {"unsigned", "number", "numeric"}:
+        raw_type = "uint"
+    if raw_type in {"signed", "integer"}:
+        raw_type = "int"
+    if raw_type in {"flag", "boolean"}:
+        raw_type = "bool"
+    if raw_type not in {"uint", "int", "bool"}:
+        raise ValueError(f"Field '{key}' type must be uint, int or bool.")
+    try:
+        scale = float(field.get("scale", 1))
+    except Exception as exc:
+        raise ValueError(f"Field '{key}' has invalid scale.") from exc
+    try:
+        offset = float(field.get("offset", 0))
+    except Exception as exc:
+        raise ValueError(f"Field '{key}' has invalid offset.") from exc
+    try:
+        decimals = int(field.get("decimals", 0 if raw_type in {"uint", "bool"} else 2))
+    except Exception as exc:
+        raise ValueError(f"Field '{key}' has invalid decimals.") from exc
+    enum_map = field.get("enum") if isinstance(field.get("enum"), dict) else {}
+    normalized_enum = {str(k): str(v) for k, v in enum_map.items()}
+    return {
+        "key": key,
+        "label": str(field.get("label") or key.replace("_", " ").title()).strip(),
+        "bits": bits,
+        "type": raw_type,
+        "scale": scale,
+        "offset": offset,
+        "unit": str(field.get("unit") or "").strip(),
+        "decimals": max(0, min(decimals, 6)),
+        "summary": bool(field.get("summary", False)),
+        "description": str(field.get("description") or "").strip(),
+        "enum": normalized_enum,
+    }
+
+
+def validate_custom_payload_profiles(raw_profiles: Any) -> list[Dict[str, Any]]:
+    if isinstance(raw_profiles, dict):
+        raw_profiles = raw_profiles.get("profiles", [])
+    if raw_profiles in (None, ""):
+        return []
+    if not isinstance(raw_profiles, list):
+        raise ValueError("Custom payload profiles must be a JSON array or an object with a 'profiles' array.")
+
+    normalized_profiles: list[Dict[str, Any]] = []
+    seen_profile_ids: set[str] = set()
+    builtin_ids = {"auto", "raw", "lansen_e2_co2_v1", "lansen_m2_v1"}
+    for index, raw_profile in enumerate(raw_profiles, start=1):
+        if not isinstance(raw_profile, dict):
+            raise ValueError(f"Custom payload profile #{index} must be an object.")
+        profile_id = _slugify_payload_profile_id(raw_profile.get("id") or raw_profile.get("key") or raw_profile.get("name"))
+        if not profile_id:
+            raise ValueError(f"Custom payload profile #{index} requires an id.")
+        if profile_id in builtin_ids:
+            raise ValueError(f"Custom payload profile id '{profile_id}' conflicts with a built-in decoder.")
+        if profile_id in seen_profile_ids:
+            raise ValueError(f"Custom payload profile id '{profile_id}' is duplicated.")
+        seen_profile_ids.add(profile_id)
+
+        try:
+            payload_length_bytes = int(raw_profile.get("payload_length_bytes", 0))
+        except Exception as exc:
+            raise ValueError(f"Custom payload profile '{profile_id}' has invalid payload_length_bytes.") from exc
+        if payload_length_bytes <= 0 or payload_length_bytes > 128:
+            raise ValueError(f"Custom payload profile '{profile_id}' payload_length_bytes must be between 1 and 128.")
+
+        bit_order = str(raw_profile.get("bit_order", "msb") or "msb").strip().lower()
+        if bit_order not in {"msb"}:
+            raise ValueError(f"Custom payload profile '{profile_id}' currently supports only bit_order='msb'.")
+
+        fields_raw = raw_profile.get("fields")
+        if not isinstance(fields_raw, list) or not fields_raw:
+            raise ValueError(f"Custom payload profile '{profile_id}' requires a non-empty fields array.")
+        fields = [_normalize_custom_payload_field(field) for field in fields_raw]
+        field_keys = [field["key"] for field in fields]
+        if len(field_keys) != len(set(field_keys)):
+            raise ValueError(f"Custom payload profile '{profile_id}' contains duplicate field keys.")
+        used_bits = sum(field["bits"] for field in fields)
+        total_bits = payload_length_bytes * 8
+        if used_bits > total_bits:
+            raise ValueError(f"Custom payload profile '{profile_id}' uses {used_bits} bits but payload length allows only {total_bits} bits.")
+
+        summary_fields = raw_profile.get("summary_fields") if isinstance(raw_profile.get("summary_fields"), list) else []
+        normalized_summary_fields = [
+            key for key in (_slugify_payload_profile_id(item) for item in summary_fields)
+            if key in set(field_keys)
+        ]
+        if not normalized_summary_fields:
+            normalized_summary_fields = [field["key"] for field in fields if field.get("summary")][:3]
+        if not normalized_summary_fields:
+            normalized_summary_fields = field_keys[:3]
+
+        normalized_profiles.append({
+            "id": profile_id,
+            "label": str(raw_profile.get("label") or profile_id.replace("_", " ").title()).strip(),
+            "description": str(raw_profile.get("description") or "").strip(),
+            "model_hint": str(raw_profile.get("model_hint") or raw_profile.get("label") or profile_id.replace("_", " ").title()).strip(),
+            "payload_length_bytes": payload_length_bytes,
+            "bit_order": bit_order,
+            "fields": fields,
+            "summary_fields": normalized_summary_fields,
+        })
+    return normalized_profiles
+
+
+def load_custom_payload_profiles(force_reload: bool = False) -> list[Dict[str, Any]]:
+    path = _custom_payload_profiles_file()
+    try:
+        mtime = os.path.getmtime(path)
+    except OSError:
+        mtime = None
+
+    cached_path = _CUSTOM_PAYLOAD_PROFILE_CACHE.get("path")
+    cached_mtime = _CUSTOM_PAYLOAD_PROFILE_CACHE.get("mtime")
+    if not force_reload and cached_path == path and cached_mtime == mtime:
+        return copy.deepcopy(_CUSTOM_PAYLOAD_PROFILE_CACHE.get("profiles") or [])
+
+    profiles: list[Dict[str, Any]] = []
+    if mtime is not None:
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                raw = json.load(handle)
+            profiles = validate_custom_payload_profiles(raw)
+        except Exception as exc:
+            logger.warning(f"Failed to load custom payload profiles from {path}: {exc}")
+            profiles = []
+
+    profile_map = {profile["id"]: profile for profile in profiles}
+    _CUSTOM_PAYLOAD_PROFILE_CACHE.update({
+        "path": path,
+        "mtime": mtime,
+        "profiles": profiles,
+        "map": profile_map,
+    })
+    return copy.deepcopy(profiles)
+
+
+def get_custom_payload_profile(profile_id: Any, force_reload: bool = False) -> Optional[Dict[str, Any]]:
+    normalized_id = _slugify_payload_profile_id(profile_id)
+    if not normalized_id:
+        return None
+    load_custom_payload_profiles(force_reload=force_reload)
+    profile = (_CUSTOM_PAYLOAD_PROFILE_CACHE.get("map") or {}).get(normalized_id)
+    return copy.deepcopy(profile) if isinstance(profile, dict) else None
+
+
+def save_custom_payload_profiles(raw_profiles: Any) -> list[Dict[str, Any]]:
+    profiles = validate_custom_payload_profiles(raw_profiles)
+    path = _custom_payload_profiles_file()
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump({"profiles": profiles}, handle, indent=2, ensure_ascii=False)
+    load_custom_payload_profiles(force_reload=True)
+    return profiles
+
+
+def decode_custom_payload_profile(profile: Dict[str, Any], user_data: list[int]) -> Optional[Dict[str, Any]]:
+    if not isinstance(profile, dict):
+        return None
+    if not isinstance(user_data, list) or not all(isinstance(v, int) and 0 <= v <= 255 for v in user_data):
+        return None
+    payload_length = int(profile.get("payload_length_bytes") or 0)
+    if payload_length <= 0 or len(user_data) != payload_length:
+        return None
+    bits = "".join(f"{byte:08b}" for byte in user_data)
+    position = 0
+    raw_values: Dict[str, Any] = {}
+    values: Dict[str, Any] = {}
+    field_meta = []
+    for field in profile.get("fields") or []:
+        bit_length = int(field.get("bits") or 0)
+        if bit_length <= 0:
+            continue
+        chunk = bits[position:position + bit_length]
+        if len(chunk) != bit_length:
+            return None
+        position += bit_length
+        raw_value = int(chunk, 2)
+        field_type = str(field.get("type") or "uint")
+        if field_type == "int":
+            sign_bit = 1 << (bit_length - 1)
+            if raw_value & sign_bit:
+                raw_value = raw_value - (1 << bit_length)
+            processed_value: Any = (raw_value * float(field.get("scale", 1))) + float(field.get("offset", 0))
+        elif field_type == "bool":
+            processed_value = bool(raw_value)
+        else:
+            processed_value = (raw_value * float(field.get("scale", 1))) + float(field.get("offset", 0))
+        enum_map = field.get("enum") if isinstance(field.get("enum"), dict) else {}
+        if enum_map and field_type != "bool":
+            processed_value = enum_map.get(str(int(raw_value)), enum_map.get(str(raw_value), processed_value))
+        if isinstance(processed_value, float):
+            decimals = int(field.get("decimals", 2) or 0)
+            processed_value = round(processed_value, decimals)
+        raw_values[f"{field['key']}_raw"] = raw_value
+        values[field["key"]] = processed_value
+        field_meta.append({
+            "key": field["key"],
+            "label": str(field.get("label") or field["key"]),
+            "unit": str(field.get("unit") or ""),
+            "decimals": int(field.get("decimals", 0) or 0),
+            "type": field_type,
+            "summary": field["key"] in set(profile.get("summary_fields") or []),
+            "description": str(field.get("description") or ""),
+        })
+    return {
+        "profile": str(profile.get("id") or "raw"),
+        "profile_label": str(profile.get("label") or profile.get("id") or "Custom payload"),
+        "model_hint": str(profile.get("model_hint") or profile.get("label") or "Custom payload"),
+        "raw": raw_values,
+        "values": values,
+        "field_meta": field_meta,
+        "custom_profile": True,
+    }
 
 
 class TLSServer:
@@ -40,6 +298,24 @@ class TLSServer:
         self.pending_attach_requests: Dict[int, Dict[str, Any]] = {}
         # Track if status request task is running
         self._status_task_running = False
+        self._attach_reconcile_task_running = False
+        self.attach_reconcile_interval = max(
+            15,
+            int(getattr(bssci_config, "ATTACH_RECONCILE_INTERVAL_SECONDS", 60) or 60),
+        )
+        self.attach_retry_min_interval = max(
+            10,
+            int(getattr(bssci_config, "ATTACH_RETRY_MIN_INTERVAL_SECONDS", 120) or 120),
+        )
+        self.attach_response_timeout = max(
+            5,
+            int(getattr(bssci_config, "ATTACH_RESPONSE_TIMEOUT_SECONDS", 12) or 12),
+        )
+        self.attach_post_connect_retry_delay = max(
+            3,
+            int(getattr(bssci_config, "ATTACH_POST_CONNECT_RETRY_DELAY_SECONDS", 8) or 8),
+        )
+        self._last_attach_attempt: Dict[tuple[str, str], float] = {}
 
         # Deduplication variables
         # message_key -> {message, timestamp, snr, bs_eui}
@@ -79,6 +355,12 @@ class TLSServer:
         # Sensor packet tracking for packet loss detection
         # eui -> {last_packet_cnt, packets_received, packets_lost, snr_sum, snr_count}
         self.sensor_packet_stats: Dict[str, Dict[str, Any]] = {}
+        self.sensor_uplink_history_size = max(
+            5,
+            int(getattr(bssci_config, "SENSOR_UPLINK_HISTORY_SIZE", 30) or 30),
+        )
+        self.sensor_uplink_history: Dict[str, Any] = {}
+        self._sensor_uplink_lock = threading.Lock()
         
         # SNR/RSSI history for graphs (last 288 data points, 5 min intervals = 24 hours)
         self.snr_rssi_history: list = []
@@ -133,6 +415,11 @@ class TLSServer:
         # Start auto-detach monitoring if enabled
         if getattr(bssci_config, 'AUTO_DETACH_ENABLED', True):
             asyncio.create_task(self.auto_detach_monitor())
+
+        # Start periodic attach reconcile (prevents manual re-attach after transient failures/restarts)
+        if not self._attach_reconcile_task_running:
+            self._attach_reconcile_task_running = True
+            asyncio.create_task(self.periodic_attach_reconcile())
 
         try:
             with open(sensor_config_file, "r") as f:
@@ -271,6 +558,250 @@ class TLSServer:
                 logger.error(f"❌ Failed to decode BSSCI payload: {exc}")
 
         return messages
+
+    def _get_sensor_config(self, eui: str) -> Dict[str, Any]:
+        eui_upper = str(eui or "").upper()
+        for sensor in self.sensor_config:
+            if str(sensor.get("eui", "")).upper() == eui_upper:
+                return sensor
+        return {}
+
+    def _infer_sensor_payload_profile(self, eui: str) -> str:
+        def _normalize_profile(value: Any) -> str:
+            raw = str(value or "").strip().lower()
+            if raw in {"", "auto", "default", "heuristic"}:
+                return "auto"
+            if raw in {"lansen_e2_co2_v1", "lansen_co2", "lansen-e2-co2"}:
+                return "lansen_e2_co2_v1"
+            if raw in {"lansen_m2_v1", "lansen_m2", "lan-mioty-m2", "m2"}:
+                return "lansen_m2_v1"
+            if raw in {"raw", "none"}:
+                return "raw"
+            custom_profile = get_custom_payload_profile(raw)
+            if custom_profile:
+                return str(custom_profile.get("id") or raw)
+            return "auto"
+
+        sensor = self._get_sensor_config(eui)
+        if not sensor:
+            return "raw"
+        explicit_profile = _normalize_profile(sensor.get("payload_decoder"))
+        if explicit_profile not in {"auto"}:
+            return explicit_profile
+        name = str(sensor.get("name", "") or "").strip().lower()
+        tags = " ".join(str(tag or "").strip().lower() for tag in (sensor.get("tags") or []))
+        marker = f"{name} {tags}"
+        if "lansen" in marker and "co2" in marker:
+            return "lansen_e2_co2_v1"
+        if "lansen" in marker and "m2" in marker:
+            return "lansen_m2_v1"
+        return "raw"
+
+    @staticmethod
+    def _decode_lansen_e2_co2_payload(user_data: list[int]) -> Optional[Dict[str, Any]]:
+        if not isinstance(user_data, list) or len(user_data) != 10:
+            return None
+        if not all(isinstance(v, int) and 0 <= v <= 255 for v in user_data):
+            return None
+
+        field_layout = [
+            ("temp_1_raw", 9),
+            ("humidity_1_raw", 7),
+            ("co2_1_raw", 8),
+            ("unused_1_raw", 6),
+            ("temp_2_raw", 9),
+            ("humidity_2_raw", 7),
+            ("co2_2_raw", 8),
+            ("unused_2_raw", 6),
+            ("battery_raw", 5),
+            ("co2_last_calibration_raw", 8),
+            ("days_to_next_calibration", 5),
+            ("calibration_not_done", 1),
+            ("co2_error", 1),
+        ]
+
+        bits = "".join(f"{byte:08b}" for byte in user_data)
+        position = 0
+        decoded_raw: Dict[str, int] = {}
+        for field_name, field_size in field_layout:
+            decoded_raw[field_name] = int(bits[position:position + field_size], 2)
+            position += field_size
+
+        temp_1 = -10.0 + (decoded_raw["temp_1_raw"] * 0.125)
+        temp_2 = -10.0 + (decoded_raw["temp_2_raw"] * 0.125)
+        humidity_1 = decoded_raw["humidity_1_raw"]
+        humidity_2 = decoded_raw["humidity_2_raw"]
+        co2_1_ppm = decoded_raw["co2_1_raw"] * 20
+        co2_2_ppm = decoded_raw["co2_2_raw"] * 20
+        co2_last_calibration_ppm = decoded_raw["co2_last_calibration_raw"] * 20
+
+        return {
+            "profile": "lansen_e2_co2_v1",
+            "model_hint": "LAN-MIOTY-E2-CO2",
+            "raw": decoded_raw,
+            "values": {
+                "temperature_1_c": round(temp_1, 3),
+                "humidity_1_pct": int(humidity_1),
+                "co2_1_ppm": int(co2_1_ppm),
+                "temperature_2_c": round(temp_2, 3),
+                "humidity_2_pct": int(humidity_2),
+                "co2_2_ppm": int(co2_2_ppm),
+                # Vendor sheet is ambiguous around battery baseline. Keep raw + practical estimate.
+                "battery_v_est": round(decoded_raw["battery_raw"] * 0.1, 2),
+                "co2_last_calibration_ppm": int(co2_last_calibration_ppm),
+                "days_to_next_calibration": int(decoded_raw["days_to_next_calibration"]),
+                "calibration_not_done": bool(decoded_raw["calibration_not_done"]),
+                "co2_error": bool(decoded_raw["co2_error"]),
+            },
+        }
+
+    @staticmethod
+    def _decode_lansen_m2_payload(user_data: list[int]) -> Optional[Dict[str, Any]]:
+        if not isinstance(user_data, list) or len(user_data) != 10:
+            return None
+        if not all(isinstance(v, int) and 0 <= v <= 255 for v in user_data):
+            return None
+
+        field_layout = [
+            ("total_openings_raw", 20),
+            ("internal_magnet_alarm", 1),
+            ("external_alarm", 1),
+            ("internal_magnet_alarm_last_5min", 1),
+            ("internal_magnet_alarm_last_10min", 1),
+            ("internal_magnet_alarm_last_1h", 1),
+            ("internal_magnet_alarm_last_24h", 1),
+            ("external_alarm_last_5min", 1),
+            ("external_alarm_last_10min", 1),
+            ("external_alarm_last_1h", 1),
+            ("external_alarm_last_24h", 1),
+            ("minutes_since_last_alarm_raw", 18),
+            ("duration_last_alarm_raw", 13),
+            ("last_alarm_input", 1),
+            ("op_years_raw", 5),
+            ("run_time_raw", 5),
+            ("battery_voltage_raw", 4),
+            ("low_batt", 1),
+            ("sab_detected_internal", 1),
+            ("sab_detected_external", 1),
+            ("async_message", 1),
+            ("unused", 0),
+        ]
+
+        bits = "".join(f"{byte:08b}" for byte in user_data)
+        position = 0
+        decoded_raw: Dict[str, int] = {}
+        for field_name, field_size in field_layout:
+            if field_size <= 0:
+                decoded_raw[field_name] = 0
+                continue
+            decoded_raw[field_name] = int(bits[position:position + field_size], 2)
+            position += field_size
+
+        battery_mv = 1800 + (decoded_raw["battery_voltage_raw"] * 100)
+
+        return {
+            "profile": "lansen_m2_v1",
+            "model_hint": "LAN-MIOTY-M2",
+            "raw": decoded_raw,
+            "values": {
+                "total_openings": int(decoded_raw["total_openings_raw"]),
+                "internal_magnet_alarm": bool(decoded_raw["internal_magnet_alarm"]),
+                "external_alarm": bool(decoded_raw["external_alarm"]),
+                "internal_magnet_alarm_last_5min": bool(decoded_raw["internal_magnet_alarm_last_5min"]),
+                "internal_magnet_alarm_last_10min": bool(decoded_raw["internal_magnet_alarm_last_10min"]),
+                "internal_magnet_alarm_last_1h": bool(decoded_raw["internal_magnet_alarm_last_1h"]),
+                "internal_magnet_alarm_last_24h": bool(decoded_raw["internal_magnet_alarm_last_24h"]),
+                "external_alarm_last_5min": bool(decoded_raw["external_alarm_last_5min"]),
+                "external_alarm_last_10min": bool(decoded_raw["external_alarm_last_10min"]),
+                "external_alarm_last_1h": bool(decoded_raw["external_alarm_last_1h"]),
+                "external_alarm_last_24h": bool(decoded_raw["external_alarm_last_24h"]),
+                "minutes_since_last_alarm": int(decoded_raw["minutes_since_last_alarm_raw"]),
+                "duration_last_alarm_minutes": int(decoded_raw["duration_last_alarm_raw"]),
+                "last_alarm_input": "external" if decoded_raw["last_alarm_input"] else "internal",
+                "operating_years": int(decoded_raw["op_years_raw"]),
+                "runtime_years": int(decoded_raw["run_time_raw"]),
+                "battery_mv": int(battery_mv),
+                "battery_v_est": round(battery_mv / 1000.0, 2),
+                "low_batt": bool(decoded_raw["low_batt"]),
+                "sabotage_internal": bool(decoded_raw["sab_detected_internal"]),
+                "sabotage_external": bool(decoded_raw["sab_detected_external"]),
+                "async_message": bool(decoded_raw["async_message"]),
+                "any_alarm_active": bool(
+                    decoded_raw["internal_magnet_alarm"] or decoded_raw["external_alarm"]
+                ),
+            },
+        }
+
+    def _decode_sensor_payload(self, eui: str, user_data: list[int]) -> Dict[str, Any]:
+        profile = self._infer_sensor_payload_profile(eui)
+        decoder_map = {
+            "lansen_e2_co2_v1": self._decode_lansen_e2_co2_payload,
+            "lansen_m2_v1": self._decode_lansen_m2_payload,
+        }
+        decoder = decoder_map.get(profile)
+        if decoder:
+            parsed = decoder(user_data)
+            if parsed:
+                return parsed
+        custom_profile = get_custom_payload_profile(profile)
+        if custom_profile:
+            parsed = decode_custom_payload_profile(custom_profile, user_data)
+            if parsed:
+                return parsed
+        return {
+            "profile": "raw",
+            "values": {},
+        }
+
+    def _record_sensor_uplink(
+        self,
+        *,
+        eui: str,
+        base_station_eui: str,
+        packet_cnt: Any,
+        snr: Any,
+        rssi: Any,
+        rx_time_ns: Any,
+        user_data: list[int],
+    ) -> None:
+        eui_upper = str(eui or "").upper()
+        payload_bytes = bytes(user_data)
+        decoded = self._decode_sensor_payload(eui_upper, user_data)
+        entry = {
+            "sensor_eui": eui_upper,
+            "base_station_eui": str(base_station_eui or "").upper(),
+            "packet_cnt": int(packet_cnt) if packet_cnt is not None else None,
+            "snr": float(snr) if snr is not None else None,
+            "rssi": float(rssi) if rssi is not None else None,
+            "rx_time_ns": int(rx_time_ns) if rx_time_ns is not None else None,
+            "received_at": datetime.now(timezone.utc).isoformat(),
+            "raw_hex": payload_bytes.hex(),
+            "raw_dec": list(user_data),
+            "decoded": decoded,
+        }
+        with self._sensor_uplink_lock:
+            history = self.sensor_uplink_history.get(eui_upper)
+            if history is None:
+                history = deque(maxlen=self.sensor_uplink_history_size)
+                self.sensor_uplink_history[eui_upper] = history
+            history.append(entry)
+
+    def get_sensor_latest_uplink(self, eui: str) -> Optional[Dict[str, Any]]:
+        eui_upper = str(eui or "").upper()
+        with self._sensor_uplink_lock:
+            history = self.sensor_uplink_history.get(eui_upper)
+            if not history:
+                return None
+            return copy.deepcopy(history[-1])
+
+    def get_sensor_uplink_history(self, eui: str, limit: int = 10) -> list[Dict[str, Any]]:
+        eui_upper = str(eui or "").upper()
+        requested_limit = max(1, min(int(limit or 10), self.sensor_uplink_history_size))
+        with self._sensor_uplink_lock:
+            history = self.sensor_uplink_history.get(eui_upper)
+            if not history:
+                return []
+            return copy.deepcopy(list(history)[-requested_limit:])
 
     async def start_server(self) -> None:
         logger.info("🔐 Setting up SSL/TLS context for BSSCI server...")
@@ -455,6 +986,9 @@ class TLSServer:
                     'base_station': bs_eui,
                     'sensor_config': normalized_sensor
                 }
+                self._last_attach_attempt[
+                    (normalized_sensor["eui"], str(bs_eui or "").strip().upper())
+                ] = asyncio.get_event_loop().time()
 
                 logger.info(f"✅ BSSCI ATTACH REQUEST TRANSMITTED")
                 logger.info(f"   Operation ID {op_id} sent to base station {bs_eui}")
@@ -547,6 +1081,236 @@ class TLSServer:
 
         if failed_attachments > 0:
             logger.warning(f"   ⚠️  {failed_attachments} sensors failed to attach - check individual sensor logs above")
+
+    def _is_sensor_mapped_to_bs(self, sensor: Dict[str, Any], bs_eui: str) -> bool:
+        mapped_targets_raw = sensor.get("attached_base_stations", [])
+        if isinstance(mapped_targets_raw, str):
+            mapped_targets_raw = [mapped_targets_raw]
+        elif not isinstance(mapped_targets_raw, (list, tuple, set)):
+            mapped_targets_raw = []
+        mapped_targets = {
+            str(item or "").strip().upper()
+            for item in mapped_targets_raw
+            if str(item or "").strip()
+        }
+        # Empty mapping means "all connected base stations".
+        if not mapped_targets:
+            return True
+        return str(bs_eui or "").strip().upper() in mapped_targets
+
+    def _has_pending_attach(self, sensor_eui: str, bs_eui: str) -> bool:
+        sensor_eui_upper = str(sensor_eui or "").strip().upper()
+        bs_eui_upper = str(bs_eui or "").strip().upper()
+        for pending in (self.pending_attach_requests or {}).values():
+            if str(pending.get("sensor_eui", "")).strip().upper() != sensor_eui_upper:
+                continue
+            pending_bs = str(
+                pending.get("base_station")
+                or pending.get("base_station_eui")
+                or ""
+            ).strip().upper()
+            if pending_bs == bs_eui_upper:
+                return True
+        return False
+
+    def _prune_stale_pending_attach_requests(self, now: float | None = None, base_station: str | None = None) -> int:
+        if not self.pending_attach_requests:
+            return 0
+
+        now_ts = float(now if now is not None else asyncio.get_event_loop().time())
+        base_station_upper = str(base_station or "").strip().upper()
+        expired_op_ids = []
+        for op_id, pending in list(self.pending_attach_requests.items()):
+            pending_bs = str(
+                pending.get("base_station")
+                or pending.get("base_station_eui")
+                or ""
+            ).strip().upper()
+            if base_station_upper and pending_bs != base_station_upper:
+                continue
+            age = now_ts - float(pending.get("timestamp", 0.0) or 0.0)
+            if age < self.attach_response_timeout:
+                continue
+            expired_op_ids.append(op_id)
+
+        for op_id in expired_op_ids:
+            pending = self.pending_attach_requests.pop(op_id, {})
+            sensor_eui = str(pending.get("sensor_eui", "unknown")).strip().upper()
+            pending_bs = str(
+                pending.get("base_station")
+                or pending.get("base_station_eui")
+                or "unknown"
+            ).strip().upper()
+            logger.warning(
+                f"⏱️ ATTACH RESPONSE TIMEOUT for sensor {sensor_eui} via {pending_bs} "
+                f"(opId={op_id}, timeout={self.attach_response_timeout}s)"
+            )
+        return len(expired_op_ids)
+
+    async def _retry_attach_for_writer(
+        self,
+        writer: asyncio.streams.StreamWriter,
+        reason: str,
+        *,
+        force_retry: bool = False,
+    ) -> int:
+        bs_eui = self.connected_base_stations.get(writer)
+        if not bs_eui:
+            return 0
+
+        bs_eui_upper = str(bs_eui or "").strip().upper()
+        now = asyncio.get_event_loop().time()
+        retries_sent = 0
+
+        if force_retry:
+            self._prune_stale_pending_attach_requests(now=now, base_station=bs_eui_upper)
+
+        for sensor in self.sensor_config:
+            sensor_eui = str(sensor.get("eui", "")).strip().upper()
+            if not sensor_eui or not self._is_sensor_mapped_to_bs(sensor, bs_eui_upper):
+                continue
+
+            reg_info = self.registered_sensors.get(sensor_eui, {})
+            reg_bases = {
+                str(item or "").strip().upper()
+                for item in (reg_info.get("base_stations", []) or [])
+                if str(item or "").strip()
+            }
+            if reg_info.get("status") == "registered" and bs_eui_upper in reg_bases:
+                continue
+            if self._has_pending_attach(sensor_eui, bs_eui_upper):
+                continue
+
+            key = (sensor_eui, bs_eui_upper)
+            last_ts = float(self._last_attach_attempt.get(key, 0.0) or 0.0)
+            if not force_retry and now - last_ts < self.attach_retry_min_interval:
+                continue
+
+            try:
+                await self.send_attach_request(writer, sensor)
+                retries_sent += 1
+                await asyncio.sleep(0.05)
+            except Exception as retry_err:
+                logger.debug(
+                    f"Attach retry failed for {sensor_eui} via {bs_eui_upper} during {reason}: {retry_err}"
+                )
+
+        if retries_sent > 0:
+            logger.info(
+                f"🔁 ATTACH RECOVERY sent {retries_sent} request(s) for {bs_eui_upper} ({reason})"
+            )
+        return retries_sent
+
+    async def _post_connect_attach_recovery(
+        self,
+        writer: asyncio.streams.StreamWriter,
+        bs_eui: str,
+    ) -> None:
+        for attempt in range(1, 3):
+            await asyncio.sleep(self.attach_post_connect_retry_delay * attempt)
+            if self.connected_base_stations.get(writer) != bs_eui:
+                return
+            await self._retry_attach_for_writer(
+                writer,
+                reason=f"post-connect recovery #{attempt}",
+                force_retry=True,
+            )
+
+    def _drop_base_station_registrations(self, bs_eui: str) -> int:
+        bs_eui_upper = str(bs_eui or "").strip().upper()
+        if not bs_eui_upper:
+            return 0
+
+        removed_links = 0
+        for sensor_eui, reg_info in list(self.registered_sensors.items()):
+            base_stations = list(reg_info.get("base_stations", []) or [])
+            filtered_base_stations = [
+                bs
+                for bs in base_stations
+                if str(bs or "").strip().upper() != bs_eui_upper
+            ]
+            removed_for_sensor = len(base_stations) - len(filtered_base_stations)
+            if removed_for_sensor <= 0:
+                continue
+
+            removed_links += removed_for_sensor
+            reg_info["base_stations"] = filtered_base_stations
+            reg_info["registrations"] = [
+                item
+                for item in (reg_info.get("registrations", []) or [])
+                if str(item.get("base_station", "") or "").strip().upper() != bs_eui_upper
+            ]
+            if filtered_base_stations:
+                reg_info["status"] = "registered"
+                reg_info["registered"] = True
+            else:
+                reg_info["status"] = "disconnected"
+                reg_info["registered"] = False
+
+        if removed_links > 0:
+            logger.info(
+                f"Cleared {removed_links} runtime sensor attachment(s) for disconnected base station {bs_eui_upper}"
+            )
+        return removed_links
+
+    async def periodic_attach_reconcile(self) -> None:
+        """Periodically retries attach for mapped sensors missing registration on connected base stations."""
+        logger.info(
+            f"🔁 ATTACH RECONCILE monitor started (interval={self.attach_reconcile_interval}s, retry-min={self.attach_retry_min_interval}s)"
+        )
+        while True:
+            try:
+                await asyncio.sleep(self.attach_reconcile_interval)
+                if not self.connected_base_stations or not self.sensor_config:
+                    continue
+
+                now = asyncio.get_event_loop().time()
+                expired = self._prune_stale_pending_attach_requests(now=now)
+                if expired > 0:
+                    logger.info(f"Cleared {expired} stale pending attach request(s)")
+                retries_sent = 0
+                for writer, bs_eui in list(self.connected_base_stations.items()):
+                    if writer not in self.connected_base_stations:
+                        continue
+                    bs_eui_upper = str(bs_eui or "").strip().upper()
+                    for sensor in self.sensor_config:
+                        sensor_eui = str(sensor.get("eui", "")).strip().upper()
+                        if not sensor_eui:
+                            continue
+                        if not self._is_sensor_mapped_to_bs(sensor, bs_eui_upper):
+                            continue
+                        reg_info = self.registered_sensors.get(sensor_eui, {})
+                        reg_bases = {
+                            str(item or "").strip().upper()
+                            for item in (reg_info.get("base_stations", []) or [])
+                            if str(item or "").strip()
+                        }
+                        if reg_info.get("status") == "registered" and bs_eui_upper in reg_bases:
+                            continue
+                        if self._has_pending_attach(sensor_eui, bs_eui_upper):
+                            continue
+
+                        key = (sensor_eui, bs_eui_upper)
+                        last_ts = float(self._last_attach_attempt.get(key, 0.0) or 0.0)
+                        if now - last_ts < self.attach_retry_min_interval:
+                            continue
+
+                        try:
+                            await self.send_attach_request(writer, sensor)
+                            self._last_attach_attempt[key] = now
+                            retries_sent += 1
+                            await asyncio.sleep(0.05)
+                        except Exception as retry_err:
+                            logger.debug(
+                                f"Attach reconcile retry failed for {sensor_eui} via {bs_eui_upper}: {retry_err}"
+                            )
+                if retries_sent > 0:
+                    logger.info(f"🔁 ATTACH RECONCILE sent {retries_sent} retry request(s)")
+            except asyncio.CancelledError:
+                logger.info("🔁 ATTACH RECONCILE task cancelled")
+                break
+            except Exception as exc:
+                logger.error(f"❌ ATTACH RECONCILE error: {exc}")
 
     async def send_detach_request(self, writer: asyncio.streams.StreamWriter, sensor_eui: str) -> bool:
         """Send detach request for a specific sensor"""
@@ -1044,6 +1808,8 @@ class TLSServer:
                                 self.bs_op_ids.pop(old_writer, None)
                                 # Also remove from connecting if present there
                                 self.connecting_base_stations.pop(old_writer, None)
+                            if old_writers:
+                                self._drop_base_station_registrations(bs_eui)
                             
                             self.connected_base_stations[writer] = bs_eui
                             self.bs_op_ids[writer] = -1
@@ -1070,6 +1836,7 @@ class TLSServer:
 
                             # Start attachment process
                             await self.attach_file(writer)
+                            asyncio.create_task(self._post_connect_attach_recovery(writer, bs_eui))
 
                             # Always ensure status request task is running
                             if not hasattr(self, '_status_task_running') or not self._status_task_running:
@@ -1215,11 +1982,16 @@ class TLSServer:
                             if eui_key not in self.registered_sensors:
                                 self.registered_sensors[eui_key] = {
                                     'status': 'registered',
+                                    'registered': True,
                                     'base_stations': [],
                                     'timestamp': response_time,
                                     'registration_time': self._get_local_time(),
                                     'registrations': []
                                 }
+
+                            self.registered_sensors[eui_key]['status'] = 'registered'
+                            self.registered_sensors[eui_key]['registered'] = True
+                            self.registered_sensors[eui_key]['timestamp'] = response_time
 
                             # Add this base station if not already registered
                             if bs_eui not in self.registered_sensors[eui_key]['base_stations']:
@@ -1268,11 +2040,16 @@ class TLSServer:
                                 if eui_key not in self.registered_sensors:
                                     self.registered_sensors[eui_key] = {
                                         'status': 'registered',
+                                        'registered': True,
                                         'base_stations': [],
                                         'timestamp': asyncio.get_event_loop().time(),
                                         'registration_time': self._get_local_time(),
                                         'registrations': []
                                     }
+
+                                self.registered_sensors[eui_key]['status'] = 'registered'
+                                self.registered_sensors[eui_key]['registered'] = True
+                                self.registered_sensors[eui_key]['timestamp'] = asyncio.get_event_loop().time()
 
                                 # Add this base station if not already registered
                                 if bs_eui not in self.registered_sensors[eui_key]['base_stations']:
@@ -1541,6 +2318,19 @@ class TLSServer:
                         logger.info(f"     Length: {len(message['userData'])} bytes")
                         logger.info(f"     Data (hex): {' '.join(f'{b:02x}' for b in message['userData'])}")
                         logger.info(f"     Data (dec): {message['userData']}")
+                        self._record_sensor_uplink(
+                            eui=eui,
+                            base_station_eui=bs_eui,
+                            packet_cnt=packet_cnt,
+                            snr=snr,
+                            rssi=message.get("rssi"),
+                            rx_time_ns=message.get("rxTime"),
+                            user_data=(
+                                message["userData"]
+                                if isinstance(message.get("userData"), list)
+                                else list(message.get("userData")) if isinstance(message.get("userData"), (bytes, bytearray)) else []
+                            ),
+                        )
 
                         # Check if this sensor is registered
                         is_registered = eui.upper() in self.registered_sensors
@@ -1949,6 +2739,25 @@ class TLSServer:
                 bs_eui = self.connected_base_stations.pop(writer)
                 logger.info(f"❌ Base station {bs_eui} disconnected")
                 logger.info(f"   Remaining connected base stations: {len(self.connected_base_stations)}")
+                self._drop_base_station_registrations(bs_eui)
+                stale_op_ids = [
+                    op_id
+                    for op_id, pending in list(self.pending_attach_requests.items())
+                    if str(
+                        pending.get("base_station")
+                        or pending.get("base_station_eui")
+                        or ""
+                    ).strip().upper() == str(bs_eui or "").strip().upper()
+                ]
+                for op_id in stale_op_ids:
+                    self.pending_attach_requests.pop(op_id, None)
+                if stale_op_ids:
+                    logger.info(f"   Removed {len(stale_op_ids)} pending attach request(s) for disconnected base station")
+                self._last_attach_attempt = {
+                    key: ts
+                    for key, ts in self._last_attach_attempt.items()
+                    if key[1] != str(bs_eui or "").strip().upper()
+                }
             if writer in self.connecting_base_stations:
                 self.connecting_base_stations.pop(writer)
             self.bs_status_failures.pop(writer, None)
@@ -1977,6 +2786,7 @@ class TLSServer:
                 eui = int(message["epEui"]).to_bytes(8, byteorder="big").hex()
                 snr = message_data['snr']
                 packet_cnt = message["packetCnt"]
+                user_data = message.get("userData", [])
 
                 data_dict = {
                     "bs_eui": bs_eui,
@@ -1984,7 +2794,7 @@ class TLSServer:
                     "snr": snr,
                     "rssi": message["rssi"],
                     "cnt": packet_cnt,
-                    "data": message["userData"],
+                    "data": user_data,
                 }
 
                 mqtt_topic = f"ep/{eui.upper()}/ul"
@@ -3442,4 +4252,6 @@ class TLSServer:
                     logger.error(f"Failed to send attach request for {eui} to {bs_eui}: {e}")
         else:
             logger.warning(f"⚠️  No base stations connected, attach request for {eui} will be sent when they connect.")
+
+
 

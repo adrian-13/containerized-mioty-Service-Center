@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+{% block title %}{{ t('page.sensor_detail', 'Detail senzora') }}{% endblock %}
+
+{% block content %}
+<style>
+.sensor-detail-page{display:grid;gap:.95rem}
+.sensor-detail-head,.sensor-detail-shell,.sensor-detail-error{border:1px solid #d6dfec;border-radius:.98rem;background:linear-gradient(180deg,#fff 0%,#f9fcff 100%);box-shadow:0 10px 24px rgba(15,23,42,.08)}
+.sensor-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.9rem;padding:.88rem .96rem}
+.sensor-detail-kicker{margin:0;font-size:.64rem;text-transform:uppercase;letter-spacing:.08em;color:#5f7088;font-weight:800}
+.sensor-detail-title{margin:.14rem 0 0;font-family:"Sora","Manrope",sans-serif;font-size:1.28rem;font-weight:800;color:#13263f}
+.sensor-detail-subtitle{margin:.24rem 0 0;color:#5f7088;font-size:.78rem}
+.sensor-detail-head-actions{display:flex;align-items:center;gap:.48rem;flex-wrap:wrap;justify-content:flex-end}
+.sensor-detail-tabs{display:flex;align-items:center;gap:.42rem;padding:.82rem .9rem 0;flex-wrap:wrap}
+.sensor-detail-tab{border:1px solid #cdd9ea;background:#fff;color:#284465;border-radius:999px;padding:.48rem .8rem;font-size:.78rem;font-weight:800;display:inline-flex;align-items:center;gap:.42rem;cursor:pointer}
+.sensor-detail-tab.is-active{background:linear-gradient(180deg,#264878 0%,#1b3559 100%);border-color:#1b3559;color:#fff;box-shadow:0 10px 22px rgba(27,53,89,.24)}
+.sensor-detail-body{padding:.9rem}
+.sensor-detail-tabpanel{display:none}
+.sensor-detail-tabpanel.is-active{display:block}
+.sensor-detail-banner,.sensor-panel,.sensor-kpi-card,.sensor-payload-card,.sensor-empty-state{border:1px solid #d7e3f3;border-radius:.96rem;background:#fff;box-shadow:0 8px 18px rgba(15,23,42,.05)}
+.sensor-detail-banner{padding:1.08rem 1.12rem;margin-bottom:.95rem;background:linear-gradient(180deg,#fcfdff 0%,#f3f8ff 100%)}
+.sensor-top-meta,.sensor-inline-meta{display:flex;align-items:center;gap:.46rem;flex-wrap:wrap}
+.sensor-top-meta{margin-bottom:.72rem}
+.sensor-status-chip,.sensor-context-chip{display:inline-flex;align-items:center;gap:.36rem;border-radius:999px;padding:.34rem .66rem;font-size:.76rem;font-weight:800;border:1px solid #d1dced;background:#fff;color:#284465}
+.sensor-status-chip.is-online,.sensor-status-chip.is-recent,.sensor-context-chip.is-success{background:rgba(25,135,84,.12);color:#0f7a4b;border-color:rgba(25,135,84,.24)}
+.sensor-status-chip.is-delayed,.sensor-context-chip.is-warning{background:rgba(255,193,7,.16);color:#9a6700;border-color:rgba(255,193,7,.28)}
+.sensor-status-chip.is-offline,.sensor-status-chip.is-stale,.sensor-context-chip.is-danger{background:rgba(220,53,69,.12);color:#b4232f;border-color:rgba(220,53,69,.22)}
+.sensor-status-chip.is-quiet,.sensor-context-chip.is-info{background:rgba(37,99,235,.10);color:#2f63be;border-color:rgba(37,99,235,.18)}
+.sensor-summary-grid,.sensor-kpi-grid,.sensor-section-grid,.sensor-health-grid,.sensor-payload-grid,.sensor-debug-grid{display:grid;gap:.78rem}
+.sensor-summary-grid,.sensor-kpi-grid,.sensor-payload-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sensor-section-grid{grid-template-columns:1.2fr 1fr}
+.sensor-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sensor-debug-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:.8rem}
+.sensor-panel-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;padding:.92rem 1.04rem;border-bottom:1px solid #dfe8f5;background:#f8fbff}
+.sensor-panel-title{margin:0;font-size:1rem;font-weight:800;color:#18385f;display:inline-flex;align-items:center;gap:.5rem}
+.sensor-panel-note{color:#60748f;font-size:.74rem;font-weight:700}
+.sensor-panel-body{padding:1.08rem 1.12rem}
+.sensor-kpi-card{padding:1rem 1.06rem}
+.sensor-kpi-label,.sensor-payload-label,.sensor-table th{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#60748f;font-weight:800}
+.sensor-kpi-value,.sensor-payload-value{margin-top:.34rem;font-size:1rem;font-weight:800;color:#142a47;line-height:1.25}
+.sensor-kpi-note,.sensor-payload-note,.sensor-empty-state,.sensor-detail-error{margin-top:.3rem;color:#627690;font-size:.74rem;line-height:1.5}
+.sensor-metric-rows{display:grid;gap:.5rem}
+.sensor-metric-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:.12rem 0 .66rem;border-bottom:1px solid #edf2f9}
+.sensor-metric-row:last-child{padding-bottom:.12rem;border-bottom:none}
+.sensor-metric-name{color:#60748f;font-size:.78rem;font-weight:700}
+.sensor-metric-value{color:#13263f;font-size:.92rem;font-weight:800;text-align:right;line-height:1.45;max-width:62%}
+.sensor-progress-track{position:relative;height:.62rem;border-radius:999px;background:#eaf0f8;overflow:hidden}
+.sensor-progress-bar{position:absolute;inset:0 auto 0 0;border-radius:999px;background:linear-gradient(90deg,#dc3545 0%,#ffc107 48%,#28a745 100%)}
+.sensor-table-wrap{overflow-x:auto}
+.sensor-table{width:100%;border-collapse:collapse}
+.sensor-table th,.sensor-table td{padding:.86rem .92rem;border-bottom:1px solid #edf2f9;vertical-align:top}
+.sensor-table td{color:#13263f;font-size:.9rem}
+.sensor-payload-card{padding:.9rem .95rem;background:#f9fbfe}
+.sensor-payload-card.is-success{background:rgba(25,135,84,.08);border-color:rgba(25,135,84,.16)}
+.sensor-payload-card.is-warning{background:rgba(255,193,7,.12);border-color:rgba(255,193,7,.2)}
+.sensor-payload-card.is-danger{background:rgba(220,53,69,.10);border-color:rgba(220,53,69,.18)}
+.sensor-payload-card.is-info{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.16)}
+.sensor-code-block{margin:0;border:1px solid #dbe5f2;border-radius:.84rem;background:#f8fbff;padding:.9rem .98rem;font-size:.82rem;color:#17375f;overflow-x:auto;white-space:pre-wrap;word-break:break-word;line-height:1.55}
+.sensor-empty-state{padding:1.4rem 1rem;text-align:center;background:#fbfdff}
+.sensor-audit-toolbar{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;margin-bottom:.72rem}
+.sensor-audit-filters{display:inline-flex;align-items:center;gap:.38rem;flex-wrap:wrap}
+.sensor-audit-filter{border:1px solid #cedaed;background:#fff;color:#284465;border-radius:999px;padding:.32rem .62rem;font-size:.73rem;font-weight:800;display:inline-flex;align-items:center;gap:.36rem;cursor:pointer}
+.sensor-audit-filter.is-active{background:#e9f3ff;border-color:#2f6cab;color:#17497d}
+.sensor-audit-filter-count{font-size:.67rem;color:#5f7088;background:#f0f5fd;border-radius:999px;padding:.1rem .36rem}
+.sensor-audit-meta-note{font-size:.73rem;color:#627690;font-weight:700}
+.sensor-audit-table-wrap{border:1px solid #d7e3f3;border-radius:.92rem;overflow:auto;background:#fff}
+.sensor-audit-table{width:100%;border-collapse:collapse}
+.sensor-audit-table th,.sensor-audit-table td{padding:.62rem .76rem;border-bottom:1px solid #edf2f9;vertical-align:top}
+.sensor-audit-table th{font-size:.69rem;letter-spacing:.06em;text-transform:uppercase;color:#60748f;font-weight:800;background:#f8fbff;white-space:nowrap}
+.sensor-audit-table td{font-size:.82rem;color:#13263f}
+.sensor-audit-table tbody tr:hover td{background:#f9fbff}
+.sensor-audit-action{display:inline-flex;align-items:center;gap:.4rem;font-weight:800;color:#18385f}
+.sensor-audit-action-kind{display:inline-flex;align-items:center;border-radius:999px;padding:.08rem .42rem;font-size:.64rem;font-weight:800;letter-spacing:.03em}
+.sensor-audit-action-kind.is-update{background:#e9f3ff;color:#1f5b91}
+.sensor-audit-action-kind.is-attach{background:#e6f7ef;color:#0f7a4b}
+.sensor-audit-action-kind.is-detach{background:#fff1f2;color:#b4232f}
+.sensor-audit-summary{display:grid;gap:.18rem}
+.sensor-audit-summary-note{font-size:.74rem;color:#526882;line-height:1.35}
+.sensor-audit-summary-empty{font-size:.74rem;color:#8a9ab0}
+.sensor-audit-group-badge{display:inline-flex;align-items:center;border-radius:999px;background:#f0f5fd;color:#355271;font-size:.66rem;font-weight:800;padding:.12rem .42rem}
+.sensor-audit-time-range{font-size:.72rem;color:#627690;line-height:1.35}
+.sensor-audit-empty-row td{text-align:center;color:#6b7f98;font-weight:700;padding:1rem .8rem}
+.sensor-detail-error{text-align:center;padding:1.3rem 1rem;color:#b4232f}
+@media (max-width:1200px){.sensor-summary-grid,.sensor-kpi-grid,.sensor-payload-grid,.sensor-debug-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sensor-section-grid{grid-template-columns:1fr}}
+@media (max-width:767.98px){.sensor-detail-head{flex-direction:column}.sensor-detail-head-actions{width:100%;justify-content:flex-start}.sensor-summary-grid,.sensor-kpi-grid,.sensor-health-grid,.sensor-payload-grid,.sensor-debug-grid{grid-template-columns:1fr}.sensor-audit-table th:nth-child(3),.sensor-audit-table td:nth-child(3){display:none}}
+</style>
+
+<div class="sensor-detail-page">
+  <section class="sensor-detail-head">
+    <div>
+      <p class="sensor-detail-kicker">{{ t('common.details', 'Detail') }}</p>
+      <h1 class="sensor-detail-title" id="sensorDetailPageTitle">{{ t('page.sensor_detail', 'Detail senzora') }} {{ sensor_eui }}</h1>
+      <p class="sensor-detail-subtitle" id="sensorDetailPageSubtitle">{{ t('sensor_detail.subtitle', 'Hlavné pracovisko pre kontrolu, telemetriu, debug a audit.') }}</p>
+    </div>
+    <div class="sensor-detail-head-actions">
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('sensors') }}"><i class="fas fa-arrow-left me-1"></i>{{ t('sensor_detail.back_to_sensors', 'Späť na senzory') }}</a>
+      <a class="btn btn-outline-primary btn-sm" id="sensorDetailEditLink" href="{{ url_for('sensors') }}?edit_sensor={{ sensor_eui }}"><i class="fas fa-pen me-1"></i>{{ t('sensor_detail.edit_sensor', 'Upraviť senzor') }}</a>
+      <a class="btn btn-outline-primary btn-sm" id="sensorDetailAttachLink" href="{{ url_for('sensors') }}?attach_sensor={{ sensor_eui }}"><i class="fas fa-link me-1"></i>{{ t('sensor_detail.manage_attach', 'Správa priradenia') }}</a>
+      <a class="btn btn-outline-primary btn-sm" id="sensorDetailTelemetryLink" href="{{ url_for('sensor_telemetry') }}?sensor_eui={{ sensor_eui }}"><i class="fas fa-wave-square me-1"></i>{{ t('sensor_detail.telemetry_history', 'História telemetrie') }}</a>
+      <button type="button" class="btn btn-primary btn-sm" id="sensorDetailRefreshBtn"><i class="fas fa-rotate-right me-1"></i>{{ t('common.refresh', 'Obnoviť') }}</button>
+    </div>
+  </section>
+
+  <section class="sensor-detail-shell">
+    <div class="sensor-detail-tabs" id="sensorDetailTabs"></div>
+    <div class="sensor-detail-body" id="sensorDetailPageBody">
+      <div class="sensor-empty-state">{{ t('runtime.loading_sensor_detail', 'Načítavam detail senzora...') }}</div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const SD_I18N = {
+    loadingSensorDetail: {{ t('runtime.loading_sensor_detail', 'Načítavam detail senzora...')|tojson }},
+    unableLoadSensorDetail: {{ t('runtime.unable_load_sensor_detail', 'Nepodarilo sa načítať detail senzora: {error}')|tojson }},
+    unableLoadSensorAudit: {{ t('runtime.unable_load_sensor_audit', 'Nepodarilo sa načítať audit senzora')|tojson }},
+    noAuditYet: {{ t('sensor_detail.no_audit_yet', 'Pre tento senzor zatiaľ nie sú auditné záznamy.')|tojson }},
+    auditWillLoad: {{ t('sensor_detail.audit_load_on_open', 'Auditná stopa sa načíta po otvorení tejto karty.')|tojson }},
+    backToSensors: {{ t('sensor_detail.back_to_sensors', 'Späť na senzory')|tojson }},
+    overview: {{ t('common.overview', 'Prehľad')|tojson }},
+    telemetry: {{ t('common.telemetry', 'Telemetria')|tojson }},
+    debug: {{ t('common.debug', 'Debug')|tojson }},
+    audit: {{ t('common.audit', 'Audit')|tojson }},
+    noDataYet: {{ t('common.no_data_yet', 'Zatiaľ bez dát')|tojson }},
+    na: {{ t('common.not_available', 'Nedostupné')|tojson }},
+    sensor: {{ t('sensor_detail.sensor', 'Senzor')|tojson }},
+    eventDrivenSensor: {{ t('sensor_detail.event_driven_sensor', 'Udalostný senzor')|tojson }},
+    periodicSensor: {{ t('sensor_detail.periodic_sensor', 'Periodický senzor')|tojson }},
+    subtitle: {{ t('sensor_detail.subtitle_runtime', 'Použite Prehľad pre operatívu, Telemetriu pre dekódované hodnoty, Debug pre raw payload a Audit pre admin zmeny.')|tojson }},
+    noEvents: {{ t('sensor_detail.no_events', 'Bez udalostí')|tojson }},
+    unknown: {{ t('common.unknown', 'Neznáme')|tojson }},
+    online: {{ t('sensor_detail.online', 'Online')|tojson }},
+    delayed: {{ t('sensor_detail.delayed', 'Delayed')|tojson }},
+    offline: {{ t('common.offline', 'Offline')|tojson }},
+    stale: {{ t('sensor_detail.stale', 'Stale')|tojson }},
+    quiet: {{ t('sensor_detail.quiet', 'Quiet')|tojson }},
+    recentEvent: {{ t('sensor_detail.recent_event', 'Nedávna udalosť')|tojson }},
+    noTelemetry: {{ t('sensor_detail.no_telemetry', 'Bez telemetrie')|tojson }},
+    auditAll: {{ t('sensor_detail.audit_all', 'Všetko')|tojson }},
+    auditUpdates: {{ t('sensor_detail.audit_updates', 'Úpravy')|tojson }},
+    auditAttach: {{ t('sensor_detail.audit_attach', 'Priradenie')|tojson }},
+    auditDetach: {{ t('sensor_detail.audit_detach', 'Odpojenie')|tojson }},
+    auditUpdate: {{ t('sensor_detail.audit_update', 'Úprava')|tojson }},
+    auditOther: {{ t('sensor_detail.audit_other', 'Iné')|tojson }},
+    auditAction: {{ t('sensor_detail.audit_action', 'Akcia')|tojson }},
+    auditSummary: {{ t('sensor_detail.audit_summary', 'Zhrnutie')|tojson }},
+    auditActor: {{ t('sensor_detail.audit_actor', 'Vykonal')|tojson }},
+    rowsShown: {{ t('sensor_detail.rows_shown', '{count} riadkov')|tojson }},
+    noStructuredSummary: {{ t('sensor_detail.no_structured_summary', 'Bez štruktúrovaného zhrnutia.')|tojson }},
+    repeatedTimes: {{ t('sensor_detail.repeated_times', 'Opakované {count}x')|tojson }},
+    oldestInGroup: {{ t('sensor_detail.oldest_in_group', 'Oldest in group: {time}')|tojson }},
+    noAuditMatch: {{ t('sensor_detail.no_audit_match', 'Vybranému filtru nezodpovedajú žiadne auditné záznamy.')|tojson }},
+    genericNoDecoded: {{ t('sensor_detail.generic_no_decoded', 'Bez dekódovaných hodnôt')|tojson }},
+    genericTelemetryNote: {{ t('sensor_detail.generic_telemetry_note', 'Tento payload profil zatiaľ nemá vlastný zobrazovací blok. Dekódované hodnoty sú stále dostupné nižšie.')|tojson }},
+    tableTime: {{ t('common.time', 'Čas')|tojson }},
+    decodedSummary: {{ t('sensor_detail.decoded_summary', 'Zhrnutie dekódovania')|tojson }},
+    noShortHistory: {{ t('sensor_detail.no_short_history', 'Krátka história zatiaľ nie je dostupná.')|tojson }},
+    noDecodedPayload: {{ t('sensor_detail.no_decoded_payload', 'Zatiaľ neprišiel žiadny dekódovaný payload. Po prijatí telemetrie sa tu zobrazia dekódované hodnoty a krátka história.')|tojson }},
+    noRawPayload: {{ t('sensor_detail.no_raw_payload', 'Raw payload zatiaľ nie je dostupný.')|tojson }},
+    profile: {{ t('sensor_detail.profile', 'Profil')|tojson }},
+    decoderProfileNote: {{ t('sensor_detail.decoder_profile_note', 'Profil dekódera použitý pre posledný uplink')|tojson }},
+    modelHint: {{ t('sensor_detail.model_hint', 'Odhad modelu')|tojson }},
+    modelHintNote: {{ t('sensor_detail.model_hint_note', 'Najlepší dostupný odhad modelu zariadenia')|tojson }},
+    receivedAt: {{ t('sensor_detail.received_at', 'Prijaté')|tojson }},
+    receivedAtNote: {{ t('sensor_detail.received_at_note', 'Čas po deduplikácii a uložení')|tojson }},
+    rawPayload: {{ t('sensor_detail.raw_payload', 'Raw payload')|tojson }},
+    hexAndDecimal: {{ t('sensor_detail.hex_and_decimal', 'Hex a desiatkové bajty')|tojson }},
+    decimal: {{ t('sensor_detail.decimal', 'Desiatkové bajty')|tojson }},
+    decodedJson: {{ t('sensor_detail.decoded_json', 'Dekódovaný JSON')|tojson }},
+    debugViewNote: {{ t('sensor_detail.debug_view_note', 'Debug pohľad pre technickú analýzu')|tojson }},
+    autoInferred: {{ t('sensor_profiles.auto.label', 'Automaticky / odvodené')|tojson }},
+    eventDriven: {{ t('sensors.reporting_event_short', 'Udalostné')|tojson }},
+    periodic: {{ t('sensors.reporting_periodic_short', 'Periodické')|tojson }},
+    expectedInterval: {{ t('sensor_detail.expected_interval', 'Očakávaný interval')|tojson }},
+    serviceWindow: {{ t('sensor_detail.service_window', 'Servisné okno')|tojson }},
+    serviceWindowShort: {{ t('sensor_detail.service_window_short', 'servisné okno')|tojson }},
+    firstSeen: {{ t('sensor_detail.first_seen', 'Prvé videnie')|tojson }},
+    lastSeen: {{ t('sensor_detail.last_seen', 'Posledné videnie')|tojson }},
+    initialRegistrationTimestamp: {{ t('sensor_detail.initial_registration_timestamp', 'Čas prvej registrácie senzora')|tojson }},
+    gatewayCoverage: {{ t('sensor_detail.gateway_coverage', 'Pokrytie základňovými stanicami')|tojson }},
+    baseStationsReceivingUplinks: {{ t('sensor_detail.base_stations_receiving_uplinks', 'Základňové stanice prijímajúce uplinky')|tojson }},
+    counterGapLoss: {{ t('sensor_detail.counter_gap_loss', 'Strata podľa packet countera')|tojson }},
+    operationalStateAndThresholds: {{ t('sensor_detail.operational_state_and_thresholds', 'Prevádzkový stav a prahy')|tojson }},
+    avgSnrOperatorScore: {{ t('sensor_detail.avg_snr_operator_score', 'Priemerné SNR prepočítané na operátorské skóre.')|tojson }},
+    signalQualityAndBaseStationPath: {{ t('sensor_detail.signal_quality_and_base_station_path', 'Kvalita signálu a trasa cez základňové stanice')|tojson }},
+    frameCounter: {{ t('sensor_detail.frame_counter', 'Počítadlo rámcov')|tojson }},
+    currentPacketCounterObserved: {{ t('sensor_detail.current_packet_counter_observed', 'Aktuálna hodnota packet countera zachytená Service Centrom')|tojson }},
+    primaryGateway: {{ t('sensor_detail.primary_base_station', 'Primárna základňová stanica')|tojson }},
+    preferredReceivingBaseStation: {{ t('sensor_detail.preferred_receiving_base_station', 'Preferovaná prijímajúca základňová stanica')|tojson }},
+    noCoverageDataYet: {{ t('sensor_detail.no_coverage_data_yet', 'Pokrytie základňovými stanicami zatiaľ nie je k dispozícii.')|tojson }},
+    expectedIntervalSource: {{ t('sensor_detail.expected_interval_source', 'Zdroj očakávaného intervalu')|tojson }},
+    secondsAgo: {{ t('sensor_detail.seconds_ago', 'pred {value}s')|tojson }},
+    minutesAgo: {{ t('sensor_detail.minutes_ago', 'pred {value}m')|tojson }},
+    hoursAgo: {{ t('sensor_detail.hours_ago', 'pred {value}h')|tojson }},
+    daysAgo: {{ t('sensor_detail.days_ago', 'pred {value}d')|tojson }},
+  };
+  function tr(key, fallback, params = null) {
+    let template = Object.prototype.hasOwnProperty.call(SD_I18N, key) ? SD_I18N[key] : fallback;
+    if (params && typeof template === 'string') {
+      Object.entries(params).forEach(([name, value]) => {
+        template = template.replaceAll(`{${name}}`, String(value));
+      });
+    }
+    return template;
+  }
+  const SENSOR_EUI = {{ sensor_eui|tojson }};
+  const CAN_VIEW_AUDIT = {{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('view_admin_audit') else 'false' }};
+  const SENSOR_PROFILE_OPTIONS = {{ sensor_profiles|tojson|safe }};
+  const SENSOR_PROFILE_LIBRARY = Object.fromEntries((SENSOR_PROFILE_OPTIONS || []).map((p) => [String(p.id || '').toLowerCase(), p]));
+  const state = { detail: null, activeTab: 'overview', auditLoaded: false, auditLoading: false, audit: [], auditFilter: 'all' };
+  const els = {
+    title: document.getElementById('sensorDetailPageTitle'),
+    subtitle: document.getElementById('sensorDetailPageSubtitle'),
+    body: document.getElementById('sensorDetailPageBody'),
+    tabs: document.getElementById('sensorDetailTabs'),
+    refresh: document.getElementById('sensorDetailRefreshBtn'),
+    telemetry: document.getElementById('sensorDetailTelemetryLink'),
+    edit: document.getElementById('sensorDetailEditLink'),
+    attach: document.getElementById('sensorDetailAttachLink'),
+  };
+
+  function escapeHtml(value) { return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#039;'); }
+  function formatMetric(value, decimals = 0, suffix = '') { const n = Number(value); return Number.isFinite(n) ? `${n.toFixed(decimals)}${suffix}` : tr('na', 'Nedostupné'); }
+  function formatHistoryMetric(value, decimals = 0) { const n = Number(value); return Number.isFinite(n) ? n.toFixed(decimals) : '-'; }
+  function formatDateTime(value) { return value ? (typeof AppTime !== 'undefined' && AppTime.formatDateTime ? AppTime.formatDateTime(value) : new Date(value).toLocaleString()) : tr('na', 'Nedostupné'); }
+  function formatTimeOnly(value) { return value ? (typeof AppTime !== 'undefined' && AppTime.formatTime ? AppTime.formatTime(value) : new Date(value).toLocaleTimeString()) : tr('na', 'Nedostupné'); }
+  function formatTimeAgo(value) { const ts = Number(value); const target = Number.isFinite(ts) ? (ts > 1e12 ? ts : ts * 1000) : Date.parse(value); if (!Number.isFinite(target)) return tr('na', 'Nedostupné'); const diff = Math.max(0, Date.now() - target); const sec = Math.floor(diff / 1000); if (sec < 60) return tr('secondsAgo', 'pred {value}s', { value: sec }); const min = Math.floor(sec / 60); if (min < 60) return tr('minutesAgo', 'pred {value}m', { value: min }); const hrs = Math.floor(min / 60); if (hrs < 24) return tr('hoursAgo', 'pred {value}h', { value: hrs }); return tr('daysAgo', 'pred {value}d', { value: Math.floor(hrs / 24) }); }
+  function formatDurationShort(seconds) { const n = Number(seconds); if (!Number.isFinite(n) || n <= 0) return tr('na', 'Nedostupné'); if (n < 60) return `${Math.round(n)}s`; const min = n / 60; if (min < 60) return `${Math.round(min)} min`; const hrs = min / 60; if (hrs < 24) return `${hrs.toFixed(1)} h`; return `${(hrs / 24).toFixed(1)} d`; }
+  function formatHexBytes(value) { if (Array.isArray(value)) return value.map((entry) => Number(entry).toString(16).padStart(2, '0')).join(' '); return String(value || '').trim() || tr('na', 'Nedostupné'); }
+  function getAuditActor(entry) { return entry?.actor_username || entry?.actor || 'system'; }
+  function getAuditTimestamp(entry) { return entry?.ts || entry?.timestamp || entry?.created_at || null; }
+  function getAuditKind(entry) { const action = String(entry?.action || '').toLowerCase(); if (action.includes('detach')) return 'detach'; if (action.includes('attach')) return 'attach'; if (action.includes('update')) return 'update'; return 'other'; }
+  function getAuditKindLabel(kind) { if (kind === 'attach') return tr('auditAttach', 'Priradenie'); if (kind === 'detach') return tr('auditDetach', 'Odpojenie'); if (kind === 'update') return tr('auditUpdate', 'Úprava'); return tr('auditOther', 'Iné'); }
+  function getAuditActionMeta(entry) { const kind = getAuditKind(entry); return { kind, label: getAuditKindLabel(kind), actor: getAuditActor(entry), timestamp: getAuditTimestamp(entry) }; }
+  function getAuditFilterCounts(entries) { return (entries || []).reduce((acc, entry) => { const kind = getAuditKind(entry); acc.all += 1; if (kind === 'update') acc.update += 1; if (kind === 'attach') acc.attach += 1; if (kind === 'detach') acc.detach += 1; return acc; }, { all: 0, update: 0, attach: 0, detach: 0 }); }
+  function filterAuditEntries(entries) { if (state.auditFilter === 'all') return Array.isArray(entries) ? entries.slice() : []; return (entries || []).filter((entry) => getAuditKind(entry) === state.auditFilter); }
+  function groupAuditEntries(entries) {
+    const grouped = [];
+    (entries || []).forEach((entry) => {
+      const meta = getAuditActionMeta(entry);
+      const groupable = meta.kind === 'attach' || meta.kind === 'detach';
+      const previous = grouped[grouped.length - 1];
+      if (groupable && previous && previous.groupable && previous.kind === meta.kind && previous.action === String(entry?.action || '') && previous.actor === meta.actor) {
+        previous.entries.push(entry);
+        previous.count += 1;
+        previous.oldestTimestamp = meta.timestamp || previous.oldestTimestamp;
+        if (!previous.summary) previous.summary = summarizeAuditDetails(entry);
+        return;
+      }
+      grouped.push({
+        action: String(entry?.action || 'unknown_action'),
+        kind: meta.kind,
+        actor: meta.actor,
+        latestTimestamp: meta.timestamp,
+        oldestTimestamp: meta.timestamp,
+        summary: summarizeAuditDetails(entry),
+        count: 1,
+        groupable,
+        entries: [entry]
+      });
+    });
+    return grouped;
+  }
+  function getSensorProfileMeta(profileId) {
+    const normalized = String(profileId || 'auto').toLowerCase();
+    const base = SENSOR_PROFILE_LIBRARY[normalized] || {};
+    const localizedLabels = {
+      auto: {{ t('sensor_profiles.auto.label', 'Automaticky / odvodené')|tojson }},
+      lansen_e2_co2_auto: {{ t('sensor_profiles.lansen_e2_co2_auto.label', 'LANSEN E2 CO2')|tojson }},
+      lansen_e2_co2_indoor: {{ t('sensor_profiles.lansen_e2_co2_indoor.label', 'LANSEN E2 CO2 interiér')|tojson }},
+      lansen_e2_co2_outdoor: {{ t('sensor_profiles.lansen_e2_co2_outdoor.label', 'LANSEN E2 CO2 exteriér')|tojson }},
+      lansen_m2_contact: {{ t('sensor_profiles.lansen_m2_contact.label', 'LANSEN M2 kontakt')|tojson }},
+      custom: {{ t('sensor_profiles.custom.label', 'Vlastný profil')|tojson }},
+    };
+    return { ...base, label: localizedLabels[normalized] || base.label || {{ t('sensor_profiles.auto.label', 'Automaticky / odvodené')|tojson }} };
+  }
+  function getSensorEnvironmentMeta(context) { const n = String(context || 'auto').toLowerCase(); if (n === 'indoor') return { shortLabel: {{ t('sensor_detail.indoor', 'Interiér')|tojson }}, description: {{ t('sensor_detail.indoor_context_note', 'Pre CO2 a komfortné metriky sa používajú vnútorné prahy.')|tojson }}, icon: 'fa-house' }; if (n === 'outdoor') return { shortLabel: {{ t('sensor_detail.outdoor', 'Exteriér')|tojson }}, description: {{ t('sensor_detail.outdoor_context_note', 'Pre CO2 a environmentálne metriky sa používajú vonkajšie prahy.')|tojson }}, icon: 'fa-tree-city' }; return { shortLabel: {{ t('display.auto_recommended', 'Auto (odporúčané)')|tojson }}, description: {{ t('sensor_detail.auto_context_note', 'Kontext prostredia sa odvodí zo zvoleného profilu senzora.')|tojson }}, icon: 'fa-wand-magic-sparkles' }; }
+  function getCo2VisualMeta(co2Value, context) { const ppm = Number(co2Value); if (!Number.isFinite(ppm)) return { tone: 'info', label: {{ t('sensor_detail.co2_no_data', 'Bez dát')|tojson }}, note: {{ t('sensor_detail.co2_no_data_note', 'Dekódovaná CO2 vzorka zatiaľ nie je dostupná.')|tojson }} }; const indoor = String(context || 'auto').toLowerCase() !== 'outdoor'; if (indoor) { if (ppm <= 800) return { tone: 'success', label: {{ t('sensor_detail.co2_comfortable', 'Komfortné')|tojson }}, note: {{ t('sensor_detail.co2_comfortable_note', 'Vnútorná úroveň CO2 je v bežnom komfortnom pásme.')|tojson }} }; if (ppm <= 1200) return { tone: 'warning', label: {{ t('sensor_detail.co2_elevated', 'Zvýšené')|tojson }}, note: {{ t('sensor_detail.co2_elevated_note', 'Vnútorné CO2 je zvýšené. Odporúča sa skontrolovať vetranie.')|tojson }} }; return { tone: 'danger', label: {{ t('sensor_detail.co2_critical', 'Kritické')|tojson }}, note: {{ t('sensor_detail.co2_critical_note', 'Vnútorné CO2 je vysoké a treba ho preveriť.')|tojson }} }; } if (ppm <= 500) return { tone: 'success', label: {{ t('sensor_detail.co2_ambient', 'Ambientné')|tojson }}, note: {{ t('sensor_detail.co2_ambient_note', 'Vonkajšia úroveň CO2 je blízko bežného ambientného stavu.')|tojson }} }; if (ppm <= 900) return { tone: 'warning', label: {{ t('sensor_detail.co2_elevated', 'Zvýšené')|tojson }}, note: {{ t('sensor_detail.co2_outdoor_elevated_note', 'Vonkajšie CO2 je zvýšené oproti typickému ambientnému pozadiu.')|tojson }} }; return { tone: 'danger', label: {{ t('sensor_detail.co2_critical', 'Kritické')|tojson }}, note: {{ t('sensor_detail.co2_outdoor_critical_note', 'Vonkajšie CO2 je nezvyčajne vysoké.')|tojson }} }; }
+  function getBatteryVisualMeta(voltage) { const v = Number(voltage); if (!Number.isFinite(v)) return { tone: 'info', label: {{ t('common.unknown', 'Neznáme')|tojson }} }; if (v >= 2.9) return { tone: 'success', label: {{ t('sensor_detail.battery_healthy', 'V poriadku')|tojson }} }; if (v >= 2.6) return { tone: 'warning', label: {{ t('sensor_detail.battery_monitor', 'Sledovať')|tojson }} }; return { tone: 'danger', label: {{ t('sensor_detail.battery_low', 'Nízka')|tojson }} }; }
+  function getSignalColor(score) { const n = Number(score); if (!Number.isFinite(n)) return '#60748f'; if (n >= 4.5) return '#16a34a'; if (n >= 3) return '#d97706'; return '#dc2626'; }
+  function getSignalLabel(score) { const n = Number(score); if (!Number.isFinite(n)) return {{ t('common.unknown', 'Neznáme')|tojson }}; if (n >= 4.5) return {{ t('sensor_detail.signal_excellent', 'Výborný')|tojson }}; if (n >= 3.5) return {{ t('sensor_detail.signal_good', 'Dobrý')|tojson }}; if (n >= 2.5) return {{ t('sensor_detail.signal_fair', 'Priemerný')|tojson }}; return {{ t('sensor_detail.signal_weak', 'Slabý')|tojson }}; }
+  function getLastEventTypeLabel(latestUplink) { const explicit = String(latestUplink?.decoded?.values?.last_alarm_input || '').trim().toLowerCase(); if (explicit === 'internal') return {{ t('sensor_detail.internal_alarm', 'Interný alarm')|tojson }}; if (explicit === 'external') return {{ t('sensor_detail.external_alarm', 'Externý alarm')|tojson }}; return {{ t('sensor_detail.no_event_type', 'Bez typu udalosti')|tojson }}; }
+  function getExpectedIntervalSourceLabel(source) { const normalized = String(source || '').trim().toLowerCase(); const labels = { configured: {{ t('sensor_detail.expected_interval_source_configured', 'nastavený')|tojson }}, default: {{ t('sensor_detail.expected_interval_source_default', 'predvolený')|tojson }}, profile: {{ t('sensor_detail.expected_interval_source_profile', 'profil senzora')|tojson }}, observed: {{ t('sensor_detail.expected_interval_source_observed', 'odvodený z prevádzky')|tojson }}, inferred: {{ t('sensor_detail.expected_interval_source_inferred', 'automaticky odvodený')|tojson }}, auto: {{ t('sensor_detail.expected_interval_source_inferred', 'automaticky odvodený')|tojson }} }; return labels[normalized] || normalized || tr('unknown', 'Neznáme'); }
+  function getPacketLossSourceLabel(source) { const normalized = String(source || '').trim().toLowerCase(); const labels = { runtime: {{ t('sensor_detail.packet_loss_source_runtime', 'runtime')|tojson }}, snapshot: {{ t('sensor_detail.packet_loss_source_snapshot', 'snapshot')|tojson }} }; return labels[normalized] || normalized || tr('unknown', 'Neznáme'); }
+  function deriveMonitoringMode(detail) { const explicit = String(detail?.config?.reporting_mode || '').trim().toLowerCase(); if (explicit === 'event' || explicit === 'periodic') return explicit; return String(detail?.sensor_profile || '').toLowerCase().includes('m2') ? 'event' : 'periodic'; }
+  function deriveStatus(detail) { const mode = deriveMonitoringMode(detail); const now = Date.now() / 1000; const lastSeenSec = Number(detail?.last_seen || 0); const expected = Number(detail?.expected_interval_seconds || 0); const offline = Number(detail?.offline_threshold_seconds || 0); const staleHours = Number(detail?.config?.stale_after_hours || 0); if (!lastSeenSec) return mode === 'event' ? { label: tr('noEvents', 'Bez udalostí'), variant: 'is-quiet', note: {{ t('sensor_detail.no_events_note', 'Pre tento senzor zatiaľ nebola zaznamenaná žiadna udalostná telemetria.')|tojson }} } : { label: tr('unknown', 'Neznáme'), variant: 'is-delayed', note: {{ t('sensor_detail.unknown_telemetry_note', 'Zatiaľ nebola zachytená žiadna nedávna telemetria.')|tojson }} }; const age = Math.max(0, now - lastSeenSec); if (mode === 'event') { const stale = staleHours > 0 ? staleHours * 3600 : (offline > 0 ? offline : 72 * 3600); if (age <= 3600) return { label: tr('recentEvent', 'Nedávna udalosť'), variant: 'is-recent', note: {{ t('sensor_detail.last_event_arrived', 'Posledná udalosť prišla {time}.')|tojson }}.replace('{time}', formatTimeAgo(lastSeenSec)) }; if (age <= stale) return { label: tr('quiet', 'Pokojný'), variant: 'is-quiet', note: {{ t('sensor_detail.quiet_note', 'Nedávno nebola zaznamenaná žiadna udalosť. Pre udalostné senzory je to v poriadku.')|tojson }} }; return { label: tr('stale', 'Stagnujúci'), variant: 'is-stale', note: {{ t('sensor_detail.stale_note', 'V rámci nastaveného servisného okna neprišla žiadna udalostná telemetria.')|tojson }} }; } if (expected > 0 && age <= expected) return { label: tr('online', 'Online'), variant: 'is-online', note: {{ t('sensor_detail.online_note', 'Senzor posiela dáta v očakávanom intervale.')|tojson }} }; if (offline > 0 && age <= offline) return { label: tr('delayed', 'Oneskorený'), variant: 'is-delayed', note: {{ t('sensor_detail.delayed_note', 'Posledný uplink mešká ({time}).')|tojson }}.replace('{time}', formatTimeAgo(lastSeenSec)) }; return { label: tr('offline', 'Offline'), variant: 'is-offline', note: {{ t('sensor_detail.offline_note', 'V rámci offline prahu neprišla žiadna telemetria.')|tojson }} }; }
+  function renderTabs() { const tabs = [{ id: 'overview', icon: 'fa-gauge-high', label: tr('overview', 'Prehľad') }, { id: 'telemetry', icon: 'fa-wave-square', label: tr('telemetry', 'Telemetria') }, { id: 'debug', icon: 'fa-terminal', label: tr('debug', 'Debug') }]; if (CAN_VIEW_AUDIT) tabs.push({ id: 'audit', icon: 'fa-clipboard-list', label: tr('audit', 'Audit') }); els.tabs.innerHTML = tabs.map((tab) => `<button type="button" class="sensor-detail-tab ${state.activeTab === tab.id ? 'is-active' : ''}" data-tab="${tab.id}"><i class="fas ${tab.icon}"></i>${tab.label}</button>`).join(''); els.tabs.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => { state.activeTab = button.dataset.tab; renderTabs(); renderBody(); if (state.activeTab === 'audit') ensureAuditLoaded(); })); }
+  function renderOverview(detail) {
+    const config = detail.config || {};
+    const status = deriveStatus(detail);
+    const profileLabel = String(getSensorProfileMeta(detail.sensor_profile).label || detail.sensor_profile_label || tr('autoInferred', 'Automaticky / odvodené'));
+    const environment = getSensorEnvironmentMeta(config.environment_context);
+    const mode = deriveMonitoringMode(detail);
+    const summaryInterval = mode === 'event' ? `${Number(config.stale_after_hours || 0) || 72} h ${tr('serviceWindowShort', 'service window')}` : (detail.expected_interval_seconds ? formatDurationShort(detail.expected_interval_seconds) : tr('unknown', 'Unknown'));
+    const firstSeen = detail.first_seen ? formatDateTime(Number(detail.first_seen) * 1000) : tr('na', 'Nedostupné');
+    const lastSeen = detail.last_seen ? formatTimeAgo(Number(detail.last_seen)) : tr('na', 'Nedostupné');
+    const coverageRows = Object.entries(detail.receiving_bases_details || {});
+    const signalScore = Number(detail.signal_score || 0);
+    return `
+      <section class="sensor-detail-banner">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="sensor-top-meta">
+            <span class="sensor-status-chip ${status.variant}"><i class="fas fa-circle" style="font-size:.46rem;"></i>${escapeHtml(status.label)}</span>
+            <code>${escapeHtml(detail.eui || SENSOR_EUI)}</code>
+            ${config.shortAddr ? `<span class="sensor-context-chip">{{ t('common.address', 'Adr') }} ${escapeHtml(config.shortAddr)}</span>` : ''}
+            <span class="sensor-context-chip"><i class="fas fa-layer-group"></i>${escapeHtml(profileLabel)}</span>
+            <span class="sensor-context-chip"><i class="fas ${environment.icon}"></i>${escapeHtml(environment.shortLabel)}</span>
+            <span class="sensor-context-chip"><i class="fas ${mode === 'event' ? 'fa-bell' : 'fa-repeat'}"></i>${mode === 'event' ? tr('eventDriven', 'Udalostné') : tr('periodic', 'Periodické')}</span>
+          </div>
+          <div class="small text-muted">${mode === 'event' ? tr('serviceWindow', 'Servisné okno') : tr('expectedInterval', 'Očakávaný interval')}: ${escapeHtml(summaryInterval)}</div>
+        </div>
+        <div class="sensor-summary-grid">
+          <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('firstSeen', 'Prvé videnie'))}</div><div class="sensor-kpi-value">${escapeHtml(firstSeen)}</div><div class="sensor-kpi-note">${escapeHtml(tr('initialRegistrationTimestamp', 'Čas prvej registrácie senzora'))}</div></div>
+          <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('lastSeen', 'Posledné videnie'))}</div><div class="sensor-kpi-value">${escapeHtml(lastSeen)}</div><div class="sensor-kpi-note">${escapeHtml(status.note)}</div></div>
+          <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('gatewayCoverage', 'Pokrytie základňovými stanicami'))}</div><div class="sensor-kpi-value">${Number(detail.gateway_count || 0)}</div><div class="sensor-kpi-note">${escapeHtml(tr('baseStationsReceivingUplinks', 'Základňové stanice prijímajúce uplinky'))}</div></div>
+          <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('counterGapLoss', 'Strata podľa packet countera'))}</div><div class="sensor-kpi-value">${formatMetric(detail.packet_loss_rate, 2, '%')}</div><div class="sensor-kpi-note">${escapeHtml(tr('counterGapLossNote', 'Odhad podľa chýbajúcich hodnôt packet countera ({source}).', { source: getPacketLossSourceLabel(detail.packet_loss_source || 'runtime') }))}</div></div>
+        </div>
+      </section>
+      <div class="sensor-section-grid">
+        <section class="sensor-panel">
+          <div class="sensor-panel-head"><h2 class="sensor-panel-title"><i class="fas fa-heart-pulse"></i>{{ t('sensor_detail.health', 'Zdravie') }}</h2><span class="sensor-panel-note">${escapeHtml(tr('operationalStateAndThresholds', 'Prevádzkový stav a prahy'))}</span></div>
+          <div class="sensor-panel-body">
+            <div class="sensor-health-grid">
+              <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('status', 'Stav'))}</div><div class="sensor-kpi-value" style="color:${status.variant === 'is-online' || status.variant === 'is-recent' ? '#12834d' : (status.variant === 'is-delayed' || status.variant === 'is-quiet' ? '#9a6700' : '#b4232f')};">${escapeHtml(status.label)}</div><div class="sensor-kpi-note">${escapeHtml(status.note)}</div></div>
+              <div class="sensor-kpi-card"><div class="sensor-kpi-label">{{ t('sensor_detail.signal_score', 'Skóre signálu') }}</div><div class="sensor-kpi-value" style="color:${getSignalColor(signalScore)};">${escapeHtml(getSignalLabel(signalScore))} (${signalScore.toFixed(1)}/5)</div><div class="sensor-progress-track mt-2"><span class="sensor-progress-bar" style="width:${Math.max(0, Math.min(100, signalScore * 20))}%;"></span></div><div class="sensor-kpi-note">${escapeHtml(tr('avgSnrOperatorScore', 'Priemerné SNR prepočítané na operátorské skóre.'))}</div></div>
+            </div>
+            <div class="sensor-metric-rows mt-3">
+              <div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.profile', 'Profil') }}</span><span class="sensor-metric-value">${escapeHtml(profileLabel)}</span></div>
+              <div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.environment_context', 'Kontext prostredia') }}</span><span class="sensor-metric-value">${escapeHtml(environment.description)}</span></div>
+              <div class="sensor-metric-row"><span class="sensor-metric-name">${mode === 'event' ? escapeHtml(tr('lastEventType', 'Typ poslednej udalosti')) : escapeHtml(tr('expectedIntervalSource', 'Zdroj očakávaného intervalu'))}</span><span class="sensor-metric-value">${mode === 'event' ? escapeHtml(getLastEventTypeLabel(detail.latest_uplink)) : escapeHtml(getExpectedIntervalSourceLabel(detail.expected_interval_source))}</span></div>
+              <div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.telegrams_received', 'Prijaté telegramy') }}</span><span class="sensor-metric-value">${Number(detail.packets_received || 0).toLocaleString()}</span></div>
+            </div>
+          </div>
+        </section>
+        <section class="sensor-panel">
+          <div class="sensor-panel-head"><h2 class="sensor-panel-title"><i class="fas fa-tower-cell"></i>{{ t('sensor_detail.radio_and_coverage', 'Rádio a pokrytie') }}</h2><span class="sensor-panel-note">${escapeHtml(tr('signalQualityAndBaseStationPath', 'Kvalita signálu a trasa cez základňové stanice'))}</span></div>
+          <div class="sensor-panel-body">
+            <div class="sensor-kpi-grid">
+              <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('avgSnr', 'Priem. SNR'))}</div><div class="sensor-kpi-value">${formatMetric(detail.avg_snr, 1, ' dB')}</div><div class="sensor-kpi-note">${escapeHtml(tr('minMaxTemplate', 'Min {min} / Max {max}', { min: formatMetric(detail.min_snr, 1, ' dB'), max: formatMetric(detail.max_snr, 1, ' dB') }))}</div></div>
+              <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('avgRssi', 'Priem. RSSI'))}</div><div class="sensor-kpi-value">${formatMetric(detail.avg_rssi, 1, ' dBm')}</div><div class="sensor-kpi-note">${escapeHtml(tr('minMaxTemplate', 'Min {min} / Max {max}', { min: formatMetric(detail.min_rssi, 1, ' dBm'), max: formatMetric(detail.max_rssi, 1, ' dBm') }))}</div></div>
+              <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('frameCounter', 'Počítadlo rámcov'))}</div><div class="sensor-kpi-value">${Number(detail.frame_counter || 0).toLocaleString()}</div><div class="sensor-kpi-note">${escapeHtml(tr('currentPacketCounterObserved', 'Aktuálna hodnota packet countera zachytená Service Centrom'))}</div></div>
+              <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('primaryGateway', 'Primárna základňová stanica'))}</div><div class="sensor-kpi-value">${detail.primary_gateway ? `<code>${escapeHtml(detail.primary_gateway)}</code>` : tr('na', 'Nedostupné')}</div><div class="sensor-kpi-note">${escapeHtml(tr('preferredReceivingBaseStation', 'Preferovaná prijímajúca základňová stanica'))}</div></div>
+            </div>
+            <div class="sensor-table-wrap mt-3">
+              ${coverageRows.length ? `<table class="sensor-table"><thead><tr><th>{{ t('sensor_detail.base_station', 'Základňová stanica') }}</th><th>SNR</th><th>RSSI</th><th>{{ t('sensor_detail.messages', 'Správy') }}</th><th>{{ t('sensor_detail.last_seen', 'Posledné videnie') }}</th></tr></thead><tbody>${coverageRows.map(([bsEui, bsData]) => `<tr><td>${bsEui === detail.primary_gateway ? `<span class="sensor-context-chip is-info me-1">${escapeHtml(tr('primary', 'Primárna'))}</span>` : ''}<code>${escapeHtml(bsEui)}</code></td><td>${formatMetric(bsData && bsData.snr, 1, ' dB')}</td><td>${formatMetric(bsData && bsData.rssi, 1, ' dBm')}</td><td>${Number(bsData && bsData.count || 0).toLocaleString()}</td><td>${bsData && bsData.last_seen ? formatTimeAgo(Number(bsData.last_seen) * 1000) : tr('na', 'Nedostupné')}</td></tr>`).join('')}</tbody></table>` : `<div class="sensor-empty-state">${escapeHtml(tr('noCoverageDataYet', 'Pokrytie základňovými stanicami zatiaľ nie je k dispozícii.'))}</div>`}
+            </div>
+          </div>
+        </section>
+      </div>`;
+  }
+
+  function renderCo2Telemetry(latest, history, config) {
+    const values = latest?.decoded?.values || {};
+    const environment = getSensorEnvironmentMeta(config.environment_context);
+    const co2 = Number(values.co2_1_ppm);
+    const temp = Number(values.temperature_1_c);
+    const humidity = Number(values.humidity_1_pct);
+    const battery = Number(values.battery_v_est);
+    const previousCo2 = Number(values.co2_2_ppm);
+    const co2Visual = getCo2VisualMeta(co2, config.environment_context);
+    const batteryVisual = getBatteryVisualMeta(battery);
+    const trendLabel = Number.isFinite(co2) && Number.isFinite(previousCo2) ? (co2 > previousCo2 ? tr('rising', 'Rastie') : (co2 < previousCo2 ? tr('falling', 'Klesá') : tr('stable', 'Stabilné'))) : tr('unknown', 'Neznáme');
+    const tone = co2Visual.tone === 'danger' ? 'danger' : (co2Visual.tone === 'warning' ? 'warning' : 'success');
+    const battTone = batteryVisual.tone === 'danger' ? 'danger' : (batteryVisual.tone === 'warning' ? 'warning' : 'success');
+    const rows = history.map((row) => { const rowValues = row?.decoded?.values || {}; const rxMs = Number(row?.rx_time_ns || 0) > 0 ? Number(row.rx_time_ns) / 1000000 : null; return `<tr><td>${escapeHtml(rxMs ? formatTimeOnly(rxMs) : 'Nedostupné')}</td><td>${formatHistoryMetric(rowValues.co2_1_ppm, 0)}</td><td>${formatHistoryMetric(rowValues.temperature_1_c, 2)}</td><td>${formatHistoryMetric(rowValues.humidity_1_pct, 0)}</td><td>${formatHistoryMetric(row?.snr, 1)}</td><td>${formatHistoryMetric(row?.rssi, 1)}</td></tr>`; }).join('');
+    return `<div class="sensor-inline-meta mb-3"><span class="sensor-context-chip"><i class="fas ${environment.icon}"></i>${escapeHtml(environment.shortLabel)}</span><span class="sensor-context-chip is-${tone}"><i class="fas fa-wind"></i>${escapeHtml(co2Visual.label)}</span><span class="sensor-context-chip is-info"><i class="fas fa-chart-line"></i>${escapeHtml(trendLabel)}</span></div><div class="sensor-payload-grid mb-3"><div class="sensor-payload-card is-${tone}"><div class="sensor-payload-label">{{ t('sensor_detail.co2_current', 'CO2 (aktuálne)') }}</div><div class="sensor-payload-value">${Number.isFinite(co2) ? `${Math.round(co2)} ppm` : 'Nedostupné'}</div><div class="sensor-payload-note">${escapeHtml(co2Visual.note)}</div></div><div class="sensor-payload-card"><div class="sensor-payload-label">{{ t('sensor_detail.temperature', 'Teplota') }}</div><div class="sensor-payload-value">${Number.isFinite(temp) ? `${temp.toFixed(2)} C` : 'Nedostupné'}</div><div class="sensor-payload-note">{{ t('sensor_detail.current_sample', 'Aktuálna vzorka') }}</div></div><div class="sensor-payload-card"><div class="sensor-payload-label">{{ t('sensor_detail.humidity', 'Vlhkosť') }}</div><div class="sensor-payload-value">${Number.isFinite(humidity) ? `${Math.round(humidity)} %` : 'Nedostupné'}</div><div class="sensor-payload-note">{{ t('sensor_detail.relative_humidity', 'Relatívna vlhkosť') }}</div></div><div class="sensor-payload-card is-${battTone}"><div class="sensor-payload-label">{{ t('sensor_detail.battery_est', 'Batéria (odhad)') }}</div><div class="sensor-payload-value">${Number.isFinite(battery) ? `${battery.toFixed(1)} V` : 'Nedostupné'}</div><div class="sensor-payload-note">${escapeHtml(batteryVisual.label)}</div></div></div><div class="sensor-metric-rows mb-3"><div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.previous_sample', 'Predchádzajúca vzorka') }}</span><span class="sensor-metric-value">${Number.isFinite(previousCo2) ? `${Math.round(previousCo2)} ppm` : 'Nedostupné'}</span></div><div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.last_calibration_reference', 'Posledná kalibračná referencia') }}</span><span class="sensor-metric-value">${Number.isFinite(Number(values.co2_last_calibration_ppm)) ? `${Math.round(Number(values.co2_last_calibration_ppm))} ppm` : 'Nedostupné'}</span></div><div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.days_to_next_calibration', 'Dni do ďalšej kalibrácie') }}</span><span class="sensor-metric-value">${Number.isFinite(Number(values.days_to_next_calibration)) ? Math.round(Number(values.days_to_next_calibration)).toString() : 'Nedostupné'}</span></div></div><div class="sensor-table-wrap"><table class="sensor-table"><thead><tr><th>{{ t('common.time', 'Čas') }}</th><th>CO2</th><th>{{ t('sensor_detail.temperature_short', 'Tepl.') }}</th><th>{{ t('sensor_detail.humidity_short', 'Vlh.') }}</th><th>SNR</th><th>RSSI</th></tr></thead><tbody>${rows || '<tr><td colspan="6"><div class="sensor-empty-state">Krátka história zatiaľ nie je dostupná.</div></td></tr>'}</tbody></table></div>`;
+  }
+  function renderM2Telemetry(latest, history) {
+    const values = latest?.decoded?.values || {};
+    const battery = Number(values.battery_v_est);
+    const batteryVisual = getBatteryVisualMeta(battery);
+    const anyAlarmActive = Boolean(values.any_alarm_active);
+    const battTone = batteryVisual.tone === 'danger' ? 'danger' : (batteryVisual.tone === 'warning' ? 'warning' : 'success');
+    const rows = history.map((row) => { const rowValues = row?.decoded?.values || {}; const rxMs = Number(row?.rx_time_ns || 0) > 0 ? Number(row.rx_time_ns) / 1000000 : null; return `<tr><td>${escapeHtml(rxMs ? formatTimeOnly(rxMs) : tr('na', 'Nedostupné'))}</td><td>${formatHistoryMetric(rowValues.total_openings, 0)}</td><td>${rowValues.any_alarm_active ? 'Alarm' : 'Bez alarmu'}</td><td>${formatHistoryMetric(rowValues.minutes_since_last_alarm, 0)}</td><td>${formatHistoryMetric(row?.snr, 1)}</td><td>${formatHistoryMetric(row?.rssi, 1)}</td></tr>`; }).join('');
+    return `<div class="sensor-inline-meta mb-3"><span class="sensor-context-chip ${anyAlarmActive ? 'is-danger' : 'is-success'}"><i class="fas fa-door-open"></i>${anyAlarmActive ? 'Alarm aktívny' : 'Stabilné'}</span>${values.internal_magnet_alarm ? '<span class="sensor-context-chip is-warning"><i class="fas fa-magnet"></i>Interný alarm</span>' : ''}${values.external_alarm ? '<span class="sensor-context-chip is-warning"><i class="fas fa-bolt"></i>Externý alarm</span>' : ''}${values.async_message ? '<span class="sensor-context-chip is-info"><i class="fas fa-bell"></i>Asynchrónna správa</span>' : ''}</div><div class="sensor-payload-grid mb-3"><div class="sensor-payload-card ${anyAlarmActive ? 'is-danger' : 'is-success'}"><div class="sensor-payload-label">{{ t('sensor_detail.total_openings', 'Počet otvorení') }}</div><div class="sensor-payload-value">${Number.isFinite(Number(values.total_openings)) ? Math.round(Number(values.total_openings)).toLocaleString() : tr('na', 'Nedostupné')}</div><div class="sensor-payload-note">Celoživotný počet otvorení od spustenia senzora</div></div><div class="sensor-payload-card"><div class="sensor-payload-label">{{ t('sensor_detail.last_alarm', 'Posledný alarm') }}</div><div class="sensor-payload-value">${Number.isFinite(Number(values.minutes_since_last_alarm)) ? `${Math.round(Number(values.minutes_since_last_alarm))} min` : tr('na', 'Nedostupné')}</div><div class="sensor-payload-note">${escapeHtml(getLastEventTypeLabel(latest))}</div></div><div class="sensor-payload-card"><div class="sensor-payload-label">{{ t('sensor_detail.alarm_duration', 'Trvanie alarmu') }}</div><div class="sensor-payload-value">${Number.isFinite(Number(values.duration_last_alarm_minutes)) ? `${Math.round(Number(values.duration_last_alarm_minutes))} min` : tr('na', 'Nedostupné')}</div><div class="sensor-payload-note">Dĺžka trvania posledného alarmového stavu</div></div><div class="sensor-payload-card is-${battTone}"><div class="sensor-payload-label">{{ t('sensor_detail.battery_est', 'Batéria (odhad)') }}</div><div class="sensor-payload-value">${Number.isFinite(battery) ? `${battery.toFixed(1)} V` : tr('na', 'Nedostupné')}</div><div class="sensor-payload-note">${escapeHtml(batteryVisual.label)}</div></div></div><div class="sensor-inline-meta mb-3"><span class="sensor-context-chip">${values.internal_magnet_alarm_last_5min ? 'Interný 5 min aktívny' : 'Interný 5 min bez alarmu'}</span><span class="sensor-context-chip">${values.internal_magnet_alarm_last_1h ? 'Interný 1 h aktívny' : 'Interný 1 h bez alarmu'}</span><span class="sensor-context-chip">${values.external_alarm_last_5min ? 'Externý 5 min aktívny' : 'Externý 5 min bez alarmu'}</span><span class="sensor-context-chip">${values.external_alarm_last_1h ? 'Externý 1 h aktívny' : 'Externý 1 h bez alarmu'}</span><span class="sensor-context-chip ${values.low_batt ? 'is-danger' : 'is-success'}">${values.low_batt ? 'Slabá batéria' : 'Batéria v poriadku'}</span></div><div class="sensor-table-wrap"><table class="sensor-table"><thead><tr><th>{{ t('common.time', 'Čas') }}</th><th>Otvorenia</th><th>Alarm</th><th>Posledný alarm (min)</th><th>SNR</th><th>RSSI</th></tr></thead><tbody>${rows || '<tr><td colspan="6"><div class="sensor-empty-state">Krátka história zatiaľ nie je dostupná.</div></td></tr>'}</tbody></table></div>`;
+  }
+  function renderGenericTelemetry(latest, history) { const values = latest?.decoded?.values || {}; const rows = history.map((row) => { const rxMs = Number(row?.rx_time_ns || 0) > 0 ? Number(row.rx_time_ns) / 1000000 : null; const summary = Object.entries(row?.decoded?.values || {}).slice(0, 3).map(([key, value]) => `${key}: ${value}`).join(' | ') || tr('genericNoDecoded', 'Bez dekódovaných hodnôt'); return `<tr><td>${escapeHtml(rxMs ? formatTimeOnly(rxMs) : tr('na', 'Nedostupné'))}</td><td>${escapeHtml(summary)}</td><td>${formatHistoryMetric(row?.snr, 1)}</td><td>${formatHistoryMetric(row?.rssi, 1)}</td></tr>`; }).join(''); return `<div class="sensor-empty-state mb-3">${escapeHtml(tr('genericTelemetryNote', 'Tento payload profil zatiaľ nemá vlastný zobrazovací blok. Dekódované hodnoty sú stále dostupné nižšie.'))}</div><pre class="sensor-code-block mb-3">${escapeHtml(JSON.stringify(values, null, 2))}</pre><div class="sensor-table-wrap"><table class="sensor-table"><thead><tr><th>${escapeHtml(tr('tableTime', 'Čas'))}</th><th>${escapeHtml(tr('decodedSummary', 'Zhrnutie dekódovania'))}</th><th>SNR</th><th>RSSI</th></tr></thead><tbody>${rows || `<tr><td colspan="4"><div class="sensor-empty-state">${escapeHtml(tr('noShortHistory', 'Krátka história zatiaľ nie je dostupná.'))}</div></td></tr>`}</tbody></table></div>`; }
+  function renderTelemetry(detail) { const latest = detail.latest_uplink; if (!latest) return `<div class="sensor-empty-state">${escapeHtml(tr('noDecodedPayload', 'Zatiaľ neprišiel žiadny dekódovaný payload. Po prijatí telemetrie sa tu zobrazia dekódované hodnoty a krátka história.'))}</div>`; const profile = String(latest?.decoded?.profile || detail.sensor_profile || 'raw').toLowerCase(); const history = Array.isArray(detail.uplink_history) ? detail.uplink_history.slice(0, 10) : []; if (profile === 'lansen_e2_co2_v1') return renderCo2Telemetry(latest, history, detail.config || {}); if (profile === 'lansen_m2_v1') return renderM2Telemetry(latest, history); return renderGenericTelemetry(latest, history); }
+  function renderDebug(detail) { const latest = detail.latest_uplink; if (!latest) return `<div class="sensor-empty-state">${escapeHtml(tr('noRawPayload', 'Raw payload zatiaľ nie je dostupný.'))}</div>`; const profile = String(latest?.decoded?.profile || 'raw'); const modelHint = String(latest?.decoded?.model_hint || '').trim() || tr('na', 'Nedostupné'); const values = latest?.decoded?.values || {}; const receivedAt = Number(latest?.rx_time_ns || 0) > 0 ? formatDateTime(Number(latest.rx_time_ns) / 1000000) : (latest?.received_at ? formatDateTime(latest.received_at) : tr('na', 'Nedostupné')); return `<div class="sensor-debug-grid"><div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('profile', 'Profil'))}</div><div class="sensor-kpi-value">${escapeHtml(profile)}</div><div class="sensor-kpi-note">${escapeHtml(tr('decoderProfileNote', 'Profil dekódera použitý pre posledný uplink'))}</div></div><div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('modelHint', 'Odhad modelu'))}</div><div class="sensor-kpi-value">${escapeHtml(modelHint)}</div><div class="sensor-kpi-note">${escapeHtml(tr('modelHintNote', 'Najlepší dostupný odhad modelu zariadenia'))}</div></div><div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('receivedAt', 'Prijaté'))}</div><div class="sensor-kpi-value">${escapeHtml(receivedAt)}</div><div class="sensor-kpi-note">${escapeHtml(tr('receivedAtNote', 'Čas po deduplikácii a uložení'))}</div></div></div><div class="sensor-section-grid"><section class="sensor-panel"><div class="sensor-panel-head"><h2 class="sensor-panel-title"><i class="fas fa-barcode"></i>${escapeHtml(tr('rawPayload', 'Raw payload'))}</h2><span class="sensor-panel-note">${escapeHtml(tr('hexAndDecimal', 'Hex a desiatkové bajty'))}</span></div><div class="sensor-panel-body"><div class="sensor-metric-rows"><div class="sensor-metric-row"><span class="sensor-metric-name">Hex</span><span class="sensor-metric-value">${escapeHtml(formatHexBytes(latest.raw_hex))}</span></div><div class="sensor-metric-row"><span class="sensor-metric-name">${escapeHtml(tr('decimal', 'Desiatkové bajty'))}</span><span class="sensor-metric-value">${escapeHtml(Array.isArray(latest.raw_dec) ? latest.raw_dec.join(', ') : tr('na', 'Nedostupné'))}</span></div></div></div></section><section class="sensor-panel"><div class="sensor-panel-head"><h2 class="sensor-panel-title"><i class="fas fa-code"></i>${escapeHtml(tr('decodedJson', 'Dekódovaný JSON'))}</h2><span class="sensor-panel-note">${escapeHtml(tr('debugViewNote', 'Debug pohľad pre technickú analýzu'))}</span></div><div class="sensor-panel-body"><pre class="sensor-code-block">${escapeHtml(JSON.stringify(values, null, 2))}</pre></div></section></div>`; }
+  function summarizeAuditDetails(entry) { const details = entry?.details || {}; if (details.summary) return String(details.summary); if (details.action_summary) return String(details.action_summary); const changed = Array.isArray(details.changed_fields) ? details.changed_fields : []; if (changed.length) return `Zmenené polia: ${changed.join(', ')}`; if (details.message) return String(details.message); return ''; }
+  function renderAudit(entries) {
+    if (!entries?.length) return `<div class="sensor-empty-state">${escapeHtml(tr('noAuditYet', 'Pre tento senzor zatiaľ nie sú žiadne auditné záznamy.'))}</div>`;
+    const counts = getAuditFilterCounts(entries);
+    const filtered = filterAuditEntries(entries);
+    const grouped = groupAuditEntries(filtered);
+    const filters = [
+      { id: 'all', label: tr('auditAll', 'All'), count: counts.all },
+      { id: 'update', label: tr('auditUpdates', 'Updates'), count: counts.update },
+      { id: 'attach', label: tr('auditAttach', 'Attach'), count: counts.attach },
+      { id: 'detach', label: tr('auditDetach', 'Detach'), count: counts.detach },
+    ];
+    return `<div class="sensor-audit-toolbar">
+        <div class="sensor-audit-filters">
+          ${filters.map((filter) => `<button type="button" class="sensor-audit-filter ${state.auditFilter === filter.id ? 'is-active' : ''}" data-audit-filter="${filter.id}">${escapeHtml(filter.label)}<span class="sensor-audit-filter-count">${filter.count}</span></button>`).join('')}
+        </div>
+        <div class="sensor-audit-meta-note">${escapeHtml(tr('rowsShown', '{count} rows shown', { count: grouped.length }))}</div>
+      </div>
+      <div class="sensor-audit-table-wrap">
+        <table class="sensor-audit-table">
+          <thead>
+            <tr><th>${escapeHtml(tr('auditAction', 'Action'))}</th><th>${escapeHtml(tr('auditSummary', 'Summary'))}</th><th>${escapeHtml(tr('auditActor', 'Actor'))}</th><th>${escapeHtml(tr('tableTime', 'Time'))}</th></tr>
+          </thead>
+          <tbody>
+            ${grouped.length ? grouped.map((group) => {
+              const summary = String(group.summary || '').trim();
+              const latestTime = group.latestTimestamp ? formatDateTime(group.latestTimestamp) : tr('na', 'Nedostupné');
+              const oldestTime = group.oldestTimestamp ? formatDateTime(group.oldestTimestamp) : latestTime;
+              const groupedNote = group.count > 1 ? tr('repeatedTimes', 'Opakované {count}x', { count: group.count }) : '';
+              return `<tr>
+                <td>
+                  <div class="sensor-audit-action">
+                    <span class="sensor-audit-action-kind is-${group.kind}">${escapeHtml(getAuditKindLabel(group.kind))}</span>
+                    <span>${escapeHtml(group.action)}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="sensor-audit-summary">
+                    ${summary ? `<div class="sensor-audit-summary-note">${escapeHtml(summary)}</div>` : `<div class="sensor-audit-summary-empty">${escapeHtml(tr('noStructuredSummary', 'Bez štruktúrovaného zhrnutia.'))}</div>`}
+                    ${groupedNote ? `<div class="sensor-audit-group-badge">${escapeHtml(groupedNote)}</div>` : ''}
+                  </div>
+                </td>
+                <td>${escapeHtml(group.actor)}</td>
+                <td>
+                  <div>${escapeHtml(latestTime)}</div>
+                  ${group.count > 1 ? `<div class="sensor-audit-time-range">${escapeHtml(tr('oldestInGroup', 'Oldest in group: {time}', { time: oldestTime }))}</div>` : ''}
+                </td>
+              </tr>`;
+            }).join('') : `<tr class="sensor-audit-empty-row"><td colspan="4">${escapeHtml(tr('noAuditMatch', 'Vybranému filtru nezodpovedajú žiadne auditné záznamy.'))}</td></tr>`}
+          </tbody>
+        </table>
+      </div>`;
+  }
+  async function ensureAuditLoaded() { if (!CAN_VIEW_AUDIT || state.auditLoaded || state.auditLoading) return; state.auditLoading = true; try { const response = await fetch(`/api/audit/logs?limit=25&target_id=${encodeURIComponent(SENSOR_EUI)}`); const result = await response.json(); if (!result.success) throw new Error(result.message || tr('unableLoadSensorAudit', 'Auditný záznam senzora sa nepodarilo načítať')); state.audit = Array.isArray(result.entries) ? result.entries : []; state.auditLoaded = true; } catch (error) { state.audit = { error: error.message || tr('unableLoadSensorAudit', 'Auditný záznam senzora sa nepodarilo načítať') }; state.auditLoaded = true; } finally { state.auditLoading = false; if (state.activeTab === 'audit') renderBody(); } }
+  function renderBody() { const detail = state.detail; if (!detail) { els.body.innerHTML = `<div class="sensor-empty-state">${escapeHtml(tr('loadingSensorDetail', 'Načítavam detail senzora...'))}</div>`; return; } const panels = { overview: renderOverview(detail), telemetry: renderTelemetry(detail), debug: renderDebug(detail) }; if (CAN_VIEW_AUDIT) panels.audit = !state.auditLoaded ? `<div class="sensor-empty-state">${escapeHtml(tr('auditWillLoad', 'Auditné záznamy sa načítajú po otvorení tejto karty.'))}</div>` : (state.audit?.error ? `<div class="sensor-detail-error">${escapeHtml(state.audit.error)}</div>` : renderAudit(state.audit || [])); const order = ['overview', 'telemetry', 'debug'].concat(CAN_VIEW_AUDIT ? ['audit'] : []); els.body.innerHTML = order.map((tabId) => `<section class="sensor-detail-tabpanel ${state.activeTab === tabId ? 'is-active' : ''}" data-tabpanel="${tabId}">${panels[tabId]}</section>`).join(''); }
+  async function loadDetail() { els.body.innerHTML = `<div class="sensor-empty-state">${escapeHtml(tr('loadingSensorDetail', 'Načítavam detail senzora...'))}</div>`; try { const response = await fetch(`/api/sensors/${encodeURIComponent(SENSOR_EUI)}/details`); const detail = await response.json(); if (!detail.success) throw new Error(detail.message || 'Nepodarilo sa načítať detail senzora'); state.detail = detail; state.auditLoaded = false; state.audit = []; const sensorName = String(detail?.config?.name || '').trim(); els.title.textContent = sensorName ? `${sensorName} (${detail.eui})` : `${tr('sensor', 'Senzor')} ${detail.eui}`; const modeLabel = deriveMonitoringMode(detail) === 'event' ? tr('eventDrivenSensor', 'Udalostný senzor') : tr('periodicSensor', 'Periodický senzor'); els.subtitle.textContent = `${modeLabel}. ${tr('subtitle', 'Použite Prehľad pre operatívu, Telemetriu pre dekódované hodnoty, Debug pre raw payload a Audit pre administrátorské zmeny.')}`; els.telemetry.href = `{{ url_for('sensor_telemetry') }}?sensor_eui=${encodeURIComponent(detail.eui || SENSOR_EUI)}`; els.edit.href = `{{ url_for('sensors') }}?edit_sensor=${encodeURIComponent(detail.eui || SENSOR_EUI)}`; els.attach.href = `{{ url_for('sensors') }}?attach_sensor=${encodeURIComponent(detail.eui || SENSOR_EUI)}`; renderTabs(); renderBody(); if (state.activeTab === 'audit') ensureAuditLoaded(); } catch (error) { els.body.innerHTML = `<div class="sensor-detail-error">${escapeHtml(tr('unableLoadSensorDetail', 'Detail senzora sa nepodarilo načítať: {error}', { error: error.message || tr('unknown', 'neznáme') }))}</div>`; } }
+  els.refresh.addEventListener('click', loadDetail);
+  els.body.addEventListener('click', (event) => {
+    const filterButton = event.target.closest('[data-audit-filter]');
+    if (!filterButton) return;
+    state.auditFilter = String(filterButton.dataset.auditFilter || 'all');
+    if (state.activeTab === 'audit' && state.auditLoaded && !state.audit?.error) renderBody();
+  });
+  renderTabs();
+  loadDetail();
+})();
+</script>
+{% endblock %}

@@ -21,7 +21,7 @@ import ssl
 from datetime import datetime, timezone, timedelta
 from flask import Flask, render_template, request, jsonify, redirect, url_for, Response, session, send_file, has_request_context, make_response
 from functools import wraps
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import bssci_config
 try:
     import psycopg
@@ -77,6 +77,1847 @@ _timescale_uplink_stats = {
     "batch_size": _TIMESCALE_UPLINK_BATCH_SIZE,
 }
 _timescale_uplink_stats_lock = threading.Lock()
+
+_APP_LANGUAGE_OPTIONS = {
+    "en": {
+        "label": "English",
+        "native_label": "English",
+        "locale": "en-US",
+    },
+    "sk": {
+        "label": "Slovak",
+        "native_label": "Slovenčina",
+        "locale": "sk-SK",
+    },
+}
+
+_UI_TRANSLATIONS = {
+    "en": {},
+    "sk": {
+        "page.dashboard": "Dashboard",
+        "page.sensors": "Senzory",
+        "page.base_stations": "Základňové stanice",
+        "page.system_health": "Stav systému",
+        "page.network_topology": "Topológia siete",
+        "page.coverage_map": "Mapa pokrytia",
+        "page.mqtt": "MQTT",
+        "page.sensor_telemetry": "Telemetria senzorov",
+        "page.logs": "Logy",
+        "page.access_tenants": "Prístupy a tenancy",
+        "page.configuration": "Konfigurácia",
+        "page.certificates": "Certifikáty",
+        "page.documentation": "Dokumentácia",
+        "page.administration": "Administrácia",
+        "page.login": "Prihlásenie",
+        "page.sensor_detail": "Detail senzora",
+        "page.base_station_detail": "Detail základňovej stanice",
+        "nav.overview": "Prehľad",
+        "nav.devices": "Zariadenia",
+        "nav.monitoring": "Monitoring",
+        "nav.administration": "Administrácia",
+        "nav.dashboard": "Dashboard",
+        "nav.sensors": "Senzory",
+        "nav.base_stations": "Základňové stanice",
+        "nav.oms": "OMS",
+        "nav.system_health": "Stav systému",
+        "nav.network_topology": "Topológia siete",
+        "nav.coverage_map": "Mapa pokrytia",
+        "nav.mqtt": "MQTT",
+        "nav.sensor_telemetry": "Telemetria senzorov",
+        "nav.logs": "Logy",
+        "nav.access_tenants": "Prístupy a tenancy",
+        "nav.configuration": "Konfigurácia",
+        "nav.certificates": "Certifikáty",
+        "nav.documentation": "Dokumentácia",
+        "auth.log_out": "Odhlásiť sa",
+        "brand.subtitle": "MIOTY operačné centrum",
+        "topbar.workspace_subtitle": "Prevádzkové rozhranie MIOTY",
+        "topbar.toggle_navigation": "Prepnúť navigáciu",
+        "common.current_application_time": "Aktuálny čas aplikácie",
+        "common.close": "Zavrieť",
+        "common.cancel": "Zrušiť",
+        "common.confirm": "Potvrdiť",
+        "toast.success": "Úspech",
+        "toast.info": "Informácia",
+        "toast.warning": "Upozornenie",
+        "toast.error": "Chyba",
+        "common.done": "Hotovo",
+        "common.reset": "Obnoviť",
+        "common.loading": "Načítava sa...",
+        "common.refresh": "Obnoviť",
+        "common.edit": "Upraviť",
+        "common.save": "Uložiť",
+        "common.delete": "Vymazať",
+        "common.back": "Späť",
+        "common.details": "Detail",
+        "common.expanded": "Rozšírený",
+        "common.overview": "Prehľad",
+        "common.telemetry": "Telemetria",
+        "common.debug": "Debug",
+        "common.audit": "Audit",
+        "common.certificates": "Certifikáty",
+        "common.linked_sensors": "Pripojené senzory",
+        "common.yes": "Áno",
+        "common.no": "Nie",
+        "common.connected": "Pripojené",
+        "common.connecting": "Pripája sa",
+        "common.offline": "Offline",
+        "common.unknown": "Neznáme",
+        "common.not_set": "Nenastavené",
+        "common.disabled": "Vypnuté",
+        "common.not_configured": "Nenakonfigurované",
+        "common.not_available": "Nedostupné",
+        "common.no_data_yet": "Zatiaľ bez dát",
+        "common.no_tags": "Bez tagov",
+        "common.present": "Prítomné",
+        "common.missing": "Chýba",
+        "common.primary": "Primárna",
+        "common.time": "Čas",
+        "common.status": "Stav",
+        "common.runtime": "Runtime",
+        "common.configuration": "Konfigurácia",
+        "common.language": "Jazyk",
+        "common.super_admin": "Super admin",
+        "display.settings": "Nastavenia zobrazenia",
+        "display.ui_zoom": "Priblíženie rozhrania",
+        "display.zoom_note": "Prispôsobí text a rozostupy pre menšie obrazovky alebo vysoké DPI.",
+        "display.layout_density": "Hustota rozloženia",
+        "display.density_note": "Určuje, ako kompaktne budú panely a navigácia rozložené.",
+        "display.color_scheme": "Farebná schéma",
+        "display.theme_note": "Použije svetlý farebný variant v celom rozhraní.",
+        "display.auto_recommended": "Auto (odporúčané)",
+        "display.comfortable": "Pohodlné",
+        "display.compact": "Kompaktné",
+        "display.condensed": "Zhustené",
+        "display.kinet_light": "Kinet light",
+        "display.azure_light": "Azure light",
+        "display.sage_light": "Sage light",
+        "confirm.please_confirm": "Potvrďte akciu",
+        "confirm.are_you_sure": "Naozaj chcete pokračovať?",
+        "guard.unsaved_changes_title": "Neuložené zmeny",
+        "guard.unsaved_changes_message": "Máte neuložené zmeny. Opustiť stránku bez uloženia?",
+        "guard.leave_page": "Opustiť stránku",
+        "guard.stay": "Zostať",
+        "config.workspace_title": "Pracovisko konfigurácie",
+        "config.workspace_subtitle": "Upravte runtime, MQTT, úložiská telemetrie a servisné voľby.",
+        "config.no_changes": "Bez zmien",
+        "config.unsaved_changes": "Neuložené zmeny",
+        "config.unsaved_changes_message": "Máte neuložené zmeny konfigurácie. Opustiť stránku bez uloženia?",
+        "config.saving": "Ukladá sa...",
+        "config.fix_validation_errors": "Opravte validačné chyby",
+        "config.save_configuration": "Uložiť konfiguráciu",
+        "config.tab.general": "Všeobecné",
+        "config.tab.storage": "Úložisko",
+        "config.tab.maintenance": "Údržba",
+        "config.advanced_on": "Pokročilé: Zapnuté",
+        "config.advanced_off": "Pokročilé: Vypnuté",
+        "config.server_configuration": "Konfigurácia servera",
+        "config.listen_host": "Host pre počúvanie",
+        "config.listen_port": "Port pre počúvanie",
+        "config.status_interval": "Interval stavu (sekundy)",
+        "config.deduplication_delay": "Oneskorenie deduplikácie správ (sekundy)",
+        "config.deduplication_delay_note": "Čas na zachytenie duplicít pred odoslaním najlepšej správy ďalej (0,5-10 sekúnd).",
+        "config.timezone": "Časové pásmo",
+        "config.timezone_note": "Používa sa pre časové značky v logoch a v rozhraní.",
+        "config.language": "Jazyk aplikácie",
+        "config.language_note": "Prepína texty rozhrania a formátovanie času. Po uložení sa stránka obnoví.",
+        "config.mqtt_configuration": "Konfigurácia MQTT",
+        "config.enable_mqtt_transport": "Povoliť MQTT transport",
+        "config.enable_mqtt_transport_note": "Spustí MQTT bridge klienta, príjem príkazov z brokera a publikovanie runtime správ z platformy.",
+        "config.mqtt_broker": "MQTT broker",
+        "config.mqtt_port": "MQTT port",
+        "config.mqtt_username": "MQTT používateľ",
+        "config.mqtt_password": "MQTT heslo",
+        "config.base_topic": "Základný topic",
+        "config.auto_detach_configuration": "Konfigurácia auto-detach",
+        "config.enable_auto_detach": "Povoliť auto-detach",
+        "config.enable_auto_detach_note": "Automaticky odpojí senzory po dlhšej neaktivite.",
+        "config.auto_detach_timeout": "Timeout auto-detach (hodiny)",
+        "config.auto_detach_timeout_note": "Počet hodín neaktivity pred automatickým odpojením (predvolene 72).",
+        "config.warning_timeout": "Timeout varovania (hodiny)",
+        "config.warning_timeout_note": "Počet hodín neaktivity pred zobrazením varovania (predvolene 36).",
+        "config.check_interval": "Interval kontroly (hodiny)",
+        "config.check_interval_note": "Ako často sa majú kontrolovať neaktívne senzory (predvolene 1 hodina).",
+        "config.optional_modules": "Voliteľné moduly",
+        "config.platform": "Platforma",
+        "config.integrations": "Integrácie",
+        "config.server_configuration_note": "Runtime host, časovanie a lokalizačné nastavenia platformy a rozhrania.",
+        "config.mqtt_configuration_note": "Správa MQTT bridge, pripojenia na broker a routovania topicov pre toto nasadenie.",
+        "config.sensor_rules": "Pravidlá senzorov",
+        "config.auto_detach_configuration_note": "Nastavenia varovania a automatického odpojenia pre senzory, ktoré prestanú odosielať dáta.",
+        "config.modules": "Moduly",
+        "config.optional_modules_note": "Skryte stránky a funkcie, ktoré v tomto nasadení nechcete mať viditeľné predvolene.",
+        "config.storage": "Úložisko",
+        "config.storage_and_telemetry_note": "Vyberte hlavný zdroj telemetrie, spravujte InfluxDB alebo TimescaleDB a nastavte monitorovacie prahy.",
+        "config.storage.influx_kicker": "Zdroj runtime telemetrie",
+        "config.storage.influx_title": "InfluxDB a zdroj telemetrie",
+        "config.storage.influx_note": "Určite, odkiaľ UI číta telemetriu, a spravujte InfluxDB zápisy a snapshoty inventára.",
+        "config.storage.timescale_kicker": "Operačné úložisko",
+        "config.storage.timescale_note": "Konfigurácia trvalého telemetry store, retencie, kompresie a tenant-aware operačnej databázy.",
+        "config.storage.monitoring_kicker": "Prahy monitoringu",
+        "config.storage.monitoring_note": "Definujte prahy fronty, retry, latencie a reconnectov a spúšťajte prevádzkové kontroly priamo z tejto stránky.",
+        "config.operations": "Operácie",
+        "config.maintenance_note": "Uloženie konfigurácie a servisné reštarty majte oddelené od bežných nastavení.",
+        "config.requires_attention": "Vyžaduje pozornosť",
+        "config.live_scope": "Jadro runtime",
+        "config.advanced": "Pokročilé",
+        "config.optional": "Voliteľné",
+        "config.show_bs_uptime_panel_short": "Uptime panel",
+        "config.summary.title": "Súhrn konfigurácie",
+        "config.summary.guidance": "Odporúčania pre úpravy",
+        "config.summary.language_timezone": "Jazyk a časové pásmo",
+        "config.summary.locale_note": "Hlavné prezentačné nastavenia rozhrania",
+        "config.summary.transport": "Runtime transport",
+        "config.summary.transport_note": "MQTT bridge a primárny zdroj telemetrie",
+        "config.summary.modules": "Voliteľné moduly",
+        "config.summary.modules_note": "Viditeľné doplnkové funkcie tohto nasadenia",
+        "config.summary.change_state": "Stav zmien",
+        "config.summary.change_note": "Validácia, uloženie a dopad na reštart",
+        "config.summary.locale": "Lokalita",
+        "config.summary.mqtt": "MQTT transport",
+        "config.summary.telemetry": "Zdroj telemetrie",
+        "config.summary.modules_enabled": "Aktívne moduly",
+        "config.summary.restart_impact": "Dopad na reštart",
+        "config.summary.modules_none": "Žiadne voliteľné moduly nie sú zapnuté",
+        "config.summary.mqtt_enabled_unconfigured": "Povolené, broker ešte nie je vyplnený",
+        "config.summary.restart_pending": "Konfigurácia sa zmenila. Pred servisnou akciou skontrolujte dopad na reštart.",
+        "config.summary.restart_clear": "Momentálne nie je potrebná žiadna reštart akcia.",
+        "config.summary.guidance_status": "Všeobecné",
+        "config.summary.guidance_status_text": "Všeobecné použite pre identitu platformy, MQTT bridge a voliteľné moduly. Pokročilé sekcie zapnite len vtedy, keď potrebujete pravidlá alebo politiky.",
+        "config.summary.guidance_storage": "Úložisko",
+        "config.summary.guidance_storage_text": "InfluxDB a TimescaleDB berte ako prevádzkové integrácie. Ako primárnu čítaciu cestu pre UI nechajte len jeden zdroj telemetrie.",
+        "config.summary.guidance_maintenance": "Údržba",
+        "config.summary.guidance_maintenance_text": "Najprv uložte konfiguráciu, až potom reštartujte službu alebo kontajner, ak sa zmenili runtime alebo env hodnoty.",
+        "config.show_oms_module": "Zobraziť OMS modul v navigácii",
+        "config.show_oms_module_note": "Skryje OMS stránku a API endpointy, ak OMS merače vo vašom nasadení nepoužívate.",
+        "config.show_mqtt_module": "Zobraziť MQTT konzolu v navigácii",
+        "config.show_mqtt_module_note": "Skryje MQTT monitorovaciu stránku a jej API endpointy, ak MQTT konzolu vo vašom nasadení nepoužívate.",
+        "config.show_bs_uptime_panel": "Zobraziť panel trendu uptime pre base stations",
+        "config.show_bs_uptime_panel_note": "Ponechá graf uptime flotily viditeľný na stránke Base Stations. Ak chcete čistejšiu predvolenú stránku, nechajte vypnuté.",
+        "config.tip": "Tip",
+        "config.tip_keep_oms": "Nechávajte OMS zapnuté len vtedy, ak sú OMS/W-MBus merače súčasťou vášho nasadenia.",
+        "config.tip_mqtt_console": "MQTT konzolu nechajte zapnutú len vtedy, ak potrebujete živý monitoring brokera alebo test publish priamo z rozhrania.",
+        "config.storage_and_telemetry": "Úložisko a telemetria",
+        "config.telemetry_source": "Zdroj telemetrie",
+        "config.telemetry_source.auto": "Auto",
+        "config.telemetry_source.runtime": "Runtime",
+        "config.telemetry_source.influx": "InfluxDB",
+        "config.influx_url": "Influx URL",
+        "config.org": "Organizácia",
+        "config.bucket": "Bucket",
+        "config.tls_verify": "Overenie TLS",
+        "config.token": "Token",
+        "config.sync_inventory_influx": "Synchronizovať inventory do Influx",
+        "config.inventory_events_measurement": "Measurement udalostí inventory",
+        "config.crud_events": "CRUD udalosti",
+        "config.snapshot_measurement": "Measurement snapshotu",
+        "config.snapshot": "Snapshot",
+        "config.enabled": "povolené",
+        "config.disabled": "zakázané",
+        "config.snapshot_interval_sec": "Interval snapshotu (sek)",
+        "config.uptime_measurement": "Measurement uptime",
+        "config.uptime_field": "Pole uptime",
+        "config.uptime_eui_tag": "EUI tag uptime",
+        "config.custom_uptime_flux_query": "Vlastný Flux query pre uptime (voliteľné)",
+        "config.custom_uptime_flux_query_note": "Ak je prázdne, predvolený query pre uptime sa vygeneruje automaticky.",
+        "config.timescale_section": "TimescaleDB / PostgreSQL (multi-tenant operačné úložisko)",
+        "config.timescale": "Timescale",
+        "config.host": "Host",
+        "config.port": "Port",
+        "config.database": "Databáza",
+        "config.user": "Používateľ",
+        "config.password": "Heslo",
+        "config.ssl_mode": "SSL režim",
+        "config.default_tenant": "Predvolený tenant",
+        "config.event_writes": "Zápisy udalostí",
+        "config.telemetry_writes": "Zápisy telemetrie",
+        "config.snapshots": "Snapshoty",
+        "config.retention": "Retencia",
+        "config.telemetry_retention_days": "Retencia telemetrie (dni)",
+        "config.inventory_retention_days": "Retencia inventory (dni)",
+        "config.compression": "Kompresia",
+        "config.compress_after_days": "Komprimovať po (dňoch)",
+        "config.grafana_url": "Grafana URL",
+        "config.grafana_dashboard_uid": "Grafana Dashboard UID",
+        "config.monitoring_alert_thresholds": "Prahy monitorovacích alertov",
+        "config.queue_warn_pct": "Varovanie fronty (%)",
+        "config.queue_critical_pct": "Kritická fronta (%)",
+        "config.retry_fail_warn_pct": "Varovanie zlyhania retry (%)",
+        "config.retry_fail_critical_pct": "Kritické zlyhanie retry (%)",
+        "config.db_latency_warn_ms": "Varovanie latencie DB (ms)",
+        "config.db_latency_critical_ms": "Kritická latencia DB (ms)",
+        "config.reconnect_warn_per_hour": "Varovanie reconnectov (/h)",
+        "config.reconnect_critical_per_hour": "Kritické reconnecty (/h)",
+        "config.operational_tools": "Prevádzkové nástroje",
+        "config.check_timescale_status": "Skontrolovať stav Timescale",
+        "config.sync_inventory_timescale": "Synchronizovať inventory do Timescale",
+        "config.apply_timescale_policies": "Aplikovať Timescale politiky",
+        "config.maintenance": "Údržba",
+        "config.restart_service": "Reštartovať službu",
+        "config.restart_container": "Reštartovať kontajner",
+        "config.note": "Poznámka",
+        "config.auto_update_disabled_note": "Automatické aktualizácie sú v tomto upravenom nasadení vypnuté. Aktualizácie aplikujte cez Git workflow a rebuild kontajnerov.",
+        "config.restart_required_note": "Zmeny konfigurácie vyžadujú reštart. Použite „Reštartovať službu“ pre rýchly reštart procesu alebo „Reštartovať kontajner“ pre plné znovunačítanie prostredia.",
+        "config.validation.listen_host_required": "Host pre počúvanie je povinný.",
+        "config.validation.listen_port_range": "Port pre počúvanie musí byť v rozsahu 1 až 65535.",
+        "config.validation.mqtt_broker_required": "MQTT broker je povinný.",
+        "config.validation.mqtt_port_range": "MQTT port musí byť v rozsahu 1 až 65535.",
+        "config.validation.base_topic_required": "Základný topic je povinný.",
+        "config.validation.status_interval_min": "Interval stavu musí byť aspoň 1 sekunda.",
+        "config.validation.dedup_range": "Oneskorenie deduplikácie musí byť v rozsahu 0,5 až 10 sekúnd.",
+        "config.validation.auto_detach_timeout_min": "Timeout auto-detach musí byť aspoň 1 hodina.",
+        "config.validation.warning_timeout_min": "Timeout varovania musí byť aspoň 1 hodina.",
+        "config.validation.warning_timeout_order": "Timeout varovania musí byť menší alebo rovný timeoutu auto-detach.",
+        "config.validation.check_interval_min": "Interval kontroly musí byť aspoň 1 hodina.",
+        "config.validation.influx_url_required": "Influx URL je povinné, keď je zdroj telemetrie InfluxDB.",
+        "config.validation.influx_org_required": "Influx organizácia je povinná, keď je zdroj telemetrie InfluxDB.",
+        "config.validation.influx_bucket_required": "Influx bucket je povinný, keď je zdroj telemetrie InfluxDB.",
+        "config.validation.influx_snapshot_interval_min": "Interval snapshotu pre Influx musí byť aspoň 15 sekúnd.",
+        "config.validation.timescale_host_required": "Host pre Timescale je povinný, keď je Timescale zapnutý.",
+        "config.validation.timescale_port_range": "Port pre Timescale musí byť v rozsahu 1 až 65535.",
+        "config.validation.timescale_db_required": "Databáza Timescale je povinná, keď je Timescale zapnutý.",
+        "config.validation.timescale_user_required": "Používateľ Timescale je povinný, keď je Timescale zapnutý.",
+        "config.validation.default_tenant_required": "Predvolený tenant je povinný, keď je Timescale zapnutý.",
+        "config.validation.timescale_snapshot_interval_min": "Interval snapshotu pre Timescale musí byť aspoň 15 sekúnd.",
+        "config.validation.telemetry_retention_min": "Retencia telemetrie musí byť aspoň 1 deň.",
+        "config.validation.inventory_retention_min": "Retencia inventory musí byť aspoň 1 deň.",
+        "config.validation.compression_window_min": "Okno kompresie musí byť aspoň 1 deň.",
+        "config.validation.threshold_warn_non_negative": "{label} varovanie musí byť nezáporné číslo.",
+        "config.validation.threshold_crit_non_negative": "{label} kritická hodnota musí byť nezáporné číslo.",
+        "config.validation.threshold_order": "{label} kritická hodnota musí byť väčšia alebo rovná varovaniu.",
+        "config.validation.label.queue_threshold": "Prah fronty",
+        "config.validation.label.retry_threshold": "Prah zlyhania retry",
+        "config.validation.label.db_latency_threshold": "Prah latencie databázy",
+        "config.validation.label.reconnect_threshold": "Prah reconnectov",
+        "config.saved_restart_notice": "Konfigurácia uložená. Ak sa zmenili runtime hodnoty, reštartujte službu.",
+        "config.save_failed": "Uloženie zlyhalo: {error}",
+        "config.influx_sync_complete": "Synchronizácia Influx dokončená: {line_count} bodov ({sensor_points} senzorov, {base_station_points} základňových staníc).",
+        "config.influx_sync_failed": "Synchronizácia Influx zlyhala: {error}",
+        "config.timescale_status_online": "Timescale online ({host}/{database}) | fronta {queue_size}, zapísané {written}, zahodené {dropped}.",
+        "config.timescale_status_failed": "Kontrola stavu Timescale zlyhala: {error}",
+        "config.timescale_sync_complete": "Synchronizácia Timescale dokončená: {line_count} záznamov ({sensor_points} senzorov, {base_station_points} základňových staníc).",
+        "config.timescale_sync_failed": "Synchronizácia Timescale zlyhala: {error}",
+        "config.apply_policies_success": "Politiky retencie a kompresie pre Timescale boli aplikované.",
+        "config.apply_policies_failed": "Aplikovanie politík zlyhalo: {error}",
+        "config.restart_service_title": "Reštart služby",
+        "config.restart_service_message": "Reštartovať BSSCI službu teraz? Spojenia budú krátko prerušené.",
+        "config.restart_service_confirm": "Reštartovať službu",
+        "config.restarting": "Reštartuje sa...",
+        "config.restart_service_success": "Reštart služby bol úspešne spustený.",
+        "config.restart_service_failed": "Reštart služby zlyhal: {error}",
+        "config.restart_container_title": "Reštart kontajnera",
+        "config.restart_container_message": "Reštartovať celý kontajner? Úplné znovunačítanie trvá približne 10-15 sekúnd.",
+        "config.restart_container_confirm": "Reštartovať kontajner",
+        "config.restart_container_notice": "Reštart kontajnera bol spustený. Stránka sa pripojí znova automaticky.",
+        "login.brand_badge": "",
+        "login.brand_title": "Kinet MIOTY Center",
+        "login.brand_subtitle": "Správa základňových staníc, senzorov a telemetrie v jednom prevádzkovom rozhraní.",
+        "login.brand_footer": "",
+        "login.heading": "Prihlásenie",
+        "login.subtitle": "Pokračujte pomocou prihlasovacích údajov svojho účtu.",
+        "login.username": "Používateľské meno",
+        "login.password": "Heslo",
+        "login.submit": "Prihlásiť sa",
+        "login.error.timeout": "Relácia vypršala z dôvodu neaktivity. Prihláste sa znova.",
+        "login.error.invalid_credentials": "Neplatné používateľské meno alebo heslo",
+        "login.language_switch": "Jazyk rozhrania",
+        "runtime.loading_sensor_detail": "Načítava sa detail senzora...",
+        "runtime.loading_base_station_detail": "Načítava sa detail základňovej stanice...",
+        "runtime.unable_load_sensor_detail": "Nepodarilo sa načítať detail senzora: {error}",
+        "runtime.unable_load_base_station_detail": "Nepodarilo sa načítať detail základňovej stanice: {error}",
+        "runtime.unable_load_sensor_audit": "Nepodarilo sa načítať audit senzora",
+        "runtime.unable_load_base_station_audit": "Nepodarilo sa načítať audit základňovej stanice",
+        "runtime.failed_load_sensors": "Nepodarilo sa načítať senzory: {error}",
+        "runtime.failed_load_base_stations": "Nepodarilo sa načítať základňové stanice: {error}",
+        "runtime.failed_load_base_station_data": "Nepodarilo sa načítať dáta základňovej stanice.",
+        "runtime.failed_load_logs": "Nepodarilo sa načítať logy.",
+        "runtime.failed_load_audit_logs": "Nepodarilo sa načítať audit logy.",
+        "runtime.failed_load_service_status": "Nepodarilo sa načítať stav služby",
+        "runtime.no_sensors_configured": "Zatiaľ nie sú nakonfigurované žiadne senzory. Pridajte prvý senzor.",
+        "runtime.view_prefs_reset": "Nastavenia zobrazenia boli obnovené.",
+        "runtime.auto_refresh_enabled": "Automatické obnovovanie je zapnuté.",
+        "runtime.auto_refresh_paused": "Automatické obnovovanie je pozastavené.",
+        "runtime.select_sensor_first": "Najprv vyberte aspoň jeden senzor.",
+        "runtime.no_sensor_selected_for_attach": "Nie je vybraný žiadny senzor na priradenie.",
+        "runtime.loading_base_stations": "Načítavajú sa základňové stanice...",
+        "runtime.failed_load_base_stations_inline": "Nepodarilo sa načítať základňové stanice: {error}",
+        "runtime.importing_sensors": "Importujú sa senzory...",
+        "runtime.clipboard_unavailable": "Clipboard API nie je v tomto kontexte prehliadača dostupné.",
+        "runtime.clipboard_copy_failed": "SN sa nepodarilo skopírovať do schránky.",
+        "runtime.sn_copied": "SN skopírované: {eui}",
+        "runtime.gps_both_required": "Zadajte obe GPS hodnoty alebo nechajte obe polia prázdne.",
+        "runtime.gps_invalid_numbers": "GPS súradnice musia byť platné čísla.",
+        "runtime.gps_out_of_range": "GPS sú mimo rozsahu. Latitude -90..90, longitude -180..180.",
+        "runtime.attach_mapping_saved": "Priradenie bolo uložené pre {success}/{total} senzorov.",
+        "runtime.save_finished_with_issues": "Uloženie skončilo s problémami.",
+        "runtime.attachment_mapping_updated": "Priradenie bolo upravené pre senzor {eui}.",
+        "runtime.sensor_detached": "Senzor {eui} bol odpojený.",
+        "runtime.sensor_deleted": "Senzor {eui} bol vymazaný.",
+        "runtime.sensor_reloaded": "Konfigurácia senzorov bola znovu načítaná.",
+        "runtime.detach_all_requested": "Odpojenie všetkých senzorov bolo odoslané.",
+        "runtime.all_sensors_cleared": "Všetky senzory boli vymazané.",
+        "runtime.import_complete": "Import bol dokončený.",
+        "runtime.bulk_action_completed": "{action} bolo dokončené pre {count} senzor(y).",
+        "runtime.bulk_action_completed_with_issues": "{action} skončilo s problémami ({success}/{total} úspešne).",
+        "runtime.confirm_action": "Potvrdiť akciu",
+        "runtime.are_you_sure": "Naozaj chcete pokračovať?",
+        "runtime.discard_sensor_changes_title": "Zahodiť zmeny senzora",
+        "runtime.discard_sensor_changes_message": "Máte neuložené zmeny senzora. Zavrieť formulár bez uloženia?",
+        "runtime.leave_page_sensor_changes": "Máte neuložené zmeny formulára senzora. Opustiť stránku bez uloženia?",
+        "runtime.discard": "Zahodiť",
+        "runtime.save_as_detached": "Uložiť ako odpojené",
+        "runtime.detach_sensor_title": "Odpojiť senzor",
+        "runtime.delete_sensor_title": "Vymazať senzor",
+        "runtime.detach_all_sensors_title": "Odpojiť všetky senzory",
+        "runtime.clear_all_sensors_title": "Vymazať všetky senzory",
+        "runtime.clear_all_sensors_message": "Vymazať všetky senzory, odpojiť ich a odstrániť všetky konfigurácie? Túto akciu nemožno vrátiť späť.",
+        "runtime.loading_service_status": "Načítava sa stav služby...",
+        "runtime.loading_logs": "Načítavajú sa logy...",
+        "runtime.loading_audit_trail": "Načítava sa audit stopa...",
+        "runtime.logs_cleared": "Logy boli vymazané.",
+        "runtime.unable_clear_logs": "Nepodarilo sa vymazať logy.",
+        "runtime.admin_audit_cleared": "Admin audit log bol vymazaný.",
+        "runtime.unable_clear_admin_audit": "Nepodarilo sa vymazať admin audit log.",
+        "runtime.audit_export_failed": "Export auditu zlyhal: {error}",
+        "runtime.telemetry_workspace_unavailable": "Pracovisko telemetrie nie je dostupné: {error}",
+        "runtime.unable_refresh_system_health": "Nepodarilo sa obnoviť stav systému: {error}",
+        "runtime.telemetry_refresh_failed": "Obnovenie pracoviska telemetrie zlyhalo: {error}",
+        "runtime.layout_saved": "Rozloženie bolo uložené.",
+        "runtime.layout_engine_failed": "Engine rozloženia sa nepodarilo načítať. Obnovte stránku a overte prístup na internet.",
+        "runtime.gps_sync_failed": "GPS synchronizácia zlyhala pre {eui}: {error}",
+        "runtime.positions_locked": "Pozície sú uzamknuté. Pre presun alebo umiestnenie bodov vypnite uzamknutie.",
+        "runtime.base_station_list_error": "Chyba zoznamu z?klad?ov?ch stan?c: {error}",
+        "runtime.select_device_first": "Najprv vyberte zariadenie.",
+        "runtime.selected_device_has_no_position": "Vybrané zariadenie nemá uloženú pozíciu.",
+        "runtime.unsupported_position_source": "Nepodporovaný zdroj pozície.",
+        "runtime.invalid_device_selected": "Vybrané zariadenie je neplatné.",
+        "runtime.sensor_saved": "Senzor {eui} bol uložený.",
+        "runtime.sensor_save_failed": "Uloženie senzora zlyhalo: {error}",
+        "runtime.attachment_mapping_update_failed": "Aktualizácia mapovania attach zlyhala: {error}",
+        "runtime.sensor_detach_failed": "Odpojenie senzora zlyhalo: {error}",
+        "runtime.sensor_delete_failed": "Vymazanie senzora zlyhalo: {error}",
+        "runtime.sensor_reload_failed": "Znovunačítanie senzorov zlyhalo: {error}",
+        "runtime.detach_sensors_failed": "Odpojenie senzorov zlyhalo: {error}",
+        "runtime.clear_sensors_failed": "Vymazanie senzorov zlyhalo: {error}",
+        "runtime.import_sensors_failed": "Import senzorov zlyhal: {error}",
+        "runtime.sensor_not_found_reload": "Senzor {eui} sa v aktuálnej cache nenašiel. Zoznam sa obnovuje.",
+        "runtime.no_base_stations_found_tenant": "V aktívnom tenante sa nenašli žiadne základňové stanice.",
+        "runtime.invalid_mapping_payload": "Neplatný payload mapovania.",
+        "runtime.saving": "Ukladá sa...",
+        "runtime.base_station_gps_updated": "GPS pre základňovú stanicu bolo aktualizované.",
+        "runtime.sensor_gps_updated": "GPS pre senzor bolo aktualizované.",
+        "runtime.base_station_placed_floorplan": "Základňová stanica bola umiestnená na pôdorys.",
+        "runtime.sensor_placed_floorplan": "Senzor bol umiestnený na pôdorys.",
+        "runtime.place_base_station_first": "Najprv umiestnite aspoň jednu základňovú stanicu na pôdorys.",
+        "runtime.place_devices_first_heatmap": "Pre generovanie heatmapy najprv umiestnite zariadenia na mapu.",
+        "runtime.heatmap_generated": "Heatmapa bola vygenerovaná.",
+        "runtime.positions_zoom_saved": "Pozície a úroveň priblíženia boli uložené.",
+        "runtime.positions_cleared": "Všetky pozície boli vymazané.",
+        "runtime.clear_positions_title": "Vymazať všetky pozície",
+        "runtime.clear_positions_message": "Vymazať všetky uložené pozície zariadení?",
+        "runtime.type_eui_or_name_first": "Najprv zadajte EUI alebo názov uzla.",
+        "runtime.no_topology_match": "Pre \"{query}\" sa nenašiel žiadny uzol topológie.",
+        "runtime.topology_graph_not_ready": "Graf topológie ešte nie je pripravený.",
+        "runtime.topology_positions_saved": "Pozície a pohľad topológie boli úspešne uložené.",
+        "runtime.failed_save_positions": "Uloženie pozícií zlyhalo: {error}",
+        "runtime.coverage_positions_locked": "Pozície v mape pokrytia sú uzamknuté.",
+        "runtime.coverage_positions_unlocked": "Pozície v mape pokrytia sú odomknuté.",
+        "runtime.saved_positions_active": "Aktívne sú uložené pozície. Ak chcete použiť automatické rozloženie, zvoľte Reset layout.",
+        "runtime.cannot_save_layout_browser": "V tomto prehliadači sa rozloženie nedá uložiť.",
+        "runtime.layout_reverted_saved": "Rozloženie bolo vrátené do posledného uloženého stavu.",
+        "runtime.no_saved_layout_found": "Nenašlo sa žiadne uložené rozloženie. Bola načítaná predvolená verzia.",
+        "runtime.layout_reset_default": "Rozloženie bolo obnovené na predvolené.",
+        "runtime.auto_refresh_failed": "Automatické obnovovanie zlyhalo: {error}",
+        "runtime.runtime_refresh_failed": "Obnovenie runtime dát zlyhalo: {error}",
+        "runtime.audit_export_failed_simple": "Export auditu zlyhal: {error}",
+        "runtime.base_station_added": "Base station bola úspešne pridaná.",
+        "runtime.base_station_updated": "Base station bola aktualizovaná.",
+        "runtime.base_station_deleted": "Základňová stanica bola vymazaná.",
+        "runtime.base_station_eui_copied": "EUI základňovej stanice bolo skopírované: {eui}",
+        "runtime.no_base_stations_match_filters": "Žiadna základňová stanica nezodpovedá aktuálnym filtrom.",
+        "runtime.no_uptime_events_available": "Zatiaľ nie sú dostupné žiadne uptime udalosti.",
+        "runtime.uptime_data_unavailable": "Dáta uptime momentálne nie sú dostupné.",
+        "runtime.no_uptime_telemetry_window": "V zvolenom okne nie sú žiadne uptime telemetry udalosti.",
+        "runtime.no_status_events_yet": "Zatiaľ bez status udalostí.",
+        "runtime.base_station_detail_loading_failed": "Načítanie detailu základňovej stanice zlyhalo.",
+        "runtime.failed_load_base_station_cert_inventory": "Nepodarilo sa načítať certifikátový inventár základňovej stanice.",
+        "runtime.failed_load_global_cert_status": "Nepodarilo sa načítať globálny stav certifikátov.",
+        "runtime.periodic_status_query_disabled": "Periodické dotazovanie stavu je vypnuté.",
+        "runtime.please_select_file_upload": "Najprv vyberte súbor na nahratie.",
+        "runtime.please_select_backup_zip": "Najprv vyberte záložný ZIP súbor.",
+        "runtime.error_activating_vm": "Aktivácia VM zlyhala.",
+        "runtime.error_querying_vm_status": "Dotaz na stav VM zlyhal.",
+        "runtime.clear_logs_title": "Vymazať logy služby",
+        "runtime.clear_logs_message": "Vymazať aktuálne logy služby?",
+        "runtime.clear_admin_audit_title": "Vymazať admin audit log",
+        "runtime.clear_admin_audit_message": "Vymazať celý admin audit log?",
+        "runtime.export_failed": "Export zlyhal",
+        "health.failed_load_data": "Nepodarilo sa načítať health dáta",
+        "mqtt.queue_util_note": "Využitie fronty voči kapacite zápisu.",
+        "mqtt.retry_note": "Podiel zlyhaných retry pokusov v sledovanom okne.",
+        "mqtt.latency_note": "Priemerná latencia zápisu do úložiska telemetrie.",
+        "mqtt.reconnect_note": "Počet MQTT reconnectov za poslednú hodinu.",
+        "base_station.validation.eui_length": "EUI musí mať presne 16 hex znakov.",
+        "base_station.save_failed": "Uloženie zlyhalo",
+        "base_station.delete_failed": "Vymazanie zlyhalo",
+        "base_station.unsaved_changes_message": "Máte neuložené zmeny základňovej stanice. Zavrieť formulár bez uloženia?",
+        "sensor_detail.decimal": "Desiatkové bajty",
+        "sensor_detail.subtitle": "Hlavné pracovisko pre kontrolu, telemetriu, debug a audit.",
+        "sensor_detail.subtitle_runtime": "Použite Prehľad pre operatívu, Telemetriu pre dekódované hodnoty, Debug pre raw payload a Audit pre admin zmeny.",
+        "sensor_detail.back_to_sensors": "Späť na senzory",
+        "sensor_detail.edit_sensor": "Upraviť senzor",
+        "sensor_detail.manage_attach": "Správa priradenia",
+        "sensor_detail.telemetry_history": "História telemetrie",
+        "sensor_detail.sensor": "Senzor",
+        "sensor_detail.event_driven_sensor": "Udalosťami riadený senzor",
+        "sensor_detail.periodic_sensor": "Periodický senzor",
+        "sensor_detail.no_events": "Bez udalostí",
+        "sensor_detail.no_events_note": "Pre tento senzor zatiaľ nebola zaznamenaná žiadna event telemetria.",
+        "sensor_detail.no_telemetry": "Bez telemetrie",
+        "sensor_detail.unknown_telemetry_note": "Zatiaľ nebola zachytená žiadna nedávna telemetria.",
+        "sensor_detail.recent_event": "Nedávna udalosť",
+        "sensor_detail.quiet": "Pokojný",
+        "sensor_detail.stale": "Stagnujúci",
+        "sensor_detail.online": "Online",
+        "sensor_detail.delayed": "Oneskorený",
+        "sensor_detail.last_event_arrived": "Posledná udalosť prišla {time}.",
+        "sensor_detail.quiet_note": "Nedávno nebola zaznamenaná žiadna udalosť. Pre event-driven senzory je to v poriadku.",
+        "sensor_detail.stale_note": "V rámci nastaveného servisného okna neprišla žiadna event telemetria.",
+        "sensor_detail.online_note": "Senzor posiela dáta v očakávanom intervale.",
+        "sensor_detail.delayed_note": "Posledný uplink mešká ({time}).",
+        "sensor_detail.offline_note": "V rámci offline prahu neprišla žiadna telemetria.",
+        "sensor_detail.audit_all": "Všetko",
+        "sensor_detail.audit_updates": "Úpravy",
+        "sensor_detail.audit_attach": "Priradenie",
+        "sensor_detail.audit_detach": "Odpojenie",
+        "sensor_detail.audit_update": "Úprava",
+        "sensor_detail.audit_other": "Iné",
+        "sensor_detail.audit_action": "Akcia",
+        "sensor_detail.audit_summary": "Zhrnutie",
+        "sensor_detail.audit_actor": "Vykonal",
+        "sensor_detail.rows_shown": "{count} riadkov",
+        "sensor_detail.no_structured_summary": "Bez štruktúrovaného zhrnutia.",
+        "sensor_detail.repeated_times": "Opakované {count}x",
+        "sensor_detail.oldest_in_group": "Najstaršie v skupine: {time}",
+        "sensor_detail.no_audit_match": "Žiadny audit záznam nevyhovuje zvolenému filtru.",
+        "sensor_detail.no_audit_yet": "Pre tento senzor zatiaľ nie sú audit záznamy.",
+        "sensor_detail.audit_load_on_open": "Audit stopa sa načíta po otvorení tejto karty.",
+        "sensor_detail.generic_no_decoded": "Bez dekódovaných hodnôt",
+        "sensor_detail.generic_telemetry_note": "Tento payload profil zatiaľ nemá vlastný UI blok. Dekódované hodnoty sú stále dostupné nižšie.",
+        "sensor_detail.decoded_summary": "Zhrnutie dekódovania",
+        "sensor_detail.no_short_history": "Krátka história zatiaľ nie je dostupná.",
+        "sensor_detail.no_decoded_payload": "Zatiaľ neprišiel žiadny dekódovaný payload. Po prijatí telemetrie sa tu zobrazia dekódované hodnoty a krátka história.",
+        "sensor_detail.no_raw_payload": "Raw payload zatiaľ nie je dostupný.",
+        "sensor_detail.profile": "Profil",
+        "sensor_detail.decoder_profile_note": "Profil dekódera použitý pre posledný uplink",
+        "sensor_detail.model_hint": "Odhad modelu",
+        "sensor_detail.model_hint_note": "Best-effort identifikácia modelu",
+        "sensor_detail.received_at": "Prijaté",
+        "sensor_detail.received_at_note": "Čas po deduplikácii a uložení",
+        "sensor_detail.raw_payload": "Raw payload",
+        "sensor_detail.hex_and_decimal": "Hex a desiatkové bajty",
+        "sensor_detail.decoded_json": "Dekódovaný JSON",
+        "sensor_detail.debug_view_note": "Debug pohľad pre technickú analýzu",
+        "sensor_detail.indoor": "Interiér",
+        "sensor_detail.outdoor": "Exteriér",
+        "sensor_detail.indoor_context_note": "Pre CO2 a komfortné metriky sa používajú vnútorné prahy.",
+        "sensor_detail.outdoor_context_note": "Pre CO2 a environmentálne metriky sa používajú vonkajšie prahy.",
+        "sensor_detail.auto_context_note": "Kontext prostredia sa odvodí zo zvoleného profilu senzora.",
+        "sensor_detail.co2_no_data": "Bez dát",
+        "sensor_detail.co2_no_data_note": "Dekódovaná CO2 vzorka zatiaľ nie je dostupná.",
+        "sensor_detail.co2_comfortable": "Komfortné",
+        "sensor_detail.co2_comfortable_note": "Vnútorná úroveň CO2 je v bežnom komfortnom pásme.",
+        "sensor_detail.co2_elevated": "Zvýšené",
+        "sensor_detail.co2_elevated_note": "Vnútorné CO2 je zvýšené. Odporúča sa skontrolovať vetranie.",
+        "sensor_detail.co2_critical": "Kritické",
+        "sensor_detail.co2_critical_note": "Vnútorné CO2 je vysoké a treba ho preveriť.",
+        "sensor_detail.co2_ambient": "Ambientné",
+        "sensor_detail.co2_ambient_note": "Vonkajšia úroveň CO2 je blízko bežného ambientného stavu.",
+        "sensor_detail.co2_outdoor_elevated_note": "Vonkajšie CO2 je zvýšené oproti typickému ambientnému pozadiu.",
+        "sensor_detail.co2_outdoor_critical_note": "Vonkajšie CO2 je nezvyčajne vysoké.",
+        "sensor_detail.battery_healthy": "V poriadku",
+        "sensor_detail.battery_monitor": "Sledovať",
+        "sensor_detail.battery_low": "Nízka",
+        "sensor_detail.signal_excellent": "Výborný",
+        "sensor_detail.signal_good": "Dobrý",
+        "sensor_detail.signal_fair": "Priemerný",
+        "sensor_detail.signal_weak": "Slabý",
+        "sensor_detail.internal_alarm": "Interný alarm",
+        "sensor_detail.external_alarm": "Externý alarm",
+        "sensor_detail.no_event_type": "Bez typu udalosti",
+        "sensor_detail.first_seen": "Prvé videnie",
+        "sensor_detail.last_seen": "Posledné videnie",
+        "sensor_detail.gateway_coverage": "Pokrytie základňovými stanicami",
+        "sensor_detail.counter_gap_loss": "Strata podľa packet countera",
+        "sensor_detail.health": "Zdravie",
+        "sensor_detail.radio_and_coverage": "Rádio a pokrytie",
+        "sensor_detail.base_station": "Základňová stanica",
+        "sensor_detail.messages": "Správy",
+        "sensor_detail.latest_payload_snapshot": "Posledný prehľad payloadu",
+        "sensor_detail.environment_context": "Kontext prostredia",
+        "sensor_detail.expected_interval_source": "Zdroj očakávaného intervalu",
+        "sensor_detail.telegrams_received": "Prijaté telegramy",
+        "sensor_detail.signal_score": "Skóre signálu",
+        "sensor_detail.last_event_type": "Typ poslednej udalosti",
+        "sensor_detail.co2_current": "CO2 (aktuálne)",
+        "sensor_detail.temperature": "Teplota",
+        "sensor_detail.humidity": "Vlhkosť",
+        "sensor_detail.battery_est": "Batéria (odhad)",
+        "sensor_detail.last_alarm": "Posledný alarm",
+        "sensor_detail.alarm_duration": "Trvanie alarmu",
+        "sensor_detail.total_openings": "Celkový počet otvorení",
+        "sensor_detail.seconds_ago": "pred {value}s",
+        "sensor_detail.minutes_ago": "pred {value}m",
+        "sensor_detail.hours_ago": "pred {value}h",
+        "sensor_detail.days_ago": "pred {value}d",
+        "base_station_detail.subtitle": "Prevádzkový detail pre runtime health, pripojené senzory, certifikáty a audit históriu.",
+        "base_station_detail.back_to_base_stations": "Späť na základňové stanice",
+        "base_station_detail.subtitle_runtime": "Použite Prehľad pre runtime stav, Pripojené senzory pre routing kontext, Certifikáty pre PKI stav a Audit pre admin zmeny.",
+        "base_station_detail.no_recent_event": "Bez nedávnej udalosti",
+        "base_station_detail.connected_note": "TLS relácia je aktívna a základňová stanica je online.",
+        "base_station_detail.connecting_note": "TLS handshake práve prebieha.",
+        "base_station_detail.offline_note": "Aktuálne nie je registrovaná žiadna aktívna TLS relácia.",
+        "base_station_detail.valid_certificate": "Platný certifikát",
+        "base_station_detail.expiring_soon": "Čoskoro expirovaný",
+        "base_station_detail.expired": "Expirovaný",
+        "base_station_detail.missing_certificate": "Chýbajúci certifikát",
+        "base_station_detail.expires_at": "Expiruje {date}",
+        "base_station_detail.expired_at": "Expiroval {date}",
+        "base_station_detail.certificate_present": "Metadáta certifikátu sú prítomné.",
+        "base_station_detail.certificate_review": "Certifikát treba čoskoro preveriť.",
+        "base_station_detail.certificate_expired": "Certifikát expiroval.",
+        "base_station_detail.missing_certificate_note": "Pre túto základňovú stanicu neboli nájdené metadáta certifikátu.",
+        "base_station_detail.no_linked_sensors": "K tejto základňovej stanici momentálne nie sú priradené ani naviazané žiadne senzory.",
+        "base_station_detail.live_route": "Aktívna trasa",
+        "base_station_detail.configured_only": "Len nakonfigurované",
+        "base_station_detail.observed_elsewhere": "Pozorované inde",
+        "base_station_detail.unnamed_sensor": "Nepomenovaný senzor",
+        "base_station_detail.open_sensor": "Otvoriť senzor",
+        "base_station_detail.certificate_status": "Stav certifikátu",
+        "base_station_detail.certificate_status_note": "Aktuálne metadáta certifikátu pre túto základňovú stanicu",
+        "base_station_detail.generated": "Vygenerované",
+        "base_station_detail.registry_timestamp": "Čas z registru",
+        "base_station_detail.expires": "Expiruje",
+        "base_station_detail.certificate_expiration_metadata": "Metadáta expirácie certifikátu",
+        "base_station_detail.certificate_file": "Súbor certifikátu",
+        "base_station_detail.filesystem_presence_check": "Kontrola prítomnosti na disku",
+        "base_station_detail.open_certificate_workspace": "Otvoriť pracovisko certifikátov",
+        "base_station_detail.no_audit_yet": "Pre túto base station zatiaľ nie sú audit záznamy.",
+        "base_station_detail.audit_load_on_open": "Audit stopa sa načíta po otvorení tejto karty.",
+        "base_station_detail.load_failed": "Načítanie detailu základňovej stanice zlyhalo",
+        "base_station_detail.runtime_health": "Prevádzkový stav",
+        "base_station_detail.configured_ip": "Nakonfigurovaná IP",
+        "base_station_detail.status_age": "Vek stavu",
+        "base_station_detail.cpu": "CPU",
+        "base_station_detail.memory": "Pamäť",
+        "base_station_detail.vm_capable": "Podpora VM",
+        "base_station_detail.last_status_change": "Posledná zmena stavu",
+        "base_station_detail.last_event": "Posledná udalosť",
+        "base_station_detail.runtime_uptime": "Runtime uptime",
+        "base_station_detail.name": "Názov",
+        "base_station_detail.tenant": "Tenant",
+        "base_station_detail.tags": "Tagy",
+        "base_station_detail.gps": "GPS",
+        "base_station_detail.configuration_note": "Statické nastavenia uložené v registri",
+        "base_station_detail.runtime_health_note": "CPU, pamäť, teplota a VM schopnosti",
+        "base_station_detail.declared_management_endpoint": "Deklarovaný manažment endpoint",
+        "base_station_detail.coverage_map_source": "Zdroj umiestnenia v mape pokrytia",
+        "base_station_detail.linked_sensor_note": "Senzory preferujúce túto base station",
+        "base_station_detail.last_event_connected": "Posledná zaznamenaná pripojená udalosť",
+        "base_station_detail.no_runtime_status_events": "Zatiaľ bez runtime status udalostí",
+        "base_station_detail.latest_runtime_health": "Posledný runtime health snapshot",
+        "base_station_detail.used_memory_estimate": "Odhad využitej pamäte",
+        "base_station_detail.latest_reported_temperature": "Posledná nahlásená teplota zariadenia",
+        "base_station_detail.supports_vm_routing": "Podporuje virtual meter routing",
+        "base_station_detail.unnamed_base_station": "Nepomenovaná základňová stanica",
+        "base_station_detail.yes": "Áno",
+        "base_station_detail.no": "Nie",
+        "language.english": "English",
+        "language.slovak": "Slovenčina",
+    },
+}
+
+_PAGE_TITLE_KEYS = {
+    "Dashboard": "page.dashboard",
+    "Sensors": "page.sensors",
+    "Base Stations": "page.base_stations",
+    "System Health": "page.system_health",
+    "Network": "page.network_topology",
+    "Network Topology": "page.network_topology",
+    "Coverage": "page.coverage_map",
+    "Coverage Map": "page.coverage_map",
+    "MQTT": "page.mqtt",
+    "Sensor Telemetry": "page.sensor_telemetry",
+    "Logs": "page.logs",
+    "Administration": "page.administration",
+    "Access & Tenants": "page.access_tenants",
+    "Configuration": "page.configuration",
+    "Certificates": "page.certificates",
+    "Documentation": "page.documentation",
+    "Login": "page.login",
+    "Sensor Detail": "page.sensor_detail",
+    "Base Station Detail": "page.base_station_detail",
+}
+
+_UI_TRANSLATIONS["sk"].update({
+    "common.auto_refresh": "Automatické obnovovanie",
+    "common.refresh_now": "Obnoviť teraz",
+    "common.updated": "Aktualizované",
+    "common.never": "nikdy",
+    "common.never_capitalized": "Nikdy",
+    "common.cache": "Cache",
+    "common.focus": "Zamerať",
+    "common.refresh": "Obnoviť",
+    "common.save": "Uložiť",
+    "common.reset": "Reset",
+    "common.clear": "Vymazať",
+    "common.filters": "Filtre",
+    "common.search": "Hľadať",
+    "common.limit": "Limit",
+    "common.identity": "Identita",
+    "common.telemetry": "Telemetria",
+    "common.placement": "Umiestnenie",
+    "common.name": "Názov",
+    "common.name_label_optional": "Názov / štítok (voliteľné)",
+    "common.tags_optional": "Tagy (voliteľné)",
+    "common.tags_comma_separated": "Tagy oddelené čiarkou.",
+    "common.auto_unknown": "Auto / neznáme",
+    "common.indoor": "Interiér",
+    "common.outdoor": "Exteriér",
+    "common.gps_latitude_optional": "GPS zemepisná šírka (voliteľné)",
+    "common.gps_longitude_optional": "GPS zemepisná dĺžka (voliteľné)",
+    "common.latitude": "Latitude",
+    "common.longitude": "Longitude",
+    "common.live_summary": "Živý súhrn",
+    "common.sensor": "Senzor",
+    "common.close": "Zavrieť",
+    "common.network": "Sieť",
+    "common.ip_address": "IP adresa",
+    "common.user": "Používateľ",
+    "common.username": "Používateľské meno",
+    "common.password": "Heslo",
+    "common.tenant": "Tenant",
+    "common.description_optional": "Popis (voliteľné)",
+    "common.note": "Poznámka:",
+    "common.last_refresh": "Posledné obnovenie:",
+    "common.none": "Žiadne",
+    "common.not_available_short": "N/A",
+    "common.seconds_ago": "{count}s dozadu",
+    "common.minutes_ago": "{count}m dozadu",
+    "common.hours_ago": "{count}h dozadu",
+    "common.days_ago": "{count}d dozadu",
+    "common.json": "JSON",
+    "common.latest": "Posledná",
+    "common.minimum": "Minimum",
+    "common.maximum": "Maximum",
+    "common.configuration": "6. Konfigurácia",
+    "common.dashboard": "Dashboard",
+    "common.network_topology": "Network Topology",
+    "common.system_health": "System Health",
+    "common.mqtt_logs": "MQTT a logy",
+    "common.administration": "Administrácia",
+    "common.configuration_short": "Configuration",
+    "common.authenticated": "Autentifikovaný prístup",
+    "common.selected_count": "0 vybraných",
+    "health.refresh_interval": "Interval obnovovania",
+    "health.tenant_scoped_view": "Tenant-scoped pohľad na telemetriu",
+    "health.system_uptime": "Uptime systému",
+    "health.service_center_runtime": "Runtime Service Center",
+    "health.active_registered": "Aktívne / Registrované",
+    "health.connected_total": "Pripojené / Celkom",
+    "health.uplinks_24h": "Uplinky (24h)",
+    "health.timescale_telemetry_volume": "Objem telemetrie v Timescale",
+    "health.average_snr": "Priemerné SNR",
+    "health.signal_quality_baseline": "Základná úroveň kvality signálu",
+    "health.across_tracked_sensors": "Naprieč sledovanými senzormi",
+    "health.telemetry_analytics_workspace": "Pracovisko analýzy telemetrie",
+    "health.native_charts_subtitle": "Natívne grafy z telemetrického API platformy (tenant-aware)",
+    "health.layout_edit_mode_active": "Režim úpravy rozloženia je aktívny. Panely môžete presúvať alebo meniť ich veľkosť z pravého dolného rohu. Zmeny sa po dokončení uložia automaticky.",
+    "network.coverage_routing": "Pokrytie a smerovanie",
+    "network.workspace_title": "Pracovisko topológie siete",
+    "network.workspace_subtitle": "Umiestňujte zariadenia presne, overujte kvalitu spojení a spravujte topológiu z jedného operatívneho pohľadu.",
+    "network.gps_synced": "GPS synchronizované",
+    "network.live_topology": "Živá topológia",
+    "network.tenant_aware": "Tenant-aware",
+    "network.workspace_mode": "Režim pracoviska",
+    "network.coverage_mode": "Režim pokrytia",
+    "network.topology_mode": "Režim topológie",
+    "network.coverage_mode_hint": "Režim pokrytia: mapa + umiestnenie v pôdoryse.",
+    "network.coverage_controls": "Ovládanie pokrytia",
+    "network.refresh_data": "Obnoviť dáta",
+    "network.show_base_stations": "Zobraziť base stations",
+    "network.show_sensors": "Zobraziť senzory",
+    "network.heatmap": "Heatmapa",
+    "network.signal_metric": "Signálová metrika",
+    "network.gps_changes_sync": "Zmeny GPS sa synchronizujú automaticky.",
+    "network.topology_controls": "Ovládanie topológie",
+    "network.fit_graph": "Prispôsobiť graf",
+    "network.layout_organic": "Organické (COSE)",
+    "network.layout_layered": "Vrstvené (BS -> senzory)",
+    "network.layout_grid": "Mriežka",
+    "network.layout_concentric": "Sústredné",
+    "logs.service_logs": "Servisné logy",
+    "logs.admin_audit": "Admin audit",
+    "logs.service_status": "Stav služby platformy",
+    "logs.search_placeholder": "Hľadať správu, logger, zdroj...",
+    "logs.level": "Úroveň",
+    "logs.all_levels": "Všetky úrovne",
+    "logs.logger": "Logger",
+    "logs.all_loggers": "Všetky loggery",
+    "logs.follow_tail": "Sledovať koniec",
+    "logs.log_stream": "Tok logov",
+    "sensors.add_new_sensor": "Pridať nový senzor",
+    "sensors.configuration_sections": "Sekcie konfigurácie senzora",
+    "sensors.identity_registration": "Identita a registrácia",
+    "sensors.identity_registration_note": "Základné registračné hodnoty používané na identifikáciu endpointu a viazanie protokolu.",
+    "sensors.eui_hex16": "EUI (16 hex znakov)",
+    "sensors.network_key_hex32": "Sieťový kľúč (32 hex znakov)",
+    "sensors.short_address_hex4": "Krátka adresa (4 hex znaky)",
+    "sensors.name_placeholder": "napr. Vodomer - Hala A",
+    "sensors.tags_placeholder": "napr. voda, hala-a, kritické",
+    "sensors.bidirectional": "Obojsmerné",
+    "sensors.telemetry_behavior": "Správanie telemetrie",
+    "sensors.telemetry_behavior_note": "Profil, dekóder a časovanie určujú interpretáciu dát, vyhodnotenie neaktuálneho stavu aj prahy v rozhraní.",
+    "sensors.sensor_profile": "Profil senzora",
+    "sensors.sensor_profile_help": "Vyberte profil, ktorý nastaví dekóder, režim hlásenia a predvolené časovanie.",
+    "sensors.payload_decoder": "Dekóder payloadu",
+    "sensors.decoder_auto": "Automaticky (podľa názvu a tagov)",
+    "sensors.raw_only": "Len raw dáta (bez dekódovania)",
+    "sensors.payload_decoder_help": "Vyberte konkrétny dekódovací profil pre tento typ senzora.",
+    "sensors.deployment_context": "Prostredie nasadenia",
+    "sensors.deployment_context_help": "Používa sa pri kontextovom vyhodnocovaní CO2 a komfortných metrík.",
+    "sensors.reporting_mode": "Režim hlásenia",
+    "sensors.reporting_auto": "Automaticky (podľa typu senzora)",
+    "sensors.reporting_periodic": "Periodické hlásenie",
+    "sensors.reporting_event": "Udalostné hlásenie / len alarm",
+    "sensors.reporting_mode_help": "Pri senzoroch dverí, okien alebo alarmov, ktoré neposielajú v pevných intervaloch, použite udalostný režim.",
+    "sensors.expected_uplink_interval": "Očakávaný interval uplinku (sekundy)",
+    "sensors.expected_interval_placeholder": "Auto podľa typu zariadenia",
+    "sensors.expected_interval_help": "Len pre periodické senzory. Nechajte prázdne, ak sa má odvodiť z typu zariadenia/profilu a prispôsobiť podľa prevádzky.",
+    "sensors.event_sensor_service_window": "Servisné okno udalostného senzora (hodiny)",
+    "sensors.service_window_placeholder": "Automaticky podľa typu udalostného senzora",
+    "sensors.service_window_help": "Len pre udalostné senzory. Ak sa v tomto okne neobjaví žiadna udalosť, senzor sa označí ako neaktuálny.",
+    "sensors.placement_mapping": "Umiestnenie a mapovanie",
+    "sensors.placement_mapping_note": "Voliteľné GPS údaje používané pre pohľad pokrytia, kontext topológie a umiestnenie na mape.",
+    "sensors.gps_set_both_note": "Ak chcete senzor umiestniť na mape automaticky, vyplňte obe GPS polia.",
+    "sensors.live_summary_note": "Panel vpravo priebežne zobrazuje aktuálne zvolený profil, režim hlásenia a umiestnenie.",
+    "sensors.manage_attachments": "Priradenie senzora k základňovým staniciam",
+    "sensors.loading_attachment_state": "Načítava sa aktuálny stav attach...",
+    "sensors.all_base_stations": "Všetky základňové stanice",
+    "sensors.clear_selection_detach": "Zrušiť výber a odpojiť",
+    "sensors.save_mapping": "Uložiť priradenie",
+    "base_stations.uptime_tracking_starts": "Sledovanie uptime začne, keď sa base stations pripoja",
+    "base_stations.configuration_sections": "Sekcie konfigurácie base station",
+    "base_stations.identity_inventory": "Identita a inventár",
+    "base_stations.identity_inventory_note": "Základná identita, názov a metadata používané na vyhľadávanie tejto base station.",
+    "base_stations.eui_hex16": "EUI (16 hex znakov)",
+    "base_stations.name_placeholder": "napr. Sklad Sever",
+    "base_stations.tags_comma": "Tagy (oddelené čiarkou)",
+    "base_stations.tags_placeholder": "napr. indoor, floor1, production",
+    "base_stations.generate_certificates_automatically": "Generovať certifikáty automaticky",
+    "base_stations.network_reachability": "Sieť a dostupnosť",
+    "base_stations.network_reachability_note": "Voliteľné sieťové údaje používané na operatívnu viditeľnosť a diagnostiku.",
+    "base_stations.ip_placeholder": "napr. 192.168.1.100",
+    "base_stations.ip_help": "Voliteľné inventory pole pre LAN dostupnosť a rýchly operátorský kontext.",
+    "base_stations.placement_mapping": "Umiestnenie a mapovanie",
+    "base_stations.placement_mapping_note": "Voliteľné GPS súradnice pre umiestnenie base station do Coverage a Topology máp.",
+    "base_stations.gps_set_both_note": "Pre automatické umiestnenie base station v mape Coverage nastavte obe polia.",
+    "mqtt.topic_suffix_example": "ep/00124B001CBCE171/cmd",
+    "mqtt.guide_step_1_title": "1) Príkaz senzoru - textový payload",
+    "mqtt.guide_step_1_note": "Rýchly príkaz pre jeden senzorový endpoint.",
+    "mqtt.guide_step_2_title": "2) Príkaz senzoru - JSON payload",
+    "mqtt.guide_step_2_note": "Pripojte senzor k vybranej základňovej stanici alebo k viacerým základňovým staniciam.",
+    "mqtt.guide_step_3_title": "3) Legacy register payload",
+    "mqtt.guide_step_3_note": "Registrácia/konfigurácia endpointu cez legacy register topic.",
+    "mqtt.guide_step_4_title": "4) Čo overiť po publishi",
+    "mqtt.guide_step_4_note": "Skontrolujte, že sa správa objaví v outgoing topics a že sa ACK/odpoveď vráti na response topic.",
+    "mqtt.runtime_counters": "Runtime počítadlá",
+    "mqtt.runtime_counters_subtitle": "Priepustnosť príjmu, front a publishu",
+    "mqtt.incoming_total": "Prijaté celkom",
+    "mqtt.incoming_queued": "Zaradené do fronty",
+    "mqtt.incoming_failed": "Príjem zlyhal",
+    "mqtt.published": "Publikované",
+    "mqtt.publish_failed": "Publish zlyhal",
+    "mqtt.recent_errors": "Nedávne chyby",
+    "mqtt.recent_incoming_topics": "Nedávne prichádzajúce topics",
+    "mqtt.recent_outgoing_topics": "Nedávne odchádzajúce topics",
+    "telemetry.tenant_scoped_history": "História obmedzená na tenant",
+    "telemetry.no_decoded_values": "Bez dekódovaných hodnôt",
+    "telemetry.raw_payload_hex": "Raw payload (hex)",
+    "telemetry.raw_payload_dec": "Raw payload (dec)",
+    "telemetry.no_numeric_decoded_values": "Žiadne číselné dekódované hodnoty",
+    "telemetry.no_trend_metric_yet": "Pre trend zatiaľ nie je dostupná dekódovaná metrika",
+    "telemetry.choose_one_sensor": "Vyberte jeden senzor",
+    "telemetry.window_drift": "Posun v okne",
+    "oms.note_wmbus_devices": "OMS merače sú WMBUS zariadenia (voda, plyn, elektrina). ID sa extrahujú z hlavičiek payloadov.",
+    "oms.auto_refresh_every_30s": "Automatické obnovovanie každých 30 s",
+    "oms.error_loading_vm_capable": "Nepodarilo sa načítať základňové stanice s podporou VM.",
+    "oms.no_base_stations_connected": "Nie sú pripojené žiadne základňové stanice.",
+    "oms.vm_not_confirmed_prefix": "Je pripojených <strong>{count}</strong> základňových staníc, ale podpora VM ešte nebola potvrdená.",
+    "oms.run_vm_status_query": "Spustite VM status query pre detekciu podpory.",
+    "oms.vm_capable_count": "VM-capable ({count})",
+    "oms.not_confirmed_count": "Nepotvrdené ({count})",
+    "oms.total_connected": "Pripojené celkom: {count}",
+    "oms.error_loading_data": "Nepodarilo sa načítať dáta.",
+    "oms.no_meters_available": "Nie sú dostupné žiadne merače",
+    "oms.no_meters_match_search": "Aktuálnemu vyhľadávaniu nezodpovedá žiadny merač.",
+    "cert.generated": "Vygenerované",
+    "cert.expires": "Platí do",
+    "cert.backup_restore": "Záloha a obnova",
+    "cert.recovery_workflow": "Recovery workflow",
+    "cert.backup_all_certificates": "Zálohovať všetky certifikáty",
+    "cert.backup_all_certificates_note": "Vytvorí jeden ZIP archív s CA, servisným certifikátom a servisným kľúčom.",
+    "cert.restore_from_zip": "Obnoviť zo ZIP",
+    "cert.restore_from_zip_note": "Nahrajte predchádzajúci záložný balík a nahraďte aktuálne súbory.",
+    "cert.restore_backup": "Obnoviť zálohu",
+    "cert.no_certificate_records": "Nenašli sa žiadne certifikátové záznamy.",
+    "admin.create_mode": "Režim vytvorenia",
+    "admin.username_placeholder": "acme_user",
+    "admin.display_name": "Zobrazované meno",
+    "admin.display_name_placeholder": "ACME Operátor",
+    "admin.password_required_create": "povinné pri vytvorení",
+    "admin.access_scope": "Rozsah prístupu",
+    "admin.tenant_id": "Tenant ID",
+    "admin.user_restricted_to_tenant": "Používateľ je obmedzený na tento tenant.",
+    "admin.admin_permissions": "Admin oprávnenia",
+    "admin.granular_admin_rights": "Jemnozrnné admin práva pre tento účet.",
+    "admin.save_user": "Uložiť používateľa",
+    "admin.tenant_profile": "Profil tenantu",
+    "admin.tenant_id_placeholder": "acme",
+    "admin.tenant_name_placeholder": "ACME s.r.o.",
+    "admin.tenant_description_placeholder": "Zákaznícky tenant pre ACME operácie",
+        "admin.save_tenant": "Uložiť tenant",
+        "admin.unsaved_changes_title": "Neuložené zmeny administrácie",
+        "admin.unsaved_user_changes_message": "Máte neuložené zmeny používateľa. Zavrieť formulár bez uloženia?",
+        "admin.unsaved_tenant_changes_message": "Máte neuložené zmeny tenanta. Zavrieť formulár bez uloženia?",
+        "admin.unsaved_forms_leave_message": "Máte neuložené zmeny vo formulári používateľa alebo tenanta. Opustiť stránku bez uloženia?",
+    "docs.core_workflows": "4. Kľúčové workflowy",
+    "docs.api_summary": "5. Súhrn API",
+    "docs.rbac": "7. Prístup, tenancy, RBAC",
+    "docs.monitoring_reliability": "8. Monitoring a spoľahlivosť",
+    "docs.troubleshooting": "9. Riešenie problémov",
+    "docs.backup_restore_runbook": "10. Runbook zálohy a obnovy",
+    "docs.objective_secure_transport": "Udržiavať bezpečný prenos medzi base stations a backend službami.",
+    "docs.objective_sensor_lifecycle": "Spravovať celý životný cyklus senzora: vytvoriť, registrovať, attach, detach, monitorovať.",
+    "docs.objective_observability": "Poskytnúť takmer real-time observabilitu cez dashboard a health stránky.",
+    "docs.objective_tenant_separation": "Podporovať oddelenie tenantov s globálnym dohľadom na úrovni admina.",
+    "docs.data_path_uplinks": "Uplinky prichádzajú cez TLSServer/BSSCI handlery.",
+    "docs.data_path_queues": "Interné fronty oddeľujú ingest od perzistencie a publikovania.",
+    "docs.data_path_storage": "Dáta môžu tiecť do MQTT a voliteľných storage backendov.",
+    "docs.data_path_frontend": "Frontend číta API projekcie navrhnuté pre operatívnu zrozumiteľnosť.",
+    "docs.quick_step_1": "Krok 1: Overte, že kontajnery a služby sú zdravé (`bssci-service-center`, DB, broker, voliteľne Grafana).",
+    "docs.quick_step_2": "Krok 2: Otvorte Configuration a overte server/MQTT/storage endpointy.",
+    "docs.quick_step_3": "Krok 3: Pridajte základňové stanice a potom nastavte GPS buď v edit formulári, alebo cez mapový workflow.",
+    "docs.quick_step_4": "Krok 4: Pridajte senzory a spustite priradenie k vybraným základňovým staniciam.",
+    "docs.quick_step_5": "Krok 5: Overte telemetriu v MQTT + Logs + System Health.",
+    "docs.page_dashboard_desc": "Denný operatívny pohľad s mapou topológie, kvalitou signálu, prevádzkou, upozorneniami a kontextom základňových staníc.",
+    "docs.page_sensors_desc": "Inventory a lifecycle operácie: create/edit, attach/detach, tenant labeling a diagnostika stavu.",
+    "docs.page_base_stations_desc": "Inventár základňových staníc, runtime stav, identita, certifikáty a lokačné metaúdaje.",
+    "docs.page_network_desc": "Coverage mapa + topology graf, kontrola liniek, filtre problémov a workflowy GPS synchronizácie.",
+    "docs.page_health_desc": "Runtime počítadlá, queue/retry reliability metriky a analytika operatívnych incidentov.",
+    "docs.page_mqtt_logs_desc": "Zdravie brokera, publish správanie, nástroje test publishu a viditeľnosť logov/auditu.",
+    "docs.page_admin_desc": "Správa používateľov, tenant governance a administratívne akcie riadené rolami a scope.",
+    "docs.page_configuration_desc": "Centralizované runtime nastavenia servera, storage, MQTT a údržby.",
+    "docs.core_workflows_sub": "Produkčne bezpečný spôsob vykonania bežných akcií.",
+    "docs.add_base_station": "Pridať base station",
+    "docs.add_base_station_step_1": "Vytvorte záznam v Base Stations a overte identifikačné polia.",
+    "docs.add_base_station_step_2": "Priraďte GPS, aby ste predišli nekonzistenciám na mape.",
+    "docs.add_base_station_step_3": "Skontrolujte konektivitu a propagáciu stavu na Dashboarde.",
+    "docs.add_sensor_attach": "Pridať senzor + attach",
+    "docs.add_sensor_attach_step_1": "Vytvorte senzor s EUI a voliteľným popisným názvom/tagom.",
+    "docs.add_sensor_attach_step_2": "Použite akciu priradenia na mapovanie senzora na jednu alebo viac základňových staníc.",
+    "docs.add_sensor_attach_step_3": "Potvrďte, že riadok senzora zobrazuje pripojenú BS namiesto",
+    "docs.gps_consistency": "Konzistencia GPS",
+    "docs.gps_consistency_step_1": "Použite umiestnenie na mape a Save positions.",
+    "docs.gps_consistency_step_2": "Znovu otvorte edit formuláre senzora/base station a overte rovnaké súradnice.",
+    "docs.gps_consistency_step_3": "Vyčistite položky uvedené v pomocníkovi Missing GPS.",
+    "docs.incident_triage": "Triáž incidentu",
+    "docs.incident_triage_step_1": "Začnite v Dashboard alerts a health indikátoroch.",
+    "docs.incident_triage_step_2": "Skontrolujte MQTT publish/reconnect správanie.",
+    "docs.incident_triage_step_3": "Korelujte queue depth, retry failures a logy.",
+    "docs.api_summary_sub": "Hlavné API skupiny používané UI a operations skriptami.",
+    "docs.api_family": "Skupina",
+    "docs.api_example_endpoints": "Príklady endpointov",
+    "docs.api_purpose": "Účel",
+    "docs.api_access_scope": "Rozsah prístupu",
+    "docs.api_sensors_purpose": "Inventory + lifecycle priradenia",
+    "docs.api_sensors_scope": "Oprávnenia na správu senzorov",
+    "docs.api_bs_purpose": "Invent?r z?klad?ov?ch stan?c a meta?daje",
+    "docs.api_bs_scope": "Oprávnenia na správu base stations",
+    "docs.api_topology_coverage": "Topológia/Pokrytie",
+    "docs.api_topology_purpose": "GPS stav mapy a dáta grafu",
+    "docs.api_topology_scope": "Autentifikovaný, s obmedzeným zápisom",
+    "docs.api_health_mqtt": "Health/MQTT",
+    "docs.api_health_purpose": "Runtime spoľahlivosť a stav brokera",
+    "docs.api_admin_tenants": "Admin/Tenanti",
+    "docs.api_admin_purpose": "Governance a tenant operácie",
+    "docs.api_admin_scope": "Admin scope",
+    "docs.api_audit_purpose": "Čítanie/export admin aktivít",
+    "docs.api_audit_scope": "Admin audit scope",
+    "docs.configuration_sub": "Prevádzková politika pre bezpečné zmeny konfigurácie.",
+    "docs.configuration_general_desc": "Základné správanie servera a runtime intervaly.",
+    "docs.configuration_storage_desc": "Pripojenie Influx/Timescale, retencia, kompresia a sync akcie.",
+    "docs.configuration_auto_detach_modules": "Auto-detach + voliteľné moduly",
+    "docs.configuration_auto_detach_modules_desc": "Pokročilé moduly ponechajte skryté, ak ich vaše nasadenie nepoužíva.",
+    "docs.configuration_maintenance_desc": "Akcie reštartu služby/kontajnera. Používajte len v kontrolovaných oknách.",
+    "docs.configuration_warning_unsaved": "Guard neuložených zmien treba rešpektovať. Ak má zmena pretrvať, pred odchodom ju uložte.",
+    "docs.rbac_sub": "Ako interpretovať oprávnenia a tenant izoláciu.",
+    "docs.admin_visibility": "Viditeľnosť admina",
+    "docs.admin_visibility_desc": "Admin môže byť globálny (cross-tenant) s limitmi podľa typu akcie a scope.",
+    "docs.tenant_users": "Tenant používatelia",
+    "docs.tenant_users_desc": "Ne-admin používatelia by mali pracovať striktne v dátových hraniciach prideleného tenantu.",
+    "docs.auditability": "Auditovateľnosť",
+    "docs.auditability_desc": "Kritické akcie sa majú objaviť v admin audit logu s aktérom, cieľom a stavom.",
+    "docs.monitoring_reliability_sub": "Metriky, na ktoré sa oplatí alertovať v produkcii.",
+    "docs.metric": "Metrika",
+    "docs.why": "Prečo",
+    "docs.healthy_behavior": "Zdravé správanie",
+    "docs.example_alert": "Príklad alertu",
+    "docs.metric_queue_depth": "Hĺbka fronty",
+    "docs.metric_queue_depth_why": "Detekcia backpressure",
+    "docs.metric_queue_depth_healthy": "Zväčša nízka, len s krátkymi špičkami",
+    "docs.metric_queue_depth_alert": "Varovanie >70 %, kritické >90 %",
+    "docs.metric_retry_fail_rate": "Miera zlyhania retry",
+    "docs.metric_retry_fail_rate_why": "Detekcia pretrvávajúcich zlyhaní publish/write",
+    "docs.metric_retry_fail_rate_healthy": "Takmer nulový rolling priemer",
+    "docs.metric_retry_fail_rate_alert": "Alert >2 % na 5-10 min",
+    "docs.metric_db_latency": "Latencia zápisu DB",
+    "docs.metric_db_latency_why": "Zdravie storage/siete",
+    "docs.metric_db_latency_healthy": "Stabilné p95",
+    "docs.metric_db_latency_alert": "Alert pri prekročení SLO",
+    "docs.metric_mqtt_reconnect": "Počet MQTT reconnectov",
+    "docs.metric_mqtt_reconnect_why": "Indikátor stability brokera",
+    "docs.metric_mqtt_reconnect_healthy": "Reconnecty sú zriedkavé",
+    "docs.metric_mqtt_reconnect_alert": "Alert pri náhlych dávkach",
+    "docs.troubleshooting_sub": "Časté problémy a prvé kontroly.",
+    "docs.sensor_shows_bs_none": "Senzor zobrazuje BS: none",
+    "docs.sensor_shows_bs_none_desc": "Znova skontrolujte odpoveď pri ukladaní attach mapovania, tenant filtre a obnovenú projekciu stavu senzora.",
+    "docs.map_vs_device_gps_mismatch": "Nesúlad GPS medzi mapou a zariadením",
+    "docs.map_vs_device_gps_mismatch_desc": "Spustite save/sync cyklus a overte, že v uložených map positions nie je duplicitný záznam EUI.",
+    "docs.no_sensor_traffic_mqtt": "Žiadna senzorová prevádzka v MQTT",
+    "docs.no_sensor_traffic_mqtt_desc": "Potvrďte registráciu + attach stav, potom skontrolujte počítadlá na MQTT stránke a runtime queue metriky.",
+    "docs.empty_analytics_panels": "Prázdne analytické panely",
+    "docs.empty_analytics_panels_desc": "Overte datasource, dashboard UID a správanie tenant variable query skôr než budete predpokladať chybu v UI.",
+    "docs.backup_restore_runbook_sub": "Základy disaster recovery.",
+    "docs.runbook_backup_scope": "Rozsah zálohy: DB dáta + konfiguračné súbory + users/tenants + certifikáty + runtime JSON.",
+    "docs.runbook_backup_action": "Akcia zálohy: spustite backup skript a overte úplnosť archívu.",
+    "docs.runbook_restore_action": "Akcia obnovy: najprv obnovte dátovú vrstvu, potom runtime súbory a napokon reštartujte služby.",
+    "docs.runbook_validation": "Validácia: login, počty inventory, attach vzťahy, GPS stav, MQTT publish, health metriky.",
+    "docs.no_section_matches_search": "Aktuálnemu vyhľadávaniu nezodpovedá žiadna sekcia dokumentácie.",
+    "common.all": "Všetko",
+    "common.more": "Viac",
+    "common.import": "Import",
+    "common.view_options": "Možnosti zobrazenia",
+    "common.columns": "Stĺpce",
+    "common.density": "Hustota",
+    "common.detailed": "Detailné",
+    "common.compact": "Kompaktné",
+    "common.warning": "Upozornenie",
+    "common.seconds": "sekundy",
+        "dashboard.auto_refresh": "Automatické obnovovanie",
+    "dashboard.waiting_first_update": "Čaká sa na prvú aktualizáciu...",
+    "dashboard.cache_label": "Cache",
+    "dashboard.operational_alerts": "Prevádzkové upozornenia",
+    "dashboard.layout_options": "Možnosti rozloženia",
+    "dashboard.customize_layout": "Upraviť rozloženie",
+    "dashboard.revert_saved": "Vrátiť uložené",
+    "dashboard.reset_default": "Obnoviť predvolené",
+    "dashboard.layout_edit_active": "Režim úpravy rozloženia je aktívny. Panely presúvajte za ikonu úchopu alebo meniť veľkosť z pravého dolného rohu. Zmeny sa po kliknutí na Dokončiť uložia automaticky.",
+    "dashboard.finish": "Dokončiť",
+    "dashboard.revert": "Vrátiť",
+    "dashboard.tls_server": "TLS server",
+    "dashboard.port_label": "Port",
+        "dashboard.baseline_establishing": "Zhromažďujú sa úvodné dáta...",
+    "dashboard.mqtt_broker": "MQTT broker",
+    "dashboard.connected_gateways": "Pripojené základňové stanice",
+    "dashboard.configured": "nakonfigurované",
+        "dashboard.live_topology_canvas": "Živá mapa topológie",
+    "dashboard.map": "Mapa",
+    "dashboard.graph": "Graf",
+    "dashboard.map_position_placeholder": "Lat --, Lng --, Z --",
+    "dashboard.save_view": "Uložiť pohľad",
+        "dashboard.click_full_network_editor": "Otvoriť editor topológie",
+    "dashboard.no_positioned_devices_yet": "Zatiaľ nie sú umiestnené žiadne zariadenia",
+    "dashboard.add_gps_map_note": "Doplňte GPS v základňových staniciach alebo senzoroch a značky sa zobrazia na mape.",
+    "dashboard.alert_feed": "Prehľad upozornení",
+    "dashboard.issues_requiring_attention": "Udalosti vyžadujúce pozornosť",
+    "dashboard.no_critical_incidents": "Neboli zistené žiadne kritické incidenty",
+    "dashboard.healthy": "v poriadku",
+        "dashboard.gateway_actions": "Prehľad základňových staníc",
+        "dashboard.quick_gateway_context": "Rýchly stav základňových staníc",
+    "dashboard.no_gateways_yet": "Zatiaľ žiadne základňové stanice",
+    "dashboard.waiting_for_data": "Čaká sa na dáta...",
+    "telemetry.telemetry_store": "Úložisko telemetrie",
+    "telemetry.subtitle": "TimescaleDB sa používa ako primárne úložisko telemetrie pre produkčnú históriu. Tabuľka zobrazuje najprv dekódované hodnoty; raw payload je dostupný iba v rozbaľovacom debug zobrazení.",
+    "telemetry.waiting": "čaká sa",
+    "telemetry.queue": "Fronta",
+    "telemetry.records": "Záznamy",
+    "telemetry.window": "Okno",
+    "telemetry.current_page": "Strana",
+    "telemetry.write_latency": "Latencia zápisu",
+    "telemetry.all_sensors": "Všetky senzory",
+    "telemetry.all_base_stations": "Všetky základňové stanice",
+    "telemetry.payload_profile": "Profil payloadu",
+    "telemetry.all_payloads": "Všetky payloady",
+    "telemetry.time_window": "Časové okno",
+    "telemetry.last_hour": "Posledná hodina",
+    "telemetry.last_6_hours": "Posledných 6 hodín",
+    "telemetry.last_24_hours": "Posledných 24 hodín",
+    "telemetry.last_7_days": "Posledných 7 dní",
+    "telemetry.last_30_days": "Posledných 30 dní",
+    "telemetry.rows_per_page": "Riadkov na stránku",
+    "telemetry.reset_filters": "Obnoviť filtre",
+    "telemetry.export_csv": "Export CSV",
+    "telemetry.refresh_history": "Obnoviť históriu",
+    "telemetry.selected_sensor_trend": "Trend vybraného senzora",
+    "telemetry.trend_note": "Mini trend používa aktuálne filtrované riadky senzora z TimescaleDB. Vyberte jeden senzor a skontrolujte posledný vývoj dekódovaných hodnôt bez opustenia stránky.",
+    "telemetry.trend_metric": "Trendová metrika",
+    "telemetry.auto_metric": "Automatická metrika",
+    "telemetry.select_one_sensor_for_trend": "Vyberte jeden senzor, aby sa vykreslil kompaktný trend primárnej dekódovanej metriky podľa profilu payloadu.",
+    "telemetry.decoded_records": "Dekódované telemetrické záznamy",
+    "telemetry.table_note": "V tabuľke majú prednosť dekódované hodnoty. Riadok rozbaľte len vtedy, keď potrebujete skontrolovať raw payload.",
+    "telemetry.no_rows_match_filters": "Aktuálnym filtrom nezodpovedajú žiadne telemetrické riadky.",
+    "mqtt.title": "Monitoring MQTT brokeru",
+    "mqtt.subtitle": "Živá runtime telemetria brokeru a diagnostika publikovania",
+    "mqtt.refresh_interval": "Interval obnovovania",
+    "mqtt.refresh_now": "Obnoviť teraz",
+    "mqtt.updated": "Aktualizované",
+    "mqtt.connection": "Pripojenie",
+    "mqtt.broker": "Broker",
+    "mqtt.topic_label": "Topic",
+    "mqtt.input_queue": "Vstupná fronta",
+    "mqtt.input_queue_note": "Prichádzajúce príkazy a konfigurácia",
+    "mqtt.output_queue": "Výstupná fronta",
+    "mqtt.output_queue_note": "Odchádzajúce publish/ack správy",
+    "mqtt.monitoring_alerting": "Monitoring a alerting",
+    "mqtt.monitoring_subtitle": "Hĺbka fronty, zlyhania retry, DB latencia a MQTT reconnect správanie",
+    "mqtt.queue_depth": "Hĺbka fronty",
+    "mqtt.retry_fail_rate": "Miera zlyhania retry",
+    "mqtt.db_write_latency": "Latencia DB zápisu",
+    "mqtt.reconnect_count": "Počet MQTT reconnectov",
+    "mqtt.no_critical_runtime_signals": "Neboli zistené žiadne kritické runtime signály.",
+    "mqtt.publish_test": "MQTT publish test",
+    "mqtt.base_topic_label": "Základný topic",
+    "mqtt.admin_tool": "Admin nástroj",
+    "mqtt.topic_suffix": "Prípona topicu",
+    "mqtt.payload": "Payload",
+    "mqtt.payload_text": "Text",
+    "mqtt.retain": "Retain",
+    "mqtt.payload_example_json": "Príklad JSON: {\"command\":\"status\"}",
+    "mqtt.queue_publish": "Zaradiť publish",
+    "mqtt.test_guide": "MQTT testovací sprievodca",
+    "mqtt.test_guide_subtitle": "Ako bezpečne testovať topicy a payloady",
+    "mqtt.guide_intro_prefix": "Použite",
+    "mqtt.guide_intro_suffix": "(bez základného topicu), vyberte režim payloadu a potom správu zaraďte do fronty. V tomto nasadení môžu testovacie správy publikovať iba používatelia s admin/config oprávnením.",
+    "admin.users": "Používatelia",
+    "admin.tenants": "Tenants",
+    "admin.administrators": "Administrátori",
+    "admin.default_tenant": "Super admin",
+    "admin.super_admin_scope": "Super admin",
+    "admin.reserved_super_admin_scope": "Rezervovaný globálny scope pre super admina",
+    "admin.user_management": "Správa používateľov",
+    "admin.tenant_management": "Správa tenantov",
+    "admin.admin_only_operations": "Operácie iba pre administrátora. Zmeny sa aplikujú okamžite.",
+    "admin.users_tenant_assignment": "Používatelia a priradenie tenantov",
+    "admin.new_user": "Nový používateľ",
+    "admin.load_users_tenants_note": "Načítajte používateľov a tenantov z backendu.",
+    "admin.search_username_name_tenant": "Hľadať podľa používateľa, mena alebo tenantu",
+    "admin.name": "Názov",
+    "admin.role": "Rola",
+    "admin.scope": "Rozsah",
+    "admin.actions": "Akcie",
+    "admin.no_users_loaded": "Zatiaľ nie sú načítaní žiadni používatelia.",
+    "admin.tenant_registry": "Register tenantov",
+    "admin.new_tenant": "Nový tenant",
+    "admin.manage_tenant_records": "Spravujte tenant záznamy a dátové operácie.",
+    "admin.tenant": "Tenant",
+    "admin.no_tenants_loaded": "Zatiaľ nie sú načítané žiadne tenanty.",
+    "cert.backup_zip": "Zálohovací ZIP",
+    "cert.generate_new": "Vygenerovať nové",
+    "cert.never": "nikdy",
+    "cert.ca_certificate": "CA certifikát",
+    "cert.service_certificate": "Servisný certifikát",
+    "cert.private_key": "Privátny kľúč",
+    "cert.checking": "Kontroluje sa...",
+    "cert.managed_bs_certs": "Spravované BS certifikáty",
+    "cert.base_stations_inventory": "Základňové stanice v registri certifikátov",
+    "cert.needs_attention": "Vyžaduje pozornosť",
+    "cert.needs_attention_note": "Chýbajúce, expirované alebo čoskoro expirované",
+    "cert.download_certificates": "Stiahnuť certifikáty",
+    "cert.export_active_trust_assets": "Exportovať aktívne dôveryhodné súbory",
+    "oms.total_meters": "Spolu OMS meračov",
+    "oms.unique_devices_detected": "Zistené unikátne zariadenia",
+    "oms.total_messages": "Spolu správ",
+    "oms.vm_uplink_payloads_processed": "Spracované VM uplink payloady",
+    "oms.average_per_meter": "Priemer / merač",
+    "oms.messages_per_meter": "Správy na známy merač",
+    "oms.active_last_hour": "Aktívne za poslednú hodinu",
+    "oms.meters_seen_60m": "Merače videné za 60 minút",
+    "oms.vm_controls": "VM ovládanie",
+    "oms.control_virtual_channel_discovery": "Ovládanie objavovania virtuálnych kanálov",
+    "oms.mac_type": "MAC typ",
+    "oms.mac_type_note": "Predvolená hodnota je 0. Používajte len hodnoty podporované vašimi základňovými stanicami.",
+    "oms.activate_vm": "Aktivovať VM",
+    "oms.query_vm_status": "Zistiť stav VM",
+    "oms.periodic_status_query": "Periodické zisťovanie stavu",
+    "oms.auto_query_interval_range": "Rozsah intervalu automatického dotazu: 10 až 3600 sekúnd.",
+    "oms.vm_event_log": "Log VM udalostí",
+    "oms.recent_control_state_transitions": "Nedávne riadiace a stavové prechody",
+    "oms.no_vm_events": "Zatiaľ neboli zaznamenané žiadne VM udalosti.",
+    "oms.vm_capable_base_stations": "Základňové stanice s podporou VM",
+    "oms.capability_discovery_status": "Stav zisťovania schopností",
+    "oms.loading_vm_capable_base_stations": "Načítavajú sa základňové stanice s podporou VM...",
+    "oms.detected_meters": "Detegované OMS merače (WMBUS)",
+    "oms.live_telemetry_inventory": "Živý telemetrický inventár",
+    "oms.search_placeholder": "Hľadať podľa sériového čísla, výrobcu, základňovej stanice...",
+    "oms.no_meters_detected": "Zatiaľ neboli zistené žiadne OMS merače. Merače sa tu objavia po prijatí VM uplink dát.",
+    "oms.meter": "Merač",
+    "oms.manufacturer": "Výrobca",
+    "oms.type": "Typ",
+    "oms.version": "Verzia",
+    "oms.last_payload": "Posledný payload",
+    "docs.index_label": "Obsah dokumentácie",
+    "docs.search_placeholder": "Hľadať v dokumentácii...",
+    "docs.sidebar_note": "Tento manuál je usporiadaný podľa reálnych funkcií UI a produkčných operácií.",
+    "docs.hero_title": "Funkčná dokumentácia Kinet MIOTY Center",
+    "docs.hero_subtitle": "Komplexný sprievodca pre prevádzku senzorov, základňových staníc, topológie siete, toku telemetrie, administrácie a runtime údržby na jednom mieste.",
+    "docs.introduction": "1. Úvod",
+    "docs.introduction_sub": "Kinet MIOTY Center je operačná riadiaca rovina pre MIOTY infraštruktúru: TLS komunikáciu, správu inventára, vizualizáciu topológie a spoľahlivosť telemetrie.",
+    "docs.main_objectives": "Hlavné ciele",
+    "docs.data_path": "Dátová cesta",
+    "docs.data_path_code": "Základňová stanica -> TLSServer -> Runtime fronty -> MQTT + Timescale/Influx -> UI API",
+    "docs.quick_start": "2. Rýchly štart",
+    "docs.quick_start_sub": "Minimálna sekvencia uvedenia do prevádzky pre čisté nasadenie.",
+    "docs.warning_attach_mapping": "Ak sú senzory viditeľné, ale dáta neprichádzajú, najprv overte attach mapovanie, stav registrácie a cestu topicu.",
+    "docs.page_reference": "3. Prehľad stránok",
+    "docs.page_reference_sub": "Na čo slúži každá sekcia menu a kedy ju použiť.",
+    "sensors.reload_config": "Znovu načítať konfiguráciu",
+    "sensors.detach_all": "Odpojiť všetko",
+    "sensors.clear_all": "Vymazať všetko",
+    "sensors.list_density": "Hustota zoznamu senzorov",
+    "sensors.show_summary_cards": "Zobraziť sumárne karty",
+    "sensors.show_quick_filters": "Zobraziť rýchle filtre",
+    "sensors.reset_view": "Obnoviť zobrazenie",
+    "sensors.total_sensors": "Senzory spolu",
+    "sensors.configured_in_registry": "Nakonfigurované v registri",
+    "sensors.registered": "Registrované",
+    "sensors.active_registration": "Má aktívnu registráciu",
+    "sensors.active": "Aktívne",
+    "sensors.recent_traffic_observed": "Pozorovaná nedávna prevádzka",
+    "sensors.warnings": "Upozornenia",
+    "sensors.warning_or_detached": "Upozornenie alebo odpojený stav",
+    "sensors.search_placeholder": "Hľadať podľa EUI, názvu, tagu, krátkej adresy, GPS, základňovej stanice alebo stavu...",
+    "sensors.live_configuration_overview": "Živý prehľad konfigurácie",
+    "sensors.show_last_seen": "Zobraziť naposledy videné",
+    "sensors.show_path_coverage": "Zobraziť trasu a pokrytie",
+    "sensors.bulk_mode": "Hromadný výber",
+    "sensors.bulk_mode_on": "Hromadný výber zapnutý",
+    "sensors.waiting_first_refresh": "Čaká sa na prvé obnovenie...",
+    "sensors.detached": "Odpojené",
+    "sensors.no_data": "Bez dát",
+    "sensors.unregistered": "Neregistrované",
+    "sensors.status_unregistered": "Neregistrovaný",
+    "sensors.status_recent_event": "Nedávna udalosť",
+    "sensors.status_quiet": "Bez nových udalostí",
+    "sensors.status_active": "Aktívny",
+    "sensors.status_stale": "Neaktuálny",
+    "sensors.status_auto_detached": "Automaticky odpojený",
+    "sensors.status_no_events": "Bez udalostí",
+    "sensors.status_no_data": "Bez dát",
+    "sensors.status_registered": "Registrovaný",
+    "sensors.status_not_registered": "Neregistrovaný",
+    "sensors.event_seen": "Udalosť zachytená",
+    "sensors.no_events_yet": "Zatiaľ bez udalostí",
+    "sensors.traffic_seen": "Prevádzka zachytená",
+    "sensors.no_recent_traffic": "Zatiaľ bez prevádzky",
+    "sensors.no_path": "Bez trasy",
+    "sensors.full_coverage": "Plné pokrytie",
+    "sensors.no_coverage": "Bez pokrytia",
+    "sensors.coverage_label": "Pokrytie",
+    "sensors.active_paths_count": "Aktívne cesty: {count}",
+    "sensors.configured_paths_count": "V konfigurácii: {count}",
+    "sensors.missing_coverage_count": "Chýba: {count}",
+    "sensors.open_detail": "Otvoriť detail",
+    "sensors.showing_range": "Zobrazené {start}-{end} z {total} senzorov",
+    "sensors.showing_zero": "Zobrazené 0 z {total} senzorov",
+    "sensors.uplink_only": "Len uplink",
+    "sensors.loading_attachment_state": "Načítava sa aktuálny stav priradenia...",
+    "sensors.profile_hint_co2_name": "napr. CO2 - zasadacia miestnosť",
+    "sensors.profile_hint_co2_tags": "napr. co2, vnútorný-vzduch, kancelária",
+    "sensors.profile_hint_co2_tags_help": "Použite tagy ako miestnosť, poschodie alebo komfortná zóna pre rýchle filtrovanie CO2 senzorov.",
+    "sensors.profile_hint_co2_decoder": "Profil LANSEN E2 CO2 dekóduje CO2, teplotu, vlhkosť a stav batérie.",
+    "sensors.profile_hint_co2_environment": "Nastavte interiér alebo exteriér explicitne, aby sa použili správne CO2 prahy.",
+    "sensors.profile_hint_co2_reporting": "CO2 senzory bývajú periodické a mali by posielať pravidelné hlásenia.",
+    "sensors.profile_hint_co2_expected": "Typický interval hlásenia CO2 senzora je približne 300 až 360 sekúnd.",
+    "sensors.profile_hint_co2_stale": "Používa sa len vtedy, ak tento senzor zámerne prepnete na udalostný režim.",
+    "sensors.profile_hint_m2_name": "napr. kontakt dverí - sklad sever",
+    "sensors.profile_hint_m2_tags": "napr. dvere, kontakt, sklad",
+    "sensors.profile_hint_m2_tags_help": "Použite tagy pre zónu dverí alebo okna, časť budovy alebo alarmovú skupinu.",
+    "sensors.profile_hint_m2_decoder": "Profil LANSEN M2 dekóduje otvorenia, alarmové okná, batériu a tamper príznaky.",
+    "sensors.profile_hint_m2_environment": "Kontext ovplyvňuje hlavne komfortnú interpretáciu, nie logiku kontaktového alarmu.",
+    "sensors.profile_hint_m2_reporting": "Senzory dverí a okien sú zvyčajne udalostné a mali by používať servisné okno.",
+    "sensors.profile_hint_m2_expected": "Pri udalostných senzoroch to zvyčajne netreba. Pole nechajte prázdne, ak zariadenie neposiela pravidelný heartbeat.",
+    "sensors.profile_hint_m2_stale": "Určuje, ako dlho môže byť senzor ticho, kým ho systém označí ako neaktuálny.",
+    "sensors.profile_hint_custom_name": "napr. vodomer - hala A",
+    "sensors.profile_hint_custom_tags": "napr. vlastné, utility, hala-a",
+    "sensors.profile_hint_custom_tags_help": "Voľné tagy pomáhajú pri filtrovaní, skupinovaní tenantov aj vyhľadávaní.",
+    "sensors.profile_hint_custom_decoder": "Vlastný profil ponecháva dekóder, časovanie aj kontext úplne ručné.",
+    "sensors.profile_hint_custom_environment": "Kontext používajte len vtedy, ak payload závisí od interiéru alebo exteriéru.",
+    "sensors.profile_hint_custom_reporting": "Pre pravidelne hlásiace senzory zvoľte periodický režim, pre alarmové a kontaktné zariadenia udalostný.",
+    "sensors.profile_hint_custom_expected": "Konkrétny heartbeat nastavte len vtedy, keď zariadenie naozaj posiela pravidelne.",
+    "sensors.profile_hint_custom_stale": "Servisné okno používajte pri udalostných zariadeniach, ktoré môžu byť dlho bez aktivity.",
+    "sensors.profile_hint_auto_name": "napr. vodomer - hala A",
+    "sensors.profile_hint_auto_tags": "napr. voda, hala-a, kritické",
+    "sensors.profile_hint_auto_tags_help": "Tagy oddelené čiarkou pomáhajú pri vyhľadávaní, skupinovaní aj filtrovaní topológie.",
+    "sensors.profile_hint_auto_decoder": "Automatický dekóder sa pokúsi odhadnúť formát payloadu podľa profilu, názvu alebo tagov.",
+    "sensors.profile_hint_auto_environment": "Neznámy kontext ponechá interpretáciu neutrálnu, kým sa nezvolí profil alebo prostredie.",
+    "sensors.profile_hint_auto_reporting": "Automatický režim určí periodické alebo udalostné správanie podľa zvoleného profilu.",
+    "sensors.profile_hint_auto_expected": "Pole nechajte prázdne a očakávaný interval sa odvodí z profilu alebo pozorovanej prevádzky.",
+    "sensors.profile_hint_auto_stale": "Servisné okno používajú len udalostné senzory pri detekcii neaktuálneho stavu.",
+    "sensors.not_placed_yet": "Zatiaľ bez umiestnenia",
+    "sensors.map_placement_available_note": "Umiestnenie na mape bude dostupné v režime Pokrytie.",
+    "sensors.map_placement_add_coordinates": "Pridajte zemepisnú šírku a dĺžku, aby sa senzor zobrazil na mape.",
+    "sensors.service_window_short": "servisné okno",
+    "sensors.auto_service_window": "Automatické servisné okno",
+    "sensors.expected_interval_short": "očakávaný interval",
+    "sensors.auto_expected_interval": "Automatický očakávaný interval",
+    "sensors.service_window_note_short": "Určuje, kedy sa tichý event senzor začne považovať za neaktuálny.",
+    "sensors.expected_interval_note_short": "Určuje prechod medzi stavmi online, oneskorený a offline.",
+    "sensors.profile_summary_note": "Prednastavenie riadi dekóder, režim hlásenia aj časovanie.",
+    "sensors.payload_decoder_summary_note": "Formát dekódovania payloadu použitý pri interpretácii telemetrie.",
+    "sensors.context_note_indoor": "Použijú sa interiérové komfortné prahy.",
+    "sensors.context_note_outdoor": "Použijú sa prahy prispôsobené exteriéru.",
+    "sensors.context_note_auto": "Zatiaľ nie je vynútený žiadny konkrétny kontext.",
+    "sensors.timing": "Časovanie",
+    "sensors.selected_count_suffix": "vybraných senzorov",
+    "sensors.attach_selected": "Pripojiť vybrané",
+    "sensors.detach_selected": "Odpojiť vybrané",
+    "sensors.delete_selected": "Vymazať vybrané",
+    "sensors.clear_selection": "Zrušiť výber",
+    "base_stations.fleet_overview": "Prehľad flotily",
+    "base_stations.list_density": "Hustota zoznamu základňových staníc",
+    "base_stations.add_base_station": "Pridať základňovú stanicu",
+    "base_stations.total_configured": "Spolu nakonfigurované",
+    "base_stations.gateway_inventory": "Inventár základňových staníc",
+    "base_stations.search_placeholder": "Hľadať podľa EUI, názvu, IP, GPS, tagu...",
+    "base_stations.live_gateway_inventory": "Živý inventár základňových staníc",
+    "base_stations.base_station_eui": "Základňová stanica (EUI)",
+    "base_stations.network": "Sieť",
+    "base_stations.last_update": "Posledná aktualizácia",
+    "base_stations.score": "Skóre",
+    "base_stations.fleet_uptime_trend": "Trend uptime flotily (posledných 24 hodín)",
+    "health.runtime_health": "Stav systému",
+    "common.settings": "nastavenia",
+    "common.note": "Poznámka",
+    "common.auto": "Auto",
+    "common.previous": "Predchádzajúce",
+    "common.next": "Ďalšie",
+        "dashboard.signal_quality_distribution": "Prehľad kvality signálu",
+        "dashboard.open_health_analytics": "Otvoriť analýzu stavu",
+    "dashboard.excellent": "Výborné",
+    "dashboard.good": "Dobré",
+    "dashboard.fair": "Priemerné",
+    "dashboard.poor": "Slabé",
+    "dashboard.critical": "Kritické",
+    "dashboard.avg_snr": "Priem. SNR",
+    "dashboard.avg_rssi": "Priem. RSSI",
+    "dashboard.avg_loss": "Priem. strata",
+    "dashboard.top_problem_sensors": "Najproblematickejšie senzory",
+    "dashboard.no_sensor_incidents": "Zatiaľ neboli zistené žiadne incidenty senzorov.",
+    "dashboard.traffic_capacity": "Prevádzka a kapacita",
+    "dashboard.open_system_health": "Otvoriť stav systému",
+    "dashboard.trend_unavailable": "Trend nie je dostupný",
+    "dashboard.peak_label": "Špička",
+    "dashboard.packets_per_hour": "Pakety/h",
+    "dashboard.packet_loss": "Strata paketov",
+    "dashboard.vm_capable_bs": "BS s podporou VM",
+    "dashboard.messages_today": "Správy dnes",
+    "telemetry.timestamp": "Časová pečiatka",
+    "telemetry.decoded_values": "Dekódované hodnoty",
+    "telemetry.radio": "Rádio",
+    "base_stations.connected_now": "Pripojené teraz",
+    "base_stations.peak_connected": "Maximum pripojených",
+    "base_stations.fleet_availability": "Dostupnosť flotily",
+    "base_stations.calculating_uptime": "Počíta sa uptime flotily...",
+    "base_stations.source": "Zdroj",
+    "base_stations.runtime_memory_events": "runtime udalosti v pamäti",
+    "base_stations.show_breakdown": "Zobraziť rozpis základňových staníc",
+    "base_stations.availability": "Dostupnosť",
+    "base_stations.online_hours": "Online hodiny",
+    "base_stations.last_change": "Posledná zmena",
+    "cert.ca_note": "Koreňová certifikačná autorita pre podpísané servisné a BS certifikáty.",
+    "cert.download_ca": "Stiahnuť CA",
+    "cert.service_cert_note": "Serverový certifikát pre TLS spojenia so service centrom.",
+    "cert.download_service_cert": "Stiahnuť servisný certifikát",
+    "cert.service_private_key": "Servisný privátny kľúč",
+    "cert.private_key_note": "Privátny kľúč spárovaný so servisným certifikátom.",
+    "cert.download_key": "Stiahnuť kľúč",
+    "cert.upload_certificates": "Nahrať certifikáty",
+    "cert.replace_selected_without_leaving_ui": "Nahradiť vybrané certifikáty bez opustenia UI",
+    "cert.restart_after_upload": "Po nahraní reštartujte službu/kontajner, aby sa TLS zmeny plne aplikovali.",
+    "cert.accepts_pem_crt_cer": "Akceptuje .pem/.crt/.cer",
+    "cert.upload_ca": "Nahrať CA",
+    "cert.upload_service_cert": "Nahrať servisný certifikát",
+    "cert.accepts_pem_key": "Akceptuje .pem/.key",
+    "cert.upload_key": "Nahrať kľúč",
+    "cert.per_base_station_certificates": "Certifikáty po základňových staniciach",
+    "cert.operational_certificate_registry": "Prevádzkový register certifikátov",
+    "cert.search_placeholder": "Hľadať podľa EUI, názvu, stavu...",
+    "sensors.sensor_sn": "Senzor (SN)",
+    "sensors.path_coverage": "Trasa a pokrytie",
+    "sensor_detail.internal_alarm": "Interný alarm",
+    "sensor_detail.external_alarm": "Externý alarm",
+    "sensor_detail.no_event_type": "Bez typu udalosti",
+    "sensor_detail.service_window": "Servisné okno",
+    "sensor_detail.signal_score": "Skóre signálu",
+    "sensor_detail.health": "Zdravie",
+    "sensor_detail.profile": "Profil",
+    "sensor_detail.environment_context": "Kontext prostredia",
+    "sensor_detail.radio_and_coverage": "Rádio a pokrytie",
+    "sensor_detail.messages": "Správy",
+    "sensor_detail.co2_current": "CO2 (aktuálne)",
+    "sensor_detail.temperature": "Teplota",
+    "sensor_detail.humidity": "Vlhkosť",
+    "sensor_detail.battery_est": "Batéria (odhad)",
+    "sensor_detail.total_openings": "Počet otvorení",
+    "sensor_detail.last_alarm": "Posledný alarm",
+    "sensor_detail.alarm_duration": "Trvanie alarmu",
+    "sensor_detail.no_structured_summary": "Bez štruktúrovaného zhrnutia.",
+})
+
+_UI_TRANSLATIONS["sk"].update({
+    "common.source": "Zdroj",
+    "common.total": "Spolu",
+    "common.filtered": "Filtrované",
+    "common.shown": "Zobrazené",
+    "common.unknown": "neznáme",
+    "common.unknown_error": "Neznáma chyba",
+    "common.running": "Beží",
+    "common.base_station_short": "BS",
+    "common.snr": "SNR",
+    "common.rssi": "RSSI",
+    "common.cpu": "CPU",
+    "common.memory_short": "Pamäť",
+    "common.temperature_short": "Teplota",
+    "common.base_stations": "Základňové stanice",
+    "common.sensors": "senzory",
+    "common.connected": "Pripojené",
+    "common.hide": "Skryť",
+    "common.fit": "Prispôsobiť",
+    "common.excellent": "Výborné",
+    "common.good": "Dobré",
+    "common.fair": "Priemerné",
+    "common.poor": "Slabé",
+    "common.critical": "Kritické",
+    "common.eui": "EUI",
+    "common.address": "Adr",
+    "common.name": "Názov",
+    "common.issue": "Problém",
+    "common.configured": "Nakonfigurované",
+    "common.yes": "Áno",
+    "common.no": "Nie",
+    "common.disconnected": "Odpojené",
+    "common.received_at": "Prijaté",
+    "common.registered": "Registrované",
+    "common.not_registered": "Neregistrované",
+    "common.messages": "Správy",
+    "common.no_tags": "Bez tagov",
+    "common.hex": "Hex",
+    "common.topic": "Topic",
+    "common.full_screen": "Celá obrazovka",
+    "common.focus": "Zamerať",
+    "common.offline": "Offline",
+    "common.online": "Online",
+    "common.connected": "Pripojené",
+    "common.page_x_of_y": "Strana {current}/{total}",
+    "common.time_minutes_ago_compact": "pred {count} min",
+    "common.time_hours_ago_compact": "pred {count} h",
+    "common.time_days_ago_compact": "pred {count} d",
+    "common.inactive": "Neaktívny",
+    "common.not_connected": "Bez spojenia",
+    "common.attention": "pozor",
+    "common.all_statuses": "Všetky stavy",
+    "common.edit": "Upraviť",
+    "common.delete": "Vymazať",
+    "common.no_summary": "Bez zhrnutia",
+    "common.edit_mode": "Režim úpravy",
+    "common.details": "Detaily",
+    "common.healthy": "v poriadku",
+    "dashboard.active_sensors": "Aktívne senzory",
+    "dashboard.live_links": "Aktívne linky",
+    "dashboard.finish_customizing": "Dokončiť úpravy",
+    "dashboard.no_sensor_incidents_short": "Neboli zistené incidenty senzorov.",
+    "dashboard.no_gateways_detected": "Neboli zistené žiadne základňové stanice",
+    "dashboard.check_base_station_config": "Skontrolujte konfiguráciu base station.",
+    "dashboard.baseline_established": "Základná línia pripravená",
+    "dashboard.no_change_last_refresh": "Bez zmeny pri poslednom obnovení",
+    "dashboard.diff_vs_previous_refresh": "{sign}{diff}{suffix} oproti predchádzajúcemu obnoveniu",
+    "dashboard.last_updated_time": "Aktualizované {time}",
+    "dashboard.cache_age_seconds": "Cache {seconds}s",
+    "dashboard.live_badge": "Naživo",
+    "dashboard.zoom_in": "Priblížiť",
+    "dashboard.zoom_out": "Oddialiť",
+    "dashboard.view_saved": "Pohľad uložený",
+    "dashboard.save_failed_short": "Uloženie zlyhalo",
+    "dashboard.save_failed": "Uloženie zlyhalo: {error}",
+    "dashboard.map_position_value": "Lat {lat}, Lng {lng}, Z {zoom}",
+    "dashboard.base_station_tooltip": "Základňová stanica: {label}",
+    "dashboard.sensor_tooltip": "Senzor: {label}",
+    "dashboard.topology_needs_more_live_nodes": "Topológia potrebuje viac aktívnych uzlov",
+    "dashboard.topology_waiting_more_nodes": "Po pripojení ďalších základňových staníc alebo senzorov sa graf vykreslí automaticky.",
+    "dashboard.status_active": "Aktívny",
+    "dashboard.status_connected": "Pripojený",
+    "dashboard.status_disconnected": "Odpojený",
+    "dashboard.incident_tls_online_recovered": "Obnovené: TLS server je online",
+    "dashboard.incident_tls_offline_warning": "Upozornenie: TLS server prešiel do offline stavu",
+    "dashboard.incident_mqtt_recovered": "Obnovené: MQTT broker je pripojený",
+    "dashboard.incident_mqtt_disconnected_warning": "Upozornenie: MQTT broker sa odpojil",
+    "dashboard.stable_online": "Stabilne online",
+    "dashboard.still_offline": "Stále offline",
+        "dashboard.stable_connection": "Stabilné spojenie",
+        "dashboard.still_disconnected": "Stále odpojený",
+        "dashboard.transport_disabled": "Transport vypnutý",
+        "dashboard.transport_disabled_note": "Vypnuté v konfigurácii",
+    "dashboard.connecting_count": "{count} v pripájaní",
+    "dashboard.configured_count": "{count} nakonfigurované",
+    "dashboard.sensor_count_suffix": " senzorov",
+    "dashboard.sensor_count_meta": "{count} senzorov",
+    "dashboard.trend_collecting_baseline": "Trend: zhromažďujú sa úvodné dáta",
+    "dashboard.trend_since_last_refresh": "Trend: {diff} správ od posledného obnovenia",
+    "dashboard.peak_messages": "Špička: {count} správ",
+    "dashboard.problem_sensor_row": "strata {loss}% | SNR {snr} dB",
+    "dashboard.no_ip": "bez IP",
+    "dashboard.incident_tls_offline": "TLS server je offline.",
+    "dashboard.incident_mqtt_disconnected": "MQTT broker je odpojený.",
+    "dashboard.incident_no_connected_bs": "Nie sú pripojené žiadne základňové stanice.",
+    "dashboard.incident_only_sensors_active": "Aktívnych je len {percent}% senzorov.",
+    "dashboard.incident_packet_loss_elevated": "Strata paketov je zvýšená: {loss}%.",
+    "dashboard.incident_no_vm_capable_bs": "Nebola zistená žiadna základňová stanica s podporou VM.",
+    "dashboard.incident_dedup_ratio_high": "Pomer deduplikácie je vysoký ({ratio}%).",
+        "dashboard.alert_note_critical": "kritické",
+        "dashboard.alert_note_attention": "pozor",
+        "dashboard.platform_overview": "Preh\u013ead platformy",
+        "dashboard.summary_focus": "Fokus",
+        "dashboard.summary_fleet": "Flotila",
+        "dashboard.summary_posture": "Stav prostredia",
+        "dashboard.summary_next_step": "\u010eo \u010falej",
+        "dashboard.platform_fleet_summary": "{baseStations} BS \u00b7 {sensors}/{total} senzorov na\u017eivo",
+        "dashboard.focus_connect_base_station": "Pripojte aspo\u0148 jednu z\u00e1klad\u0148ov\u00fa stanicu.",
+        "dashboard.focus_waiting_for_sensors": "Z\u00e1klad\u0148ov\u00e9 stanice s\u00fa pripraven\u00e9, \u010dak\u00e1 sa na prev\u00e1dzku zo senzorov.",
+        "dashboard.focus_check_mqtt_transport": "Jadro routovania funguje, ale MQTT transport vy\u017eaduje pozornos\u0165.",
+        "dashboard.focus_runtime_operational": "Runtime transport aj flotila s\u00fa pripraven\u00e9 na prev\u00e1dzku.",
+        "dashboard.next_step_connect_and_position": "Prive\u010fte jednu z\u00e1klad\u0148ov\u00fa stanicu online a ponechajte jej GPS pre mapu.",
+        "dashboard.next_step_wait_sensor_traffic": "Skontrolujte priradenie senzorov a po\u010dkajte na prv\u00e9 telegramy.",
+        "dashboard.next_step_open_health": "Otvorte Stav syst\u00e9mu pre hlb\u0161iu anal\u00fdzu alebo skontrolujte jednotliv\u00e9 zariadenia.",
+        "dashboard.posture_attention_required": "Vy\u017eaduje pozornos\u0165",
+        "dashboard.posture_transport_degraded": "MQTT potrebuje pozornos\u0165",
+        "dashboard.posture_partial_coverage": "\u010ciasto\u010dn\u00e9 \u017eiv\u00e9 pokrytie",
+        "dashboard.posture_stable": "Stabiln\u00fd prev\u00e1dzkov\u00fd stav",
+        "dashboard.base_station_route_live": "\u017div\u00e9 trasy s\u00fa dostupn\u00e9",
+        "dashboard.sensor_routes_observed": "Bola zaznamenan\u00e1 ned\u00e1vna telemetria",
+        "dashboard.connect_base_station_first": "Najprv pripojte z\u00e1klad\u0148ov\u00fa stanicu",
+        "dashboard.connect_base_station_map_note": "\u017div\u00e1 topol\u00f3gia sa napln\u00ed a\u017e po pripojen\u00ed aspo\u0148 jednej z\u00e1klad\u0148ovej stanice.",
+        "dashboard.topology_waiting_base_station": "Po pripojen\u00ed prvej z\u00e1klad\u0148ovej stanice sa v grafe zobrazia \u017eiv\u00e9 trasy.",
+        "dashboard.ops_snapshot_title": "Prev\u00e1dzkov\u00fd preh\u013ead telemetrie",
+        "dashboard.ops_connect_station_badge": "Pripojte z\u00e1klad\u0148ov\u00fa stanicu",
+        "dashboard.ops_delivery_risk_badge": "Riziko doru\u010denia",
+        "dashboard.ops_waiting_traffic_badge": "\u010cak\u00e1 sa na telemetriu",
+        "dashboard.ops_traffic_healthy_badge": "Telemetria je v poriadku",
+        "dashboard.ops_connect_station_note": "Ke\u010f sa prv\u00e1 z\u00e1klad\u0148ov\u00e1 stanica pripoj\u00ed, tieto karty sa automaticky naplnia routovan\u00edm a telemetriou.",
+        "dashboard.ops_rate_note": "Aktu\u00e1lna priemern\u00e1 vstupn\u00e1 r\u00fdchlos\u0165",
+        "dashboard.ops_rate_waiting": "Zatia\u013e nebola zaznamenan\u00e1 prev\u00e1dzka",
+        "dashboard.ops_delivery_good": "Doru\u010dovanie vyzer\u00e1 zdravo naprie\u010d akt\u00edvnymi senzormi",
+        "dashboard.ops_delivery_watch": "Odhad vych\u00e1dza z medzier v packet counteri",
+        "dashboard.ops_sensors_reporting": "Senzory s\u00fa pozorovan\u00e9 v \u017eivom runtime",
+        "dashboard.ops_sensors_idle": "Zatia\u013e nie je \u017eiadna \u017eiv\u00e1 telemetria senzorov",
+        "dashboard.ops_links_note": "Akt\u00edvne trasy medzi senzormi a z\u00e1klad\u0148ov\u00fdmi stanicami",
+        "dashboard.ops_links_waiting": "\u017div\u00e9 linky sa zobrazia po spusten\u00ed routovania",
+    "sensors.decoder_lansen_e2_co2": "LANSEN E2 CO2",
+    "sensors.decoder_lansen_m2": "LANSEN M2",
+    "sensors.no_sensors_match_filters": "Žiadne senzory nezodpovedajú aktuálnym filtrom.",
+    "sensors.copy_sensor_sn": "Kopírovať SN senzora",
+    "sensors.no_path_yet": "Zatiaľ bez trasy",
+    "sensors.manage_attach": "Spravovať priradenie",
+    "sensors.manage_attach_natural": "Spravovať priradenie",
+    "sensors.delete_sensor_title": "Vymazať senzor",
+    "sensors.decoded_payload_available": "Dekódovaný payload je dostupný",
+    "sensors.no_base_station_coverage_data_yet": "Zatiaľ nie sú dostupné údaje o pokrytí základňovými stanicami.",
+    "sensors.packets": "Pakety",
+    "sensors.quick_overview": "Rýchly prehľad",
+    "sensors.latest_payload_snapshot": "Posledný snapshot payloadu",
+    "sensors.no_payload_snapshot_yet": "Zatiaľ nie je dostupný dekódovaný snapshot payloadu.",
+    "sensors.no_sensor_audit_entries": "Pre tento senzor ešte nie sú zaznamenané audit záznamy.",
+    "sensors.decoder_debug": "Debug dekódera",
+    "sensors.raw_payload_debug_after_first_uplink": "Debug raw payloadu sa zobrazí po prijatí prvého uplinku.",
+    "sensors.runtime_storage_payload_note": "Runtime alebo storage payload použitý pri poslednom vykreslení detailu senzora.",
+    "sensors.decoder_profile": "Profil dekódera",
+    "sensors.model_hint": "Model hint",
+    "sensors.packet_counter": "Počítadlo paketov",
+    "sensors.decoded_values_json": "Dekódované hodnoty (JSON)",
+    "sensors.indoor_thresholds": "Indoor prahy",
+    "sensors.outdoor_thresholds": "Outdoor prahy",
+    "sensors.generic_thresholds": "Všeobecné prahy",
+    "sensors.auto_context": "Auto kontext",
+    "sensors.co2_indoor_limits": "CO2 sa vyhodnocuje podľa indoor komfortných limitov.",
+    "sensors.co2_outdoor_limits": "CO2 sa vyhodnocuje podľa outdoor ambient limitov.",
+    "sensors.set_context_for_stricter_interpretation": "Pre prísnejšiu interpretáciu nastavte v nastaveniach senzora Indoor alebo Outdoor.",
+    "sensors.ambient": "Ambientné",
+    "sensors.typical_outdoor_baseline": "Typická outdoor základná línia.",
+    "sensors.within_expected_outdoor_variation": "Stále v očakávanej outdoor variabilite.",
+    "sensors.higher_than_usual_outside": "Vyššie než je vonku obvyklé.",
+    "sensors.outdoor_exhaust_or_enclosure": "Pravdepodobne ovplyvnené výfukom alebo uzavretým priestorom v okolí.",
+    "sensors.unusually_high_outdoor": "Na outdoor umiestnenie nezvyčajne vysoké.",
+    "sensors.fresh_indoor_air": "Čerstvá indoor kvalita vzduchu.",
+    "sensor_profiles.auto.label": "Automaticky / odvodené",
+    "sensor_profiles.auto.description": "Ponechá ručné nastavenia dekódera alebo ich odvodí z názvu senzora a tagov.",
+    "sensor_profiles.lansen_e2_co2_auto.label": "LANSEN E2 CO2",
+    "sensor_profiles.lansen_e2_co2_auto.description": "Periodická CO2 telemetria s automatickým určením prostredia a intervalom približne 6 minút.",
+    "sensor_profiles.lansen_e2_co2_indoor.label": "LANSEN E2 CO2 interiér",
+    "sensor_profiles.lansen_e2_co2_indoor.description": "CO2 telemetria pre interiér s prahmi pohodlia nastavenými pre obsadené priestory.",
+    "sensor_profiles.lansen_e2_co2_outdoor.label": "LANSEN E2 CO2 exteriér",
+    "sensor_profiles.lansen_e2_co2_outdoor.description": "CO2 telemetria pre exteriér s interpretáciou prispôsobenou vonkajšiemu prostrediu.",
+    "sensor_profiles.lansen_m2_contact.label": "LANSEN M2 kontakt",
+    "sensor_profiles.lansen_m2_contact.description": "Udalostný snímač dverí alebo okna s týždenným servisným oknom.",
+    "sensor_profiles.custom.label": "Vlastný profil",
+    "sensor_profiles.custom.description": "Ručná kombinácia dekódera, kontextu, režimu hlásenia a časovania.",
+    "sensors.comfortable_indoor_range": "Komfortné indoor rozmedzie.",
+    "sensors.check_ventilation": "Skontrolujte ventiláciu.",
+    "sensors.insufficient_air_exchange": "Výmena vzduchu je pravdepodobne nedostatočná.",
+    "sensors.ventilate_immediately": "Okamžite vetrajte.",
+    "sensors.fresh": "Čerstvé",
+    "sensors.healthy_baseline": "Zdravá základná línia.",
+    "sensors.generally_acceptable": "Všeobecne akceptovateľné.",
+    "sensors.consider_setting_context": "Zvážte nastavenie Indoor/Outdoor kontextu.",
+    "sensors.context_missing_value_high": "Kontext chýba, hodnota rastie vysoko.",
+    "sensors.context_missing_clearly_excessive": "Kontext chýba, no hodnota je zjavne nadmerná.",
+    "sensors.battery_estimate_not_available": "Odhad batérie nie je dostupný.",
+    "sensors.battery_level_stable": "Úroveň batérie vyzerá stabilne.",
+    "sensors.monitor": "Sledovať",
+    "sensors.battery_should_be_watched": "Batéria je ešte použiteľná, ale treba ju sledovať.",
+    "sensors.battery_replacement_plan": "Naplánujte výmenu batérie.",
+    "sensors.latest_uplink_payload": "Posledný uplink payload",
+    "sensors.no_decoded_payload_received_yet": "Zatiaľ nebol prijatý žiadny dekódovaný payload.",
+    "sensors.no_structured_decoder_for_profile": "Pre tento profil payloadu nie je dostupný štruktúrovaný dekóder.",
+    "sensors.rising": "Rastie",
+    "sensors.falling": "Klesá",
+    "sensors.stable": "Stabilné",
+    "sensors.for_use": "pre",
+    "sensors.use_suffix": "použitie",
+    "sensors.current_sample": "Aktuálna vzorka",
+    "sensors.relative_humidity": "Relatívna vlhkosť",
+    "base_stations.vm_capable": "S podporou VM",
+    "base_stations.no_cert_metadata": "Bez cert metadata",
+    "base_stations.open_detail_for": "Otvoriť detail základňovej stanice pre",
+    "base_stations.copy_eui": "Kopírovať EUI",
+    "base_stations.linked_sensors": "pripojené senzory",
+    "base_stations.manage_certificates": "Spravovať certifikáty",
+    "base_stations.no_uptime_events_available": "Nie sú dostupné žiadne uptime udalosti.",
+    "base_stations.edit_base_station": "Upraviť base station",
+    "mqtt.no_incoming_messages": "Zatiaľ neboli zaznamenané žiadne prichádzajúce MQTT správy.",
+    "mqtt.no_outgoing_messages": "Zatiaľ neboli zaznamenané žiadne odchádzajúce MQTT publish správy.",
+    "mqtt.qos": "QoS",
+    "mqtt.retain": "Retain",
+    "mqtt.no_errors_captured": "Neboli zachytené žiadne MQTT chyby.",
+    "mqtt.no_critical_runtime_signals": "Neboli zistené žiadne kritické runtime signály.",
+    "network.metric_snr": "SNR (dB)",
+    "network.metric_rssi": "RSSI (dBm)",
+    "network.all_nodes": "Všetky uzly",
+    "network.base_stations_only": "Len z?klad?ov? stanice",
+    "network.sensors_only": "Len senzory",
+    "network.problems_context": "Problémy + kontext",
+    "network.routes": "Trasy",
+    "network.live_assigned": "Živé + priradené",
+    "network.live_only": "Len živé",
+    "network.assigned_only": "Len priradené",
+    "network.highlight_issues": "Zvýrazniť problémy",
+    "network.show_secondary_routes": "Zobraziť sekundárne trasy",
+    "network.only_problematic": "Len problematické",
+    "network.topology_control_note": "Živé uplink trasy používajú farby kvality. Len registrované linky sú modro prerušované, aby zostalo viditeľné priradenie senzor-base station.",
+    "network.coverage_map_workspace": "Pracovisko mapy pokrytia",
+    "network.openstreetmap": "OpenStreetMap",
+    "network.floor_plan": "Pôdorys",
+    "network.save_positions": "Uložiť pozície",
+    "network.wheel_zoom_off": "Koliesko zoom vypnuté",
+    "network.zoom_out": "Oddialiť",
+    "network.zoom_in": "Priblížiť",
+    "network.fit_to_view": "Prispôsobiť zobrazeniu",
+    "network.reset_to_100": "Obnoviť na 100 %",
+    "network.upload_floor_plan_start": "Nahrajte obrázok pôdorysu, aby ste mohli začať",
+    "network.selected_device": "Vybrané zariadenie",
+    "network.no_device_selected": "Nie je vybrané zariadenie",
+    "network.select_device_drag_marker": "Vyberte zariadenie a potom posuňte marker na mape pre aktualizáciu GPS.",
+    "network.primary_path": "Primárna trasa",
+    "network.coverage_links": "Linky pokrytia",
+    "network.best_signal": "Najlepší signál",
+    "network.position_source": "Zdroj pozície",
+    "network.gps_editor": "Editor GPS",
+    "network.gps_sync_on_move": "GPS aktualizácie sa synchronizujú automaticky pri pohybe markeru.",
+    "network.unlocked": "Odomknuté",
+    "network.marker_dragging_enabled": "Ťahanie markerov a umiestňovanie na mape je povolené.",
+    "network.lock_positions": "Zamknúť pozície",
+    "network.device_explorer": "Prieskumník zariadení",
+    "network.showing_devices_initial": "Zobrazuje sa 0 z 0 zariadení",
+    "network.missing_gps": "Chýbajúce GPS",
+    "network.topology_workspace": "Pracovisko topológie",
+    "network.route_connection_inspection": "Kontrola trás a spojení",
+    "network.topology_graph": "Graf topológie",
+    "network.primary_route_live": "Primárna trasa (live)",
+    "network.secondary_route_live": "Sekundárna trasa (live)",
+    "network.assigned_relation_registration": "Priradený vzťah (registrácia)",
+    "network.assigned_relation_configured": "Priradený vzťah (konfigurácia)",
+    "network.good_link_quality": "Dobrá kvalita linky",
+    "network.fair_link_quality": "Priemerná kvalita linky",
+    "network.poor_link_quality": "Slabá kvalita linky",
+    "network.critical_link_quality": "Kritická kvalita linky",
+    "network.topology_stats": "Štatistiky topológie",
+    "network.connections": "Spojenia",
+    "network.problem_nodes": "Problémové uzly",
+    "network.relationships": "Vzťahy",
+    "network.online_bs": "Online BS",
+    "network.linked_sensors": "Pripojené senzory",
+    "network.orphan_sensors": "Osirelé senzory",
+    "network.multi_bs_sensors": "Senzory na viacerých BS",
+    "network.primary_routes": "Primárne trasy",
+    "network.live_routes": "Živé trasy",
+    "network.assigned_routes": "Priradené trasy",
+    "network.no_base_stations_match_filter": "Žiadne base stations nezodpovedajú aktuálnemu filtru.",
+    "network.no_sensors_match_filter": "Žiadne senzory nezodpovedajú aktuálnemu filtru.",
+    "network.no_missing_gps_entries": "Nie sú žiadne položky bez GPS.",
+    "network.gps_not_configured": "GPS nie je nakonfigurované",
+    "network.no_telegram_data_yet": "Zatiaľ nie sú dostupné žiadne telegramové dáta",
+    "network.receiving_sensors": "Prijímané senzory",
+    "network.showing_devices_count": "Zobrazuje sa {shown} z {total} zariadení",
+    "network.devices_hidden_until_gps": "{count} zariadení je na OpenStreetMap skrytých, kým sa nepriradí GPS.",
+    "network.positioned": "Umiestnené",
+    "network.not_positioned": "Neumiestnené",
+    "network.route": "trasa",
+    "network.routes_count": "trasy",
+    "network.connection_lost": "Spojenie stratené",
+    "network.duty_cycle": "Duty cycle",
+    "network.primary_bs": "Primárna BS",
+    "network.receivers": "Prijímače",
+    "network.live_receivers": "Live prijímače",
+    "network.assigned_bs": "Priradené BS",
+    "network.no_base_station_relation": "Bez vzťahu k základňovej stanici",
+    "network.no_live_uplink_assignment_only": "Zatiaľ bez live uplinku (len priradenie)",
+    "network.missing_primary_route": "Chýba primárna trasa",
+    "logs.service_not_running": "Služba nebeží.",
+    "logs.connected_bs": "pripojené BS",
+    "logs.connecting_bs": "BS v pripájaní",
+    "logs.pending": "čaká",
+    "logs.no_logs_current_filter": "Pre aktuálny filter nie sú žiadne logy.",
+    "logs.memory_source": "pamäť",
+    "logs.no_audit_entries_current_filter": "Pre aktuálny filter nie sú žiadne audit záznamy.",
+    "logs.refresh_audit": "Obnoviť audit",
+    "logs.loading_audit_trail": "Načítava sa audit trail...",
+    "health.station": "Stanica",
+    "health.duty": "Duty",
+    "health.uptime": "Uptime",
+    "health.no_base_stations_runtime_snapshot": "V runtime snímke nie sú žiadne základňové stanice.",
+    "sensors.current_mapping_summary": "Aktuálne priradenie: <strong>{count}</strong> základňových staníc. Zrušte všetky výbery a uložte, ak chcete senzor odpojiť.",
+    "sensors.currently_detached_prompt": "Senzor je momentálne odpojený. Vyberte jednu alebo viac základňových staníc a uložte.",
+    "sensors.bulk_mapping_summary": "Hromadná úprava pre <strong>{count}</strong> senzorov. Označené položky predstavujú spoločné priradenie.",
+    "sensors.base_station_offline_pending_assignment": "Offline (čaká na priradenie)",
+    "sensors.not_assigned": "Nepriradené",
+    "sensors.assigned": "Priradené",
+    "sensors.assigned_all_selected": "Priradené (všetky vybrané)",
+    "sensors.assigned_partial": "Priradené ({count}/{total})",
+    "sensors.assignment_selection_summary": "{selected} vybraných · {mapped} už priradených",
+    "sensors.save_detached_selected": "Uložiť ako odpojené pre vybrané senzory",
+    "sensors.save_assignment_selected": "Uložiť priradenie pre vybrané senzory",
+    "sensors.confirm_save_detached_selected": "Uložiť <strong>{count}</strong> vybraných senzorov ako odpojené? Tým sa odstráni ich priradenie k základňovým staniciam.",
+    "sensors.confirm_save_detached_single": "Uložiť senzor <code>{eui}</code> ako odpojený bez priradenia k základňovej stanici?",
+    "sensors.primary_base_station": "Primárna základňová stanica",
+    "sensors.base_station_label": "Základňová stanica",
+    "sensors.base_station_coverage": "Pokrytie základňovými stanicami",
+    "sensors.receiving_base_stations": "Prijímajúce základňové stanice",
+    "sensors.recorded_base_station_paths": "Počet zaznamenaných trás k základňovým staniciam: {count}",
+    "sensors.no_base_station_path_yet": "Trasa k základňovej stanici zatiaľ nebola zaznamenaná",
+    "health.sensor_reliability": "Spoľahlivosť senzorov",
+    "health.worst_packet_loss_first": "Najhoršie linky podľa straty paketov ako prvé",
+    "health.received": "Prijaté",
+    "health.lost": "Stratené",
+    "health.loss_percent": "Strata %",
+    "health.avg_snr": "Priem. SNR",
+    "health.avg_rssi": "Priem. RSSI",
+    "health.no_sensor_packet_stats": "Nie sú dostupné štatistiky paketov senzorov.",
+    "admin.no_scope_definitions": "Nie sú dostupné žiadne definície admin scope.",
+    "admin.cannot_grant_scope": "Tento scope nemôžete prideliť alebo odobrať.",
+    "admin.all_tenants": "Všetky tenanty",
+    "admin.global_admins": "Globálni admini",
+    "admin.all_roles": "Všetky roly",
+    "admin.no_users_match_filters": "Žiadni používatelia nezodpovedajú aktuálnym filtrom.",
+    "admin.no_tenants_loaded": "Nie sú načítané žiadne tenanty.",
+    "admin.edit_user": "Upraviť používateľa",
+    "admin.create_user": "Vytvoriť používateľa",
+    "admin.update_user": "Aktualizovať používateľa",
+    "admin.edit_tenant": "Upraviť tenant",
+    "admin.create_tenant": "Vytvoriť tenant",
+    "admin.update_tenant": "Aktualizovať tenant",
+    "admin.all_tenants_global_admin": "Všetky tenanty (globálny admin)",
+    "admin.admin_global_can_see_all": "Admin je globálny a vidí všetky tenanty.",
+})
+
+
+def _normalize_app_language(value):
+    raw = str(value or "").strip().lower()
+    return raw if raw in _APP_LANGUAGE_OPTIONS else "en"
+
+
+def _get_app_language():
+    if has_request_context():
+        override = session.get("ui_language_override")
+        if override:
+            return _normalize_app_language(override)
+    return _normalize_app_language(getattr(bssci_config, "APP_LANGUAGE", "en"))
+
+
+def _get_app_locale():
+    return str(_APP_LANGUAGE_OPTIONS.get(_get_app_language(), _APP_LANGUAGE_OPTIONS["en"]).get("locale") or "en-US")
+
+
+def _ui_text(key, default=None, language=None, **kwargs):
+    lang = _normalize_app_language(language or _get_app_language())
+    translations = _UI_TRANSLATIONS.get(lang, {})
+    fallback_translations = _UI_TRANSLATIONS.get("en", {})
+    template = translations.get(key)
+    if template is None:
+        template = fallback_translations.get(key, default if default is not None else key)
+    try:
+        return str(template).format(**kwargs) if kwargs else str(template)
+    except Exception:
+        return str(template)
+
+
+_UI_TRANSLATIONS["sk"].update({
+    "config.influx_enabled": "Povoli\u0165 integr\u00e1ciu InfluxDB",
+    "config.influx_enabled_note": "Vypnite t\u00fato vo\u013ebu, ak chcete nasadenie bez InfluxDB a chcete pou\u017e\u00edva\u0165 len runtime a TimescaleDB.",
+    "config.influx_disabled_notice": "Integr\u00e1cia InfluxDB je vypnut\u00e1. Aplik\u00e1cia bude pou\u017e\u00edva\u0165 iba runtime a TimescaleDB cesty.",
+    "config.storage_and_telemetry_note": "Spravujte TimescaleDB ako hlavn\u00e9 \u00falo\u017eisko telemetrie a nastavte monitorovacie prahy.",
+    "config.storage.influx_title": "Zdroj telemetrie",
+    "config.storage.influx_note": "Ur\u010dite, odkia\u013e UI \u010d\u00edta telemetriu. Pri vypnutom InfluxDB sa pou\u017e\u00edva runtime a TimescaleDB fallback.",
+    "config.summary.guidance_storage_text": "TimescaleDB berte ako hlavn\u00e9 opera\u010dn\u00e9 \u00falo\u017eisko. Runtime pou\u017eite pre \u017eiv\u00e9 stavy a InfluxDB nechajte mimo akt\u00edvneho nasadenia.",
+    "config.storage.runtime_timescale_note": "Toto nasadenie pou\u017e\u00edva runtime telemetriu a TimescaleDB ako hlavn\u00e9 perzistentn\u00e9 \u00falo\u017eisko. InfluxDB u\u017e nie je s\u00fa\u010das\u0165ou akt\u00edvnej konfigur\u00e1cie.",
+    "config.storage.runtime_timescale_source_note": "\u017div\u00e1 telemetria sa \u010d\u00edta z runtime pam\u00e4te. Historick\u00e9 a trvalo ulo\u017een\u00e9 d\u00e1ta s\u00fa v TimescaleDB.",
+    "config.storage.runtime_timescale_notice": "Polia pre InfluxDB boli z tohto pracovn\u00e9ho priestoru odstr\u00e1nen\u00e9, preto\u017ee t\u00e1to platforma be\u017e\u00ed v re\u017eime runtime + TimescaleDB.",
+    "config.storage.runtime_ready_title": "Runtime + TimescaleDB je akt\u00edvny model",
+    "config.storage.section_connection": "Pripojenie a identita",
+    "config.storage.section_runtime_behavior": "Z\u00e1pisy a snapshoty",
+    "config.storage.section_retention": "Retencia a kompresia",
+    "config.storage.section_observability": "Napojen\u00e1 observabilita",
+    "config.summary.changed_fields": "Zmenen\u00e9 polia",
+    "config.summary.changed_fields_empty": "Zatia\u013e neboli vykonan\u00e9 \u017eiadne zmeny. Upraven\u00e9 polia sa zobrazia tu.",
+    "config.summary.changed_fields_more": "A e\u0161te {count} \u010fal\u0161\u00edch upraven\u00fdch pol\u00ed.",
+})
+
+def _translate_page_title(value):
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    key = _PAGE_TITLE_KEYS.get(raw)
+    if not key:
+        return raw
+    return _ui_text(key, raw)
 
 def record_bs_event(eui, event_type):
     eui = eui.lower()
@@ -198,6 +2039,12 @@ def _get_influx_uptime_events():
         error?: str
       }
     """
+    if not bool(getattr(bssci_config, "INFLUX_ENABLED", True)):
+        return {
+            "success": False,
+            "source": "influxdb",
+            "error": "InfluxDB integration is disabled."
+        }
     influx_url = bssci_config.INFLUXDB_URL.rstrip("/")
     influx_org = bssci_config.INFLUXDB_ORG
     influx_token = bssci_config.INFLUXDB_TOKEN
@@ -251,6 +2098,8 @@ def _get_influx_uptime_events():
 
 def _influx_write_is_ready():
     return bool(
+        getattr(bssci_config, "INFLUX_ENABLED", True)
+        and
         bssci_config.INFLUXDB_URL
         and bssci_config.INFLUXDB_ORG
         and bssci_config.INFLUXDB_BUCKET
@@ -366,6 +2215,309 @@ def _normalize_inventory_fields(data):
             normalized[field_key] = str(value)
     return normalized
 
+def _normalize_expected_interval_seconds(value):
+    if value in (None, ""):
+        return None
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        raise ValueError("Expected interval must be a number of seconds.")
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise ValueError("Expected interval must be greater than 0 seconds.")
+    return int(max(10, min(round(seconds), 86400)))
+
+def _normalize_reporting_mode(value):
+    raw = str(value or "").strip().lower()
+    if raw in {"event", "event-driven", "event_driven", "alarm", "async"}:
+        return "event"
+    if raw in {"periodic", "interval", "heartbeat"}:
+        return "periodic"
+    return "auto"
+
+def _sensor_profile_catalog():
+    return {
+        "auto": {
+            "id": "auto",
+            "label": "Auto / inferred",
+            "description": "Keep manual decoder settings or infer from sensor name and tags.",
+            "short_label": "Auto",
+            "payload_decoder": "auto",
+            "environment_context": "auto",
+            "reporting_mode": "auto",
+            "expected_interval_seconds": None,
+            "stale_after_hours": None,
+            "enforced": False,
+        },
+        "lansen_e2_co2_auto": {
+            "id": "lansen_e2_co2_auto",
+            "label": "LANSEN E2 CO2",
+            "description": "Periodic CO2 telemetry with auto deployment context and 6 minute cadence.",
+            "short_label": "CO2",
+            "payload_decoder": "lansen_e2_co2_v1",
+            "environment_context": "auto",
+            "reporting_mode": "periodic",
+            "expected_interval_seconds": 360,
+            "stale_after_hours": None,
+            "enforced": True,
+        },
+        "lansen_e2_co2_indoor": {
+            "id": "lansen_e2_co2_indoor",
+            "label": "LANSEN E2 CO2 Indoor",
+            "description": "Indoor CO2 telemetry with comfort thresholds tuned for occupied rooms.",
+            "short_label": "CO2 indoor",
+            "payload_decoder": "lansen_e2_co2_v1",
+            "environment_context": "indoor",
+            "reporting_mode": "periodic",
+            "expected_interval_seconds": 360,
+            "stale_after_hours": None,
+            "enforced": True,
+        },
+        "lansen_e2_co2_outdoor": {
+            "id": "lansen_e2_co2_outdoor",
+            "label": "LANSEN E2 CO2 Outdoor",
+            "description": "Outdoor CO2 telemetry with ambient context and 6 minute cadence.",
+            "short_label": "CO2 outdoor",
+            "payload_decoder": "lansen_e2_co2_v1",
+            "environment_context": "outdoor",
+            "reporting_mode": "periodic",
+            "expected_interval_seconds": 360,
+            "stale_after_hours": None,
+            "enforced": True,
+        },
+        "lansen_m2_contact": {
+            "id": "lansen_m2_contact",
+            "label": "LANSEN M2 Contact",
+            "description": "Event-driven door/window contact sensor with weekly service window.",
+            "short_label": "M2 contact",
+            "payload_decoder": "lansen_m2_v1",
+            "environment_context": "auto",
+            "reporting_mode": "event",
+            "expected_interval_seconds": None,
+            "stale_after_hours": 168,
+            "enforced": True,
+        },
+        "custom": {
+            "id": "custom",
+            "label": "Custom",
+            "description": "Manual combination of decoder, context, reporting mode and timing.",
+            "short_label": "Custom",
+            "payload_decoder": None,
+            "environment_context": None,
+            "reporting_mode": None,
+            "expected_interval_seconds": None,
+            "stale_after_hours": None,
+            "enforced": False,
+        },
+    }
+
+def _normalize_sensor_profile(value):
+    raw = str(value or "").strip().lower()
+    if raw in {"", "auto", "default", "infer", "inferred"}:
+        return "auto"
+    aliases = {
+        "co2": "lansen_e2_co2_auto",
+        "lansen_co2": "lansen_e2_co2_auto",
+        "lansen_e2_co2": "lansen_e2_co2_auto",
+        "lansen_e2_co2_auto": "lansen_e2_co2_auto",
+        "lansen_e2_co2_indoor": "lansen_e2_co2_indoor",
+        "lansen_e2_co2_outdoor": "lansen_e2_co2_outdoor",
+        "co2_indoor": "lansen_e2_co2_indoor",
+        "co2_outdoor": "lansen_e2_co2_outdoor",
+        "m2": "lansen_m2_contact",
+        "lansen_m2": "lansen_m2_contact",
+        "lan-mioty-m2": "lansen_m2_contact",
+        "lansen_m2_contact": "lansen_m2_contact",
+        "contact": "lansen_m2_contact",
+        "door_contact": "lansen_m2_contact",
+        "custom": "custom",
+        "manual": "custom",
+    }
+    normalized = aliases.get(raw, raw)
+    return normalized if normalized in _sensor_profile_catalog() else "auto"
+
+def _sensor_profile_preset(profile_id):
+    return dict(_sensor_profile_catalog().get(_normalize_sensor_profile(profile_id), _sensor_profile_catalog()["auto"]))
+
+def _sensor_profile_options():
+    catalog = _sensor_profile_catalog()
+    order = [
+        "auto",
+        "lansen_e2_co2_auto",
+        "lansen_e2_co2_indoor",
+        "lansen_e2_co2_outdoor",
+        "lansen_m2_contact",
+        "custom",
+    ]
+    return [dict(catalog[key]) for key in order if key in catalog]
+
+def _infer_sensor_profile(sensor):
+    explicit = _normalize_sensor_profile((sensor or {}).get("sensor_profile"))
+    if explicit not in {"auto", "custom"}:
+        return explicit
+    decoder = str((sensor or {}).get("payload_decoder", "auto") or "auto").strip().lower()
+    environment = str((sensor or {}).get("environment_context", "auto") or "auto").strip().lower()
+    reporting_mode = _normalize_reporting_mode((sensor or {}).get("reporting_mode"))
+    if decoder == "lansen_e2_co2_v1":
+        if environment == "indoor":
+            return "lansen_e2_co2_indoor"
+        if environment == "outdoor":
+            return "lansen_e2_co2_outdoor"
+        return "lansen_e2_co2_auto"
+    if decoder == "lansen_m2_v1" and reporting_mode in {"auto", "event"}:
+        return "lansen_m2_contact"
+    return explicit
+
+def _sensor_profile_label(profile_id):
+    return str(_sensor_profile_preset(profile_id).get("label") or "Auto / inferred")
+
+def _apply_sensor_profile_defaults(payload):
+    profile_id = _normalize_sensor_profile((payload or {}).get("sensor_profile"))
+    preset = _sensor_profile_preset(profile_id)
+    if not preset.get("enforced"):
+        return payload
+    payload["payload_decoder"] = str(preset.get("payload_decoder") or payload.get("payload_decoder") or "auto")
+    payload["environment_context"] = str(preset.get("environment_context") or payload.get("environment_context") or "auto")
+    payload["reporting_mode"] = str(preset.get("reporting_mode") or payload.get("reporting_mode") or "auto")
+    payload["expected_interval_seconds"] = preset.get("expected_interval_seconds")
+    payload["stale_after_hours"] = preset.get("stale_after_hours")
+    return payload
+
+def _normalize_stale_after_hours(value):
+    if value in (None, ""):
+        return None
+    try:
+        hours = float(value)
+    except (TypeError, ValueError):
+        raise ValueError("Stale-after value must be a number of hours.")
+    if not math.isfinite(hours) or hours <= 0:
+        raise ValueError("Stale-after value must be greater than 0 hours.")
+    return int(max(1, min(round(hours), 2160)))
+
+def _infer_sensor_decoder_profile(sensor):
+    raw = str((sensor or {}).get("payload_decoder", "auto") or "auto").strip().lower()
+    if raw in {"lansen_e2_co2_v1", "lansen_m2_v1", "raw"}:
+        return raw
+    marker = " ".join([
+        str((sensor or {}).get("name", "") or "").strip().lower(),
+        " ".join(str(tag or "").strip().lower() for tag in ((sensor or {}).get("tags") or [])),
+    ]).strip()
+    if "lansen" in marker and "co2" in marker:
+        return "lansen_e2_co2_v1"
+    if "lansen" in marker and "m2" in marker:
+        return "lansen_m2_v1"
+    return "auto"
+
+def _infer_sensor_reporting_mode(sensor):
+    explicit = _normalize_reporting_mode((sensor or {}).get("reporting_mode"))
+    if explicit in {"periodic", "event"}:
+        return explicit, "configured"
+
+    profile = _infer_sensor_decoder_profile(sensor)
+    marker = " ".join([
+        profile,
+        str((sensor or {}).get("name", "") or "").strip().lower(),
+        " ".join(str(tag or "").strip().lower() for tag in ((sensor or {}).get("tags") or [])),
+    ]).strip()
+
+    if profile == "lansen_m2_v1":
+        return "event", "device-profile"
+    if any(keyword in marker for keyword in ["door", "window", "contact", "reed", "magnet", "alarm", "panic", "button", "leak"]):
+        return "event", "device-type"
+    return "periodic", "default"
+
+def _infer_sensor_stale_after_hours(sensor, reporting_mode=None):
+    explicit = (sensor or {}).get("stale_after_hours")
+    if explicit not in (None, ""):
+        try:
+            normalized = _normalize_stale_after_hours(explicit)
+            if normalized:
+                return normalized, "configured"
+        except ValueError:
+            pass
+
+    mode = reporting_mode or _infer_sensor_reporting_mode(sensor)[0]
+    if mode != "event":
+        return None, "n/a"
+
+    profile = _infer_sensor_decoder_profile(sensor)
+    if profile == "lansen_m2_v1":
+        return 168, "device-profile"
+    return 72, "event-default"
+
+def _infer_sensor_expected_interval_seconds(sensor):
+    explicit = (sensor or {}).get("expected_interval_seconds")
+    if explicit not in (None, ""):
+        try:
+            normalized = _normalize_expected_interval_seconds(explicit)
+            if normalized:
+                return normalized, "configured"
+        except ValueError:
+            pass
+
+    profile = _infer_sensor_decoder_profile(sensor)
+    marker = " ".join([
+        profile,
+        str((sensor or {}).get("name", "") or "").strip().lower(),
+        " ".join(str(tag or "").strip().lower() for tag in ((sensor or {}).get("tags") or [])),
+    ])
+
+    if _infer_sensor_reporting_mode(sensor)[0] == "event":
+        return 120, "event-reference"
+    if profile == "lansen_e2_co2_v1" or ("co2" in marker and "lansen" in marker):
+        return 360, "device-profile"
+    if any(keyword in marker for keyword in ["water meter", "gas meter", "heat meter", "pulse meter", "meter", "counter"]):
+        return 900, "device-type"
+    if any(keyword in marker for keyword in ["temperature", "humidity", "climate", "th ", "env", "comfort"]):
+        return 300, "device-type"
+    if any(keyword in marker for keyword in ["motion", "occupancy", "door", "window", "button", "alarm", "leak"]):
+        return 120, "device-type"
+    return 120, "default"
+
+def _resolve_sensor_expected_interval(sensor, observed_interval_seconds=None):
+    reporting_mode, reporting_mode_source = _infer_sensor_reporting_mode(sensor)
+    stale_after_hours, stale_after_source = _infer_sensor_stale_after_hours(sensor, reporting_mode=reporting_mode)
+
+    if reporting_mode == "event":
+        stale_threshold_seconds = int(max(3600, round((stale_after_hours or 72) * 3600)))
+        return {
+            "reporting_mode": reporting_mode,
+            "reporting_mode_source": reporting_mode_source,
+            "stale_after_hours": stale_after_hours,
+            "stale_after_source": stale_after_source,
+            "expected_interval_seconds": None,
+            "expected_interval_source": "event-driven",
+            "delay_threshold_seconds": 0,
+            "offline_threshold_seconds": stale_threshold_seconds,
+            "stale_threshold_seconds": stale_threshold_seconds,
+        }
+
+    base_interval, source = _infer_sensor_expected_interval_seconds(sensor)
+    observed = None
+    try:
+        observed = float(observed_interval_seconds) if observed_interval_seconds not in (None, "") else None
+    except (TypeError, ValueError):
+        observed = None
+    if observed is not None and math.isfinite(observed) and observed > 0:
+        observed = max(10, min(round(observed), 86400))
+        if observed >= base_interval * 0.75:
+            base_interval = max(base_interval, observed)
+            if source != "configured":
+                source = "observed"
+
+    delay_threshold = max(int(round(base_interval * 2.5)), base_interval + 90)
+    offline_threshold = max(int(round(base_interval * 8.0)), delay_threshold + 240)
+    return {
+        "reporting_mode": reporting_mode,
+        "reporting_mode_source": reporting_mode_source,
+        "stale_after_hours": None,
+        "stale_after_source": "n/a",
+        "expected_interval_seconds": int(base_interval),
+        "expected_interval_source": source,
+        "delay_threshold_seconds": int(delay_threshold),
+        "offline_threshold_seconds": int(offline_threshold),
+        "stale_threshold_seconds": int(offline_threshold),
+    }
+
 def _default_tenant_id():
     raw = str(getattr(bssci_config, "TIMESCALE_DEFAULT_TENANT", "default") or "default").strip().lower()
     raw = re.sub(r"[^a-z0-9:_-]+", "-", raw)
@@ -394,7 +2546,51 @@ def _tenant_id_from_sensor(sensor):
 def _tenant_id_from_base_station(bs_data):
     return _normalize_tenant_id((bs_data or {}).get("tenant_id"), fallback=_default_tenant_id())
 
+def _is_reserved_default_tenant(tenant_id):
+    return _normalize_tenant_id(tenant_id, fallback=_default_tenant_id()) == _default_tenant_id()
+
+def _tenant_scope_display_name(tenant_id, name=None):
+    normalized = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    if _is_reserved_default_tenant(normalized):
+        return "Super admin"
+    candidate = str(name or normalized).strip()
+    return candidate or normalized
+
+def _tenant_scope_display_description(tenant_id, description=None):
+    if _is_reserved_default_tenant(tenant_id):
+        return "Reserved global scope for super admin inventory and system-owned data."
+    return str(description or "").strip()
+
+def _is_super_admin(user=None):
+    if isinstance(user, dict):
+        role = _normalize_user_role(user.get("role", "viewer"))
+        raw_tenant = _sanitize_tenant_id(user.get("tenant_id"))
+        tenant_value = _normalize_user_tenant_for_role(role, raw_tenant, fallback=_default_tenant_id())
+        return role == "admin" and (not str(tenant_value or "").strip() or _is_reserved_default_tenant(raw_tenant))
+
+    if has_request_context():
+        role = _normalize_user_role(session.get("role", "viewer"))
+        raw_tenant = _sanitize_tenant_id(session.get("tenant_id"))
+        tenant_value = _normalize_user_tenant_for_role(role, raw_tenant, fallback=_default_tenant_id())
+        return role == "admin" and (not str(tenant_value or "").strip() or _is_reserved_default_tenant(raw_tenant))
+    return False
+
+def _is_global_tenant_scope(active_tenant):
+    return not str(active_tenant or "").strip()
+
+def _resolve_write_tenant_id(requested_tenant=None, *, existing_tenant=None):
+    if str(requested_tenant or "").strip():
+        return _normalize_tenant_id(requested_tenant, fallback=_default_tenant_id())
+    if str(existing_tenant or "").strip():
+        return _normalize_tenant_id(existing_tenant, fallback=_default_tenant_id())
+    active_tenant = _active_tenant_id()
+    if _is_global_tenant_scope(active_tenant):
+        return _default_tenant_id()
+    return _normalize_tenant_id(active_tenant, fallback=_default_tenant_id())
+
 def _tenant_matches(record_tenant, active_tenant):
+    if _is_global_tenant_scope(active_tenant):
+        return True
     record_value = _normalize_tenant_id(record_tenant, fallback=_default_tenant_id())
     active_value = _normalize_tenant_id(active_tenant, fallback=_default_tenant_id())
     return record_value == active_value
@@ -404,11 +2600,14 @@ def _active_tenant_id():
     if not has_request_context():
         return fallback
 
-    session_tenant = _normalize_tenant_id(session.get("tenant_id"), fallback=fallback)
+    role = _normalize_user_role(session.get("role", "viewer"))
+    session_tenant = _normalize_user_tenant_for_role(role, session.get("tenant_id"), fallback=fallback)
     requested_tenant = request.headers.get("X-Tenant-Id")
-    if requested_tenant and str(session.get("role", "")).strip().lower() == "admin":
-        return _normalize_tenant_id(requested_tenant, fallback=session_tenant)
-    return session_tenant or fallback
+    if requested_tenant and role == "admin":
+        return _normalize_tenant_id(requested_tenant, fallback=fallback)
+    if role == "admin" and _is_global_tenant_scope(session_tenant):
+        return ""
+    return _normalize_tenant_id(session_tenant, fallback=fallback)
 
 def _normalize_user_role(role):
     normalized = str(role or "viewer").strip().lower()
@@ -904,16 +3103,27 @@ def _timescale_fetch_telemetry_summary(window_minutes=60, bucket_seconds=60, top
             "recent_messages": [],
         }
         with conn.cursor() as cur:
-            cur.execute("""
-                SELECT
-                    COUNT(*)::BIGINT AS uplink_total,
-                    COUNT(DISTINCT sensor_eui)::BIGINT AS sensor_count,
-                    (COUNT(DISTINCT base_station_eui) FILTER (WHERE base_station_eui IS NOT NULL AND base_station_eui <> ''))::BIGINT AS base_station_count,
-                    MAX(ts) AS last_ts
-                FROM telemetry_uplink
-                WHERE tenant_id = %s
-                  AND ts >= NOW() - (%s * INTERVAL '1 minute')
-            """, (tenant_id, window_minutes))
+            if _is_global_tenant_scope(tenant_id):
+                cur.execute("""
+                    SELECT
+                        COUNT(*)::BIGINT AS uplink_total,
+                        COUNT(DISTINCT sensor_eui)::BIGINT AS sensor_count,
+                        (COUNT(DISTINCT base_station_eui) FILTER (WHERE base_station_eui IS NOT NULL AND base_station_eui <> ''))::BIGINT AS base_station_count,
+                        MAX(ts) AS last_ts
+                    FROM telemetry_uplink
+                    WHERE ts >= NOW() - (%s * INTERVAL '1 minute')
+                """, (window_minutes,))
+            else:
+                cur.execute("""
+                    SELECT
+                        COUNT(*)::BIGINT AS uplink_total,
+                        COUNT(DISTINCT sensor_eui)::BIGINT AS sensor_count,
+                        (COUNT(DISTINCT base_station_eui) FILTER (WHERE base_station_eui IS NOT NULL AND base_station_eui <> ''))::BIGINT AS base_station_count,
+                        MAX(ts) AS last_ts
+                    FROM telemetry_uplink
+                    WHERE tenant_id = %s
+                      AND ts >= NOW() - (%s * INTERVAL '1 minute')
+                """, (_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), window_minutes))
             row = cur.fetchone() or (0, 0, 0, None)
             summary["uplink_total"] = int(row[0] or 0)
             summary["sensor_count"] = int(row[1] or 0)
@@ -921,21 +3131,37 @@ def _timescale_fetch_telemetry_summary(window_minutes=60, bucket_seconds=60, top
             summary["last_ts"] = row[3].isoformat() if row[3] else None
 
             bucket_interval = f"{bucket_seconds} seconds"
-            cur.execute("""
-                SELECT
-                    EXTRACT(EPOCH FROM bucket)::BIGINT AS bucket_ts,
-                    COUNT(*)::BIGINT AS uplinks,
-                    AVG(snr)::DOUBLE PRECISION AS avg_snr,
-                    AVG(rssi)::DOUBLE PRECISION AS avg_rssi
-                FROM (
-                    SELECT time_bucket(%s::interval, ts) AS bucket, snr, rssi
-                    FROM telemetry_uplink
-                    WHERE tenant_id = %s
-                      AND ts >= NOW() - (%s * INTERVAL '1 minute')
-                ) t
-                GROUP BY bucket
-                ORDER BY bucket ASC
-            """, (bucket_interval, tenant_id, window_minutes))
+            if _is_global_tenant_scope(tenant_id):
+                cur.execute("""
+                    SELECT
+                        EXTRACT(EPOCH FROM bucket)::BIGINT AS bucket_ts,
+                        COUNT(*)::BIGINT AS uplinks,
+                        AVG(snr)::DOUBLE PRECISION AS avg_snr,
+                        AVG(rssi)::DOUBLE PRECISION AS avg_rssi
+                    FROM (
+                        SELECT time_bucket(%s::interval, ts) AS bucket, snr, rssi
+                        FROM telemetry_uplink
+                        WHERE ts >= NOW() - (%s * INTERVAL '1 minute')
+                    ) t
+                    GROUP BY bucket
+                    ORDER BY bucket ASC
+                """, (bucket_interval, window_minutes))
+            else:
+                cur.execute("""
+                    SELECT
+                        EXTRACT(EPOCH FROM bucket)::BIGINT AS bucket_ts,
+                        COUNT(*)::BIGINT AS uplinks,
+                        AVG(snr)::DOUBLE PRECISION AS avg_snr,
+                        AVG(rssi)::DOUBLE PRECISION AS avg_rssi
+                    FROM (
+                        SELECT time_bucket(%s::interval, ts) AS bucket, snr, rssi
+                        FROM telemetry_uplink
+                        WHERE tenant_id = %s
+                          AND ts >= NOW() - (%s * INTERVAL '1 minute')
+                    ) t
+                    GROUP BY bucket
+                    ORDER BY bucket ASC
+                """, (bucket_interval, _normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), window_minutes))
             summary["series"] = [
                 {
                     "timestamp": int(series_row[0]),
@@ -946,21 +3172,37 @@ def _timescale_fetch_telemetry_summary(window_minutes=60, bucket_seconds=60, top
                 for series_row in (cur.fetchall() or [])
             ]
 
-            cur.execute("""
-                SELECT
-                    sensor_eui,
-                    COUNT(*)::BIGINT AS uplinks,
-                    AVG(snr)::DOUBLE PRECISION AS avg_snr,
-                    AVG(rssi)::DOUBLE PRECISION AS avg_rssi,
-                    AVG(packet_loss_pct)::DOUBLE PRECISION AS avg_loss_pct,
-                    MAX(ts) AS last_seen
-                FROM telemetry_uplink
-                WHERE tenant_id = %s
-                  AND ts >= NOW() - (%s * INTERVAL '1 minute')
-                GROUP BY sensor_eui
-                ORDER BY uplinks DESC
-                LIMIT %s
-            """, (tenant_id, window_minutes, top_limit))
+            if _is_global_tenant_scope(tenant_id):
+                cur.execute("""
+                    SELECT
+                        sensor_eui,
+                        COUNT(*)::BIGINT AS uplinks,
+                        AVG(snr)::DOUBLE PRECISION AS avg_snr,
+                        AVG(rssi)::DOUBLE PRECISION AS avg_rssi,
+                        AVG(packet_loss_pct)::DOUBLE PRECISION AS avg_loss_pct,
+                        MAX(ts) AS last_seen
+                    FROM telemetry_uplink
+                    WHERE ts >= NOW() - (%s * INTERVAL '1 minute')
+                    GROUP BY sensor_eui
+                    ORDER BY uplinks DESC
+                    LIMIT %s
+                """, (window_minutes, top_limit))
+            else:
+                cur.execute("""
+                    SELECT
+                        sensor_eui,
+                        COUNT(*)::BIGINT AS uplinks,
+                        AVG(snr)::DOUBLE PRECISION AS avg_snr,
+                        AVG(rssi)::DOUBLE PRECISION AS avg_rssi,
+                        AVG(packet_loss_pct)::DOUBLE PRECISION AS avg_loss_pct,
+                        MAX(ts) AS last_seen
+                    FROM telemetry_uplink
+                    WHERE tenant_id = %s
+                      AND ts >= NOW() - (%s * INTERVAL '1 minute')
+                    GROUP BY sensor_eui
+                    ORDER BY uplinks DESC
+                    LIMIT %s
+                """, (_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), window_minutes, top_limit))
             summary["top_sensors"] = [
                 {
                     "sensor_eui": str(sensor_row[0] or "").lower(),
@@ -973,22 +3215,39 @@ def _timescale_fetch_telemetry_summary(window_minutes=60, bucket_seconds=60, top
                 for sensor_row in (cur.fetchall() or [])
             ]
 
-            cur.execute("""
-                SELECT
-                    ts,
-                    sensor_eui,
-                    base_station_eui,
-                    packet_cnt,
-                    msg_type,
-                    snr,
-                    rssi,
-                    packet_loss_pct
-                FROM telemetry_uplink
-                WHERE tenant_id = %s
-                  AND ts >= NOW() - (%s * INTERVAL '1 minute')
-                ORDER BY ts DESC
-                LIMIT 200
-            """, (tenant_id, window_minutes))
+            if _is_global_tenant_scope(tenant_id):
+                cur.execute("""
+                    SELECT
+                        ts,
+                        sensor_eui,
+                        base_station_eui,
+                        packet_cnt,
+                        msg_type,
+                        snr,
+                        rssi,
+                        packet_loss_pct
+                    FROM telemetry_uplink
+                    WHERE ts >= NOW() - (%s * INTERVAL '1 minute')
+                    ORDER BY ts DESC
+                    LIMIT 200
+                """, (window_minutes,))
+            else:
+                cur.execute("""
+                    SELECT
+                        ts,
+                        sensor_eui,
+                        base_station_eui,
+                        packet_cnt,
+                        msg_type,
+                        snr,
+                        rssi,
+                        packet_loss_pct
+                    FROM telemetry_uplink
+                    WHERE tenant_id = %s
+                      AND ts >= NOW() - (%s * INTERVAL '1 minute')
+                    ORDER BY ts DESC
+                    LIMIT 200
+                """, (_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), window_minutes))
             summary["recent_messages"] = [
                 {
                     "ts": row[0].isoformat() if row[0] else None,
@@ -1023,6 +3282,429 @@ def _timescale_fetch_telemetry_summary(window_minutes=60, bucket_seconds=60, top
             conn.close()
         except Exception:
             pass
+
+
+def _timescale_fetch_sensor_payload_history(sensor_eui: str, tenant_id: Optional[str] = None, limit: int = 10):
+    limit = max(1, min(int(limit or 10), 50))
+    eui_lower = str(sensor_eui or "").strip().lower()
+    tenant_scope = _active_tenant_id() if tenant_id is None else tenant_id
+    if not eui_lower:
+        return []
+
+    ok, err = _timescale_is_ready()
+    if not ok:
+        return []
+
+    conn, conn_err = _timescale_connect()
+    if conn is None:
+        return []
+
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            if _is_global_tenant_scope(tenant_scope):
+                cur.execute(
+                    """
+                    SELECT ts, base_station_eui, packet_cnt, snr, rssi, msg_type, payload
+                    FROM telemetry_uplink
+                    WHERE sensor_eui = %s
+                      AND payload IS NOT NULL
+                    ORDER BY ts DESC
+                    LIMIT %s
+                    """,
+                    (eui_lower, limit),
+                )
+            else:
+                tenant = _normalize_tenant_id(tenant_scope, fallback=_default_tenant_id())
+                cur.execute(
+                    """
+                    SELECT ts, base_station_eui, packet_cnt, snr, rssi, msg_type, payload
+                    FROM telemetry_uplink
+                    WHERE tenant_id = %s
+                      AND sensor_eui = %s
+                      AND payload IS NOT NULL
+                    ORDER BY ts DESC
+                    LIMIT %s
+                    """,
+                    (tenant, eui_lower, limit),
+                )
+            rows = cur.fetchall() or []
+        out = []
+        sensor_lookup = {}
+        try:
+            sensor_lookup = {
+                str(sensor.get("eui") or "").strip().upper(): sensor
+                for sensor in _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=tenant_scope)
+            }
+        except Exception:
+            sensor_lookup = {}
+        sensor_config = sensor_lookup.get(eui_lower.upper())
+        for row in rows:
+            payload_obj = row[6] if isinstance(row[6], dict) else {}
+            raw_dec = payload_obj.get("data") if isinstance(payload_obj.get("data"), list) else None
+            raw_hex = ""
+            if isinstance(raw_dec, list):
+                try:
+                    raw_hex = bytes(int(v) & 0xFF for v in raw_dec).hex()
+                except Exception:
+                    raw_hex = ""
+            decoded_payload = _decode_telemetry_payload_for_sensor(
+                eui_lower.upper(),
+                raw_dec,
+                sensor_config=sensor_config,
+            )
+            out.append(
+                {
+                    "sensor_eui": eui_lower.upper(),
+                    "base_station_eui": str(row[1] or "").upper(),
+                    "packet_cnt": int(row[2]) if row[2] is not None else None,
+                    "snr": float(row[3]) if row[3] is not None else None,
+                    "rssi": float(row[4]) if row[4] is not None else None,
+                    "rx_time_ns": int(payload_obj.get("rxTime")) if payload_obj.get("rxTime") is not None else None,
+                    "received_at": row[0].isoformat() if row[0] else None,
+                    "raw_hex": raw_hex,
+                    "raw_dec": raw_dec if isinstance(raw_dec, list) else [],
+                    "decoded": decoded_payload,
+                }
+            )
+        return out
+    except Exception:
+        return []
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _get_sensor_lookup(tenant_id: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
+    tenant = _active_tenant_id() if tenant_id is None else tenant_id
+    try:
+        sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=tenant)
+    except Exception:
+        sensors = []
+    return {
+        str(sensor.get("eui") or "").strip().upper(): sensor
+        for sensor in sensors
+        if str(sensor.get("eui") or "").strip()
+    }
+
+
+def _decode_telemetry_payload_for_sensor(
+    sensor_eui: str,
+    raw_dec: Any,
+    sensor_config: Optional[Dict[str, Any]] = None,
+):
+    if not isinstance(raw_dec, list):
+        return {"profile": "raw", "values": {}, "raw": {}}
+
+    try:
+        payload_bytes = [int(value) & 0xFF for value in raw_dec]
+    except Exception:
+        return {"profile": "raw", "values": {}, "raw": {}}
+
+    sensor_config = dict(sensor_config or {})
+    profile = _infer_sensor_decoder_profile(sensor_config)
+    tls_server = tls_server_instance
+
+    try:
+        tls_server_cls = None
+        if not tls_server:
+            try:
+                from TLSServer import TLSServer as tls_server_cls  # Local import avoids startup coupling.
+            except Exception:
+                tls_server_cls = None
+        if profile == "lansen_e2_co2_v1":
+            decoder = getattr(tls_server, "_decode_lansen_e2_co2_payload", None) if tls_server else None
+            decoder = decoder or getattr(tls_server_cls, "_decode_lansen_e2_co2_payload", None)
+            if decoder:
+                decoded = decoder(payload_bytes)
+                if decoded:
+                    return decoded
+        if profile == "lansen_m2_v1":
+            decoder = getattr(tls_server, "_decode_lansen_m2_payload", None) if tls_server else None
+            decoder = decoder or getattr(tls_server_cls, "_decode_lansen_m2_payload", None)
+            if decoder:
+                decoded = decoder(payload_bytes)
+                if decoded:
+                    return decoded
+        if tls_server and hasattr(tls_server, "_decode_sensor_payload"):
+            decoded = tls_server._decode_sensor_payload(str(sensor_eui or "").upper(), payload_bytes)
+            if isinstance(decoded, dict) and decoded:
+                return decoded
+    except Exception:
+        pass
+
+    return {"profile": "raw", "values": {}, "raw": {}}
+
+
+def _summarize_decoded_values(decoded: Optional[Dict[str, Any]]) -> list[str]:
+    decoded = decoded if isinstance(decoded, dict) else {}
+    profile = str(decoded.get("profile") or "raw").strip().lower()
+    values = decoded.get("values") if isinstance(decoded.get("values"), dict) else {}
+
+    if profile == "lansen_e2_co2_v1":
+        parts = []
+        co2 = values.get("co2_1_ppm")
+        temp = values.get("temperature_1_c")
+        rh = values.get("humidity_1_pct")
+        battery = values.get("battery_v_est")
+        if co2 is not None:
+            parts.append(f"CO2 {co2} ppm")
+        if temp is not None:
+            parts.append(f"Temp {float(temp):.2f} C")
+        if rh is not None:
+            parts.append(f"RH {rh} %")
+        if battery is not None:
+            parts.append(f"Battery {float(battery):.1f} V")
+        return parts
+
+    if profile == "lansen_m2_v1":
+        parts = []
+        openings = values.get("total_openings")
+        last_alarm = values.get("last_alarm_input")
+        alarm_active = values.get("any_alarm_active")
+        battery = values.get("battery_v_est")
+        if openings is not None:
+            parts.append(f"Openings {openings}")
+        if last_alarm:
+            parts.append(f"Last alarm {last_alarm}")
+        parts.append("Alarm active" if alarm_active else "No active alarm")
+        if battery is not None:
+            parts.append(f"Battery {float(battery):.1f} V")
+        return parts
+
+    parts = []
+    for key, value in list(values.items())[:4]:
+        if isinstance(value, bool):
+            rendered = "yes" if value else "no"
+        elif isinstance(value, float):
+            rendered = f"{value:.2f}"
+        else:
+            rendered = str(value)
+        parts.append(f"{key.replace('_', ' ')}: {rendered}")
+    return parts
+
+
+def _build_telemetry_history_filters(
+    tenant_id: Optional[str] = None,
+    *,
+    sensor_lookup: Optional[Dict[str, Dict[str, Any]]] = None,
+):
+    tenant = _active_tenant_id() if tenant_id is None else tenant_id
+    sensor_lookup = sensor_lookup or _get_sensor_lookup(tenant)
+    sensors = [
+        {
+            "eui": eui,
+            "name": str(sensor.get("name") or "").strip(),
+            "profile": _infer_sensor_decoder_profile(sensor),
+        }
+        for eui, sensor in sorted(sensor_lookup.items(), key=lambda item: ((item[1].get("name") or "").lower(), item[0]))
+    ]
+
+    base_stations = []
+    try:
+        base_station_config = load_base_station_config()
+        for eui, data in (base_station_config.get("base_stations", {}) or {}).items():
+            if not _tenant_matches(_tenant_id_from_base_station(data), tenant):
+                continue
+            base_stations.append(
+                {
+                    "eui": str(eui or "").upper(),
+                    "name": str((data or {}).get("name") or "").strip(),
+                }
+            )
+    except Exception:
+        base_stations = []
+
+    return {
+        "sensors": sensors,
+        "base_stations": sorted(base_stations, key=lambda item: ((item.get("name") or "").lower(), item.get("eui") or "")),
+        "profiles": [
+            {"value": "all", "label": "All payloads"},
+            {"value": "lansen_e2_co2_v1", "label": "LANSEN E2 CO2"},
+            {"value": "lansen_m2_v1", "label": "LANSEN M2"},
+            {"value": "raw", "label": "Raw / unknown"},
+        ],
+    }
+
+
+def _timescale_fetch_sensor_telemetry_history(
+    *,
+    tenant_id: Optional[str] = None,
+    sensor_eui: Optional[str] = None,
+    base_station_eui: Optional[str] = None,
+    profile: Optional[str] = None,
+    minutes: int = 1440,
+    limit: int = 100,
+    offset: int = 0,
+):
+    tenant = _active_tenant_id() if tenant_id is None else tenant_id
+    limit = max(1, min(int(limit or 100), 5000))
+    offset = max(0, int(offset or 0))
+    minutes = max(5, min(int(minutes or 1440), 60 * 24 * 90))
+    profile = str(profile or "all").strip().lower()
+    sensor_filter = str(sensor_eui or "").strip().upper()
+    bs_filter = str(base_station_eui or "").strip().upper()
+
+    ok, err = _timescale_is_ready()
+    if not ok:
+        return {"success": False, "enabled": False, "error": err or "TimescaleDB is not ready", "rows": [], "total": 0}
+
+    conn, conn_err = _timescale_connect()
+    if conn is None:
+        return {"success": False, "enabled": True, "error": conn_err or "TimescaleDB connection failed", "rows": [], "total": 0}
+
+    sensor_lookup = _get_sensor_lookup(tenant)
+    allowed_sensor_euis = None
+    if profile not in {"", "all"}:
+        if profile == "raw":
+            allowed_sensor_euis = {
+                eui.lower()
+                for eui, sensor in sensor_lookup.items()
+                if _infer_sensor_decoder_profile(sensor) == "auto"
+            }
+        else:
+            allowed_sensor_euis = {
+                eui.lower()
+                for eui, sensor in sensor_lookup.items()
+                if _infer_sensor_decoder_profile(sensor) == profile
+            }
+        if not allowed_sensor_euis:
+            return {
+                "success": True,
+                "enabled": True,
+                "error": None,
+                "rows": [],
+                "total": 0,
+                "limit": limit,
+                "offset": offset,
+                "minutes": minutes,
+                "telemetry_worker": get_timescale_uplink_runtime_stats(),
+            }
+
+    filters = ["ts >= NOW() - (%s * INTERVAL '1 minute')"]
+    params = [minutes]
+    if not _is_global_tenant_scope(tenant):
+        filters.insert(0, "tenant_id = %s")
+        params.insert(0, _normalize_tenant_id(tenant, fallback=_default_tenant_id()))
+    if sensor_filter:
+        filters.append("sensor_eui = %s")
+        params.append(sensor_filter.lower())
+    if bs_filter:
+        filters.append("base_station_eui = %s")
+        params.append(bs_filter.lower())
+    if allowed_sensor_euis is not None:
+        filters.append("sensor_eui = ANY(%s)")
+        params.append(list(sorted(allowed_sensor_euis)))
+
+    where_sql = " AND ".join(filters)
+
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                f"SELECT COUNT(*) FROM telemetry_uplink WHERE {where_sql}",
+                tuple(params),
+            )
+            total = int((cur.fetchone() or [0])[0] or 0)
+            cur.execute(
+                f"""
+                SELECT ts, sensor_eui, base_station_eui, packet_cnt, msg_type, snr, rssi, packet_loss_pct, payload
+                FROM telemetry_uplink
+                WHERE {where_sql}
+                ORDER BY ts DESC
+                LIMIT %s OFFSET %s
+                """,
+                tuple(params + [limit, offset]),
+            )
+            rows = cur.fetchall() or []
+
+        results = []
+        for row in rows:
+            payload_obj = row[8] if isinstance(row[8], dict) else {}
+            raw_dec = payload_obj.get("data") if isinstance(payload_obj.get("data"), list) else []
+            sensor_key = str(row[1] or "").upper()
+            sensor_config = sensor_lookup.get(sensor_key)
+            decoded = _decode_telemetry_payload_for_sensor(sensor_key, raw_dec, sensor_config=sensor_config)
+            results.append(
+                {
+                    "ts": row[0].isoformat() if row[0] else None,
+                    "sensor_eui": sensor_key,
+                    "sensor_name": str((sensor_config or {}).get("name") or "").strip(),
+                    "base_station_eui": str(row[2] or "").upper() if row[2] else "",
+                    "packet_cnt": int(row[3]) if row[3] is not None else None,
+                    "msg_type": str(row[4] or "ul"),
+                    "snr": float(row[5]) if row[5] is not None else None,
+                    "rssi": float(row[6]) if row[6] is not None else None,
+                    "packet_loss_pct": float(row[7]) if row[7] is not None else None,
+                    "decoded": decoded,
+                    "decoded_summary": _summarize_decoded_values(decoded),
+                    "raw_hex": bytes(int(value) & 0xFF for value in raw_dec).hex(" ") if isinstance(raw_dec, list) else "",
+                    "raw_dec": raw_dec if isinstance(raw_dec, list) else [],
+                }
+            )
+
+        return {
+            "success": True,
+            "enabled": True,
+            "error": None,
+            "rows": results,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "minutes": minutes,
+            "telemetry_worker": get_timescale_uplink_runtime_stats(),
+            "filters": _build_telemetry_history_filters(tenant, sensor_lookup=sensor_lookup),
+        }
+    except Exception as exc:
+        return {"success": False, "enabled": True, "error": str(exc), "rows": [], "total": 0}
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _telemetry_csv_response(rows: list[Dict[str, Any]], *, filename: str):
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "timestamp",
+        "sensor_eui",
+        "sensor_name",
+        "base_station_eui",
+        "profile",
+        "packet_cnt",
+        "snr_db",
+        "rssi_dbm",
+        "packet_loss_pct",
+        "decoded_summary",
+        "decoded_values_json",
+        "raw_hex",
+    ])
+    for row in rows:
+        decoded = row.get("decoded") if isinstance(row.get("decoded"), dict) else {}
+        writer.writerow([
+            row.get("ts") or "",
+            row.get("sensor_eui") or "",
+            row.get("sensor_name") or "",
+            row.get("base_station_eui") or "",
+            decoded.get("profile") or "raw",
+            row.get("packet_cnt") if row.get("packet_cnt") is not None else "",
+            row.get("snr") if row.get("snr") is not None else "",
+            row.get("rssi") if row.get("rssi") is not None else "",
+            row.get("packet_loss_pct") if row.get("packet_loss_pct") is not None else "",
+            " | ".join(str(item) for item in (row.get("decoded_summary") or [])),
+            json.dumps(decoded.get("values") or {}, separators=(",", ":"), ensure_ascii=True),
+            row.get("raw_hex") or "",
+        ])
+
+    csv_text = output.getvalue()
+    response = make_response(csv_text)
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
 
 def _parse_bool_arg(value, default=False):
     if value is None:
@@ -1267,11 +3949,57 @@ def _sensor_runtime_snapshot_by_eui():
                 "last_seen": float(stats.get("last_seen", 0) or 0),
                 "avg_snr": avg_snr,
                 "avg_rssi": avg_rssi,
+                "frame_counter": int(stats.get("frame_counter", 0) or 0),
             }
     except Exception:
         pass
 
     return snapshot
+
+
+def _timescale_fetch_latest_sensor_snapshots(tenant_id: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
+    tenant = _active_tenant_id() if tenant_id is None else tenant_id
+    conn, err = _timescale_connect()
+    if conn is None:
+        return {}
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            if _is_global_tenant_scope(tenant):
+                cur.execute(
+                    """
+                    SELECT eui, payload, updated_at
+                    FROM inventory_snapshot_latest
+                    WHERE entity_type = 'sensor'
+                    """,
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT eui, payload, updated_at
+                    FROM inventory_snapshot_latest
+                    WHERE tenant_id = %s AND entity_type = 'sensor'
+                    """,
+                    (_normalize_tenant_id(tenant, fallback=_default_tenant_id()),),
+                )
+            rows = cur.fetchall() or []
+        result: Dict[str, Dict[str, Any]] = {}
+        for eui, payload, updated_at in rows:
+            sensor_eui = str(eui or "").strip().upper()
+            if not sensor_eui:
+                continue
+            result[sensor_eui] = {
+                "payload": payload if isinstance(payload, dict) else {},
+                "updated_at": updated_at.isoformat() if updated_at else None,
+            }
+        return result
+    except Exception:
+        return {}
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 def _base_station_runtime_snapshot_by_eui():
     """Build runtime map for base station states."""
@@ -1472,6 +4200,7 @@ def _build_inventory_snapshot_records(trigger):
             "avg_snr": runtime.get("avg_snr"),
             "avg_rssi": runtime.get("avg_rssi"),
             "last_seen_ts": int(runtime.get("last_seen", 0) or 0),
+            "frame_counter": int(runtime.get("frame_counter", 0) or 0),
             "snapshot_time": timestamp_iso,
         }
         records.append({
@@ -1533,6 +4262,12 @@ def _build_inventory_snapshot_records(trigger):
     return records
 
 def _sync_inventory_snapshot_to_influx(trigger="manual"):
+    if not bool(getattr(bssci_config, "INFLUX_ENABLED", True)):
+        return {
+            "success": False,
+            "error": "InfluxDB integration is disabled.",
+            "line_count": 0,
+        }
     lines = _build_inventory_snapshot_lines(trigger=trigger)
     sensor_count = sum(1 for line in lines if ",entity=sensor," in line)
     bs_count = sum(1 for line in lines if ",entity=base_station," in line)
@@ -1652,7 +4387,7 @@ def _influx_snapshot_worker():
     while not _influx_snapshot_stop.is_set():
         influx_interval = max(15, int(getattr(bssci_config, "INFLUX_SNAPSHOT_INTERVAL_SECONDS", 60)))
         timescale_interval = max(15, int(getattr(bssci_config, "TIMESCALE_SNAPSHOT_INTERVAL_SECONDS", 60)))
-        influx_enabled = bool(getattr(bssci_config, "INFLUX_SNAPSHOT_ENABLED", True))
+        influx_enabled = bool(getattr(bssci_config, "INFLUX_ENABLED", True)) and bool(getattr(bssci_config, "INFLUX_SNAPSHOT_ENABLED", True))
         timescale_enabled = bool(getattr(bssci_config, "TIMESCALE_SNAPSHOT_ENABLED", True))
         now = time.time()
         if influx_enabled and (last_influx_sync <= 0.0 or (now - last_influx_sync) >= influx_interval):
@@ -1669,7 +4404,14 @@ def _influx_snapshot_worker():
                 err = str(result_ts.get("error", "")).lower()
                 if "disabled" not in err and "missing" not in err:
                     logger.warning("Periodic Timescale snapshot failed: %s", result_ts.get("error"))
-        wait_interval = min(influx_interval, timescale_interval)
+        if influx_enabled and timescale_enabled:
+            wait_interval = min(influx_interval, timescale_interval)
+        elif influx_enabled:
+            wait_interval = influx_interval
+        elif timescale_enabled:
+            wait_interval = timescale_interval
+        else:
+            wait_interval = 30
         _influx_snapshot_stop.wait(wait_interval)
     logger.info("Influx snapshot worker stopped")
 
@@ -1734,7 +4476,7 @@ def _update_sensor_attached_base_stations(sensor_eui, base_station_euis, tenant_
     if not target_eui:
         return False
 
-    active_tenant = _normalize_tenant_id(tenant_id or _active_tenant_id(), fallback=_default_tenant_id())
+    active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     normalized_targets = _normalize_base_station_route_list(base_station_euis)
     sensors = _load_all_sensors()
     changed = False
@@ -1778,7 +4520,7 @@ def _save_all_sensors(sensors):
         json.dump(list(sensors or []), f, indent=4)
 
 def _filter_sensors_for_tenant(sensors, tenant_id=None):
-    active_tenant = _normalize_tenant_id(tenant_id or _active_tenant_id(), fallback=_default_tenant_id())
+    active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     filtered = []
     for sensor in (sensors or []):
         if not isinstance(sensor, dict):
@@ -1790,7 +4532,7 @@ def _filter_sensors_for_tenant(sensors, tenant_id=None):
     return filtered
 
 def _filter_base_stations_for_tenant(base_stations, tenant_id=None):
-    active_tenant = _normalize_tenant_id(tenant_id or _active_tenant_id(), fallback=_default_tenant_id())
+    active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     result = {}
     for eui, bs_data in (base_stations or {}).items():
         if not isinstance(bs_data, dict):
@@ -1800,6 +4542,45 @@ def _filter_base_stations_for_tenant(base_stations, tenant_id=None):
             payload["tenant_id"] = _tenant_id_from_base_station(bs_data)
             result[eui] = payload
     return result
+
+def _reassign_base_stations_for_tenant(tenant_id, selected_base_station_euis):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    default_tenant = _default_tenant_id()
+    selected = {str(eui).strip().lower() for eui in _normalize_base_station_route_list(selected_base_station_euis)}
+    config = load_base_station_config()
+    base_stations = config.setdefault("base_stations", {})
+    assigned = []
+    released = []
+    moved_in = []
+    changed = False
+
+    for raw_eui, raw_bs in list((base_stations or {}).items()):
+        if not isinstance(raw_bs, dict):
+            continue
+        eui_lower = str(raw_eui or "").strip().lower()
+        if not eui_lower:
+            continue
+        current_tenant = _tenant_id_from_base_station(raw_bs)
+        if eui_lower in selected:
+            assigned.append(eui_lower.upper())
+            if not _tenant_matches(current_tenant, tenant_key):
+                raw_bs["tenant_id"] = tenant_key
+                moved_in.append(eui_lower.upper())
+                changed = True
+        elif tenant_key != default_tenant and _tenant_matches(current_tenant, tenant_key):
+            raw_bs["tenant_id"] = default_tenant
+            released.append(eui_lower.upper())
+            changed = True
+
+    if changed:
+        save_base_station_config(config)
+
+    return {
+        "assigned": sorted(assigned),
+        "moved_in": sorted(moved_in),
+        "released": sorted(released),
+        "changed": changed,
+    }
 
 def _resolve_sensor_tenant(sensor_eui):
     sensor_key = str(sensor_eui or "").strip().upper()
@@ -2070,7 +4851,7 @@ def _sync_coverage_positions_to_inventory(tenant_id=None, only_missing=True, sta
     - Only uses OSM positions (lat/lng).
     - `only_missing=True` updates only devices without GPS in inventory.
     """
-    active_tenant = _normalize_tenant_id(tenant_id or _active_tenant_id(), fallback=_default_tenant_id())
+    active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     payload = state if isinstance(state, dict) else _load_coverage_positions_state()
     positions = payload.get("positions", {}) if isinstance(payload, dict) else {}
     if not isinstance(positions, dict):
@@ -2231,6 +5012,26 @@ def _update_base_station_gps_by_eui(eui: str, gps_lat: float, gps_lng: float) ->
     save_base_station_config(config)
 
 def _normalize_sensor_payload(data):
+    def _normalize_payload_decoder(value):
+        raw = str(value or "").strip().lower()
+        if raw in {"", "auto", "default", "heuristic"}:
+            return "auto"
+        if raw in {"lansen_e2_co2_v1", "lansen_co2", "lansen-e2-co2"}:
+            return "lansen_e2_co2_v1"
+        if raw in {"lansen_m2_v1", "lansen_m2", "lan-mioty-m2", "m2"}:
+            return "lansen_m2_v1"
+        if raw in {"raw", "none"}:
+            return "raw"
+        return "auto"
+
+    def _normalize_environment_context(value):
+        raw = str(value or "").strip().lower()
+        if raw in {"indoor", "inside", "room"}:
+            return "indoor"
+        if raw in {"outdoor", "outside", "ambient"}:
+            return "outdoor"
+        return "auto"
+
     payload = dict(data or {})
     payload["eui"] = str(payload.get("eui", "")).strip().upper()
     payload["nwKey"] = str(payload.get("nwKey", "")).strip().upper()
@@ -2238,6 +5039,13 @@ def _normalize_sensor_payload(data):
     payload["bidi"] = bool(payload.get("bidi", False))
     payload["name"] = str(payload.get("name", "") or "").strip()
     payload["tags"] = _normalize_sensor_tags(payload.get("tags", []))
+    payload["sensor_profile"] = _normalize_sensor_profile(payload.get("sensor_profile"))
+    payload["payload_decoder"] = _normalize_payload_decoder(payload.get("payload_decoder"))
+    payload["environment_context"] = _normalize_environment_context(payload.get("environment_context"))
+    payload["reporting_mode"] = _normalize_reporting_mode(payload.get("reporting_mode"))
+    payload["expected_interval_seconds"] = _normalize_expected_interval_seconds(payload.get("expected_interval_seconds"))
+    payload["stale_after_hours"] = _normalize_stale_after_hours(payload.get("stale_after_hours"))
+    payload = _apply_sensor_profile_defaults(payload)
     gps_lat, gps_lng = _normalize_gps_coordinates(payload.get("gps_lat"), payload.get("gps_lng"))
     payload["gps_lat"] = gps_lat
     payload["gps_lng"] = gps_lng
@@ -2370,6 +5178,11 @@ ADMIN_SCOPE_DEFINITIONS = {
     "clear_service_logs": {
         "label": "Clear service logs",
         "description": "Clear in-memory service log stream.",
+        "default": True,
+    },
+    "view_service_logs": {
+        "label": "View service logs",
+        "description": "Read global in-memory service log stream.",
         "default": True,
     },
 }
@@ -2568,8 +5381,8 @@ def load_tenant_registry():
     if default_tenant not in normalized_map:
         normalized_map[default_tenant] = {
             "id": default_tenant,
-            "name": "Default",
-            "description": "Default tenant namespace",
+            "name": "Super admin",
+            "description": "Reserved global scope for super admin inventory and system-owned data.",
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         changed = True
@@ -2602,8 +5415,8 @@ def _tenant_registry_map():
             continue
         tenant_map[tenant_id] = {
             "id": tenant_id,
-            "name": str(entry.get("name") or tenant_id).strip() or tenant_id,
-            "description": str(entry.get("description") or "").strip(),
+            "name": _tenant_scope_display_name(tenant_id, entry.get("name")),
+            "description": _tenant_scope_display_description(tenant_id, entry.get("description")),
             "created_at": str(entry.get("created_at") or ""),
         }
     return tenant_map
@@ -2612,6 +5425,8 @@ def _upsert_tenant_registry_entry(tenant_id, name=None, description=None):
     tenant_id = _sanitize_tenant_id(tenant_id)
     if not tenant_id:
         return False, "Invalid tenant id", None
+    if _is_reserved_default_tenant(tenant_id):
+        return False, "Reserved super admin scope cannot be modified", None
 
     registry = load_tenant_registry()
     tenant_map = {
@@ -2722,6 +5537,7 @@ def get_current_user():
         else:
             user['admin_permissions'] = {}
         user['permissions'] = users_data.get('role_permissions', {}).get(role, {})
+        user['is_super_admin'] = _is_super_admin(user)
         return user
     return None
 
@@ -3132,19 +5948,32 @@ _load_admin_audit_entries()
 def inject_user():
     """Inject user info into all templates"""
     user = get_current_user()
+    app_language = _get_app_language()
+    app_locale = _get_app_locale()
     return {
         'current_user': user,
         'user_permissions': user.get('permissions', {}) if user else {},
         'visible_tabs': user.get('permissions', {}).get('visible_tabs', []) if user else [],
         'active_tenant_id': _active_tenant_id() if user else _default_tenant_id(),
         'oms_enabled': bool(getattr(bssci_config, 'OMS_ENABLED', True)),
+        'mqtt_ui_enabled': bool(getattr(bssci_config, 'MQTT_UI_ENABLED', True)),
+        'app_timezone': str(getattr(bssci_config, 'TIMEZONE', 'Europe/Berlin') or 'Europe/Berlin'),
+        'app_language': app_language,
+        'app_locale': app_locale,
+        'app_languages': {key: dict(value) for key, value in _APP_LANGUAGE_OPTIONS.items()},
+        'ui_translations': dict(_UI_TRANSLATIONS.get(app_language, {})),
+        't': _ui_text,
+        'translate_page_title': _translate_page_title,
     }
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
+    requested_lang = _normalize_app_language(request.values.get('ui_language') or request.args.get('lang') or '')
+    if requested_lang in _APP_LANGUAGE_OPTIONS:
+        session['ui_language_override'] = requested_lang
     if request.method == 'GET' and request.args.get('reason') == 'timeout':
-        error = 'Session expired due to inactivity. Please sign in again.'
+        error = _ui_text('login.error.timeout', 'Session expired due to inactivity. Please sign in again.')
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
@@ -3154,12 +5983,9 @@ def login():
         if user and user.get('password') == password:
             session['username'] = username
             session['role'] = _normalize_user_role(user.get('role', 'viewer'))
-            session['tenant_id'] = _normalize_tenant_id(
-                _normalize_user_tenant_for_role(
-                    session['role'],
-                    user.get('tenant_id'),
-                    fallback=_default_tenant_id(),
-                ),
+            session['tenant_id'] = _normalize_user_tenant_for_role(
+                session['role'],
+                user.get('tenant_id'),
                 fallback=_default_tenant_id(),
             )
             session.permanent = True
@@ -3168,8 +5994,30 @@ def login():
             logger.info(f"User '{username}' logged in")
             return redirect(url_for('index'))
         _register_login_failure(ip_addr)
-        error = 'Invalid username or password'
+        error = _ui_text('login.error.invalid_credentials', 'Invalid username or password')
     return render_template('login.html', error=error)
+
+
+@app.route('/ui/language/<lang>')
+def set_ui_language(lang):
+    normalized = _normalize_app_language(lang)
+    if normalized in _APP_LANGUAGE_OPTIONS:
+        session['ui_language_override'] = normalized
+    next_url = request.args.get('next', '').strip()
+    if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+        return redirect(next_url)
+    referrer = request.headers.get('Referer', '').strip()
+    if referrer:
+        try:
+            parsed = urllib.parse.urlparse(referrer)
+            if parsed.path:
+                target = parsed.path
+                if parsed.query:
+                    target = f"{target}?{parsed.query}"
+                return redirect(target)
+        except Exception:
+            pass
+    return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
@@ -3188,25 +6036,39 @@ def api_users():
     
     if request.method == 'GET':
         users_list = []
+        legacy_default_user_present = False
         for username, data in users_data.get('users', {}).items():
             role = _normalize_user_role(data.get('role', 'viewer'))
+            normalized_tenant = _normalize_user_tenant_for_role(
+                role,
+                data.get('tenant_id'),
+                fallback=_default_tenant_id(),
+            )
+            if role != 'admin' and _is_reserved_default_tenant(normalized_tenant):
+                legacy_default_user_present = True
+            super_admin = role == 'admin' and _is_super_admin({
+                'role': role,
+                'tenant_id': data.get('tenant_id'),
+            })
             users_list.append({
                 'username': username,
                 'name': data.get('name', ''),
                 'role': role,
-                'tenant_id': _normalize_user_tenant_for_role(
-                    role,
-                    data.get('tenant_id'),
-                    fallback=_default_tenant_id(),
+                'tenant_id': normalized_tenant,
+                'tenant_scope_label': (
+                    "Super admin"
+                    if super_admin
+                    else ("Rezervovaný scope" if _is_reserved_default_tenant(normalized_tenant) else normalized_tenant)
                 ),
+                'is_super_admin': super_admin,
                 'admin_permissions': _normalize_admin_permissions(data.get('admin_permissions')) if role == 'admin' else {},
             })
-        known_tenant_ids = {_default_tenant_id()}
+        known_tenant_ids = set()
         try:
             registry = load_tenant_registry()
             for row in (registry.get('tenants', []) if isinstance(registry, dict) else []):
                 tenant_id = _sanitize_tenant_id((row or {}).get('tenant_id') if isinstance(row, dict) else '')
-                if tenant_id:
+                if tenant_id and not _is_reserved_default_tenant(tenant_id):
                     known_tenant_ids.add(tenant_id)
         except Exception:
             pass
@@ -3216,13 +6078,17 @@ def api_users():
             role = _normalize_user_role(data.get('role', 'viewer'))
             if role == 'admin':
                 continue
-            known_tenant_ids.add(
-                _normalize_user_tenant_for_role(role, data.get('tenant_id'), fallback=_default_tenant_id())
-            )
+            normalized_tenant = _normalize_user_tenant_for_role(role, data.get('tenant_id'), fallback=_default_tenant_id())
+            if _is_reserved_default_tenant(normalized_tenant):
+                legacy_default_user_present = True
+            else:
+                known_tenant_ids.add(normalized_tenant)
         return jsonify({
             'users': users_list,
             'roles': list(users_data.get('role_permissions', {}).keys()),
             'default_tenant': _default_tenant_id(),
+            'default_tenant_label': 'Super admin',
+            'legacy_default_user_present': legacy_default_user_present,
             'tenant_choices': sorted(known_tenant_ids),
             'admin_scopes': [
                 {
@@ -3247,6 +6113,8 @@ def api_users():
             data.get('tenant_id'),
             fallback=_default_tenant_id(),
         )
+        if role != 'admin' and _is_reserved_default_tenant(tenant_id):
+            return jsonify({'success': False, 'error': 'Reserved super admin scope is not available for tenant users'}), 400
         users_data['users'][username] = {
             'password': data.get('password', 'password123'),
             'role': role,
@@ -3295,6 +6163,17 @@ def api_users():
                 tenant_source,
                 fallback=_default_tenant_id(),
             )
+            previous_tenant = _normalize_user_tenant_for_role(
+                user_row.get('role', 'viewer'),
+                user_row.get('tenant_id'),
+                fallback=_default_tenant_id(),
+            )
+            if (
+                _normalize_user_role(user_row.get('role', 'viewer')) != 'admin'
+                and _is_reserved_default_tenant(tenant_id)
+                and not _is_reserved_default_tenant(previous_tenant)
+            ):
+                return jsonify({'success': False, 'error': 'Reserved super admin scope is not available for tenant users'}), 400
             user_row['tenant_id'] = tenant_id
             if tenant_id:
                 _upsert_tenant_registry_entry(tenant_id)
@@ -3317,7 +6196,11 @@ def api_users():
         save_users(users_data)
         if username == session.get('username'):
             session['role'] = _normalize_user_role(user_row.get('role', 'viewer'))
-            session['tenant_id'] = _normalize_tenant_id(user_row.get('tenant_id'), fallback=_default_tenant_id())
+            session['tenant_id'] = _normalize_user_tenant_for_role(
+                session['role'],
+                user_row.get('tenant_id'),
+                fallback=_default_tenant_id(),
+            )
         _record_admin_audit(
             action='user.update',
             entity='user',
@@ -3371,6 +6254,8 @@ def api_tenants():
         tenant_id = _sanitize_tenant_id(data.get("tenant_id") or data.get("id"))
         if not tenant_id:
             return jsonify({"success": False, "error": "Tenant ID is required"}), 400
+        if _is_reserved_default_tenant(tenant_id):
+            return jsonify({"success": False, "error": "Reserved super admin scope cannot be created or modified here"}), 400
 
         known_ids = set(registry_map.keys())
         for user in users_map.values():
@@ -3390,6 +6275,7 @@ def api_tenants():
 
         tenant_name = str(data.get("name") or tenant_id).strip()[:120]
         tenant_description = str(data.get("description") or "").strip()[:240]
+        requested_base_stations = _normalize_base_station_route_list(data.get("base_station_euis", []))
         ok, err, tenant_entry = _upsert_tenant_registry_entry(
             tenant_id=tenant_id,
             name=tenant_name,
@@ -3397,6 +6283,8 @@ def api_tenants():
         )
         if not ok:
             return jsonify({"success": False, "error": err or "Failed to create tenant"}), 500
+
+        bs_assignment = _reassign_base_stations_for_tenant(tenant_id, requested_base_stations)
 
         conn, conn_err = _timescale_connect()
         timescale_result = {"synced": False, "error": conn_err}
@@ -3429,6 +6317,8 @@ def api_tenants():
             details={
                 'name': tenant_name,
                 'description': tenant_description,
+                'base_station_count': len(bs_assignment.get('assigned', [])),
+                'base_stations_assigned': bs_assignment.get('assigned', []),
                 'timescale_synced': bool(timescale_result.get('synced')),
                 'timescale_error': timescale_result.get('error'),
             },
@@ -3436,6 +6326,7 @@ def api_tenants():
         return jsonify({
             "success": True,
             "tenant": tenant_entry,
+            "base_station_assignment": bs_assignment,
             "timescale": timescale_result,
         })
 
@@ -3444,9 +6335,12 @@ def api_tenants():
         tenant_id = _sanitize_tenant_id(data.get("tenant_id") or data.get("id"))
         if not tenant_id:
             return jsonify({"success": False, "error": "Tenant ID is required"}), 400
+        if _is_reserved_default_tenant(tenant_id):
+            return jsonify({"success": False, "error": "Reserved super admin scope cannot be created or modified here"}), 400
 
         tenant_name = str(data.get("name") or tenant_id).strip()[:120]
         tenant_description = str(data.get("description") or "").strip()[:240]
+        requested_base_stations = _normalize_base_station_route_list(data.get("base_station_euis", []))
         ok, err, tenant_entry = _upsert_tenant_registry_entry(
             tenant_id=tenant_id,
             name=tenant_name,
@@ -3454,6 +6348,8 @@ def api_tenants():
         )
         if not ok:
             return jsonify({"success": False, "error": err or "Failed to update tenant"}), 500
+
+        bs_assignment = _reassign_base_stations_for_tenant(tenant_id, requested_base_stations)
 
         conn, conn_err = _timescale_connect()
         timescale_result = {"synced": False, "error": conn_err}
@@ -3486,6 +6382,9 @@ def api_tenants():
             details={
                 'name': tenant_name,
                 'description': tenant_description,
+                'base_station_count': len(bs_assignment.get('assigned', [])),
+                'base_stations_assigned': bs_assignment.get('assigned', []),
+                'base_stations_released': bs_assignment.get('released', []),
                 'timescale_synced': bool(timescale_result.get('synced')),
                 'timescale_error': timescale_result.get('error'),
             },
@@ -3493,6 +6392,7 @@ def api_tenants():
         return jsonify({
             "success": True,
             "tenant": tenant_entry,
+            "base_station_assignment": bs_assignment,
             "timescale": timescale_result,
         })
 
@@ -3507,7 +6407,7 @@ def api_tenants():
         if not tenant_id:
             return jsonify({"success": False, "error": "Tenant ID is required"}), 400
         if tenant_id == default_tenant:
-            return jsonify({"success": False, "error": "Default tenant cannot be deleted"}), 400
+            return jsonify({"success": False, "error": "Reserved super admin scope cannot be deleted"}), 400
 
         user_count = sum(
             1
@@ -3695,7 +6595,8 @@ def api_tenants():
             or ts_entry.get("name")
             or tenant_id
         ).strip() or tenant_id
-        tenant_description = str(registry_entry.get("description") or "").strip()
+        tenant_name = _tenant_scope_display_name(tenant_id, tenant_name)
+        tenant_description = _tenant_scope_display_description(tenant_id, registry_entry.get("description"))
         created_at = (
             registry_entry.get("created_at")
             or ts_entry.get("created_at")
@@ -3703,12 +6604,20 @@ def api_tenants():
         )
         tenant_summaries.append({
             "tenant_id": tenant_id,
+            "display_name": tenant_name,
             "name": tenant_name,
             "description": tenant_description,
             "created_at": created_at,
             "sensor_count": sensor_count,
             "base_station_count": base_station_count,
+            "assigned_base_station_euis": sorted(
+                str(eui).strip().upper()
+                for eui, bs_data in (bs_config or {}).items()
+                if isinstance(bs_data, dict) and _tenant_matches(_tenant_id_from_base_station(bs_data), tenant_id)
+            ),
             "user_count": user_count,
+            "is_reserved": _is_reserved_default_tenant(tenant_id),
+            "can_edit": not _is_reserved_default_tenant(tenant_id),
             "can_delete": (
                 tenant_id != default_tenant
                 and user_count == 0
@@ -3722,7 +6631,19 @@ def api_tenants():
     return jsonify({
         "success": True,
         "default_tenant": default_tenant,
+        "default_tenant_label": "Super admin",
         "tenants": tenant_summaries,
+        "base_stations_catalog": [
+            {
+                "eui": str(eui).strip().upper(),
+                "name": str((bs_data or {}).get("name") or "").strip(),
+                "tenant_id": _tenant_id_from_base_station(bs_data),
+                "configured_ip": str((bs_data or {}).get("ip") or "").strip(),
+                "tags": list((bs_data or {}).get("tags") or []),
+            }
+            for eui, bs_data in sorted((bs_config or {}).items(), key=lambda item: ((item[1] or {}).get("name", ""), item[0]))
+            if isinstance(bs_data, dict)
+        ],
         "timescale": timescale,
     })
 
@@ -4635,7 +7556,23 @@ def index():
 @login_required
 def sensors():
     sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=_active_tenant_id())
-    return render_template('sensors.html', sensors=sensors)
+    return render_template('sensors.html', sensors=sensors, sensor_profiles=_sensor_profile_options())
+
+
+@app.route('/sensors/<eui>')
+@login_required
+def sensor_detail_page(eui):
+    return render_template(
+        'sensor_detail.html',
+        sensor_eui=str(eui or '').strip().upper(),
+        sensor_profiles=_sensor_profile_options(),
+    )
+
+
+@app.route('/sensor-telemetry')
+@login_required
+def sensor_telemetry():
+    return render_template('sensor_telemetry.html', telemetry_timezone=str(getattr(bssci_config, 'TIMEZONE', 'Europe/Berlin') or 'Europe/Berlin'))
 
 @app.route('/api/sensors', methods=['GET'])
 @login_required
@@ -4665,6 +7602,16 @@ def get_sensors():
                     'bidi': bool(sensor.get('bidi', False)),
                     'name': sensor.get('name', ''),
                     'tags': _normalize_sensor_tags(sensor.get('tags', [])),
+                    'sensor_profile': _infer_sensor_profile(sensor),
+                    'sensor_profile_label': _sensor_profile_label(_infer_sensor_profile(sensor)),
+                    'payload_decoder': str(sensor.get('payload_decoder', 'auto') or 'auto'),
+                    'environment_context': str(sensor.get('environment_context', 'auto') or 'auto'),
+                    'configured_reporting_mode': _normalize_reporting_mode(sensor.get('reporting_mode')),
+                    'reporting_mode': _normalize_reporting_mode(sensor.get('reporting_mode')),
+                    'expected_interval_seconds': sensor.get('expected_interval_seconds'),
+                    'configured_expected_interval_seconds': _normalize_expected_interval_seconds(sensor.get('expected_interval_seconds')),
+                    'stale_after_hours': sensor.get('stale_after_hours'),
+                    'configured_stale_after_hours': _normalize_stale_after_hours(sensor.get('stale_after_hours')),
                     'gps_lat': sensor.get('gps_lat'),
                     'gps_lng': sensor.get('gps_lng'),
                     'tenant_id': sensor.get('tenant_id', active_tenant),
@@ -4680,7 +7627,12 @@ def get_sensors():
                     'total_available_bases': 0,
                     'preferredDownlinkPath': sensor.get('preferredDownlinkPath', None),
                     'activity_status': 'no_data',
-                    'hours_since_last_seen': 0
+                    'hours_since_last_seen': 0,
+                    'last_seen_timestamp': 0,
+                    'packets_received': 0,
+                    'packets_lost': 0,
+                    'avg_snr': None,
+                    'avg_rssi': None,
                 }
                 
             # Get connected base stations list for missing registration tracking
@@ -4737,6 +7689,113 @@ def get_sensors():
             for sensor_eui in sensor_status:
                 if not sensor_status[sensor_eui]['base_stations']:
                     sensor_status[sensor_eui]['missing_registrations'] = connected_bases.copy()
+
+            # Merge runtime status + packet telemetry so UI does not stay stuck on "No data".
+            runtime_status = {}
+            if tls_server and hasattr(tls_server, 'get_sensor_registration_status'):
+                try:
+                    runtime_status = tls_server.get_sensor_registration_status() or {}
+                except Exception as e:
+                    print(f"Error getting runtime sensor registration status: {e}")
+
+            packet_stats = {}
+            if tls_server and hasattr(tls_server, 'sensor_packet_stats'):
+                try:
+                    packet_stats = getattr(tls_server, 'sensor_packet_stats', {}) or {}
+                except Exception as e:
+                    print(f"Error accessing sensor packet stats: {e}")
+
+            snapshot_sensor_map = _timescale_fetch_latest_sensor_snapshots(active_tenant)
+
+            now_ts = datetime.now(timezone.utc).timestamp()
+            warning_timeout = float(getattr(bssci_config, 'AUTO_DETACH_WARNING_TIMEOUT', 129600) or 129600)
+            detach_timeout = float(getattr(bssci_config, 'AUTO_DETACH_TIMEOUT', 259200) or 259200)
+
+            for sensor_eui, sensor_data in sensor_status.items():
+                runtime_entry = (
+                    runtime_status.get(sensor_eui)
+                    or runtime_status.get(sensor_eui.upper())
+                    or runtime_status.get(sensor_eui.lower())
+                    or {}
+                )
+
+                if runtime_entry:
+                    if runtime_entry.get('preferredDownlinkPath') is not None:
+                        sensor_data['preferredDownlinkPath'] = runtime_entry.get('preferredDownlinkPath')
+                    if runtime_entry.get('activity_status'):
+                        sensor_data['activity_status'] = runtime_entry.get('activity_status')
+                    if runtime_entry.get('last_seen_timestamp'):
+                        last_seen_runtime = float(runtime_entry.get('last_seen_timestamp') or 0)
+                        sensor_data['last_seen_timestamp'] = last_seen_runtime
+                        sensor_data['hours_since_last_seen'] = (
+                            float(runtime_entry.get('hours_since_last_seen'))
+                            if runtime_entry.get('hours_since_last_seen') is not None
+                            else round(max(0.0, now_ts - last_seen_runtime) / 3600.0, 2)
+                        )
+
+                stats = (
+                    packet_stats.get(sensor_eui)
+                    or packet_stats.get(sensor_eui.upper())
+                    or packet_stats.get(sensor_eui.lower())
+                    or {}
+                )
+                snapshot_entry = snapshot_sensor_map.get(sensor_eui) or snapshot_sensor_map.get(sensor_eui.upper()) or {}
+                snapshot_payload = snapshot_entry.get("payload") if isinstance(snapshot_entry, dict) else {}
+                if stats:
+                    packets_received = int(stats.get('packets_received', 0) or 0)
+                    packets_lost = int(stats.get('packets_lost', 0) or 0)
+                    snr_count = int(stats.get('snr_count', 0) or 0)
+                    rssi_count = int(stats.get('rssi_count', 0) or 0)
+                    avg_snr = (float(stats.get('snr_sum', 0.0) or 0.0) / snr_count) if snr_count > 0 else None
+                    avg_rssi = (float(stats.get('rssi_sum', 0.0) or 0.0) / rssi_count) if rssi_count > 0 else None
+                    last_seen = float(stats.get('last_seen', 0) or 0)
+
+                    sensor_data['packets_received'] = packets_received
+                    sensor_data['packets_lost'] = packets_lost
+                    sensor_data['avg_snr'] = round(avg_snr, 2) if avg_snr is not None else None
+                    sensor_data['avg_rssi'] = round(avg_rssi, 2) if avg_rssi is not None else None
+
+                    if last_seen > 0:
+                        sensor_data['last_seen_timestamp'] = last_seen
+                        sensor_data['hours_since_last_seen'] = round(max(0.0, now_ts - last_seen) / 3600.0, 2)
+                        interval_meta = _resolve_sensor_expected_interval(sensor_data, stats.get('avg_interval_seconds'))
+                        sensor_data.update(interval_meta)
+                        if sensor_data.get('activity_status') not in {'auto_detached', 'auto_detach_pending'}:
+                            inactive_seconds = max(0.0, now_ts - last_seen)
+                            if inactive_seconds > detach_timeout:
+                                sensor_data['activity_status'] = 'auto_detach_pending'
+                            elif interval_meta.get('reporting_mode') == 'event':
+                                if inactive_seconds > interval_meta['stale_threshold_seconds']:
+                                    sensor_data['activity_status'] = 'stale'
+                                elif inactive_seconds <= 3600:
+                                    sensor_data['activity_status'] = 'active'
+                                else:
+                                    sensor_data['activity_status'] = 'quiet'
+                            elif inactive_seconds > interval_meta['offline_threshold_seconds']:
+                                sensor_data['activity_status'] = 'warning'
+                            else:
+                                sensor_data['activity_status'] = 'active'
+                    else:
+                        sensor_data.update(_resolve_sensor_expected_interval(sensor_data, stats.get('avg_interval_seconds')))
+                elif snapshot_payload:
+                    packets_received = int(snapshot_payload.get('packets_received', 0) or 0)
+                    packets_lost = int(snapshot_payload.get('packets_lost', 0) or 0)
+                    avg_snr = snapshot_payload.get('avg_snr')
+                    avg_rssi = snapshot_payload.get('avg_rssi')
+                    last_seen = float(snapshot_payload.get('last_seen_ts', 0) or 0)
+
+                    sensor_data['packets_received'] = packets_received
+                    sensor_data['packets_lost'] = packets_lost
+                    sensor_data['avg_snr'] = round(float(avg_snr), 2) if avg_snr is not None else None
+                    sensor_data['avg_rssi'] = round(float(avg_rssi), 2) if avg_rssi is not None else None
+                    sensor_data['packet_loss_source'] = 'snapshot'
+
+                    if last_seen > 0:
+                        sensor_data['last_seen_timestamp'] = last_seen
+                        sensor_data['hours_since_last_seen'] = round(max(0.0, now_ts - last_seen) / 3600.0, 2)
+                    sensor_data.update(_resolve_sensor_expected_interval(sensor_data, None))
+                else:
+                    sensor_data.update(_resolve_sensor_expected_interval(sensor_data, None))
                     
             print(f"Processed sensor status for {len(sensor_status)} sensors with registration data")
             return jsonify(sensor_status)
@@ -4770,11 +7829,13 @@ def add_sensor():
         
         # Step 1: Save directly to endpoints.json
         sensors = _load_all_sensors()
-        active_tenant = _normalize_tenant_id(data.get("tenant_id"), fallback=_active_tenant_id())
+        active_tenant = _resolve_write_tenant_id(data.get("tenant_id"))
         data["tenant_id"] = active_tenant
 
         # Check if sensor already exists
         sensor_updated = False
+        changed_fields = []
+        attach_targets_after_save = []
         for sensor in sensors:
             if str(sensor.get('eui', '')).upper() != data['eui'].upper():
                 continue
@@ -4785,13 +7846,37 @@ def add_sensor():
                     'message': f"Sensor EUI already exists in tenant '{existing_tenant}'. Reassign first if needed."
                 }), 409
             # Update existing sensor
+            compare_fields = [
+                'nwKey',
+                'shortAddr',
+                'bidi',
+                'name',
+                'tags',
+                'sensor_profile',
+                'gps_lat',
+                'gps_lng',
+                'payload_decoder',
+                'environment_context',
+                'reporting_mode',
+                'expected_interval_seconds',
+                'stale_after_hours',
+            ]
+            for field in compare_fields:
+                if sensor.get(field) != data.get(field):
+                    changed_fields.append(field)
             sensor.update(data)
+            attach_targets_after_save = _normalize_base_station_route_list(
+                sensor.get("attached_base_stations", [])
+            )
             sensor_updated = True
             break
-        
+
         if not sensor_updated:
             # Add new sensor
             sensors.append(data)
+            attach_targets_after_save = _normalize_base_station_route_list(
+                data.get("attached_base_stations", [])
+            )
 
         # Save to file
         _save_all_sensors(sensors)
@@ -4806,6 +7891,12 @@ def add_sensor():
                 "nwkey_present": bool(data.get("nwKey")),
                 "name": data.get("name", ""),
                 "tags_count": len(data.get("tags", [])),
+                "sensor_profile": data.get("sensor_profile", "auto"),
+                "payload_decoder": data.get("payload_decoder", "auto"),
+                "environment_context": data.get("environment_context", "auto"),
+                "reporting_mode": data.get("reporting_mode", "auto"),
+                "expected_interval_seconds": data.get("expected_interval_seconds"),
+                "stale_after_hours": data.get("stale_after_hours"),
                 "gps_lat": data.get("gps_lat"),
                 "gps_lng": data.get("gps_lng"),
                 "tenant_id": active_tenant,
@@ -4823,50 +7914,51 @@ def add_sensor():
                 "short_addr": data.get("shortAddr", ""),
                 "bidi": bool(data.get("bidi", False)),
                 "tags_count": len(data.get("tags", [])),
+                "sensor_profile": data.get("sensor_profile", "auto"),
+                "payload_decoder": data.get("payload_decoder", "auto"),
+                "environment_context": data.get("environment_context", "auto"),
+                "reporting_mode": data.get("reporting_mode", "auto"),
+                "expected_interval_seconds": data.get("expected_interval_seconds"),
+                "stale_after_hours": data.get("stale_after_hours"),
                 "gps_lat": data.get("gps_lat"),
                 "gps_lng": data.get("gps_lng"),
                 "tenant_id": active_tenant,
             },
         )
         
-        # Step 2: Notify TLS server to reload config and send attach requests
+        # Step 2: Notify TLS server and apply runtime attach only when needed
         global tls_server_instance
         tls_server = tls_server_instance
-        
+        should_trigger_runtime_attach = (
+            not sensor_updated
+            or any(field in {'nwKey', 'shortAddr', 'bidi'} for field in changed_fields)
+        )
+
         if tls_server and hasattr(tls_server, 'reload_sensor_config'):
             try:
                 # Reload the sensor configuration in TLS server
                 tls_server.reload_sensor_config()
-                
-                # Force attach to connected base stations if any
+
+                if not should_trigger_runtime_attach:
+                    return jsonify({'success': True, 'message': 'Sensor saved. Runtime attach unchanged (metadata-only update).'})
+
+                # Force attach only for new sensor or when protocol fields changed
                 if hasattr(tls_server, 'connected_base_stations') and tls_server.connected_base_stations:
-                    print(f"Triggering attach for new sensor {data['eui']} to {len(tls_server.connected_base_stations)} base stations")
-                    
-                    # Use simple synchronous method to send attach requests
+                    print(
+                        f"Triggering runtime attach for sensor {data['eui']} "
+                        f"(targets={attach_targets_after_save or 'all connected'})"
+                    )
                     if hasattr(tls_server, 'attach_sensor_sync'):
-                        attached_count = tls_server.attach_sensor_sync(data['eui'])
+                        attached_count = tls_server.attach_sensor_sync(
+                            data['eui'],
+                            attach_targets_after_save or None,
+                        )
                         if attached_count > 0:
-                            connected_targets = [
-                                _normalize_eui_upper(bs_eui)
-                                for bs_eui in (getattr(tls_server, "connected_base_stations", {}) or {}).values()
-                                if _normalize_eui_upper(bs_eui)
-                            ]
-                            _update_sensor_attached_base_stations(
-                                data['eui'],
-                                connected_targets,
-                                tenant_id=active_tenant,
-                            )
-                            print(f"Successfully sent attach requests for {data['eui']} to {attached_count} base stations")
                             return jsonify({'success': True, 'message': f'Sensor saved and attach requests sent to {attached_count} base stations'})
-                        else:
-                            print(f"Failed to send attach requests for {data['eui']}")
-                            return jsonify({'success': True, 'message': 'Sensor saved but failed to send attach requests'})
-                    else:
-                        return jsonify({'success': True, 'message': 'Sensor saved but attach function not available'})
-                else:
-                    return jsonify({'success': True, 'message': 'Sensor saved (no base stations connected for attach)'})
-                            
-                return jsonify({'success': True, 'message': 'Sensor saved and processed'})
+                        return jsonify({'success': True, 'message': 'Sensor saved. Runtime attach will continue when base stations are reachable.'})
+                    return jsonify({'success': True, 'message': 'Sensor saved. Attach API is not available in runtime.'})
+
+                return jsonify({'success': True, 'message': 'Sensor saved. No connected base stations now; attach will run after reconnect.'})
             except Exception as e:
                 print(f"Error notifying TLS server: {e}")
                 return jsonify({'success': True, 'message': 'Sensor saved but failed to notify TLS server'})
@@ -5105,6 +8197,47 @@ def attach_sensor(eui):
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+
+@app.route('/api/sensors/telemetry/history', methods=['GET'])
+@login_required
+def get_sensor_telemetry_history():
+    try:
+        result = _timescale_fetch_sensor_telemetry_history(
+            tenant_id=_active_tenant_id(),
+            sensor_eui=request.args.get('sensor_eui'),
+            base_station_eui=request.args.get('base_station_eui'),
+            profile=request.args.get('profile'),
+            minutes=request.args.get('minutes', 1440),
+            limit=request.args.get('limit', 100),
+            offset=request.args.get('offset', 0),
+        )
+        return jsonify(result), (200 if result.get("success", False) else 503)
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route('/api/sensors/telemetry/history/export', methods=['GET'])
+@login_required
+def export_sensor_telemetry_history():
+    try:
+        result = _timescale_fetch_sensor_telemetry_history(
+            tenant_id=_active_tenant_id(),
+            sensor_eui=request.args.get('sensor_eui'),
+            base_station_eui=request.args.get('base_station_eui'),
+            profile=request.args.get('profile'),
+            minutes=request.args.get('minutes', 1440),
+            limit=request.args.get('limit', 2000),
+            offset=0,
+        )
+        if not result.get("success"):
+            return jsonify(result), 503
+
+        sensor_suffix = str(request.args.get('sensor_eui') or 'all-sensors').strip().lower()
+        filename = f"sensor-telemetry-{sensor_suffix}-{datetime.now().strftime('%Y%m%d-%H%M%S')}.csv"
+        return _telemetry_csv_response(result.get("rows") or [], filename=filename)
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
 @app.route('/api/sensors/<eui>/detach', methods=['POST'])
 @login_required
 @permission_required('can_edit_sensors')
@@ -5210,11 +8343,37 @@ def get_sensor_details(eui):
         
         if not sensor_config:
             return jsonify({'success': False, 'message': 'Sensor not found'})
+        sensor_config = _normalize_sensor_payload(sensor_config)
+        sensor_profile = _infer_sensor_profile(sensor_config)
         
         # Get packet statistics
         stats = {}
         if tls_server and hasattr(tls_server, 'sensor_packet_stats'):
             stats = tls_server.sensor_packet_stats.get(eui_upper, {})
+        stats_source = 'runtime' if stats else 'none'
+
+        snapshot_payload = {}
+        try:
+            snapshot_map = _timescale_fetch_latest_sensor_snapshots(active_tenant)
+            snapshot_entry = snapshot_map.get(eui_upper) or {}
+            snapshot_payload = snapshot_entry.get("payload") if isinstance(snapshot_entry, dict) else {}
+        except Exception:
+            snapshot_payload = {}
+
+        if not stats and snapshot_payload:
+            stats = {
+                'packets_received': int(snapshot_payload.get('packets_received', 0) or 0),
+                'packets_lost': int(snapshot_payload.get('packets_lost', 0) or 0),
+                'last_seen': float(snapshot_payload.get('last_seen_ts', 0) or 0),
+                'frame_counter': int(snapshot_payload.get('frame_counter', 0) or 0),
+            }
+            avg_snr_snapshot = snapshot_payload.get('avg_snr')
+            avg_rssi_snapshot = snapshot_payload.get('avg_rssi')
+            if avg_snr_snapshot is not None:
+                stats['avg_snr'] = float(avg_snr_snapshot)
+            if avg_rssi_snapshot is not None:
+                stats['avg_rssi'] = float(avg_rssi_snapshot)
+            stats_source = 'snapshot'
         
         # Get topology info
         topology = {}
@@ -5230,23 +8389,85 @@ def get_sensor_details(eui):
         downlink_path = {}
         if tls_server and hasattr(tls_server, 'preferred_downlink_paths'):
             downlink_path = tls_server.preferred_downlink_paths.get(eui_upper, {})
+
+        latest_uplink = None
+        uplink_history = []
+        if tls_server and hasattr(tls_server, 'get_sensor_latest_uplink'):
+            try:
+                latest_uplink = tls_server.get_sensor_latest_uplink(eui_upper)
+            except Exception:
+                latest_uplink = None
+        if tls_server and hasattr(tls_server, 'get_sensor_uplink_history'):
+            try:
+                uplink_history = tls_server.get_sensor_uplink_history(eui_upper, limit=10) or []
+            except Exception:
+                uplink_history = []
+
+        # Fallback for restarts/cold runtime: recover latest payload from Timescale telemetry.
+        # This keeps sensor payload visible even when in-memory runtime history is empty.
+        if not latest_uplink:
+            try:
+                sensor_tenant = _normalize_tenant_id(
+                    sensor_config.get("tenant_id"),
+                    fallback=active_tenant,
+                )
+                ts_history = _timescale_fetch_sensor_payload_history(
+                    eui_upper,
+                    tenant_id=sensor_tenant,
+                    limit=10,
+                ) or []
+                if ts_history:
+                    latest_uplink = ts_history[0]
+                    uplink_history = ts_history
+            except Exception:
+                pass
         
         # Calculate derived metrics
-        avg_snr = stats.get('snr_sum', 0) / stats.get('snr_count', 1) if stats.get('snr_count', 0) > 0 else 0
-        avg_rssi = stats.get('rssi_sum', 0) / stats.get('rssi_count', 1) if stats.get('rssi_count', 0) > 0 else 0
+        if stats.get('snr_count', 0) > 0:
+            avg_snr = stats.get('snr_sum', 0) / stats.get('snr_count', 1)
+        else:
+            avg_snr = float(stats.get('avg_snr', 0) or 0)
+        if stats.get('rssi_count', 0) > 0:
+            avg_rssi = stats.get('rssi_sum', 0) / stats.get('rssi_count', 1)
+        else:
+            avg_rssi = float(stats.get('avg_rssi', 0) or 0)
         packets_received = stats.get('packets_received', 0)
         packets_lost = stats.get('packets_lost', 0)
         packet_loss_rate = (packets_lost / (packets_received + packets_lost) * 100) if (packets_received + packets_lost) > 0 else 0
         
-        # Calculate send interval (based on last 10 messages if history available)
+        # Calculate observed send interval from recent runtime or telemetry history
         send_interval = 0
+        interval_candidates = []
         if 'snr_history' in stats and len(stats['snr_history']) >= 2:
             history = stats['snr_history'][-10:]
-            intervals = []
             for i in range(1, len(history)):
-                intervals.append(history[i]['ts'] - history[i-1]['ts'])
-            if intervals:
-                send_interval = sum(intervals) / len(intervals)
+                delta = float(history[i]['ts']) - float(history[i - 1]['ts'])
+                if delta > 0:
+                    interval_candidates.append(delta)
+        if not interval_candidates and uplink_history and len(uplink_history) >= 2:
+            sorted_history = []
+            for row in uplink_history[:10]:
+                ts_value = row.get("ts")
+                if isinstance(ts_value, str):
+                    try:
+                        ts_value = datetime.fromisoformat(ts_value.replace("Z", "+00:00")).timestamp()
+                    except Exception:
+                        ts_value = None
+                try:
+                    ts_value = float(ts_value) if ts_value is not None else None
+                except (TypeError, ValueError):
+                    ts_value = None
+                if ts_value:
+                    sorted_history.append(ts_value)
+            sorted_history = sorted(sorted_history)
+            for i in range(1, len(sorted_history)):
+                delta = sorted_history[i] - sorted_history[i - 1]
+                if delta > 0:
+                    interval_candidates.append(delta)
+        if interval_candidates:
+            send_interval = sum(interval_candidates) / len(interval_candidates)
+
+        interval_meta = _resolve_sensor_expected_interval(sensor_config, send_interval or None)
         
         # Calculate device health scores
         signal_score = 5.0
@@ -5285,19 +8506,30 @@ def get_sensor_details(eui):
             'success': True,
             'eui': eui_upper,
             'config': sensor_config,
+            'sensor_profile': sensor_profile,
+            'sensor_profile_label': _sensor_profile_label(sensor_profile),
             'first_seen': stats.get('first_seen'),
             'last_seen': stats.get('last_seen'),
             'packets_received': packets_received,
             'packets_lost': packets_lost,
             'packet_loss_rate': round(packet_loss_rate, 2),
+            'packet_loss_source': stats_source,
             'avg_snr': round(avg_snr, 2),
             'avg_rssi': round(avg_rssi, 2),
             'min_snr': stats.get('min_snr', 0),
             'max_snr': stats.get('max_snr', 0),
             'min_rssi': stats.get('min_rssi', 0),
             'max_rssi': stats.get('max_rssi', 0),
-            'current_rssi': stats.get('rssi_sum', 0) / stats.get('rssi_count', 1) if stats.get('rssi_count', 0) > 0 else 0,
+            'current_rssi': (
+                stats.get('rssi_sum', 0) / stats.get('rssi_count', 1)
+                if stats.get('rssi_count', 0) > 0
+                else avg_rssi
+            ),
             'send_interval': round(send_interval, 1),
+            'expected_interval_seconds': interval_meta['expected_interval_seconds'],
+            'expected_interval_source': interval_meta['expected_interval_source'],
+            'delay_threshold_seconds': interval_meta['delay_threshold_seconds'],
+            'offline_threshold_seconds': interval_meta['offline_threshold_seconds'],
             'gateway_count': gateway_count,
             'primary_gateway': topology.get('primary_bs', ''),
             'receiving_gateways': list(topology.get('receiving_bases', {}).keys()) if topology else [],
@@ -5315,7 +8547,9 @@ def get_sensor_details(eui):
             'snr_history': stats.get('snr_history', [])[-50:],
             'rssi_history': stats.get('rssi_history', [])[-50:],
             'registration': registration,
-            'downlink_path': downlink_path
+            'downlink_path': downlink_path,
+            'latest_uplink': latest_uplink,
+            'uplink_history': uplink_history,
         }
         
         return jsonify(response)
@@ -5571,7 +8805,7 @@ def export_sensors():
         writer = csv.writer(output)
         
         # Write header
-        writer.writerow(['eui', 'nwKey', 'shortAddr', 'bidi', 'name', 'tags', 'gps_lat', 'gps_lng', 'tenant_id'])
+        writer.writerow(['eui', 'nwKey', 'shortAddr', 'bidi', 'name', 'tags', 'sensor_profile', 'payload_decoder', 'gps_lat', 'gps_lng', 'tenant_id'])
         
         # Write sensor data
         for sensor in sensors:
@@ -5582,6 +8816,8 @@ def export_sensors():
                 'true' if sensor.get('bidi', False) else 'false',
                 sensor.get('name', ''),
                 '|'.join(_normalize_sensor_tags(sensor.get('tags', []))),
+                _infer_sensor_profile(sensor),
+                sensor.get('payload_decoder', 'auto'),
                 sensor.get('gps_lat', ''),
                 sensor.get('gps_lng', ''),
                 sensor.get('tenant_id', active_tenant),
@@ -5636,7 +8872,7 @@ def import_sensors():
         
         # Check if first row is header
         header = rows[0]
-        has_header = any(h.lower() in ['eui', 'nwkey', 'shortaddr', 'bidi', 'network_key', 'short_addr', 'name', 'tags', 'label', 'gps_lat', 'gps_lng', 'latitude', 'longitude', 'lat', 'lng', 'tenant', 'tenant_id'] for h in header)
+        has_header = any(h.lower() in ['eui', 'nwkey', 'shortaddr', 'bidi', 'network_key', 'short_addr', 'name', 'tags', 'label', 'sensor_profile', 'profile', 'payload_decoder', 'decoder', 'gps_lat', 'gps_lng', 'latitude', 'longitude', 'lat', 'lng', 'tenant', 'tenant_id'] for h in header)
         
         if has_header:
             # Map header columns
@@ -5647,6 +8883,8 @@ def import_sensors():
             bidi_idx = next((i for i, h in enumerate(header_lower) if h in ['bidi', 'bidirectional', 'bidir']), 3)
             name_idx = next((i for i, h in enumerate(header_lower) if h in ['name', 'label', 'title']), None)
             tags_idx = next((i for i, h in enumerate(header_lower) if h in ['tags', 'tag', 'labels']), None)
+            profile_idx = next((i for i, h in enumerate(header_lower) if h in ['sensor_profile', 'profile']), None)
+            decoder_idx = next((i for i, h in enumerate(header_lower) if h in ['payload_decoder', 'decoder', 'payload_profile']), None)
             lat_idx = next((i for i, h in enumerate(header_lower) if h in ['gps_lat', 'latitude', 'lat']), None)
             lng_idx = next((i for i, h in enumerate(header_lower) if h in ['gps_lng', 'longitude', 'lng', 'lon']), None)
             tenant_idx = next((i for i, h in enumerate(header_lower) if h in ['tenant', 'tenant_id']), None)
@@ -5655,6 +8893,8 @@ def import_sensors():
             # Assume order: eui, nwKey, shortAddr, bidi, name, tags, gps_lat, gps_lng
             eui_idx, nwkey_idx, shortaddr_idx, bidi_idx = 0, 1, 2, 3
             name_idx, tags_idx = 4, 5
+            profile_idx = None
+            decoder_idx = None
             lat_idx, lng_idx = 6, 7
             tenant_idx = None
             data_rows = rows
@@ -5682,11 +8922,22 @@ def import_sensors():
                 shortaddr = row[shortaddr_idx].strip() if shortaddr_idx < len(row) else '0000'
                 bidi_val = row[bidi_idx].strip().lower() if bidi_idx < len(row) else 'false'
                 bidi = bidi_val in ['true', '1', 'yes', 'on']
+                row_decoder_idx = decoder_idx
+                row_lat_idx = lat_idx
+                row_lng_idx = lng_idx
+                if not has_header and len(row) >= 9:
+                    # Backward compatible: no-header files may include payload_decoder before GPS columns.
+                    row_decoder_idx = 6
+                    row_lat_idx = 7
+                    row_lng_idx = 8
+
                 name = row[name_idx].strip() if (name_idx is not None and name_idx < len(row)) else ''
                 tags_raw = row[tags_idx].strip() if (tags_idx is not None and tags_idx < len(row)) else ''
                 tags = _normalize_sensor_tags(tags_raw)
-                lat_raw = row[lat_idx].strip() if (lat_idx is not None and lat_idx < len(row)) else ''
-                lng_raw = row[lng_idx].strip() if (lng_idx is not None and lng_idx < len(row)) else ''
+                sensor_profile = row[profile_idx].strip() if (profile_idx is not None and profile_idx < len(row)) else 'auto'
+                payload_decoder = row[row_decoder_idx].strip() if (row_decoder_idx is not None and row_decoder_idx < len(row)) else 'auto'
+                lat_raw = row[row_lat_idx].strip() if (row_lat_idx is not None and row_lat_idx < len(row)) else ''
+                lng_raw = row[row_lng_idx].strip() if (row_lng_idx is not None and row_lng_idx < len(row)) else ''
                 tenant_raw = row[tenant_idx].strip() if (tenant_idx is not None and tenant_idx < len(row)) else active_tenant
                 if str(session.get("role", "")).strip().lower() != "admin":
                     tenant_raw = active_tenant
@@ -5710,10 +8961,13 @@ def import_sensors():
                     'bidi': bidi,
                     'name': name,
                     'tags': tags,
+                    'sensor_profile': sensor_profile,
+                    'payload_decoder': payload_decoder,
                     'gps_lat': gps_lat,
                     'gps_lng': gps_lng,
                     'tenant_id': tenant_id,
                 }
+                sensor_data = _normalize_sensor_payload(sensor_data)
                 
                 existing_sensor = existing_by_eui.get(eui)
                 if existing_sensor is not None:
@@ -5807,6 +9061,7 @@ def config():
         config_data = {
             'LISTEN_HOST': getattr(bssci_config, 'LISTEN_HOST', '0.0.0.0'),
             'LISTEN_PORT': getattr(bssci_config, 'LISTEN_PORT', 16018),
+            'MQTT_ENABLED': getattr(bssci_config, 'MQTT_ENABLED', True),
             'MQTT_BROKER': getattr(bssci_config, 'MQTT_BROKER', 'localhost'),
             'MQTT_PORT': getattr(bssci_config, 'MQTT_PORT', 1883),
             'MQTT_USERNAME': getattr(bssci_config, 'MQTT_USERNAME', ''),
@@ -5819,7 +9074,10 @@ def config():
             'AUTO_DETACH_WARNING_TIMEOUT': getattr(bssci_config, 'AUTO_DETACH_WARNING_TIMEOUT', 129600),
             'AUTO_DETACH_CHECK_INTERVAL': getattr(bssci_config, 'AUTO_DETACH_CHECK_INTERVAL', 3600),
             'TIMEZONE': getattr(bssci_config, 'TIMEZONE', 'Europe/Berlin'),
+            'APP_LANGUAGE': _normalize_app_language(getattr(bssci_config, 'APP_LANGUAGE', 'en')),
+            'MQTT_UI_ENABLED': getattr(bssci_config, 'MQTT_UI_ENABLED', True),
             'TELEMETRY_SOURCE': getattr(bssci_config, 'TELEMETRY_SOURCE', 'auto'),
+            'INFLUX_ENABLED': getattr(bssci_config, 'INFLUX_ENABLED', False),
             'INFLUXDB_URL': getattr(bssci_config, 'INFLUXDB_URL', ''),
             'INFLUXDB_ORG': getattr(bssci_config, 'INFLUXDB_ORG', ''),
             'INFLUXDB_BUCKET': getattr(bssci_config, 'INFLUXDB_BUCKET', ''),
@@ -5875,6 +9133,8 @@ def config():
             'MONITOR_MQTT_RECONNECT_WARN_PER_HOUR': getattr(bssci_config, 'MONITOR_MQTT_RECONNECT_WARN_PER_HOUR', 3.0),
             'MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR': getattr(bssci_config, 'MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR', 8.0),
             'OMS_ENABLED': getattr(bssci_config, 'OMS_ENABLED', True),
+            'MQTT_UI_ENABLED': getattr(bssci_config, 'MQTT_UI_ENABLED', True),
+            'BS_UPTIME_PANEL_ENABLED': getattr(bssci_config, 'BS_UPTIME_PANEL_ENABLED', False),
         }
         return render_template('config.html', config=config_data)
     except Exception as e:
@@ -5883,6 +9143,7 @@ def config():
         default_config = {
             'LISTEN_HOST': '0.0.0.0',
             'LISTEN_PORT': 16018,
+            'MQTT_ENABLED': True,
             'MQTT_BROKER': 'localhost',
             'MQTT_PORT': 1883,
             'MQTT_USERNAME': '',
@@ -5895,7 +9156,10 @@ def config():
             'AUTO_DETACH_WARNING_TIMEOUT': 129600,
             'AUTO_DETACH_CHECK_INTERVAL': 3600,
             'TIMEZONE': 'Europe/Berlin',
+            'APP_LANGUAGE': 'en',
+            'MQTT_UI_ENABLED': True,
             'TELEMETRY_SOURCE': 'auto',
+            'INFLUX_ENABLED': False,
             'INFLUXDB_URL': '',
             'INFLUXDB_ORG': '',
             'INFLUXDB_BUCKET': '',
@@ -5947,6 +9211,8 @@ def config():
             'MONITOR_MQTT_RECONNECT_WARN_PER_HOUR': 3.0,
             'MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR': 8.0,
             'OMS_ENABLED': True,
+            'MQTT_UI_ENABLED': True,
+            'BS_UPTIME_PANEL_ENABLED': False,
         }
         return render_template('config.html', config=default_config)
 
@@ -5987,6 +9253,10 @@ def update_config():
         telemetry_source = str(data.get('TELEMETRY_SOURCE', 'auto')).strip().lower()
         if telemetry_source not in {'auto', 'runtime', 'influx'}:
             telemetry_source = 'auto'
+        influx_enabled = _to_bool(data.get('INFLUX_ENABLED', False), False)
+        if not influx_enabled and telemetry_source in {'auto', 'influx'}:
+            telemetry_source = 'runtime'
+        app_language = _normalize_app_language(data.get('APP_LANGUAGE', 'en'))
         grafana_org_id = max(1, int(data.get('GRAFANA_ORG_ID', 1)))
         timescale_port = int(data.get('TIMESCALE_PORT', 5432))
         timescale_sslmode = str(data.get('TIMESCALE_SSLMODE', 'disable')).strip().lower()
@@ -6128,6 +9398,7 @@ CA_FILE={ca_file}
 TLS_CLIENT_CERT_MODE={tls_client_cert_mode}
 
 # MQTT Configuration
+MQTT_ENABLED={str(_to_bool(data.get('MQTT_ENABLED', True), True)).lower()}
 MQTT_BROKER={data.get('MQTT_BROKER', 'localhost')}
 MQTT_PORT={data.get('MQTT_PORT', 1883)}
 MQTT_USERNAME={data.get('MQTT_USERNAME', '')}
@@ -6164,6 +9435,7 @@ AUTO_DETACH_CHECK_INTERVAL={auto_detach_check_interval}
 
 # Timezone Configuration
 TIMEZONE={data.get('TIMEZONE', 'Europe/Berlin')}
+APP_LANGUAGE={app_language}
 
 # Logging Configuration
 LOG_LEVEL=INFO
@@ -6171,12 +9443,15 @@ LOG_FILE=logs/bssci_service.log
 
 # Optional modules
 OMS_ENABLED={str(_to_bool(data.get('OMS_ENABLED', True), True)).lower()}
+MQTT_UI_ENABLED={str(_to_bool(data.get('MQTT_UI_ENABLED', True), True)).lower()}
+BS_UPTIME_PANEL_ENABLED={str(_to_bool(data.get('BS_UPTIME_PANEL_ENABLED', False), False)).lower()}
 
 # Telemetry Source
 # auto | runtime | influx
 TELEMETRY_SOURCE={telemetry_source}
 
 # InfluxDB (optional - needed if TELEMETRY_SOURCE=influx/auto)
+INFLUX_ENABLED={str(influx_enabled).lower()}
 INFLUXDB_URL={data.get('INFLUXDB_URL', '')}
 INFLUXDB_ORG={data.get('INFLUXDB_ORG', '')}
 INFLUXDB_BUCKET={data.get('INFLUXDB_BUCKET', '')}
@@ -6279,7 +9554,11 @@ SECRET_KEY={secret_key}"""
                 'changed_count': len(safe_changed_keys),
                 'timescale_enabled': _to_bool(data.get('TIMESCALE_ENABLED', False), False),
                 'telemetry_source': telemetry_source,
+                'mqtt_enabled': _to_bool(data.get('MQTT_ENABLED', True), True),
                 'oms_enabled': _to_bool(data.get('OMS_ENABLED', True), True),
+                'mqtt_ui_enabled': _to_bool(data.get('MQTT_UI_ENABLED', True), True),
+                'bs_uptime_panel_enabled': _to_bool(data.get('BS_UPTIME_PANEL_ENABLED', False), False),
+                'app_language': app_language,
             },
         )
         
@@ -6295,13 +9574,15 @@ def certificates():
     return render_template('certificates.html')
 
 @app.route('/logs')
-@login_required
+@admin_scope_required('view_service_logs')
 def logs():
     return render_template('logs.html')
 
 @app.route('/mqtt')
 @login_required
 def mqtt():
+    if not getattr(bssci_config, 'MQTT_UI_ENABLED', True):
+        return redirect(url_for('index'))
     return render_template('mqtt.html')
 
 @app.route('/documentation')
@@ -6483,6 +9764,9 @@ def base_stations():
     telemetry_source = (getattr(bssci_config, 'TELEMETRY_SOURCE', 'auto') or 'auto').strip().lower()
     if telemetry_source not in {'auto', 'runtime', 'influx'}:
         telemetry_source = 'auto'
+    influx_enabled = bool(getattr(bssci_config, 'INFLUX_ENABLED', True))
+    if not influx_enabled and telemetry_source in {'auto', 'influx'}:
+        telemetry_source = 'runtime'
     influx_configured = bool(
         getattr(bssci_config, 'INFLUXDB_URL', '')
         and getattr(bssci_config, 'INFLUXDB_ORG', '')
@@ -6492,8 +9776,15 @@ def base_stations():
     return render_template(
         'base_stations.html',
         telemetry_source=telemetry_source,
-        influx_configured=influx_configured
+        influx_enabled=influx_enabled,
+        influx_configured=influx_configured,
+        bs_uptime_panel_enabled=bool(getattr(bssci_config, 'BS_UPTIME_PANEL_ENABLED', False)),
     )
+
+@app.route('/base-stations/<eui>')
+@login_required
+def base_station_detail_page(eui):
+    return render_template('base_station_detail.html', base_station_eui=str(eui or '').strip().upper())
 
 @app.route('/network')
 @login_required
@@ -6530,7 +9821,7 @@ def _load_configured_sensors_index() -> Dict[str, Dict[str, Any]]:
     """
     Load configured sensors from endpoints.json (or configured sensor file).
     Returns mapping:
-      EUI_UPPER -> {"name": str, "tags": list[str], "bidi": bool, "attached_base_stations": list[str]}
+      EUI_UPPER -> {"name": str, "tags": list[str], "bidi": bool, "payload_decoder": str, "attached_base_stations": list[str]}
     """
     result: Dict[str, Dict[str, Any]] = {}
     try:
@@ -6554,6 +9845,7 @@ def _load_configured_sensors_index() -> Dict[str, Dict[str, Any]]:
             "name": sensor_name if sensor_name else f"{sensor_eui[:8]}...",
             "tags": _normalize_sensor_tags(sensor.get("tags", [])),
             "bidi": bool(sensor.get("bidi", False)),
+            "payload_decoder": str(sensor.get("payload_decoder", "auto") or "auto"),
             "attached_base_stations": _normalize_base_station_route_list(
                 sensor.get("attached_base_stations", [])
             ),
@@ -7199,9 +10491,8 @@ def get_base_stations():
 
 @app.route('/api/base-stations/certificates/status')
 @login_required
-@permission_required('can_manage_certificates')
 def get_bs_certificates_status():
-    """Get cert status for ALL base stations"""
+    """Get read-only certificate status for tenant-visible base stations."""
     try:
         config = load_base_station_config()
         bs_config = _filter_base_stations_for_tenant(config.get("base_stations", {}), tenant_id=_active_tenant_id())
@@ -7257,6 +10548,9 @@ def get_bs_uptime():
         requested_source = (request.args.get("source") or bssci_config.TELEMETRY_SOURCE or "auto").strip().lower()
         if requested_source not in {"auto", "runtime", "influx"}:
             requested_source = "auto"
+        influx_enabled = bool(getattr(bssci_config, "INFLUX_ENABLED", True))
+        if not influx_enabled and requested_source in {"auto", "influx"}:
+            requested_source = "runtime"
 
         filtered_runtime_events = {}
         for eui, events in (bs_uptime_events or {}).items():
@@ -7274,7 +10568,7 @@ def get_bs_uptime():
         if requested_source == "runtime":
             return jsonify(runtime_payload)
 
-        if requested_source in {"auto", "influx"}:
+        if influx_enabled and requested_source in {"auto", "influx"}:
             influx_result = _get_influx_uptime_events()
             if influx_result.get("success"):
                 filtered_influx = {}
@@ -7308,6 +10602,11 @@ def get_bs_uptime():
 def sync_inventory_to_influx():
     """Force one-time snapshot sync of sensors/base stations to InfluxDB."""
     try:
+        if not bool(getattr(bssci_config, "INFLUX_ENABLED", True)):
+            return jsonify({
+                "success": False,
+                "message": "InfluxDB integration is disabled."
+            }), 404
         trigger = (request.args.get("trigger") or "manual").strip().lower()
         result = _sync_inventory_snapshot_to_influx(trigger=trigger)
         if result.get("success"):
@@ -7470,7 +10769,7 @@ def get_base_station(eui):
 
 @app.route('/api/base-stations', methods=['POST'])
 @login_required
-@permission_required('can_edit_sensors')
+@admin_scope_required('manage_tenants')
 def add_base_station():
     """Add new base station"""
     try:
@@ -7484,7 +10783,7 @@ def add_base_station():
         config = load_base_station_config()
         if eui in config.get("base_stations", {}):
             return jsonify({"success": False, "error": "Base station already exists"}), 400
-        tenant_id = _active_tenant_id()
+        tenant_id = _resolve_write_tenant_id(data.get("tenant_id"))
         
         config["base_stations"][eui] = {
             "name": data.get("name", ""),
@@ -7545,7 +10844,7 @@ def add_base_station():
 
 @app.route('/api/base-stations/<eui>', methods=['PUT'])
 @login_required
-@permission_required('can_edit_sensors')
+@admin_scope_required('manage_tenants')
 def update_base_station(eui):
     """Update base station"""
     try:
@@ -7568,9 +10867,9 @@ def update_base_station(eui):
             "ip": data.get("ip", ""),
             "gps_lat": gps_lat,
             "gps_lng": gps_lng,
-            "tenant_id": _normalize_tenant_id(
+            "tenant_id": _resolve_write_tenant_id(
                 data.get("tenant_id"),
-                fallback=previous_data.get("tenant_id") or _active_tenant_id()
+                existing_tenant=previous_data.get("tenant_id"),
             ),
         }
         save_base_station_config(config)
@@ -7617,7 +10916,7 @@ def update_base_station(eui):
 
 @app.route('/api/base-stations/<eui>', methods=['DELETE'])
 @login_required
-@permission_required('can_edit_sensors')
+@admin_scope_required('manage_tenants')
 def delete_base_station(eui):
     """Delete base station from config"""
     try:
@@ -7740,7 +11039,7 @@ def get_oms_stats():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/logs')
-@login_required
+@admin_scope_required('view_service_logs')
 def get_logs():
     global log_entries
     ensure_web_log_handler()
@@ -7968,12 +11267,15 @@ def _build_mqtt_monitor_insights(runtime_status):
 @app.route('/api/mqtt/monitor')
 @login_required
 def get_mqtt_monitor():
+    if not getattr(bssci_config, 'MQTT_UI_ENABLED', True):
+        return jsonify({"success": False, "error": "MQTT module is disabled"}), 404
     try:
         global mqtt_client_instance
         if not mqtt_client_instance:
             runtime_status = {
+                "enabled": bool(getattr(bssci_config, 'MQTT_ENABLED', True)),
                 "connected": False,
-                "message": "MQTT client is not initialized.",
+                "message": "MQTT transport is disabled." if not getattr(bssci_config, 'MQTT_ENABLED', True) else "MQTT client is not initialized.",
                 "stats": {},
                 "queue": {"in_size": 0, "out_size": 0, "in_utilization_pct": 0.0, "out_utilization_pct": 0.0},
                 "recent_incoming_topics": [],
@@ -8000,6 +11302,7 @@ def get_mqtt_monitor():
             runtime_status = mqtt_client_instance.get_runtime_status()
         else:
             runtime_status = {
+                "enabled": bool(getattr(bssci_config, 'MQTT_ENABLED', True)),
                 "connected": bool(getattr(mqtt_client_instance, "connected", False)),
                 "stats": dict(getattr(mqtt_client_instance, "stats", {}) or {}),
                 "queue": {"in_size": 0, "out_size": 0},
@@ -8031,6 +11334,10 @@ def get_mqtt_monitor():
 @login_required
 @permission_required('can_edit_config')
 def mqtt_publish_test():
+    if not getattr(bssci_config, 'MQTT_UI_ENABLED', True):
+        return jsonify({"success": False, "error": "MQTT module is disabled"}), 404
+    if not getattr(bssci_config, 'MQTT_ENABLED', True):
+        return jsonify({"success": False, "error": "MQTT transport is disabled"}), 503
     try:
         global mqtt_client_instance
         if not mqtt_client_instance:
@@ -8363,7 +11670,7 @@ def check_for_updates():
             remote_ver = parse_version(remote)
             if remote_ver > current_ver:
                 updates_available = True
-                status_message = f'Update available: {current} → {remote}'
+                status_message = f'Update available: {current} â†’ {remote}'
         elif "commit-" in current and "commit-" in remote:
             # Both are commit hashes
             current_hash = current.split("commit-")[1].split()[0][:7]
@@ -8703,7 +12010,8 @@ def get_bssci_service_status():
             print(f"Error counting sensors: {e}")
 
         # Build response safely
-        mqtt_active = bool(mqtt_client_instance and getattr(mqtt_client_instance, "connected", False))
+        mqtt_enabled = bool(getattr(bssci_config, 'MQTT_ENABLED', True))
+        mqtt_active = bool(mqtt_enabled and mqtt_client_instance and getattr(mqtt_client_instance, "connected", False))
         mqtt_stats = dict(getattr(mqtt_client_instance, "stats", {}) or {}) if mqtt_client_instance else {}
         runtime_status = None
         if mqtt_client_instance and hasattr(mqtt_client_instance, "get_runtime_status"):
@@ -8713,6 +12021,7 @@ def get_bssci_service_status():
                 runtime_status = None
         if not isinstance(runtime_status, dict):
             runtime_status = {
+                "enabled": mqtt_enabled,
                 "connected": mqtt_active,
                 "stats": mqtt_stats,
                 "queue": {"in_size": 0, "out_size": 0, "in_utilization_pct": 0.0, "out_utilization_pct": 0.0},
@@ -8732,6 +12041,7 @@ def get_bssci_service_status():
                 'registered_sensors': registered_sensors
             },
             'mqtt_broker': {
+                'enabled': mqtt_enabled,
                 'active': mqtt_active,
                 'broker_host': getattr(bssci_config, 'MQTT_BROKER', 'localhost'),
                 'broker_port': getattr(bssci_config, 'MQTT_PORT', 1883),
@@ -8754,7 +12064,7 @@ def get_bssci_service_status():
             'running': False,
             'service_type': 'web_ui',
             'tls_server': {'active': False},
-            'mqtt_broker': {'active': False},
+            'mqtt_broker': {'enabled': bool(getattr(bssci_config, 'MQTT_ENABLED', True)), 'active': False},
             'base_stations': {'total_connected': 0, 'total_connecting': 0, 'connected': [], 'connecting': []},
             'total_sensors': 0,
             'registered_sensors': 0,
@@ -8779,6 +12089,7 @@ def get_admin_audit_logs():
     entity_filter = str(request.args.get('entity', 'all') or 'all').strip().lower()
     actor_filter = str(request.args.get('actor', 'all') or 'all').strip().lower()
     status_filter = str(request.args.get('status', 'all') or 'all').strip().lower()
+    target_filter = str(request.args.get('target_id', '') or '').strip().lower()
     text_filter = str(request.args.get('q', '') or '').strip().lower()
     try:
         limit = int(request.args.get('limit', 200))
@@ -8792,6 +12103,7 @@ def get_admin_audit_logs():
         actor_filter=actor_filter,
         status_filter=status_filter,
         text_filter=text_filter,
+        target_filter=target_filter,
     )
     with _admin_audit_lock:
         total = len(admin_audit_entries)
@@ -8825,7 +12137,14 @@ def get_admin_audit_logs():
     })
 
 
-def _filter_admin_audit_entries(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter=''):
+def _filter_admin_audit_entries(
+    action_filter='all',
+    entity_filter='all',
+    actor_filter='all',
+    status_filter='all',
+    text_filter='',
+    target_filter='',
+):
     with _admin_audit_lock:
         all_entries = list(admin_audit_entries)
     filtered = list(all_entries)
@@ -8838,6 +12157,8 @@ def _filter_admin_audit_entries(action_filter='all', entity_filter='all', actor_
         filtered = [item for item in filtered if str(item.get('actor', '')).strip().lower() == actor_filter]
     if status_filter != 'all':
         filtered = [item for item in filtered if str(item.get('status', '')).strip().lower() == status_filter]
+    if target_filter:
+        filtered = [item for item in filtered if str(item.get('target_id', '')).strip().lower() == target_filter]
     if text_filter:
         text_filter = str(text_filter).strip().lower()
 
@@ -8865,6 +12186,7 @@ def export_admin_audit_logs():
     entity_filter = str(request.args.get('entity', 'all') or 'all').strip().lower()
     actor_filter = str(request.args.get('actor', 'all') or 'all').strip().lower()
     status_filter = str(request.args.get('status', 'all') or 'all').strip().lower()
+    target_filter = str(request.args.get('target_id', '') or '').strip().lower()
     text_filter = str(request.args.get('q', '') or '').strip().lower()
     export_format = str(request.args.get('format', 'json') or 'json').strip().lower()
     if export_format not in {'json', 'csv'}:
@@ -8883,6 +12205,7 @@ def export_admin_audit_logs():
         actor_filter=actor_filter,
         status_filter=status_filter,
         text_filter=text_filter,
+        target_filter=target_filter,
     )
     exported_rows = filtered[-limit:] if len(filtered) > limit else filtered
     exported_rows = list(reversed(exported_rows))
@@ -8902,6 +12225,7 @@ def export_admin_audit_logs():
                 'entity': entity_filter,
                 'actor': actor_filter,
                 'status': status_filter,
+                'target_id': target_filter,
                 'q': text_filter,
             },
         },
@@ -8947,6 +12271,7 @@ def export_admin_audit_logs():
             'entity': entity_filter,
             'actor': actor_filter,
             'status': status_filter,
+            'target_id': target_filter,
             'q': text_filter,
         },
         'total_filtered': len(filtered),
@@ -9732,4 +13057,3 @@ def restart_service():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-

@@ -3,10 +3,10 @@
     "129af3fffe01f124": {
       "name": "Kient Test",
       "tags": [],
-      "ip": "192.168.10.50",
-      "tenant_id": "default",
+      "ip": "192.168.10.254",
       "gps_lat": 48.767193,
-      "gps_lng": 18.636599
+      "gps_lng": 18.636599,
+      "tenant_id": "kinet"
     },
     "129a13fffe01f124": {
       "name": "Kient Test",

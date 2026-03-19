@@ -49,7 +49,7 @@ UID=1000          # User ID for file permissions
 GID=1000          # Group ID for file permissions
 ```
 
-### Optional: InfluxDB Integration (Inventory + Uptime)
+### Optional: InfluxDB Integration (legacy, disabled by default)
 
 If InfluxDB is running, Service Center can:
 - read base-station uptime events from Influx

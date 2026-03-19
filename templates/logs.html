@@ -335,11 +335,11 @@
 <div class="logs-shell">
     <section class="workspace-toolbar">
         <div class="logs-head-actions">
-            <button class="btn btn-outline-secondary btn-sm" id="btnRefreshLogs" type="button"><i class="fas fa-sync me-1"></i>Refresh</button>
-            <button class="btn btn-outline-secondary btn-sm" id="btnExportJson" type="button"><i class="fas fa-file-download me-1"></i>JSON</button>
+            <button class="btn btn-outline-secondary btn-sm" id="btnRefreshLogs" type="button"><i class="fas fa-sync me-1"></i>{{ t('common.refresh', 'Refresh') }}</button>
+            <button class="btn btn-outline-secondary btn-sm" id="btnExportJson" type="button"><i class="fas fa-file-download me-1"></i>{{ t('common.json', 'JSON') }}</button>
             <button class="btn btn-outline-secondary btn-sm" id="btnExportCsv" type="button"><i class="fas fa-file-csv me-1"></i>CSV</button>
             {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('clear_service_logs') %}
-            <button class="btn btn-outline-danger btn-sm" id="btnClearLogs" type="button"><i class="fas fa-trash-alt me-1"></i>Clear</button>
+            <button class="btn btn-outline-danger btn-sm" id="btnClearLogs" type="button"><i class="fas fa-trash-alt me-1"></i>{{ t('common.clear', 'Clear') }}</button>
             {% endif %}
         </div>
     </section>
@@ -350,13 +350,13 @@
             <ul class="nav nav-pills logs-tab-nav" id="logsViewTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="serviceLogsTab" data-bs-toggle="tab" data-bs-target="#serviceLogsPane" type="button" role="tab" aria-controls="serviceLogsPane" aria-selected="true">
-                        <i class="fas fa-terminal me-1"></i>Service Logs
+                        <i class="fas fa-terminal me-1"></i>{{ t('logs.service_logs', 'Service Logs') }}
                         <span class="logs-tab-badge" id="serviceLogsCountBadge">0</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="adminAuditTab" data-bs-toggle="tab" data-bs-target="#adminAuditPane" type="button" role="tab" aria-controls="adminAuditPane" aria-selected="false">
-                        <i class="fas fa-user-shield me-1"></i>Admin Audit
+                        <i class="fas fa-user-shield me-1"></i>{{ t('logs.admin_audit', 'Admin Audit') }}
                         <span class="logs-tab-badge" id="adminAuditCountBadge">0</span>
                     </button>
                 </li>
@@ -369,29 +369,29 @@
         <div class="tab-pane fade show active" id="serviceLogsPane" role="tabpanel" aria-labelledby="serviceLogsTab">
             <section class="workspace-panel mt-2">
                 <div class="workspace-panel-head">
-                    <h5><i class="fas fa-heartbeat me-2"></i>BSSCI Service Status</h5>
-                    <small id="serviceUpdated">Updated --:--:--</small>
+                    <h5><i class="fas fa-heartbeat me-2"></i>{{ t('logs.service_status', 'Platform Service Status') }}</h5>
+                    <small id="serviceUpdated">{{ t('common.updated', 'Updated') }} --:--:--</small>
                 </div>
                 <div class="workspace-panel-body" id="serviceStatusBody">
-                    <div class="text-muted small">Loading service status...</div>
+                    <div class="text-muted small">{{ t('runtime.loading_service_status', 'Loading service status...') }}</div>
                 </div>
             </section>
 
             <section class="workspace-panel mt-2">
                 <div class="workspace-panel-head">
-                    <h5><i class="fas fa-filter me-2"></i>Filters</h5>
-                    <small id="logsUpdated">Updated --:--:--</small>
+                    <h5><i class="fas fa-filter me-2"></i>{{ t('common.filters', 'Filters') }}</h5>
+                    <small id="logsUpdated">{{ t('common.updated', 'Updated') }} --:--:--</small>
                 </div>
                 <div class="workspace-panel-body">
                     <div class="logs-control-grid">
                         <div class="logs-control-item wide">
-                            <label class="form-label" for="searchFilter">Search</label>
-                            <input id="searchFilter" class="form-control form-control-sm" type="text" placeholder="Search message, logger, source...">
+                            <label class="form-label" for="searchFilter">{{ t('common.search', 'Search') }}</label>
+                            <input id="searchFilter" class="form-control form-control-sm" type="text" placeholder="{{ t('logs.search_placeholder', 'Search message, logger, source...') }}">
                         </div>
                         <div class="logs-control-item">
-                            <label class="form-label" for="levelFilter">Level</label>
+                            <label class="form-label" for="levelFilter">{{ t('logs.level', 'Level') }}</label>
                             <select id="levelFilter" class="form-select form-select-sm">
-                                <option value="all">All levels</option>
+                                <option value="all">{{ t('logs.all_levels', 'All levels') }}</option>
                                 <option value="ERROR">ERROR</option>
                                 <option value="WARNING">WARNING</option>
                                 <option value="INFO">INFO</option>
@@ -399,13 +399,13 @@
                             </select>
                         </div>
                         <div class="logs-control-item">
-                            <label class="form-label" for="loggerFilter">Logger</label>
+                            <label class="form-label" for="loggerFilter">{{ t('logs.logger', 'Logger') }}</label>
                             <select id="loggerFilter" class="form-select form-select-sm">
-                                <option value="all">All loggers</option>
+                                <option value="all">{{ t('logs.all_loggers', 'All loggers') }}</option>
                             </select>
                         </div>
                         <div class="logs-control-item narrow">
-                            <label class="form-label" for="limitFilter">Limit</label>
+                            <label class="form-label" for="limitFilter">{{ t('common.limit', 'Limit') }}</label>
                             <select id="limitFilter" class="form-select form-select-sm">
                                 <option value="50">50</option>
                                 <option value="100" selected>100</option>
@@ -415,7 +415,7 @@
                             </select>
                         </div>
                         <div class="logs-control-item narrow">
-                            <label class="form-label" for="intervalFilter">Refresh</label>
+                            <label class="form-label" for="intervalFilter">{{ t('common.refresh', 'Refresh') }}</label>
                             <select id="intervalFilter" class="form-select form-select-sm">
                                 <option value="2">2s</option>
                                 <option value="3" selected>3s</option>
@@ -427,11 +427,11 @@
                             <div class="logs-inline-toggles">
                                 <div class="form-check form-switch m-0">
                                     <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
-                                    <label class="form-check-label" for="autoRefresh">Auto-refresh</label>
+                                    <label class="form-check-label" for="autoRefresh">{{ t('common.auto_refresh', 'Auto-refresh') }}</label>
                                 </div>
                                 <div class="form-check form-switch m-0">
                                     <input class="form-check-input" type="checkbox" id="followTail" checked>
-                                    <label class="form-check-label" for="followTail">Follow tail</label>
+                                    <label class="form-check-label" for="followTail">{{ t('logs.follow_tail', 'Follow tail') }}</label>
                                 </div>
                             </div>
                         </div>
@@ -441,13 +441,13 @@
 
             <section class="workspace-panel mt-2">
                 <div class="workspace-panel-head">
-                    <h5><i class="fas fa-terminal me-2"></i>Log Stream</h5>
-                    <small id="logStatsText">Waiting for data...</small>
+                    <h5><i class="fas fa-terminal me-2"></i>{{ t('logs.log_stream', 'Log Stream') }}</h5>
+                    <small id="logStatsText">{{ t('runtime.waiting_for_data', 'Waiting for data...') }}</small>
                 </div>
                 <div class="workspace-panel-body">
                     <div class="logs-stats-row" id="logStatsChips"></div>
                     <div class="logs-console mt-2" id="logsContainer">
-                        <div class="log-empty">Loading logs...</div>
+                        <div class="log-empty">{{ t('runtime.loading_logs', 'Loading logs...') }}</div>
                     </div>
                 </div>
             </section>
@@ -457,57 +457,57 @@
         <div class="tab-pane fade" id="adminAuditPane" role="tabpanel" aria-labelledby="adminAuditTab">
             <section class="workspace-panel mt-2">
                 <div class="workspace-panel-head">
-                    <h5><i class="fas fa-user-shield me-2"></i>Admin Audit Trail</h5>
-                    <small id="auditUpdated">Updated --:--:--</small>
+                    <h5><i class="fas fa-user-shield me-2"></i>{{ t('logs.admin_audit_trail', 'Admin Audit Trail') }}</h5>
+                    <small id="auditUpdated">{{ t('common.updated', 'Updated') }} --:--:--</small>
                 </div>
                 <div class="workspace-panel-body">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                        <small class="text-muted">Who/when changed sensors, base stations, tenants, configuration and MQTT test publish.</small>
+                        <small class="text-muted">{{ t('logs.admin_audit_subtitle', 'Who and when changed sensors, base stations, tenants, configuration and MQTT test publish.') }}</small>
                     <div class="d-flex flex-wrap align-items-center gap-2">
-                        <button class="btn btn-outline-secondary btn-sm" id="btnRefreshAudit" type="button"><i class="fas fa-sync me-1"></i>Refresh</button>
+                        <button class="btn btn-outline-secondary btn-sm" id="btnRefreshAudit" type="button"><i class="fas fa-sync me-1"></i>{{ t('common.refresh', 'Refresh') }}</button>
                         {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('export_admin_audit') %}
-                        <button class="btn btn-outline-secondary btn-sm" id="btnExportAuditJson" type="button"><i class="fas fa-file-download me-1"></i>JSON</button>
+                        <button class="btn btn-outline-secondary btn-sm" id="btnExportAuditJson" type="button"><i class="fas fa-file-download me-1"></i>{{ t('common.json', 'JSON') }}</button>
                         <button class="btn btn-outline-secondary btn-sm" id="btnExportAuditCsv" type="button"><i class="fas fa-file-csv me-1"></i>CSV</button>
                         {% endif %}
                         {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('clear_admin_audit') %}
-                        <button class="btn btn-outline-danger btn-sm" id="btnClearAudit" type="button"><i class="fas fa-trash-alt me-1"></i>Clear</button>
+                        <button class="btn btn-outline-danger btn-sm" id="btnClearAudit" type="button"><i class="fas fa-trash-alt me-1"></i>{{ t('common.clear', 'Clear') }}</button>
                         {% endif %}
                     </div>
                 </div>
                     <div class="logs-control-grid mt-2">
                         <div class="logs-control-item wide">
-                            <label class="form-label" for="auditSearchFilter">Search</label>
-                            <input id="auditSearchFilter" class="form-control form-control-sm" type="text" placeholder="Search action, entity, actor, target...">
+                            <label class="form-label" for="auditSearchFilter">{{ t('common.search', 'Search') }}</label>
+                            <input id="auditSearchFilter" class="form-control form-control-sm" type="text" placeholder="{{ t('logs.audit_search_placeholder', 'Search action, entity, actor, target...') }}">
                         </div>
                         <div class="logs-control-item">
-                            <label class="form-label" for="auditActionFilter">Action</label>
+                            <label class="form-label" for="auditActionFilter">{{ t('common.action', 'Action') }}</label>
                             <select id="auditActionFilter" class="form-select form-select-sm">
-                                <option value="all">All actions</option>
+                                <option value="all">{{ t('logs.all_actions', 'All actions') }}</option>
                             </select>
                         </div>
                         <div class="logs-control-item">
-                            <label class="form-label" for="auditEntityFilter">Entity</label>
+                            <label class="form-label" for="auditEntityFilter">{{ t('common.entity', 'Entity') }}</label>
                             <select id="auditEntityFilter" class="form-select form-select-sm">
-                                <option value="all">All entities</option>
+                                <option value="all">{{ t('logs.all_entities', 'All entities') }}</option>
                             </select>
                         </div>
                         <div class="logs-control-item">
-                            <label class="form-label" for="auditActorFilter">Actor</label>
+                            <label class="form-label" for="auditActorFilter">{{ t('common.actor', 'Actor') }}</label>
                             <select id="auditActorFilter" class="form-select form-select-sm">
-                                <option value="all">All actors</option>
+                                <option value="all">{{ t('logs.all_actors', 'All actors') }}</option>
                             </select>
                         </div>
                         <div class="logs-control-item narrow">
-                            <label class="form-label" for="auditStatusFilter">Status</label>
+                            <label class="form-label" for="auditStatusFilter">{{ t('common.status', 'Status') }}</label>
                             <select id="auditStatusFilter" class="form-select form-select-sm">
-                                <option value="all">All</option>
-                                <option value="success">Success</option>
-                                <option value="warning">Warning</option>
-                                <option value="error">Error</option>
+                                <option value="all">{{ t('common.all', 'All') }}</option>
+                                <option value="success">{{ t('common.success', 'Success') }}</option>
+                                <option value="warning">{{ t('common.warning', 'Warning') }}</option>
+                                <option value="error">{{ t('common.error', 'Error') }}</option>
                             </select>
                         </div>
                         <div class="logs-control-item narrow">
-                            <label class="form-label" for="auditLimitFilter">Limit</label>
+                            <label class="form-label" for="auditLimitFilter">{{ t('common.limit', 'Limit') }}</label>
                             <select id="auditLimitFilter" class="form-select form-select-sm">
                                 <option value="50">50</option>
                                 <option value="100">100</option>
@@ -518,9 +518,9 @@
                         </div>
                     </div>
                     <div class="logs-stats-row mt-2" id="auditStatsChips"></div>
-                    <small class="text-muted d-block mt-1" id="auditStatsText">Waiting for audit data...</small>
+                    <small class="text-muted d-block mt-1" id="auditStatsText">{{ t('logs.waiting_for_audit_data', 'Waiting for audit data...') }}</small>
                     <div class="logs-console logs-console-audit mt-2" id="auditContainer">
-                        <div class="log-empty">Loading audit trail...</div>
+                        <div class="log-empty">{{ t('logs.loading_audit_trail', 'Loading audit trail...') }}</div>
                     </div>
                 </div>
             </section>
@@ -583,7 +583,7 @@ function highlightMatch(text, query) {
 }
 
 function getNowStamp() {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return AppTime.formatTime(new Date());
 }
 
 function formatBadgeCount(value) {
@@ -641,7 +641,7 @@ async function appConfirm(options) {
     if (window.AppUI && typeof window.AppUI.confirm === 'function') {
         return window.AppUI.confirm(options || {});
     }
-    return confirm((options && options.message) || 'Are you sure?');
+    return confirm((options && options.message) || appTranslate('runtime.are_you_sure', 'Are you sure?'));
 }
 
 function getLevelClass(level) {
@@ -653,12 +653,12 @@ function getLevelClass(level) {
 function renderServiceStatus(data) {
     const container = document.getElementById('serviceStatusBody');
     const updated = document.getElementById('serviceUpdated');
-    updated.textContent = `Updated ${getNowStamp()}`;
+    updated.textContent = `${appTranslate('common.updated', 'Updated')} ${getNowStamp()}`;
 
     if (!data || !data.running) {
         container.innerHTML = `
             <div class="alert alert-danger mb-0">
-                <strong>Service not running.</strong> ${escapeHtml((data && data.error) || 'Unknown error')}
+                <strong>${appTranslate('logs.service_not_running', 'Service not running.')}</strong> ${escapeHtml((data && data.error) || appTranslate('common.unknown_error', 'Unknown error'))}
             </div>
         `;
         return;
@@ -672,11 +672,11 @@ function renderServiceStatus(data) {
 
     container.innerHTML = `
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <span class="log-chip"><i class="fas fa-circle text-success"></i>Running</span>
-            <span class="log-chip"><i class="fas fa-broadcast-tower"></i>${connectedBs} connected BS</span>
-            <span class="log-chip"><i class="fas fa-spinner"></i>${connectingBs} connecting BS</span>
-            <span class="log-chip"><i class="fas fa-microchip"></i>${regSensors}/${totalSensors} sensors</span>
-            <span class="log-chip"><i class="fas fa-hourglass-half"></i>${pendingReq} pending</span>
+            <span class="log-chip"><i class="fas fa-circle text-success"></i>${appTranslate('common.running', 'Running')}</span>
+            <span class="log-chip"><i class="fas fa-broadcast-tower"></i>${connectedBs} ${appTranslate('logs.connected_bs', 'connected BS')}</span>
+            <span class="log-chip"><i class="fas fa-spinner"></i>${connectingBs} ${appTranslate('logs.connecting_bs', 'connecting BS')}</span>
+            <span class="log-chip"><i class="fas fa-microchip"></i>${regSensors}/${totalSensors} ${appTranslate('common.sensors', 'sensors')}</span>
+            <span class="log-chip"><i class="fas fa-hourglass-half"></i>${pendingReq} ${appTranslate('logs.pending', 'pending')}</span>
         </div>
     `;
 }
@@ -690,12 +690,12 @@ function buildLogStats(payload) {
     const shown = Array.isArray(payload && payload.logs) ? payload.logs.length : 0;
     const counts = (payload && payload.level_counts) || {};
 
-    statsText.textContent = `Updated ${getNowStamp()} | Source: ${escapeHtml((payload && payload.source) || 'unknown')}`;
+    statsText.textContent = `${appTranslate('common.updated', 'Updated')} ${getNowStamp()} | ${appTranslate('common.source', 'Source')}: ${escapeHtml((payload && payload.source) || appTranslate('common.unknown', 'unknown'))}`;
 
     chips.innerHTML = `
-        <span class="log-chip">Total ${total}</span>
-        <span class="log-chip">Filtered ${filtered}</span>
-        <span class="log-chip">Shown ${shown}</span>
+        <span class="log-chip">${appTranslate('common.total', 'Total')} ${total}</span>
+        <span class="log-chip">${appTranslate('common.filtered', 'Filtered')} ${filtered}</span>
+        <span class="log-chip">${appTranslate('common.shown', 'Shown')} ${shown}</span>
         <span class="log-chip critical">ERROR ${Number(counts.ERROR || 0)}</span>
         <span class="log-chip warning">WARN ${Number(counts.WARNING || 0)}</span>
         <span class="log-chip">INFO ${Number(counts.INFO || 0)}</span>
@@ -709,7 +709,7 @@ function renderLoggerOptions(payload) {
     const names = Array.isArray(payload && payload.logger_names) ? payload.logger_names : [];
     const current = select.value || 'all';
 
-    const options = ['<option value="all">All loggers</option>'];
+    const options = [`<option value="all">${appTranslate('logs.all_loggers', 'All loggers')}</option>`];
     names.forEach(name => {
         options.push(`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`);
     });
@@ -729,7 +729,7 @@ function renderLogs(logs, query) {
     const followTail = document.getElementById('followTail').checked;
 
     if (!Array.isArray(logs) || logs.length === 0) {
-        container.innerHTML = '<div class="log-empty">No logs for current filter.</div>';
+        container.innerHTML = `<div class="log-empty">${appTranslate('logs.no_logs_current_filter', 'No logs for current filter.')}</div>`;
         return;
     }
 
@@ -778,9 +778,9 @@ function renderAuditOptions(payload) {
     const entities = Array.isArray(payload && payload.entities) ? payload.entities : [];
     const actors = Array.isArray(payload && payload.actors) ? payload.actors : [];
 
-    actionSelect.innerHTML = ['<option value="all">All actions</option>', ...actions.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
-    entitySelect.innerHTML = ['<option value="all">All entities</option>', ...entities.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
-    actorSelect.innerHTML = ['<option value="all">All actors</option>', ...actors.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
+    actionSelect.innerHTML = [`<option value="all">${appTranslate('logs.all_actions', 'All actions')}</option>`, ...actions.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
+    entitySelect.innerHTML = [`<option value="all">${appTranslate('logs.all_entities', 'All entities')}</option>`, ...entities.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
+    actorSelect.innerHTML = [`<option value="all">${appTranslate('logs.all_actors', 'All actors')}</option>`, ...actors.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
 
     actionSelect.value = ['all', ...actions].includes(actionCurrent) ? actionCurrent : 'all';
     entitySelect.value = ['all', ...entities].includes(entityCurrent) ? entityCurrent : 'all';
@@ -799,15 +799,15 @@ function renderAuditStats(payload) {
     const shown = Number((payload && payload.shown) || 0);
     const counts = (payload && payload.status_counts) || {};
 
-    updated.textContent = `Updated ${getNowStamp()}`;
-    text.textContent = `Source: ${escapeHtml((payload && payload.source) || 'memory')}`;
+    updated.textContent = `${appTranslate('common.updated', 'Updated')} ${getNowStamp()}`;
+    text.textContent = `${appTranslate('common.source', 'Source')}: ${escapeHtml((payload && payload.source) || appTranslate('logs.memory_source', 'memory'))}`;
     chips.innerHTML = `
-        <span class="log-chip">Total ${total}</span>
-        <span class="log-chip">Filtered ${filtered}</span>
-        <span class="log-chip">Shown ${shown}</span>
-        <span class="log-chip">Success ${Number(counts.success || 0)}</span>
-        <span class="log-chip warning">Warning ${Number(counts.warning || 0)}</span>
-        <span class="log-chip critical">Error ${Number(counts.error || 0)}</span>
+        <span class="log-chip">${appTranslate('common.total', 'Total')} ${total}</span>
+        <span class="log-chip">${appTranslate('common.filtered', 'Filtered')} ${filtered}</span>
+        <span class="log-chip">${appTranslate('common.shown', 'Shown')} ${shown}</span>
+        <span class="log-chip">${appTranslate('common.success', 'Success')} ${Number(counts.success || 0)}</span>
+        <span class="log-chip warning">${appTranslate('common.warning', 'Warning')} ${Number(counts.warning || 0)}</span>
+        <span class="log-chip critical">${appTranslate('common.error', 'Error')} ${Number(counts.error || 0)}</span>
     `;
     updateTabBadge('adminAuditCountBadge', filtered);
 }
@@ -820,7 +820,7 @@ function renderAuditLogs(entries, query) {
     const previousScrollTop = container.scrollTop;
 
     if (!Array.isArray(entries) || entries.length === 0) {
-        container.innerHTML = '<div class="log-empty">No audit entries for current filter.</div>';
+        container.innerHTML = `<div class="log-empty">${appTranslate('logs.no_audit_entries_current_filter', 'No audit entries for current filter.')}</div>`;
         return;
     }
 
@@ -847,7 +847,7 @@ function renderAuditLogs(entries, query) {
                     ${ip ? `<span class="log-source">IP ${ip}</span>` : ''}
                     ${path ? `<span class="log-source">${path}</span>` : ''}
                 </div>
-                <p class="audit-line-summary">${summary || 'No summary'}</p>
+                <p class="audit-line-summary">${summary || appTranslate('common.no_summary', 'No summary')}</p>
                 <pre class="audit-line-details">${details}</pre>
             </article>
         `;
@@ -893,8 +893,8 @@ function updateLogsToolbarState() {
     if (exportCsvBtn) exportCsvBtn.style.display = normalActive ? '' : 'none';
     if (clearLogsBtn) clearLogsBtn.style.display = normalActive ? '' : 'none';
     if (refreshBtn) refreshBtn.innerHTML = normalActive
-        ? '<i class="fas fa-sync me-1"></i>Refresh'
-        : '<i class="fas fa-sync me-1"></i>Refresh audit';
+        ? `<i class="fas fa-sync me-1"></i>${appTranslate('common.refresh', 'Refresh')}`
+        : `<i class="fas fa-sync me-1"></i>${appTranslate('logs.refresh_audit', 'Refresh audit')}`;
 }
 
 async function refreshActiveLogsView() {
@@ -921,9 +921,9 @@ async function refreshLogs() {
         renderLoggerOptions(payload);
         buildLogStats(payload);
         renderLogs(latestFilteredLogs, collectFilters().q);
-        document.getElementById('logsUpdated').textContent = `Updated ${getNowStamp()}`;
+        document.getElementById('logsUpdated').textContent = `${appTranslate('common.updated', 'Updated')} ${getNowStamp()}`;
     } catch (error) {
-        document.getElementById('logsContainer').innerHTML = '<div class="log-empty" style="color:#ffb8bf;">Failed to load logs.</div>';
+        document.getElementById('logsContainer').innerHTML = `<div class="log-empty" style="color:#ffb8bf;">${appTranslate('runtime.failed_load_logs', 'Failed to load logs.')}</div>`;
     } finally {
         refreshInFlight = false;
     }
@@ -937,7 +937,7 @@ async function refreshAuditLogs() {
         const response = await fetch(`/api/audit/logs?${params.toString()}`);
         const payload = await response.json();
         if (!response.ok || !payload.success) {
-            throw new Error((payload && (payload.error || payload.message)) || 'Failed to load audit logs');
+            throw new Error((payload && (payload.error || payload.message)) || appTranslate('runtime.failed_load_audit_logs', 'Failed to load audit logs'));
         }
         latestAuditPayload = payload;
         latestFilteredAudit = Array.isArray(payload.entries) ? payload.entries : [];
@@ -948,7 +948,7 @@ async function refreshAuditLogs() {
     } catch (error) {
         const container = document.getElementById('auditContainer');
         if (container) {
-            container.innerHTML = '<div class="log-empty" style="color:#ffb8bf;">Failed to load audit trail.</div>';
+            container.innerHTML = `<div class="log-empty" style="color:#ffb8bf;">${appTranslate('runtime.failed_load_audit_trail', 'Failed to load audit trail.')}</div>`;
         }
     } finally {
         auditRefreshInFlight = false;
@@ -961,7 +961,7 @@ async function refreshServiceStatus() {
         const payload = await response.json();
         renderServiceStatus(payload);
     } catch (error) {
-        renderServiceStatus({ running: false, error: 'Failed to load service status' });
+        renderServiceStatus({ running: false, error: appTranslate('runtime.failed_load_service_status', 'Failed to load service status') });
     }
 }
 
@@ -989,10 +989,10 @@ function updateAutoRefreshTimer() {
 
 async function clearLogs() {
     const confirmed = await appConfirm({
-        title: 'Clear logs',
-        message: 'Clear all in-memory logs?',
-        confirmText: 'Clear',
-        cancelText: 'Cancel',
+        title: appTranslate('runtime.clear_logs_title', 'Clear service logs'),
+        message: appTranslate('runtime.clear_logs_message', 'Clear all in-memory logs?'),
+        confirmText: appTranslate('common.delete', 'Clear'),
+        cancelText: appTranslate('common.cancel', 'Cancel'),
         variant: 'danger'
     });
     if (!confirmed) return;
@@ -1001,23 +1001,23 @@ async function clearLogs() {
         const response = await fetch('/api/logs/clear', { method: 'POST' });
         const payload = await response.json();
         if (!response.ok || !payload.success) {
-            appToast(payload.message || payload.error || 'Unable to clear logs.', 'danger');
+            appToast(payload.message || payload.error || appTranslate('runtime.unable_clear_logs', 'Unable to clear logs.'), 'danger');
             return;
         }
-        appToast('Logs cleared.', 'success');
+        appToast(appTranslate('runtime.logs_cleared', 'Logs cleared.'), 'success');
         await refreshLogs();
     } catch (error) {
-        appToast('Unable to clear logs.', 'danger');
+        appToast(appTranslate('runtime.unable_clear_logs', 'Unable to clear logs.'), 'danger');
     }
 }
 
 async function clearAuditLogs() {
     if (!CAN_CLEAR_AUDIT) return;
     const confirmed = await appConfirm({
-        title: 'Clear audit trail',
-        message: 'Clear all admin audit entries?',
-        confirmText: 'Clear',
-        cancelText: 'Cancel',
+        title: appTranslate('runtime.clear_admin_audit_title', 'Clear admin audit log'),
+        message: appTranslate('runtime.clear_admin_audit_message', 'Clear all admin audit entries?'),
+        confirmText: appTranslate('common.delete', 'Clear'),
+        cancelText: appTranslate('common.cancel', 'Cancel'),
         variant: 'danger'
     });
     if (!confirmed) return;
@@ -1026,13 +1026,13 @@ async function clearAuditLogs() {
         const response = await fetch('/api/audit/logs/clear', { method: 'POST' });
         const payload = await response.json();
         if (!response.ok || !payload.success) {
-            appToast(payload.message || payload.error || 'Unable to clear admin audit log.', 'danger');
+            appToast(payload.message || payload.error || appTranslate('runtime.unable_clear_admin_audit', 'Unable to clear admin audit log.'), 'danger');
             return;
         }
-        appToast('Admin audit log cleared.', 'success');
+        appToast(appTranslate('runtime.admin_audit_cleared', 'Admin audit log cleared.'), 'success');
         await refreshAuditLogs();
     } catch (error) {
-        appToast('Unable to clear admin audit log.', 'danger');
+        appToast(appTranslate('runtime.unable_clear_admin_audit', 'Unable to clear admin audit log.'), 'danger');
     }
 }
 
@@ -1095,7 +1095,7 @@ async function exportAudit(format) {
         const response = await fetch(`/api/audit/logs/export?${params.toString()}`);
         if (!response.ok) {
             const payload = await response.json().catch(() => ({}));
-            throw new Error(payload.error || payload.message || 'Export failed');
+            throw new Error(payload.error || payload.message || appTranslate('runtime.export_failed', 'Export failed'));
         }
         const blob = await response.blob();
         const disposition = String(response.headers.get('Content-Disposition') || '');
@@ -1110,7 +1110,7 @@ async function exportAudit(format) {
         a.remove();
         URL.revokeObjectURL(url);
     } catch (error) {
-        appToast(`Audit export failed: ${error.message}`, 'danger');
+        appToast(appTranslate('runtime.audit_export_failed_simple', 'Audit export failed: {error}', { error: error.message }), 'danger');
     }
 }
 

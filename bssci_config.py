@@ -13,6 +13,7 @@ CA_FILE = os.getenv("CA_FILE", "certs/ca_cert.pem")
 TLS_CLIENT_CERT_MODE = os.getenv("TLS_CLIENT_CERT_MODE", "required").strip().lower()
 
 # MQTT Configuration - read from .env
+MQTT_ENABLED = os.getenv("MQTT_ENABLED", "true").strip().lower() == "true"
 MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_USERNAME = os.getenv("MQTT_USERNAME", "")
@@ -39,6 +40,10 @@ SENSOR_CONFIG_FILE = os.getenv("SENSOR_CONFIG_FILE", "endpoints.json")
 BASE_STATION_CONFIG_FILE = os.getenv("BASE_STATION_CONFIG_FILE", "base_stations.json")
 STATUS_INTERVAL = int(os.getenv("STATUS_INTERVAL", "30"))
 DEDUPLICATION_DELAY = float(os.getenv("DEDUPLICATION_DELAY", "2.0"))
+ATTACH_RECONCILE_INTERVAL_SECONDS = int(os.getenv("ATTACH_RECONCILE_INTERVAL_SECONDS", "60"))
+ATTACH_RETRY_MIN_INTERVAL_SECONDS = int(os.getenv("ATTACH_RETRY_MIN_INTERVAL_SECONDS", "120"))
+ATTACH_RESPONSE_TIMEOUT_SECONDS = int(os.getenv("ATTACH_RESPONSE_TIMEOUT_SECONDS", "12"))
+ATTACH_POST_CONNECT_RETRY_DELAY_SECONDS = int(os.getenv("ATTACH_POST_CONNECT_RETRY_DELAY_SECONDS", "8"))
 
 # Auto-detach Configuration
 AUTO_DETACH_ENABLED = os.getenv("AUTO_DETACH_ENABLED", "true").lower() == "true"
@@ -48,14 +53,18 @@ AUTO_DETACH_CHECK_INTERVAL = int(os.getenv("AUTO_DETACH_CHECK_INTERVAL", "3600")
 
 # Timezone Configuration
 TIMEZONE = os.getenv("TIMEZONE", "Europe/Berlin")  # Default to Europe/Berlin (CET/CEST)
+APP_LANGUAGE = os.getenv("APP_LANGUAGE", "en").strip().lower() or "en"
 
 # UI module toggles
 OMS_ENABLED = os.getenv("OMS_ENABLED", "true").strip().lower() == "true"
+MQTT_UI_ENABLED = os.getenv("MQTT_UI_ENABLED", "true").strip().lower() == "true"
+BS_UPTIME_PANEL_ENABLED = os.getenv("BS_UPTIME_PANEL_ENABLED", "false").strip().lower() == "true"
 
 # Telemetry source configuration (runtime memory vs InfluxDB)
 TELEMETRY_SOURCE = os.getenv("TELEMETRY_SOURCE", "auto").strip().lower()
 
 # InfluxDB configuration (optional)
+INFLUX_ENABLED = os.getenv("INFLUX_ENABLED", "false").strip().lower() == "true"
 INFLUXDB_URL = os.getenv("INFLUXDB_URL", "").strip()
 INFLUXDB_ORG = os.getenv("INFLUXDB_ORG", "").strip()
 INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET", "").strip()

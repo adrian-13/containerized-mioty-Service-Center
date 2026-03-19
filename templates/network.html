@@ -1279,46 +1279,33 @@ body.map-fullscreen-active {
 
 <div id="mapFullscreenBackdrop" onclick="closeActiveFullscreen()"></div>
 
-<div class="network-hero">
-    <div>
-        <p class="network-kicker">Coverage and Routing</p>
-        <h2 class="network-title">Network Topology Workspace</h2>
-        <p class="network-subtitle">Place devices precisely, verify link quality and manage topology from one operational view.</p>
-    </div>
-    <div class="network-hero-metrics">
-        <span class="network-hero-pill"><i class="fas fa-map-pin"></i>GPS synced</span>
-        <span class="network-hero-pill"><i class="fas fa-project-diagram"></i>Live topology</span>
-        <span class="network-hero-pill"><i class="fas fa-shield-alt"></i>Tenant-aware</span>
-    </div>
-</div>
-
 <div class="network-mode-bar">
-    <div class="network-mode-buttons" role="tablist" aria-label="Workspace mode">
+    <div class="network-mode-buttons" role="tablist" aria-label="{{ t('network.workspace_mode', 'Workspace mode') }}">
         <button class="network-mode-btn is-active" id="workspaceModeCoverage" type="button" onclick="setWorkspaceMode('coverage')">
-            <i class="fas fa-map-marked-alt me-1"></i>Coverage Mode
+            <i class="fas fa-map-marked-alt me-1"></i>{{ t('network.coverage_mode', 'Coverage Mode') }}
         </button>
         <button class="network-mode-btn" id="workspaceModeTopology" type="button" onclick="setWorkspaceMode('topology')">
-            <i class="fas fa-project-diagram me-1"></i>Topology Mode
+            <i class="fas fa-project-diagram me-1"></i>{{ t('network.topology_mode', 'Topology Mode') }}
         </button>
     </div>
     <div class="network-mode-right">
-        <span class="network-mode-meta" id="networkModeHint">Coverage mode: map + floorplan positioning.</span>
-        <button class="btn btn-outline-secondary btn-sm mode-hidden" id="focusTopologyBtn" onclick="focusTopologyView()"><i class="fas fa-crosshairs"></i> Focus</button>
-        <button class="btn btn-primary btn-sm" onclick="refreshNetworkWorkspace()"><i class="fas fa-sync"></i> Refresh</button>
+        <span class="network-mode-meta" id="networkModeHint">{{ t('network.coverage_mode_hint', 'Coverage mode: map + floorplan positioning.') }}</span>
+        <button class="btn btn-outline-secondary btn-sm mode-hidden" id="focusTopologyBtn" onclick="focusTopologyView()"><i class="fas fa-crosshairs"></i> {{ t('common.focus', 'Focus') }}</button>
+        <button class="btn btn-primary btn-sm" onclick="refreshNetworkWorkspace()"><i class="fas fa-sync"></i> {{ t('common.refresh', 'Refresh') }}</button>
     </div>
 </div>
 
 <div class="network-control-grid">
     <div class="network-control-card network-control-card--compact" data-mode="coverage">
         <div class="network-control-head">
-            <p class="network-control-title"><i class="fas fa-map-marked-alt me-2"></i>Coverage Controls</p>
-            <span class="network-control-meta">Updated <span id="coverageRefreshStamp">never</span></span>
-            <span class="network-control-cache" id="coverageCacheAge">Cache -</span>
+            <p class="network-control-title"><i class="fas fa-map-marked-alt me-2"></i>{{ t('network.coverage_controls', 'Coverage Controls') }}</p>
+            <span class="network-control-meta">{{ t('common.updated', 'Updated') }} <span id="coverageRefreshStamp">{{ t('common.never', 'never') }}</span></span>
+            <span class="network-control-cache" id="coverageCacheAge">{{ t('common.cache', 'Cache') }} -</span>
         </div>
         <div class="network-control-body">
             <div class="network-control-toolbar">
                 <div class="network-button-row">
-                    <button class="btn btn-primary btn-sm" onclick="refreshNetworkWorkspace()"><i class="fas fa-sync me-1"></i>Refresh Data</button>
+                    <button class="btn btn-primary btn-sm" onclick="refreshNetworkWorkspace()"><i class="fas fa-sync me-1"></i>{{ t('network.refresh_data', 'Refresh Data') }}</button>
                 </div>
                 <div class="network-inline-controls network-inline-controls--chips">
                     <span class="network-badge-chip"><i class="fas fa-broadcast-tower"></i><span id="coverageBsChip">0 BS</span></span>
@@ -1329,30 +1316,30 @@ body.map-fullscreen-active {
             <div class="network-inline-controls network-inline-controls--dense">
                 <div class="form-check m-0">
                     <input class="form-check-input" type="checkbox" id="showBaseStations" checked>
-                    <label class="form-check-label small" for="showBaseStations">Show base stations</label>
+                    <label class="form-check-label small" for="showBaseStations">{{ t('network.show_base_stations', 'Show base stations') }}</label>
                 </div>
                 <div class="form-check m-0">
                     <input class="form-check-input" type="checkbox" id="showSensors" checked>
-                    <label class="form-check-label small" for="showSensors">Show sensors</label>
+                    <label class="form-check-label small" for="showSensors">{{ t('network.show_sensors', 'Show sensors') }}</label>
                 </div>
                 <div class="form-check m-0">
                     <input class="form-check-input" type="checkbox" id="showHeatmap">
-                    <label class="form-check-label small" for="showHeatmap">Heatmap</label>
+                    <label class="form-check-label small" for="showHeatmap">{{ t('network.heatmap', 'Heatmap') }}</label>
                 </div>
-                <label class="form-label mb-0 small text-muted">Signal metric</label>
+                <label class="form-label mb-0 small text-muted">{{ t('network.signal_metric', 'Signal metric') }}</label>
                 <select class="form-select form-select-sm" id="metricSelect">
-                    <option value="snr" selected>SNR (dB)</option>
-                    <option value="rssi">RSSI (dBm)</option>
+                    <option value="snr" selected>{{ t('network.metric_snr', 'SNR (dB)') }}</option>
+                    <option value="rssi">{{ t('network.metric_rssi', 'RSSI (dBm)') }}</option>
                 </select>
-                <span class="network-control-note"><i class="fas fa-location-arrow me-1"></i>GPS changes sync automatically.</span>
+                <span class="network-control-note"><i class="fas fa-location-arrow me-1"></i>{{ t('network.gps_changes_sync', 'GPS changes sync automatically.') }}</span>
             </div>
         </div>
     </div>
     <div class="network-control-card mode-hidden" data-mode="topology">
         <div class="network-control-head">
-            <p class="network-control-title"><i class="fas fa-project-diagram me-2"></i>Topology Controls</p>
-            <span class="network-control-meta">Updated <span id="topologyRefreshStamp">never</span></span>
-            <span class="network-control-cache" id="topologyCacheAge">Cache -</span>
+            <p class="network-control-title"><i class="fas fa-project-diagram me-2"></i>{{ t('network.topology_controls', 'Topology Controls') }}</p>
+            <span class="network-control-meta">{{ t('common.updated', 'Updated') }} <span id="topologyRefreshStamp">{{ t('common.never', 'never') }}</span></span>
+            <span class="network-control-cache" id="topologyCacheAge">{{ t('common.cache', 'Cache') }} -</span>
         </div>
         <div class="network-control-body">
             <div class="network-inline-controls">
@@ -1362,103 +1349,103 @@ body.map-fullscreen-active {
                 <span class="network-badge-chip"><i class="fas fa-exclamation-triangle"></i><span id="topologyIssueChip">0 issues</span></span>
                 <div class="topology-control-actions">
                     <button class="btn btn-primary btn-sm" type="button" onclick="refreshNetworkWorkspace()">
-                        <i class="fas fa-sync me-1"></i>Refresh
+                        <i class="fas fa-sync me-1"></i>{{ t('common.refresh', 'Refresh') }}
                     </button>
                     <button class="btn btn-success btn-sm" type="button" onclick="saveTopoPositions()">
-                        <i class="fas fa-save me-1"></i>Save
+                        <i class="fas fa-save me-1"></i>{{ t('common.save', 'Save') }}
                     </button>
                     <button class="btn btn-outline-secondary btn-sm" type="button" onclick="resetLayout()">
-                        <i class="fas fa-undo me-1"></i>Reset
+                        <i class="fas fa-undo me-1"></i>{{ t('common.reset', 'Reset') }}
                     </button>
                     <button class="btn btn-outline-secondary btn-sm" type="button" onclick="focusTopologyView()">
-                        <i class="fas fa-crosshairs me-1"></i>Fit graph
+                        <i class="fas fa-crosshairs me-1"></i>{{ t('network.fit_graph', 'Fit graph') }}
                     </button>
                 </div>
             </div>
             <div class="network-inline-controls">
-                <label class="form-label mb-0 small text-muted">Layout</label>
+                <label class="form-label mb-0 small text-muted">{{ t('common.layout', 'Layout') }}</label>
                 <select class="form-select form-select-sm" id="topologyLayoutSelect">
-                    <option value="cose" selected>Organic (COSE)</option>
-                    <option value="layered">Layered (BS -> Sensors)</option>
-                    <option value="grid">Grid</option>
-                    <option value="concentric">Concentric</option>
+                    <option value="cose" selected>{{ t('network.layout_organic', 'Organic (COSE)') }}</option>
+                    <option value="layered">{{ t('network.layout_layered', 'Layered (BS -> Sensors)') }}</option>
+                    <option value="grid">{{ t('network.layout_grid', 'Grid') }}</option>
+                    <option value="concentric">{{ t('network.layout_concentric', 'Concentric') }}</option>
                 </select>
-                <label class="form-label mb-0 small text-muted">Filter</label>
+                <label class="form-label mb-0 small text-muted">{{ t('common.filter', 'Filter') }}</label>
                 <select class="form-select form-select-sm" id="topologyNodeFilter">
-                    <option value="all" selected>All nodes</option>
-                    <option value="bs">Base stations only</option>
-                    <option value="sensor">Sensors only</option>
-                    <option value="problems">Problems + context</option>
+                    <option value="all" selected>{{ t('network.all_nodes', 'All nodes') }}</option>
+                    <option value="bs">{{ t('network.base_stations_only', 'Base stations only') }}</option>
+                    <option value="sensor">{{ t('network.sensors_only', 'Sensors only') }}</option>
+                    <option value="problems">{{ t('network.problems_context', 'Problems + context') }}</option>
                 </select>
-                <label class="form-label mb-0 small text-muted">Routes</label>
+                <label class="form-label mb-0 small text-muted">{{ t('network.routes', 'Routes') }}</label>
                 <select class="form-select form-select-sm" id="topologyRouteSourceFilter">
-                    <option value="both" selected>Live + assigned</option>
-                    <option value="live">Live only</option>
-                    <option value="assigned">Assigned only</option>
+                    <option value="both" selected>{{ t('network.live_assigned', 'Live + assigned') }}</option>
+                    <option value="live">{{ t('network.live_only', 'Live only') }}</option>
+                    <option value="assigned">{{ t('network.assigned_only', 'Assigned only') }}</option>
                 </select>
                 <div class="form-check m-0">
                     <input class="form-check-input" type="checkbox" id="topologyHighlightProblems" checked>
-                    <label class="form-check-label small" for="topologyHighlightProblems">Highlight issues</label>
+                    <label class="form-check-label small" for="topologyHighlightProblems">{{ t('network.highlight_issues', 'Highlight issues') }}</label>
                 </div>
                 <div class="form-check m-0">
                     <input class="form-check-input" type="checkbox" id="showSecondaryRoutes" checked>
-                    <label class="form-check-label small" for="showSecondaryRoutes">Show secondary routes</label>
+                    <label class="form-check-label small" for="showSecondaryRoutes">{{ t('network.show_secondary_routes', 'Show secondary routes') }}</label>
                 </div>
             </div>
             <div class="network-inline-controls">
                 <div class="topology-search-group">
-                    <input type="search" class="form-control form-control-sm" id="topologyNodeSearch" placeholder="Search by EUI or name">
+                    <input type="search" class="form-control form-control-sm" id="topologyNodeSearch" placeholder="{{ t('common.search_by_eui_name', 'Search by EUI or name') }}">
                     <button class="btn btn-outline-primary btn-sm" type="button" id="topologyNodeSearchBtn">
-                        <i class="fas fa-crosshairs me-1"></i>Focus
+                        <i class="fas fa-crosshairs me-1"></i>{{ t('common.focus', 'Focus') }}
                     </button>
                     <button class="btn btn-outline-secondary btn-sm" type="button" id="topologyNodeSearchClearBtn">
-                        <i class="fas fa-times me-1"></i>Clear
+                        <i class="fas fa-times me-1"></i>{{ t('common.clear', 'Clear') }}
                     </button>
                 </div>
                 <div class="form-check m-0">
                     <input class="form-check-input" type="checkbox" id="topologyIssuesOnly">
-                    <label class="form-check-label small" for="topologyIssuesOnly">Only problematic</label>
+                    <label class="form-check-label small" for="topologyIssuesOnly">{{ t('network.only_problematic', 'Only problematic') }}</label>
                 </div>
             </div>
-            <small class="topology-control-note">Live uplink routes use quality colors. Registered-only links are blue dashed so sensor-to-base-station assignment remains visible.</small>
+            <small class="topology-control-note">{{ t('network.topology_control_note', 'Live uplink routes use quality colors. Registered-only links are blue dashed so sensor-to-base-station assignment remains visible.') }}</small>
         </div>
     </div>
 </div>
 
 <div class="network-section workspace-panel" id="coverageWorkspace" data-mode="coverage">
     <div class="network-section-head workspace-panel-head">
-        <h5><i class="fas fa-map-marked-alt me-2"></i>Coverage Map Workspace</h5>
+        <h5><i class="fas fa-map-marked-alt me-2"></i>{{ t('network.coverage_map_workspace', 'Coverage Map Workspace') }}</h5>
     </div>
     <div class="network-section-body workspace-panel-body">
         <ul class="nav nav-pills workspace-tabs" id="mapTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="osm-tab" data-bs-toggle="tab" data-bs-target="#osm-pane" type="button" role="tab">OpenStreetMap</button>
+                <button class="nav-link active" id="osm-tab" data-bs-toggle="tab" data-bs-target="#osm-pane" type="button" role="tab">{{ t('network.openstreetmap', 'OpenStreetMap') }}</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="floorplan-tab" data-bs-toggle="tab" data-bs-target="#floorplan-pane" type="button" role="tab">Floor Plan</button>
+                <button class="nav-link" id="floorplan-tab" data-bs-toggle="tab" data-bs-target="#floorplan-pane" type="button" role="tab">{{ t('network.floor_plan', 'Floor Plan') }}</button>
             </li>
             <li class="nav-item ms-auto" role="presentation">
                 <button class="btn btn-success btn-sm tab-save-btn" type="button" onclick="saveCoveragePositions()">
-                    <i class="fas fa-save me-1"></i>Save positions
+                    <i class="fas fa-save me-1"></i>{{ t('network.save_positions', 'Save positions') }}
                 </button>
             </li>
         </ul>
 
         <div class="network-side-panel coverage-legend-inline" id="coverageLegendPanel">
             <div class="network-side-head with-action">
-                <span>Legend</span>
+                <span>{{ t('common.legend', 'Legend') }}</span>
                 <button type="button" class="network-side-toggle" id="coverageLegendToggle" onclick="toggleLegendPanel('coverageLegendPanel', 'coverageLegendToggle', 'network_coverage_legend_collapsed')">
-                    <i class="fas fa-eye-slash me-1"></i>Hide
+                    <i class="fas fa-eye-slash me-1"></i>{{ t('common.hide', 'Hide') }}
                 </button>
             </div>
             <div class="network-side-body">
-                <div class="legend-row"><span class="legend-chip-circle" style="width: 20px; height: 20px; background: #ff8c00;"></span><span>Base Station</span></div>
-                <div class="legend-row"><span class="legend-chip-circle" style="width: 13px; height: 13px; background: #17a2b8;"></span><span>Sensor</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #00ff00;"></span><span>Excellent (&gt;10 dB)</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #7fff00;"></span><span>Good (5-10 dB)</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ffff00;"></span><span>Fair (0-5 dB)</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff7f00;"></span><span>Poor (-5-0 dB)</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff0000;"></span><span>Critical (&lt;-5 dB)</span></div>
+                <div class="legend-row"><span class="legend-chip-circle" style="width: 20px; height: 20px; background: #ff8c00;"></span><span>{{ t('common.base_station', 'Base Station') }}</span></div>
+                <div class="legend-row"><span class="legend-chip-circle" style="width: 13px; height: 13px; background: #17a2b8;"></span><span>{{ t('common.sensor', 'Sensor') }}</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #00ff00;"></span><span>{{ t('common.excellent', 'Excellent') }} (&gt;10 dB)</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #7fff00;"></span><span>{{ t('common.good', 'Good') }} (5-10 dB)</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ffff00;"></span><span>{{ t('common.fair', 'Fair') }} (0-5 dB)</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff7f00;"></span><span>{{ t('common.poor', 'Poor') }} (-5-0 dB)</span></div>
+                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff0000;"></span><span>{{ t('common.critical', 'Critical') }} (&lt;-5 dB)</span></div>
             </div>
         </div>
 
@@ -1468,10 +1455,10 @@ body.map-fullscreen-active {
                     <div class="map-canvas" id="osmMapCanvas">
                         <div class="map-canvas-tools">
                             <button class="btn btn-light btn-sm" id="osmWheelToggleBtn" type="button" onclick="toggleOsmWheelZoom()">
-                                <i class="fas fa-mouse-pointer me-1"></i>Wheel zoom off
+                                <i class="fas fa-mouse-pointer me-1"></i>{{ t('network.wheel_zoom_off', 'Wheel zoom off') }}
                             </button>
                             <button class="btn btn-light btn-sm" id="osmFullscreenBtn" type="button" onclick="toggleMapFullscreen('osmMapCanvas', 'osmFullscreenBtn')">
-                                <i class="fas fa-expand me-1"></i>Full screen
+                                <i class="fas fa-expand me-1"></i>{{ t('common.full_screen', 'Full screen') }}
                             </button>
                         </div>
                         <div id="osmMap"></div>
@@ -1482,22 +1469,22 @@ body.map-fullscreen-active {
                         <div class="network-side-body d-flex flex-wrap align-items-center justify-content-between gap-2">
                             <input type="file" id="floorplanUpload" accept="image/*" class="form-control form-control-sm" style="max-width: 260px;">
                             <div class="btn-group btn-group-sm" id="zoomControls" style="display: none;">
-                                <button class="btn btn-outline-secondary" onclick="zoomFloorplan(-0.25)" title="Zoom Out">-</button>
+                                <button class="btn btn-outline-secondary" onclick="zoomFloorplan(-0.25)" title="{{ t('network.zoom_out', 'Zoom Out') }}">-</button>
                                 <button class="btn btn-outline-secondary" id="zoomLevel">100%</button>
-                                <button class="btn btn-outline-secondary" onclick="zoomFloorplan(0.25)" title="Zoom In">+</button>
-                                <button class="btn btn-outline-secondary ms-2" onclick="fitFloorplan()" title="Fit to View">Fit</button>
-                                <button class="btn btn-outline-secondary" onclick="resetZoom()" title="Reset to 100%">1:1</button>
+                                <button class="btn btn-outline-secondary" onclick="zoomFloorplan(0.25)" title="{{ t('network.zoom_in', 'Zoom In') }}">+</button>
+                                <button class="btn btn-outline-secondary ms-2" onclick="fitFloorplan()" title="{{ t('network.fit_to_view', 'Fit to View') }}">{{ t('common.fit', 'Fit') }}</button>
+                                <button class="btn btn-outline-secondary" onclick="resetZoom()" title="{{ t('network.reset_to_100', 'Reset to 100%') }}">1:1</button>
                             </div>
                         </div>
                     </div>
                     <div class="map-canvas" id="floorplanMapCanvas">
                         <div class="map-canvas-tools">
                             <button class="btn btn-light btn-sm" id="floorplanFullscreenBtn" type="button" onclick="toggleMapFullscreen('floorplanMapCanvas', 'floorplanFullscreenBtn')">
-                                <i class="fas fa-expand me-1"></i>Full screen
+                                <i class="fas fa-expand me-1"></i>{{ t('common.full_screen', 'Full screen') }}
                             </button>
                         </div>
                         <div id="floorplanContainer">
-                            <div id="floorplanPlaceholder" class="text-muted"><i>Upload a floor plan image to get started</i></div>
+                            <div id="floorplanPlaceholder" class="text-muted"><i>{{ t('network.upload_floor_plan_start', 'Upload a floor plan image to get started') }}</i></div>
                             <canvas id="floorplanCanvas" style="display: none; cursor: crosshair;"></canvas>
                         </div>
                     </div>
@@ -1507,51 +1494,51 @@ body.map-fullscreen-active {
             <div class="coverage-side-stack">
                 <div class="network-side-panel coverage-selected-panel">
                     <div class="network-side-head with-action">
-                        <span>Selected Device</span>
+                        <span>{{ t('network.selected_device', 'Selected Device') }}</span>
                         <button class="network-side-toggle" type="button" id="focusSelectedCoverageDevice">
-                            <i class="fas fa-location-arrow me-1"></i>Focus
+                            <i class="fas fa-location-arrow me-1"></i>{{ t('common.focus', 'Focus') }}
                         </button>
                     </div>
                     <div class="network-side-body">
                         <div class="selected-device-card">
-                            <div class="selected-device-main" id="selectedCoverageDevice">No device selected</div>
-                            <div class="selected-device-sub" id="selectedCoverageDeviceHint">Select device, then drag marker on map to update GPS.</div>
+                            <div class="selected-device-main" id="selectedCoverageDevice">{{ t('network.no_device_selected', 'No device selected') }}</div>
+                            <div class="selected-device-sub" id="selectedCoverageDeviceHint">{{ t('network.select_device_drag_marker', 'Select device, then drag marker on map to update GPS.') }}</div>
                         </div>
                         <div class="device-detail-grid">
-                            <div class="device-detail-row"><span>Status</span><strong id="selectedDeviceStatus">-</strong></div>
-                            <div class="device-detail-row"><span>Tenant</span><strong id="selectedDeviceTenant">-</strong></div>
-                            <div class="device-detail-row"><span>Last seen</span><strong id="selectedDeviceLastSeen">-</strong></div>
-                            <div class="device-detail-row"><span>Primary path</span><strong id="selectedDevicePrimaryPath">-</strong></div>
-                            <div class="device-detail-row"><span>Coverage links</span><strong id="selectedDeviceCoverage">-</strong></div>
-                            <div class="device-detail-row"><span>Best signal</span><strong id="selectedDeviceSignal">-</strong></div>
-                            <div class="device-detail-row"><span>Position source</span><strong id="selectedDevicePositionSource">-</strong></div>
+                            <div class="device-detail-row"><span>{{ t('common.status', 'Status') }}</span><strong id="selectedDeviceStatus">-</strong></div>
+                            <div class="device-detail-row"><span>{{ t('common.tenant', 'Tenant') }}</span><strong id="selectedDeviceTenant">-</strong></div>
+                            <div class="device-detail-row"><span>{{ t('common.last_seen', 'Last seen') }}</span><strong id="selectedDeviceLastSeen">-</strong></div>
+                            <div class="device-detail-row"><span>{{ t('network.primary_path', 'Primary path') }}</span><strong id="selectedDevicePrimaryPath">-</strong></div>
+                            <div class="device-detail-row"><span>{{ t('network.coverage_links', 'Coverage links') }}</span><strong id="selectedDeviceCoverage">-</strong></div>
+                            <div class="device-detail-row"><span>{{ t('network.best_signal', 'Best signal') }}</span><strong id="selectedDeviceSignal">-</strong></div>
+                            <div class="device-detail-row"><span>{{ t('network.position_source', 'Position source') }}</span><strong id="selectedDevicePositionSource">-</strong></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="network-side-panel coverage-gps-panel">
-                    <div class="network-side-head">GPS Editor</div>
+                    <div class="network-side-head">{{ t('network.gps_editor', 'GPS Editor') }}</div>
                     <div class="network-side-body">
                         <div class="coverage-editor">
                             <div class="network-gps-grid">
-                                <input type="text" class="form-control form-control-sm" id="gpsLatInput" placeholder="Latitude" readonly>
-                                <input type="text" class="form-control form-control-sm" id="gpsLngInput" placeholder="Longitude" readonly>
+                                <input type="text" class="form-control form-control-sm" id="gpsLatInput" placeholder="{{ t('common.latitude', 'Latitude') }}" readonly>
+                                <input type="text" class="form-control form-control-sm" id="gpsLngInput" placeholder="{{ t('common.longitude', 'Longitude') }}" readonly>
                             </div>
                             <div class="network-button-row placement-button-row">
                                 <button class="btn btn-outline-secondary btn-sm" type="button" id="clearSelectedCoverageDevice">
-                                    <i class="fas fa-times-circle me-1"></i>Clear
+                                    <i class="fas fa-times-circle me-1"></i>{{ t('common.clear', 'Clear') }}
                                 </button>
                             </div>
-                            <p class="placement-inline-note"><i class="fas fa-info-circle me-1"></i>GPS updates are synchronized automatically when marker is moved.</p>
+                            <p class="placement-inline-note"><i class="fas fa-info-circle me-1"></i>{{ t('network.gps_sync_on_move', 'GPS updates are synchronized automatically when marker is moved.') }}</p>
 
                             <div class="placement-lock-card">
                                 <div>
-                                    <div class="placement-lock-title" id="coverageLockStatus">Unlocked</div>
-                                    <div class="placement-lock-note" id="coverageLockHint">Marker dragging and map placement are enabled.</div>
+                                    <div class="placement-lock-title" id="coverageLockStatus">{{ t('network.unlocked', 'Unlocked') }}</div>
+                                    <div class="placement-lock-note" id="coverageLockHint">{{ t('network.marker_dragging_enabled', 'Marker dragging and map placement are enabled.') }}</div>
                                 </div>
                                 <div class="form-check form-switch m-0">
                                     <input class="form-check-input" type="checkbox" id="lockCoveragePositions">
-                                    <label class="form-check-label small fw-semibold" for="lockCoveragePositions">Lock positions</label>
+                                    <label class="form-check-label small fw-semibold" for="lockCoveragePositions">{{ t('network.lock_positions', 'Lock positions') }}</label>
                                 </div>
                             </div>
                         </div>
@@ -1566,42 +1553,42 @@ body.map-fullscreen-active {
         </div>
 
         <div class="network-side-panel coverage-device-explorer-panel">
-            <div class="network-side-head">Device Explorer</div>
+            <div class="network-side-head">{{ t('network.device_explorer', 'Device Explorer') }}</div>
             <div class="network-side-body">
                 <div class="coverage-filter-grid coverage-filter-grid-compact">
-                    <input type="search" class="form-control form-control-sm" id="deviceSearchInput" placeholder="Search by EUI or name">
+                    <input type="search" class="form-control form-control-sm" id="deviceSearchInput" placeholder="{{ t('common.search_by_eui_name', 'Search by EUI or name') }}">
                     <select class="form-select form-select-sm" id="deviceStatusFilter">
-                        <option value="all" selected>All statuses</option>
-                        <option value="online">Online</option>
-                        <option value="warning">Warning</option>
-                        <option value="offline">Offline</option>
-                        <option value="no-data">No data</option>
+                        <option value="all" selected>{{ t('common.all_statuses', 'All statuses') }}</option>
+                        <option value="online">{{ t('common.online', 'Online') }}</option>
+                        <option value="warning">{{ t('common.warning', 'Warning') }}</option>
+                        <option value="offline">{{ t('common.offline', 'Offline') }}</option>
+                        <option value="no-data">{{ t('common.no_data', 'No data') }}</option>
                     </select>
                     <button class="btn btn-outline-secondary btn-sm" type="button" id="clearDeviceFilters">
-                        <i class="fas fa-eraser me-1"></i>Clear
+                        <i class="fas fa-eraser me-1"></i>{{ t('common.clear', 'Clear') }}
                     </button>
                 </div>
                 <div class="coverage-filter-meta">
                     <div class="device-view-tabs" role="tablist" aria-label="Device type view">
                         <button type="button" class="device-view-btn is-active" id="deviceViewBsBtn" onclick="setDeviceListMode('bs')">
                             <i class="fas fa-broadcast-tower"></i>
-                            <span>Base Stations</span>
+                            <span>{{ t('common.base_stations', 'Base Stations') }}</span>
                             <span class="device-view-count" id="deviceViewBsCount">0</span>
                         </button>
                         <button type="button" class="device-view-btn" id="deviceViewSensorBtn" onclick="setDeviceListMode('sensor')">
                             <i class="fas fa-microchip"></i>
-                            <span>Sensors</span>
+                            <span>{{ t('common.sensors', 'Sensors') }}</span>
                             <span class="device-view-count" id="deviceViewSensorCount">0</span>
                         </button>
                     </div>
-                    <span class="coverage-filter-summary" id="placementFilterSummary">Showing 0 of 0 devices</span>
+                    <span class="coverage-filter-summary" id="placementFilterSummary">{{ t('network.showing_devices_initial', 'Showing 0 of 0 devices') }}</span>
                 </div>
 
                 <div class="coverage-device-layout">
                     <div class="coverage-device-main">
                         <div class="device-list-section device-list-panel" id="baseStationsPanel">
                             <div class="device-list-head">
-                                <p class="device-list-title">Base Stations</p>
+                                <p class="device-list-title">{{ t('common.base_stations', 'Base Stations') }}</p>
                                 <span class="device-list-count" id="visibleBsCount">0 / 0</span>
                             </div>
                             <div class="device-picker-list" id="baseStationList"></div>
@@ -1609,7 +1596,7 @@ body.map-fullscreen-active {
 
                         <div class="device-list-section device-list-panel is-hidden" id="sensorsPanel">
                             <div class="device-list-head">
-                                <p class="device-list-title">Sensors</p>
+                                <p class="device-list-title">{{ t('common.sensors', 'Sensors') }}</p>
                                 <span class="device-list-count" id="visibleSensorCount">0 / 0</span>
                             </div>
                             <div class="device-picker-list" id="sensorList"></div>
@@ -1619,10 +1606,10 @@ body.map-fullscreen-active {
                     <div class="coverage-device-side">
                         <div class="device-list-section is-missing-gps">
                             <div class="device-list-head">
-                                <p class="device-list-title">Missing GPS</p>
+                                <p class="device-list-title">{{ t('network.missing_gps', 'Missing GPS') }}</p>
                                 <span class="device-list-count" id="missingGpsCount">0</span>
                             </div>
-                            <p class="missing-gps-summary" id="missingGpsSummary">All devices have GPS coordinates and can be shown on OpenStreetMap.</p>
+                            <p class="missing-gps-summary" id="missingGpsSummary">{{ t('network.all_devices_have_gps', 'All devices have GPS coordinates and can be shown on OpenStreetMap.') }}</p>
                             <div class="missing-gps-list" id="missingGpsList"></div>
                         </div>
                     </div>
@@ -1634,13 +1621,13 @@ body.map-fullscreen-active {
 
 <div class="network-section workspace-panel mode-hidden" id="topologyWorkspace" data-mode="topology">
     <div class="network-section-head workspace-panel-head">
-        <h5><i class="fas fa-project-diagram me-2"></i>Topology Workspace</h5>
-        <small>Route and connection inspection</small>
+        <h5><i class="fas fa-project-diagram me-2"></i>{{ t('network.topology_workspace', 'Topology Workspace') }}</h5>
+        <small>{{ t('network.route_connection_inspection', 'Route and connection inspection') }}</small>
     </div>
     <div class="network-section-body workspace-panel-body">
         <ul class="nav nav-pills workspace-tabs" id="topologyTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <span class="nav-link active">Topology Graph</span>
+                <span class="nav-link active">{{ t('network.topology_graph', 'Topology Graph') }}</span>
             </li>
         </ul>
         <div class="network-grid">
@@ -1659,10 +1646,10 @@ body.map-fullscreen-active {
                     </div>
                     <div class="map-canvas-tool-group">
                         <button class="btn btn-light btn-sm" id="topologyWheelToggleBtn" type="button" onclick="toggleTopologyWheelZoom()">
-                            <i class="fas fa-mouse-pointer me-1"></i>Wheel zoom off
+                            <i class="fas fa-mouse-pointer me-1"></i>{{ t('network.wheel_zoom_off', 'Wheel zoom off') }}
                         </button>
                         <button class="btn btn-light btn-sm" id="topologyFullscreenBtn" type="button" onclick="toggleMapFullscreen('topologyMapCanvas', 'topologyFullscreenBtn')">
-                            <i class="fas fa-expand me-1"></i>Full screen
+                            <i class="fas fa-expand me-1"></i>{{ t('common.full_screen', 'Full screen') }}
                         </button>
                     </div>
                 </div>
@@ -1672,52 +1659,52 @@ body.map-fullscreen-active {
             <div class="topology-side-dock">
                 <div class="network-side-panel topology-legend-panel" id="topologyLegendPanel">
                     <div class="network-side-head with-action">
-                        <span>Legend</span>
+                        <span>{{ t('common.legend', 'Legend') }}</span>
                         <button type="button" class="network-side-toggle" id="topologyLegendToggle" onclick="toggleLegendPanel('topologyLegendPanel', 'topologyLegendToggle', 'network_topology_legend_collapsed')">
-                            <i class="fas fa-eye-slash me-1"></i>Hide
+                            <i class="fas fa-eye-slash me-1"></i>{{ t('common.hide', 'Hide') }}
                         </button>
                     </div>
                     <div class="network-side-body">
-                        <div class="legend-row"><span class="legend-chip-circle" style="width: 22px; height: 22px; background: #ff8c00;"></span><span>Base Station</span></div>
-                        <div class="legend-row"><span class="legend-chip-circle" style="width: 14px; height: 14px; background: #17a2b8;"></span><span>Sensor</span></div>
+                        <div class="legend-row"><span class="legend-chip-circle" style="width: 22px; height: 22px; background: #ff8c00;"></span><span>{{ t('common.base_station', 'Base Station') }}</span></div>
+                        <div class="legend-row"><span class="legend-chip-circle" style="width: 14px; height: 14px; background: #17a2b8;"></span><span>{{ t('common.sensor', 'Sensor') }}</span></div>
                         <hr>
-                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 4px solid #1f9d57;"></span><span>Primary route (live)</span></div>
-                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 2px dashed #8d9cb1;"></span><span>Secondary route (live)</span></div>
-                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 2px dashed #4d7bd6;"></span><span>Assigned relation (registration)</span></div>
-                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 2px dotted #5a8df0;"></span><span>Assigned relation (configured)</span></div>
+                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 4px solid #1f9d57;"></span><span>{{ t('network.primary_route_live', 'Primary route (live)') }}</span></div>
+                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 2px dashed #8d9cb1;"></span><span>{{ t('network.secondary_route_live', 'Secondary route (live)') }}</span></div>
+                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 2px dashed #4d7bd6;"></span><span>{{ t('network.assigned_relation_registration', 'Assigned relation (registration)') }}</span></div>
+                        <div class="legend-row"><span style="display:inline-block; width: 28px; border-top: 2px dotted #5a8df0;"></span><span>{{ t('network.assigned_relation_configured', 'Assigned relation (configured)') }}</span></div>
                         <hr>
-                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #1f9d57;"></span><span>Good link quality</span></div>
-                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #d2a12a;"></span><span>Fair link quality</span></div>
-                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #d9822b;"></span><span>Poor link quality</span></div>
-                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #cc4a4a;"></span><span>Critical link quality</span></div>
+                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #1f9d57;"></span><span>{{ t('network.good_link_quality', 'Good link quality') }}</span></div>
+                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #d2a12a;"></span><span>{{ t('network.fair_link_quality', 'Fair link quality') }}</span></div>
+                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #d9822b;"></span><span>{{ t('network.poor_link_quality', 'Poor link quality') }}</span></div>
+                        <div class="legend-row"><span style="width: 28px; height: 4px; background: #cc4a4a;"></span><span>{{ t('network.critical_link_quality', 'Critical link quality') }}</span></div>
                     </div>
                 </div>
 
                 <div class="network-side-panel topology-stats-panel">
-                    <div class="network-side-head">Topology Stats</div>
+                    <div class="network-side-head">{{ t('network.topology_stats', 'Topology Stats') }}</div>
                     <div class="network-side-body">
-                        <div class="stat-row"><span>Base Stations</span><strong id="topo_bsCount">0</strong></div>
-                        <div class="stat-row"><span>Sensors</span><strong id="topo_sensorCount">0</strong></div>
-                        <div class="stat-row"><span>Connections</span><strong id="edgeCount">0</strong></div>
-                        <div class="stat-row"><span>Problem Nodes</span><strong id="topo_issueCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('common.base_stations', 'Base Stations') }}</span><strong id="topo_bsCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('common.sensors', 'Sensors') }}</span><strong id="topo_sensorCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('network.connections', 'Connections') }}</span><strong id="edgeCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('network.problem_nodes', 'Problem Nodes') }}</span><strong id="topo_issueCount">0</strong></div>
                     </div>
                 </div>
 
                 <div class="network-side-panel topology-stats-panel">
-                    <div class="network-side-head">Relationships</div>
+                    <div class="network-side-head">{{ t('network.relationships', 'Relationships') }}</div>
                     <div class="network-side-body">
-                        <div class="stat-row"><span>Online BS</span><strong id="topo_onlineBsCount">0</strong></div>
-                        <div class="stat-row"><span>Linked Sensors</span><strong id="topo_linkedSensorCount">0</strong></div>
-                        <div class="stat-row"><span>Orphan Sensors</span><strong id="topo_orphanSensorCount">0</strong></div>
-                        <div class="stat-row"><span>Multi-BS Sensors</span><strong id="topo_multiSensorCount">0</strong></div>
-                        <div class="stat-row"><span>Primary Routes</span><strong id="topo_primaryEdgeCount">0</strong></div>
-                        <div class="stat-row"><span>Live Routes</span><strong id="topo_liveEdgeCount">0</strong></div>
-                        <div class="stat-row"><span>Assigned Routes</span><strong id="topo_assignedEdgeCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('network.online_bs', 'Online BS') }}</span><strong id="topo_onlineBsCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('network.linked_sensors', 'Linked Sensors') }}</span><strong id="topo_linkedSensorCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('network.orphan_sensors', 'Orphan Sensors') }}</span><strong id="topo_orphanSensorCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('network.multi_bs_sensors', 'Multi-BS Sensors') }}</span><strong id="topo_multiSensorCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('network.primary_routes', 'Primary Routes') }}</span><strong id="topo_primaryEdgeCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('network.live_routes', 'Live Routes') }}</span><strong id="topo_liveEdgeCount">0</strong></div>
+                        <div class="stat-row"><span>{{ t('network.assigned_routes', 'Assigned Routes') }}</span><strong id="topo_assignedEdgeCount">0</strong></div>
                     </div>
                 </div>
 
                 <div class="network-side-panel" id="topo_detailsCard" style="display: none;">
-                    <div class="network-side-head" id="topo_detailsTitle">Details</div>
+                    <div class="network-side-head" id="topo_detailsTitle">{{ t('common.details', 'Details') }}</div>
                     <div class="network-side-body" id="topo_detailsBody"></div>
                 </div>
             </div>
@@ -1777,7 +1764,7 @@ const NETWORK_CACHE_META = {
 function setRefreshStamp(elementId, meta = null) {
     const el = document.getElementById(elementId);
     if (el) {
-        el.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        el.textContent = AppTime.formatTime(new Date());
     }
     if (meta && typeof meta === 'object') {
         const key = meta.kind === 'topology' ? 'topology' : 'coverage';
@@ -1859,7 +1846,7 @@ function setFullscreenButtonState(buttonId, isActive) {
     if (!btn) return;
     btn.innerHTML = isActive
         ? '<i class="fas fa-compress me-1"></i>Exit full screen'
-        : '<i class="fas fa-expand me-1"></i>Full screen';
+        : `<i class="fas fa-expand me-1"></i>${appTranslate('common.full_screen', 'Full screen')}`;
 }
 
 function updateOsmWheelZoomButton() {
@@ -1867,7 +1854,7 @@ function updateOsmWheelZoomButton() {
     if (!btn) return;
     btn.innerHTML = osmWheelZoomEnabled
         ? '<i class="fas fa-mouse-pointer me-1"></i>Wheel zoom on'
-        : '<i class="fas fa-mouse-pointer me-1"></i>Wheel zoom off';
+        : `<i class="fas fa-mouse-pointer me-1"></i>${appTranslate('network.wheel_zoom_off', 'Wheel zoom off')}`;
     btn.classList.toggle('btn-success', osmWheelZoomEnabled);
     btn.classList.toggle('btn-light', !osmWheelZoomEnabled);
 }
@@ -1892,7 +1879,7 @@ function updateTopologyWheelZoomButton() {
     if (!btn) return;
     btn.innerHTML = topologyWheelZoomEnabled
         ? '<i class="fas fa-mouse-pointer me-1"></i>Wheel zoom on'
-        : '<i class="fas fa-mouse-pointer me-1"></i>Wheel zoom off';
+        : `<i class="fas fa-mouse-pointer me-1"></i>${appTranslate('network.wheel_zoom_off', 'Wheel zoom off')}`;
     btn.classList.toggle('btn-success', topologyWheelZoomEnabled);
     btn.classList.toggle('btn-light', !topologyWheelZoomEnabled);
 }
@@ -2348,7 +2335,7 @@ function getDevicePositionSourceLabel(type, eui) {
     const key = coverageDeviceKey(type, eui);
     const pos = devicePositions[key];
     if (!pos) return 'Not set';
-    if (pos.type === 'osm') return 'OpenStreetMap';
+    if (pos.type === 'osm') return appTranslate('network.openstreetmap', 'OpenStreetMap');
     if (pos.type === 'floorplan') return 'Floor plan';
     return String(pos.type || 'Unknown');
 }
@@ -2439,7 +2426,7 @@ function updateSelectedCoverageDevice() {
         return;
     }
 
-    const typeLabel = selectedDevice.type === 'bs' ? 'Base Station' : 'Sensor';
+    const typeLabel = selectedDevice.type === 'bs' ? appTranslate('common.base_station', 'Base Station') : appTranslate('common.sensor', 'Sensor');
     const euiText = normalizeEuiUpper(selectedDevice.eui);
     const record = getCoverageDeviceRecord(selectedDevice.type, euiText);
     const name = String(record?.name || record?.label || '').trim();
@@ -2482,7 +2469,7 @@ async function syncDeviceGpsToBackend(device, lat, lng) {
             throw new Error(data.error || data.message || `Failed (${response.status})`);
         }
     } catch (error) {
-        showAlert('warning', `GPS sync failed for ${device.eui}: ${error.message}`);
+        showAlert('warning', appTranslate('runtime.gps_sync_failed', 'GPS sync failed for {eui}: {error}', { eui: device.eui, error: error.message }));
     }
 }
 
@@ -2753,7 +2740,7 @@ function initOSMMap() {
     osmMap.on('click', function(e) {
         if (selectedDevice) {
             if (coveragePositionsLocked) {
-                showAlert('warning', 'Positions are locked. Disable lock to move or place points.');
+                showAlert('warning', appTranslate('runtime.positions_locked', 'Positions are locked. Disable lock to move or place points.'));
                 return;
             }
             placeDeviceOnMap(selectedDevice, e.latlng);
@@ -2851,7 +2838,7 @@ function initFloorplan() {
         
         if (selectedDevice && floorplanImage) {
             if (coveragePositionsLocked) {
-                showAlert('warning', 'Positions are locked. Disable lock to move or place points.');
+                showAlert('warning', appTranslate('runtime.positions_locked', 'Positions are locked. Disable lock to move or place points.'));
                 return;
             }
             placeDeviceOnFloorplan(selectedDevice, x, y);
@@ -2928,7 +2915,7 @@ function applyCoverageDeviceBundle(bundle, meta = {}) {
     const topoData = bundle?.topoData || { sensors: {}, base_stations: [] };
 
     if (bsData && bsData.error) {
-        showAlert('warning', `Base station list error: ${bsData.error}`);
+        showAlert('warning', appTranslate('runtime.base_station_list_error', 'Base station list error: {error}', { error: bsData.error }));
     }
     devices.baseStations = mergeBaseStationRecords(bsData.base_stations || []);
     topologyData = topoData || { sensors: {}, base_stations: [] };
@@ -2962,7 +2949,7 @@ function applyCoverageDeviceBundle(bundle, meta = {}) {
     if (bsCountEl) bsCountEl.textContent = devices.baseStations.length;
     if (sensorCountEl) sensorCountEl.textContent = devices.sensors.length;
     if (bsChipEl) bsChipEl.textContent = `${devices.baseStations.length} BS`;
-    if (sensorChipEl) sensorChipEl.textContent = `${devices.sensors.length} Sensors`;
+    if (sensorChipEl) sensorChipEl.textContent = `${devices.sensors.length} ${appTranslate('common.sensors', 'Sensors')}`;
 
     const removedGhostPositions = pruneUnknownCoveragePositions();
     if (removedGhostPositions > 0) {
@@ -3101,7 +3088,7 @@ function renderDeviceLists() {
 
     if (bsCount) bsCount.textContent = `${filteredBaseStations.length} / ${devices.baseStations.length}`;
     if (sensorCount) sensorCount.textContent = `${filteredSensors.length} / ${devices.sensors.length}`;
-    if (summary) summary.textContent = `Showing ${filteredBaseStations.length + filteredSensors.length} of ${devices.baseStations.length + devices.sensors.length} devices`;
+    if (summary) summary.textContent = appTranslate('network.showing_devices_count', 'Showing {shown} of {total} devices').replace('{shown}', String(filteredBaseStations.length + filteredSensors.length)).replace('{total}', String(devices.baseStations.length + devices.sensors.length));
     if (viewBsCount) viewBsCount.textContent = String(filteredBaseStations.length);
     if (viewSensorCount) viewSensorCount.textContent = String(filteredSensors.length);
 
@@ -3153,7 +3140,7 @@ function renderDeviceLists() {
     sensorList.innerHTML = filteredSensors.map(sensor => {
         const eui = normalizeEuiUpper(sensor.eui || sensor.EUI || 'Unknown');
         const euiEncoded = encodeURIComponent(eui);
-        const name = sensor.name || sensor.label || 'Sensor';
+        const name = sensor.name || sensor.label || appTranslate('common.sensor', 'Sensor');
         const positioned = !!devicePositions[`sensor_${eui}`];
         const isSelected = !!selectedDevice && selectedDevice.type === 'sensor' && selectedDevice.eui === eui;
         const statusInfo = getCoverageDeviceStatus('sensor', sensor);
@@ -3166,19 +3153,19 @@ function renderDeviceLists() {
                 </span>
                 <span class="device-picker-sub">${escapeHtml(eui)}</span>
                 <span class="device-picker-state-row">
-                    <span class="device-picker-state">${positioned ? 'Positioned' : 'Not positioned'}</span>
-                    <span class="device-picker-state">${stats.receiverCount} route${stats.receiverCount === 1 ? '' : 's'}</span>
+                    <span class="device-picker-state">${positioned ? appTranslate('network.positioned', 'Positioned') : appTranslate('network.not_positioned', 'Not positioned')}</span>
+                    <span class="device-picker-state">${stats.receiverCount} ${appTranslate(stats.receiverCount === 1 ? 'network.route' : 'network.routes_count', stats.receiverCount === 1 ? 'route' : 'routes')}</span>
                 </span>
             </button>
         `;
     }).join('');
 
     if (!bsList.innerHTML) {
-        bsList.innerHTML = '<span class="text-muted small">No base stations match current filter.</span>';
+        bsList.innerHTML = `<span class="text-muted small">${appTranslate('network.no_base_stations_match_filter', 'No base stations match current filter.')}</span>`;
     }
 
     if (!sensorList.innerHTML) {
-        sensorList.innerHTML = '<span class="text-muted small">No sensors match current filter.</span>';
+        sensorList.innerHTML = `<span class="text-muted small">${appTranslate('network.no_sensors_match_filter', 'No sensors match current filter.')}</span>`;
     }
 
     setDeviceListMode(deviceListMode, false);
@@ -3213,7 +3200,7 @@ function renderMissingGpsList() {
         missing.push({
             type: 'sensor',
             eui,
-            name: sensor.name || sensor.label || 'Sensor'
+            name: sensor.name || sensor.label || appTranslate('common.sensor', 'Sensor')
         });
     });
 
@@ -3225,17 +3212,17 @@ function renderMissingGpsList() {
     countEl.textContent = String(missing.length);
 
     if (missing.length === 0) {
-        summaryEl.textContent = 'All devices have GPS coordinates and can be shown on OpenStreetMap.';
-        listEl.innerHTML = '<span class="text-muted small">No missing GPS entries.</span>';
+        summaryEl.textContent = appTranslate('network.all_devices_have_gps', 'All devices have GPS coordinates and can be shown on OpenStreetMap.');
+        listEl.innerHTML = `<span class="text-muted small">${appTranslate('network.no_missing_gps_entries', 'No missing GPS entries.')}</span>`;
         return;
     }
 
-    summaryEl.textContent = `${missing.length} device${missing.length === 1 ? '' : 's'} are hidden on OpenStreetMap until GPS is assigned.`;
+    summaryEl.textContent = appTranslate('network.devices_hidden_until_gps', '{count} devices are hidden on OpenStreetMap until GPS is assigned.').replace('{count}', String(missing.length));
 
     listEl.innerHTML = missing.map(item => {
         const isSelected = !!selectedDevice && selectedDevice.type === item.type && selectedDevice.eui === item.eui;
         const euiEncoded = encodeURIComponent(item.eui);
-        const typeLabel = item.type === 'bs' ? 'Base station' : 'Sensor';
+        const typeLabel = item.type === 'bs' ? appTranslate('common.base_station', 'Base station') : appTranslate('common.sensor', 'Sensor');
         const typeIcon = item.type === 'bs' ? 'fa-broadcast-tower' : 'fa-microchip';
         return `
             <button class="missing-gps-item ${isSelected ? 'is-selected' : ''}" onclick="selectDevice('${item.type}', decodeURIComponent('${euiEncoded}'))" title="${escapeHtml(item.eui)}">
@@ -3244,7 +3231,7 @@ function renderMissingGpsList() {
                     <span class="missing-gps-type-chip"><i class="fas ${typeIcon} me-1"></i>${typeLabel}</span>
                 </span>
                 <span class="device-picker-sub">${escapeHtml(item.eui)}</span>
-                <span class="missing-gps-note"><i class="fas fa-map-marker-alt me-1"></i>GPS not configured</span>
+                <span class="missing-gps-note"><i class="fas fa-map-marker-alt me-1"></i>${appTranslate('network.gps_not_configured', 'GPS not configured')}</span>
             </button>
         `;
     }).join('');
@@ -3261,13 +3248,13 @@ function selectDevice(type, eui) {
 
 function focusSelectedDeviceOnMap() {
     if (!selectedDevice) {
-        showAlert('warning', 'Select a device first.');
+        showAlert('warning', appTranslate('runtime.select_device_first', 'Select a device first.'));
         return;
     }
     const key = coverageDeviceKey(selectedDevice.type, selectedDevice.eui);
     const pos = devicePositions[key];
     if (!pos) {
-        showAlert('warning', 'Selected device has no saved position.');
+        showAlert('warning', appTranslate('runtime.selected_device_has_no_position', 'Selected device has no saved position.'));
         return;
     }
 
@@ -3301,12 +3288,12 @@ function focusSelectedDeviceOnMap() {
         return;
     }
 
-    showAlert('info', 'Unsupported position source.');
+    showAlert('info', appTranslate('runtime.unsupported_position_source', 'Unsupported position source.'));
 }
 
 function placeDeviceOnMap(device, latlng) {
     if (coveragePositionsLocked) {
-        showAlert('warning', 'Positions are locked. Disable lock to move or place points.');
+        showAlert('warning', appTranslate('runtime.positions_locked', 'Positions are locked. Disable lock to move or place points.'));
         return;
     }
 
@@ -3315,7 +3302,7 @@ function placeDeviceOnMap(device, latlng) {
         eui: normalizeEuiUpper(device?.eui || '')
     };
     if (!normalizedDevice.eui) {
-        showAlert('warning', 'Invalid device selected.');
+        showAlert('warning', appTranslate('runtime.invalid_device_selected', 'Invalid device selected.'));
         return;
     }
 
@@ -3336,12 +3323,14 @@ function placeDeviceOnMap(device, latlng) {
     syncDeviceGpsToBackend(normalizedDevice, latlng.lat, latlng.lng);
     renderDeviceLists();
     updatePositionedCount();
-    showAlert('success', `${normalizedDevice.type === 'bs' ? 'Base Station' : 'Sensor'} GPS updated`);
+    showAlert('success', normalizedDevice.type === 'bs'
+        ? appTranslate('runtime.base_station_gps_updated', 'Base Station GPS updated')
+        : appTranslate('runtime.sensor_gps_updated', 'Sensor GPS updated'));
 }
 
 function placeDeviceOnFloorplan(device, x, y) {
     if (coveragePositionsLocked) {
-        showAlert('warning', 'Positions are locked. Disable lock to move or place points.');
+        showAlert('warning', appTranslate('runtime.positions_locked', 'Positions are locked. Disable lock to move or place points.'));
         return;
     }
 
@@ -3350,7 +3339,7 @@ function placeDeviceOnFloorplan(device, x, y) {
         eui: normalizeEuiUpper(device?.eui || '')
     };
     if (!normalizedDevice.eui) {
-        showAlert('warning', 'Invalid device selected.');
+        showAlert('warning', appTranslate('runtime.invalid_device_selected', 'Invalid device selected.'));
         return;
     }
 
@@ -3369,7 +3358,9 @@ function placeDeviceOnFloorplan(device, x, y) {
     drawFloorplan();
     renderDeviceLists();
     updatePositionedCount();
-    showAlert('success', `${normalizedDevice.type === 'bs' ? 'Base Station' : 'Sensor'} placed on floorplan`);
+    showAlert('success', normalizedDevice.type === 'bs'
+        ? appTranslate('runtime.base_station_placed_floorplan', 'Base Station placed on floorplan')
+        : appTranslate('runtime.sensor_placed_floorplan', 'Sensor placed on floorplan'));
 }
 
 function addMarkerToMap(device, latlng) {
@@ -3406,7 +3397,7 @@ function addMarkerToMap(device, latlng) {
     
     const marker = L.marker(latlng, { icon: icon, draggable: !coveragePositionsLocked });
     marker.bindPopup(
-        `<b>${normalizedDevice.type === 'bs' ? 'Base Station' : 'Sensor'}</b><br>${normalizedDevice.eui}<br><small>Status: ${escapeHtml(status.label)}</small>`
+        `<b>${normalizedDevice.type === 'bs' ? appTranslate('common.base_station', 'Base Station') : appTranslate('common.sensor', 'Sensor')}</b><br>${normalizedDevice.eui}<br><small>${appTranslate('common.status', 'Status')}: ${escapeHtml(status.label)}</small>`
     );
     marker.on('click', function(e) {
         selectDevice(normalizedDevice.type, normalizedDevice.eui);
@@ -3545,7 +3536,7 @@ function drawFloorplanHeatmap() {
     
     const bsCount = Object.keys(baseStationPositions).length;
     if (bsCount === 0) {
-        showAlert('warning', 'Place at least one Base Station on the floor plan');
+        showAlert('warning', appTranslate('runtime.place_base_station_first', 'Place at least one Base Station on the floor plan'));
         return;
     }
     
@@ -3674,12 +3665,12 @@ function generateHeatmap() {
             gradient: {0.0: 'red', 0.25: 'orange', 0.5: 'yellow', 0.75: 'lime', 1.0: 'green'}
         }).addTo(osmMap);
     } else {
-        showAlert('warning', 'Place devices on the map first to generate a heatmap');
+        showAlert('warning', appTranslate('runtime.place_devices_first_heatmap', 'Place devices on the map first to generate a heatmap'));
     }
     
     drawFloorplan();
     
-    showAlert('success', 'Heatmap generated');
+    showAlert('success', appTranslate('runtime.heatmap_generated', 'Heatmap generated'));
 }
 
 function updateDisplay() {
@@ -3747,12 +3738,12 @@ function saveCoveragePositions(silent = false) {
     }).catch(e => console.error('Failed to save to server', e));
     
     if (!silent) {
-        showAlert('success', 'Positions and zoom level saved');
+        showAlert('success', appTranslate('runtime.positions_zoom_saved', 'Positions and zoom level saved'));
     }
 }
 
 function clearPositions() {
-    if (confirm('Clear all device positions?')) {
+    if (confirm(appTranslate('runtime.clear_positions_message', 'Clear all device positions?'))) {
         devicePositions = {};
         Object.values(markers).forEach(m => osmMap.removeLayer(m));
         markers = {};
@@ -3764,7 +3755,7 @@ function clearPositions() {
         renderDeviceLists();
         drawFloorplan();
         updatePositionedCount();
-        showAlert('info', 'All positions cleared');
+        showAlert('info', appTranslate('runtime.positions_cleared', 'All positions cleared'));
     }
 }
 
@@ -3777,26 +3768,12 @@ function updatePositionedCount() {
 }
 
 function showAlert(type, message) {
-    const container = document.getElementById('alert-container') || createAlertContainer();
-    const alertId = 'alert-' + Date.now();
-    container.innerHTML = `
-        <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    ` + container.innerHTML;
-    setTimeout(() => {
-        const alert = document.getElementById(alertId);
-        if (alert) alert.remove();
-    }, 4000);
-}
-
-function createAlertContainer() {
-    const container = document.createElement('div');
-    container.id = 'alert-container';
-    container.style.cssText = 'position: fixed; top: 70px; right: 20px; z-index: 9999; max-width: 400px;';
-    document.body.appendChild(container);
-    return container;
+    if (window.AppUI && typeof window.AppUI.toast === 'function') {
+        const allowHtml = /<(br|small|code)\b/i.test(String(message || ''));
+        window.AppUI.toast(message, type, { html: allowHtml });
+        return;
+    }
+    window.alert(String(message || ''));
 }
 
 function findDeviceAtPosition(x, y) {
@@ -3840,14 +3817,14 @@ function showDeviceDetails(device) {
     if (device.type === 'sensor') {
         const sensor = device.data;
         const eui = sensor.eui || sensor.EUI;
-        title.innerHTML = `<span style="color: #17a2b8;">&#9679;</span> Sensor ${eui.substring(0, 8)}...`;
+        title.innerHTML = `<span style="color: #17a2b8;">&#9679;</span> ${appTranslate('common.sensor', 'Sensor')} ${eui.substring(0, 8)}...`;
         
-        let html = `<div class="small"><strong>EUI:</strong> ${eui}</div>`;
+        let html = `<div class="small"><strong>${appTranslate('common.eui', 'EUI')}:</strong> ${eui}</div>`;
         
         if (sensor.topology && sensor.topology.base_stations) {
-            html += '<hr class="my-2"><div class="small"><strong>Base Station Connections:</strong></div>';
+            html += `<hr class="my-2"><div class="small"><strong>${appTranslate('network.base_station_connections', 'Base Station Connections')}:</strong></div>`;
             html += '<table class="table table-sm table-bordered mt-1 mb-0" style="font-size: 0.75rem;">';
-            html += '<thead><tr><th>Base Station</th><th>SNR</th><th>RSSI</th></tr></thead><tbody>';
+            html += `<thead><tr><th>${appTranslate('common.base_station', 'Base Station')}</th><th>${appTranslate('common.snr', 'SNR')}</th><th>${appTranslate('common.rssi', 'RSSI')}</th></tr></thead><tbody>`;
             
             Object.entries(sensor.topology.base_stations).forEach(([bsEui, bsData]) => {
                 const snrClass = bsData.snr >= 10 ? 'text-success' : (bsData.snr >= 0 ? 'text-warning' : 'text-danger');
@@ -3861,17 +3838,17 @@ function showDeviceDetails(device) {
             
             html += '</tbody></table>';
         } else {
-            html += '<div class="text-muted small mt-2"><i>No telegram data yet</i></div>';
+            html += `<div class="text-muted small mt-2"><i>${appTranslate('network.no_telegram_data_yet', 'No telegram data yet')}</i></div>`;
         }
         
         body.innerHTML = html;
     } else if (device.type === 'bs') {
         const bs = device.data;
         const eui = bs.eui || bs.EUI;
-        title.innerHTML = `<span style="color: #ff8c00;">&#9679;</span> Base Station ${bs.name || eui.substring(0, 8)}`;
+        title.innerHTML = `<span style="color: #ff8c00;">&#9679;</span> ${appTranslate('common.base_station', 'Base Station')} ${bs.name || eui.substring(0, 8)}`;
         
-        let html = `<div class="small"><strong>EUI:</strong> ${eui}</div>`;
-        html += `<div class="small"><strong>Status:</strong> ${bs.connected ? '<span class="text-success">Connected</span>' : '<span class="text-muted">Offline</span>'}</div>`;
+        let html = `<div class="small"><strong>${appTranslate('common.eui', 'EUI')}:</strong> ${eui}</div>`;
+        html += `<div class="small"><strong>${appTranslate('common.status', 'Status')}:</strong> ${bs.connected ? `<span class="text-success">${appTranslate('common.connected', 'Connected')}</span>` : `<span class="text-muted">${appTranslate('common.offline', 'Offline')}</span>`}</div>`;
         
         let connectedSensors = 0;
         devices.sensors.forEach(sensor => {
@@ -3881,7 +3858,7 @@ function showDeviceDetails(device) {
                 }
             }
         });
-        html += `<div class="small"><strong>Receiving Sensors:</strong> ${connectedSensors}</div>`;
+        html += `<div class="small"><strong>${appTranslate('network.receiving_sensors', 'Receiving Sensors')}:</strong> ${connectedSensors}</div>`;
         
         body.innerHTML = html;
     }
@@ -4167,13 +4144,13 @@ function focusTopologySearch(query, showWarning = true) {
     const raw = String(query || '').trim().toLowerCase();
     const norm = normalizeEuiUpper(query || '');
     if (!raw && !norm) {
-        if (showWarning) showAlert('warning', 'Type EUI or node name first.');
+        if (showWarning) showAlert('warning', appTranslate('runtime.type_eui_or_name_first', 'Type EUI or node name first.'));
         return false;
     }
 
     const candidates = cy.nodes().filter(node => topologyNodeMatchesSearch(node, raw, norm));
     if (!candidates || candidates.length === 0) {
-        if (showWarning) showAlert('warning', `No topology node matched "${escapeHtml(query)}".`);
+        if (showWarning) showAlert('warning', appTranslate('runtime.no_topology_match', 'No topology node matched "{query}".', { query: query }));
         return false;
     }
 
@@ -4481,44 +4458,44 @@ function showNodeDetails(data, nodeId = '') {
     card.style.display = 'block';
     
     if (data.type === 'base_station') {
-        title.innerHTML = '<i class="fas fa-broadcast-tower me-2"></i>Base Station';
+        title.innerHTML = `<i class="fas fa-broadcast-tower me-2"></i>${appTranslate('common.base_station', 'Base Station')}`;
         const bsIssue = isTopologyProblemNode(data);
         body.innerHTML = `
-            <div class="mb-2"><strong>EUI:</strong><br><small>${data.eui}</small></div>
-            <div class="mb-2"><strong>Name:</strong> ${data.label}</div>
-            <div class="mb-2"><strong>Status:</strong> 
-                <span class="badge bg-${data.connected ? 'success' : 'secondary'}">${data.connected ? 'Connected' : 'Disconnected'}</span>
+        <div class="mb-2"><strong>${appTranslate('common.eui', 'EUI')}:</strong><br><small>${data.eui}</small></div>
+            <div class="mb-2"><strong>${appTranslate('common.name', 'Name')}:</strong> ${data.label}</div>
+            <div class="mb-2"><strong>${appTranslate('common.status', 'Status')}:</strong> 
+                <span class="badge bg-${data.connected ? 'success' : 'secondary'}">${data.connected ? appTranslate('common.connected', 'Connected') : appTranslate('common.disconnected', 'Disconnected')}</span>
             </div>
-            <div class="mb-2"><strong>Issue:</strong> ${bsIssue ? '<span class="badge bg-danger">Connection lost</span>' : '<span class="badge bg-success">Healthy</span>'}</div>
+            <div class="mb-2"><strong>${appTranslate('common.issue', 'Issue')}:</strong> ${bsIssue ? `<span class="badge bg-danger">${appTranslate('network.connection_lost', 'Connection lost')}</span>` : `<span class="badge bg-success">${appTranslate('common.healthy', 'Healthy')}</span>`}</div>
             <hr>
-            <div class="mb-1"><strong>CPU:</strong> ${data.cpu}%</div>
-            <div class="mb-1"><strong>Memory:</strong> ${data.memory}%</div>
-            <div class="mb-1"><strong>Duty Cycle:</strong> ${data.duty_cycle}%</div>
+            <div class="mb-1"><strong>${appTranslate('common.cpu', 'CPU')}:</strong> ${data.cpu}%</div>
+            <div class="mb-1"><strong>${appTranslate('common.memory_short', 'Memory')}:</strong> ${data.memory}%</div>
+            <div class="mb-1"><strong>${appTranslate('network.duty_cycle', 'Duty Cycle')}:</strong> ${data.duty_cycle}%</div>
             ${actionsHtml}
         `;
     } else {
-        title.innerHTML = '<i class="fas fa-microchip me-2"></i>Sensor';
+        title.innerHTML = `<i class="fas fa-microchip me-2"></i>${appTranslate('common.sensor', 'Sensor')}`;
         const assignedBases = Array.isArray(data.assigned_bases) ? data.assigned_bases.filter(Boolean) : [];
         const assignedBasesHtml = assignedBases.length
             ? `<small>${assignedBases.map(bs => `<code>${escapeHtml(bs)}</code>`).join('<br>')}</small>`
-            : '<span class="text-muted">N/A</span>';
+            : `<span class="text-muted">${appTranslate('common.not_available_short', 'N/A')}</span>`;
         const liveReceivers = Number(data.live_receiver_count || 0);
         const sensorIssue = isTopologyProblemNode(data);
         const sensorIssueLabel = Number(data.receiver_count || 0) <= 0
-            ? 'No base-station relation'
+            ? appTranslate('network.no_base_station_relation', 'No base-station relation')
             : liveReceivers <= 0
-                ? 'No live uplink yet (assignment only)'
-            : 'Missing primary route';
+                ? appTranslate('network.no_live_uplink_assignment_only', 'No live uplink yet (assignment only)')
+            : appTranslate('network.missing_primary_route', 'Missing primary route');
         body.innerHTML = `
-            <div class="mb-2"><strong>EUI:</strong><br><small>${data.eui}</small></div>
-            <div class="mb-2"><strong>Name:</strong> ${data.label}</div>
-            <div class="mb-2"><strong>Primary BS:</strong><br><small>${data.primary_bs || 'N/A'}</small></div>
-            <div class="mb-2"><strong>Receivers:</strong> ${data.receiver_count}</div>
-            <div class="mb-2"><strong>Live receivers:</strong> ${liveReceivers}</div>
-            <div class="mb-2"><strong>Assigned BS:</strong><br>${assignedBasesHtml}</div>
-            <div class="mb-2"><strong>Configured:</strong> ${data.configured ? 'Yes' : 'No'}</div>
-            <div class="mb-2"><strong>Registered:</strong> ${data.registered ? 'Yes' : 'No'}</div>
-            <div class="mb-2"><strong>Issue:</strong> ${sensorIssue ? `<span class="badge bg-danger">${sensorIssueLabel}</span>` : '<span class="badge bg-success">Healthy</span>'}</div>
+            <div class="mb-2"><strong>${appTranslate('common.eui', 'EUI')}:</strong><br><small>${data.eui}</small></div>
+            <div class="mb-2"><strong>${appTranslate('common.name', 'Name')}:</strong> ${data.label}</div>
+            <div class="mb-2"><strong>${appTranslate('network.primary_bs', 'Primary BS')}:</strong><br><small>${data.primary_bs || appTranslate('common.not_available_short', 'N/A')}</small></div>
+            <div class="mb-2"><strong>${appTranslate('network.receivers', 'Receivers')}:</strong> ${data.receiver_count}</div>
+            <div class="mb-2"><strong>${appTranslate('network.live_receivers', 'Live receivers')}:</strong> ${liveReceivers}</div>
+            <div class="mb-2"><strong>${appTranslate('network.assigned_bs', 'Assigned BS')}:</strong><br>${assignedBasesHtml}</div>
+            <div class="mb-2"><strong>${appTranslate('common.configured', 'Configured')}:</strong> ${data.configured ? appTranslate('common.yes', 'Yes') : appTranslate('common.no', 'No')}</div>
+            <div class="mb-2"><strong>${appTranslate('common.registered', 'Registered')}:</strong> ${data.registered ? appTranslate('common.yes', 'Yes') : appTranslate('common.no', 'No')}</div>
+            <div class="mb-2"><strong>${appTranslate('common.issue', 'Issue')}:</strong> ${sensorIssue ? `<span class="badge bg-danger">${sensorIssueLabel}</span>` : `<span class="badge bg-success">${appTranslate('common.healthy', 'Healthy')}</span>`}</div>
             ${actionsHtml}
         `;
     }
@@ -4595,7 +4572,7 @@ function updateTopologyStats() {
     const edgeChip = document.getElementById('topologyConnectionChip');
     const issueChip = document.getElementById('topologyIssueChip');
     if (bsChip) bsChip.textContent = `${bsNodes.length} BS`;
-    if (sensorChip) sensorChip.textContent = `${sensorNodes.length} Sensors`;
+    if (sensorChip) sensorChip.textContent = `${sensorNodes.length} ${appTranslate('common.sensors', 'Sensors')}`;
     if (edgeChip) edgeChip.textContent = `${edgeCount} links`;
     if (issueChip) issueChip.textContent = `${issueCount} issues`;
 }
@@ -4834,7 +4811,7 @@ function runDefaultLayout(layoutName = null) {
 function saveTopoPositions() {
     try {
         if (!cy) {
-            showAlert('danger', 'Topology graph is not ready yet.');
+            showAlert('danger', appTranslate('runtime.topology_graph_not_ready', 'Topology graph is not ready yet.'));
             return;
         }
 
@@ -4848,9 +4825,9 @@ function saveTopoPositions() {
         localStorage.setItem('bssci_network_zoom', cy.zoom());
         localStorage.setItem('bssci_network_pan', JSON.stringify(cy.pan()));
         setRefreshStamp('topologyRefreshStamp');
-        showAlert('success', 'Topology positions and view saved successfully!');
+        showAlert('success', appTranslate('runtime.topology_positions_saved', 'Topology positions and view saved successfully!'));
     } catch (e) {
-        showAlert('danger', 'Failed to save positions: ' + e);
+        showAlert('danger', appTranslate('runtime.failed_save_positions', 'Failed to save positions: {error}', { error: e }));
     }
 }
 
@@ -4949,7 +4926,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             localStorage.setItem('bssci_coverage_locked', coveragePositionsLocked ? '1' : '0');
             applyCoverageLockState();
             saveCoveragePositions(true);
-            showAlert('info', coveragePositionsLocked ? 'Coverage positions locked.' : 'Coverage positions unlocked.');
+            showAlert('info', coveragePositionsLocked
+                ? appTranslate('runtime.coverage_positions_locked', 'Coverage positions locked.')
+                : appTranslate('runtime.coverage_positions_unlocked', 'Coverage positions unlocked.'));
         });
     }
     const clearSelectedBtn = document.getElementById('clearSelectedCoverageDevice');
@@ -4980,7 +4959,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (hasManualTopologyPositions()) {
                 applyManualTopologyPositions();
                 applyTopologyFilters();
-                showAlert('info', 'Saved positions are active. Use Reset Layout to apply automatic layout presets.');
+                showAlert('info', appTranslate('runtime.saved_positions_active', 'Saved positions are active. Use Reset Layout to apply automatic layout presets.'));
                 return;
             }
             runDefaultLayout();

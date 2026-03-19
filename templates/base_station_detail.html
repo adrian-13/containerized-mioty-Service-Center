@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% block title %}{{ t('page.base_station_detail', 'Base Station Detail') }}{% endblock %}
+
+{% block content %}
+<style>
+.bs-detail-page{display:grid;gap:.95rem}
+.bs-detail-head,.bs-detail-shell,.bs-detail-error{border:1px solid #d6dfec;border-radius:.98rem;background:linear-gradient(180deg,#fff 0%,#f9fcff 100%);box-shadow:0 10px 24px rgba(15,23,42,.08)}
+.bs-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.9rem;padding:.88rem .96rem}
+.bs-detail-kicker{margin:0;font-size:.64rem;text-transform:uppercase;letter-spacing:.08em;color:#5f7088;font-weight:800}
+.bs-detail-title{margin:.14rem 0 0;font-family:"Sora","Manrope",sans-serif;font-size:1.28rem;font-weight:800;color:#13263f}
+.bs-detail-subtitle{margin:.24rem 0 0;color:#5f7088;font-size:.78rem}
+.bs-detail-head-actions{display:flex;align-items:center;gap:.48rem;flex-wrap:wrap;justify-content:flex-end}
+.bs-detail-tabs{display:flex;align-items:center;gap:.42rem;padding:.82rem .9rem 0;flex-wrap:wrap}
+.bs-detail-tab{border:1px solid #cdd9ea;background:#fff;color:#284465;border-radius:999px;padding:.48rem .8rem;font-size:.78rem;font-weight:800;display:inline-flex;align-items:center;gap:.42rem;cursor:pointer}
+.bs-detail-tab.is-active{background:linear-gradient(180deg,#264878 0%,#1b3559 100%);border-color:#1b3559;color:#fff;box-shadow:0 10px 22px rgba(27,53,89,.24)}
+.bs-detail-body{padding:.9rem}
+.bs-detail-tabpanel{display:none}
+.bs-detail-tabpanel.is-active{display:block}
+.bs-detail-banner,.bs-panel,.bs-kpi-card,.bs-linked-card,.bs-empty-state,.bs-audit-entry{border:1px solid #d7e3f3;border-radius:.96rem;background:#fff;box-shadow:0 8px 18px rgba(15,23,42,.05)}
+.bs-detail-banner{padding:.92rem;margin-bottom:.95rem;background:linear-gradient(180deg,#fcfdff 0%,#f3f8ff 100%)}
+.bs-inline-meta{display:flex;align-items:center;gap:.46rem;flex-wrap:wrap}
+.bs-detail-banner .bs-summary-grid{margin-top:.88rem}
+.bs-status-chip,.bs-context-chip{display:inline-flex;align-items:center;gap:.36rem;border-radius:999px;padding:.34rem .66rem;font-size:.76rem;font-weight:800;border:1px solid #d1dced;background:#fff;color:#284465}
+.bs-status-chip.is-connected,.bs-context-chip.is-success{background:rgba(25,135,84,.12);color:#0f7a4b;border-color:rgba(25,135,84,.24)}
+.bs-status-chip.is-connecting,.bs-context-chip.is-warning{background:rgba(255,193,7,.16);color:#9a6700;border-color:rgba(255,193,7,.28)}
+.bs-status-chip.is-offline,.bs-context-chip.is-danger{background:rgba(220,53,69,.12);color:#b4232f;border-color:rgba(220,53,69,.22)}
+.bs-summary-grid,.bs-kpi-grid,.bs-section-grid{display:grid;gap:.78rem}
+.bs-summary-grid,.bs-kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.bs-section-grid{grid-template-columns:1.12fr .88fr}
+.bs-panel-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;padding:.82rem .92rem;border-bottom:1px solid #dfe8f5;background:#f8fbff}
+.bs-panel-title{margin:0;font-size:1rem;font-weight:800;color:#18385f;display:inline-flex;align-items:center;gap:.5rem}
+.bs-panel-note{color:#60748f;font-size:.74rem;font-weight:700}
+.bs-panel-body{padding:.92rem}
+.bs-kpi-card{padding:1rem 1.08rem}
+.bs-kpi-label,.bs-linked-label,.bs-table th{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#60748f;font-weight:800}
+.bs-kpi-value,.bs-linked-value{margin-top:.28rem;font-size:1rem;font-weight:800;color:#142a47}
+.bs-kpi-note,.bs-linked-note,.bs-empty-state,.bs-detail-error{margin-top:.22rem;color:#627690;font-size:.74rem}
+.bs-metric-rows{display:grid;gap:.5rem}
+.bs-metric-row{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding-bottom:.48rem;border-bottom:1px solid #edf2f9}
+.bs-metric-row:last-child{padding-bottom:0;border-bottom:none}
+.bs-metric-name{color:#60748f;font-size:.78rem;font-weight:700}
+.bs-metric-value{color:#13263f;font-size:.92rem;font-weight:800;text-align:right}
+.bs-detail-banner .small.text-muted{padding-left:.12rem}
+.bs-table-wrap{overflow-x:auto}
+.bs-table{width:100%;border-collapse:collapse}
+.bs-table th,.bs-table td{padding:.7rem .64rem;border-bottom:1px solid #edf2f9;vertical-align:top}
+.bs-table td{color:#13263f;font-size:.9rem}
+.bs-empty-state{padding:1.4rem 1rem;text-align:center;background:#fbfdff}
+.bs-linked-list{display:grid;gap:.72rem}
+.bs-linked-card{padding:.8rem .84rem;background:#f9fbfe}
+.bs-linked-meta{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;color:#60748f;font-size:.76rem}
+.bs-linked-actions{display:flex;align-items:center;gap:.42rem;flex-wrap:wrap}
+.bs-audit-list{display:grid;gap:.72rem}
+.bs-audit-entry{padding:.84rem .92rem;background:#fbfdff}
+.bs-audit-entry-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap}
+.bs-audit-entry-action{font-weight:800;color:#18385f}
+.bs-audit-entry-meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;color:#627690;font-size:.75rem}
+.bs-audit-entry-summary{margin:.5rem 0 0;color:#41566f;font-size:.8rem}
+.bs-detail-error{text-align:center;padding:1.3rem 1rem;color:#b4232f}
+@media (max-width:1200px){.bs-summary-grid,.bs-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bs-section-grid{grid-template-columns:1fr}}
+@media (max-width:767.98px){.bs-detail-head{flex-direction:column}.bs-detail-head-actions{width:100%;justify-content:flex-start}.bs-summary-grid,.bs-kpi-grid{grid-template-columns:1fr}}
+</style>
+
+<div class="bs-detail-page">
+  <section class="bs-detail-head">
+    <div>
+      <p class="bs-detail-kicker">{{ t('common.details', 'Detail') }}</p>
+      <h1 class="bs-detail-title" id="bsDetailPageTitle">{{ t('page.base_station_detail', 'Base Station Detail') }} {{ base_station_eui }}</h1>
+      <p class="bs-detail-subtitle" id="bsDetailPageSubtitle">{{ t('base_station_detail.subtitle', 'Operational detail page for runtime health, linked sensors, certificates and audit history.') }}</p>
+    </div>
+    <div class="bs-detail-head-actions">
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('base_stations') }}"><i class="fas fa-arrow-left me-1"></i>{{ t('base_station_detail.back_to_base_stations', 'Back to Base Stations') }}</a>
+      {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('manage_tenants') %}
+      <a class="btn btn-outline-primary btn-sm" id="bsDetailEditLink" href="{{ url_for('base_stations') }}?edit_base_station={{ base_station_eui }}"><i class="fas fa-pen me-1"></i>{{ t('common.edit', 'Edit') }}</a>
+      {% endif %}
+      <a class="btn btn-outline-primary btn-sm" id="bsDetailCertificatesLink" href="{{ url_for('certificates') }}?base_station={{ base_station_eui }}"><i class="fas fa-shield-alt me-1"></i>{{ t('common.certificates', 'Certificates') }}</a>
+      <button type="button" class="btn btn-primary btn-sm" id="bsDetailRefreshBtn"><i class="fas fa-rotate-right me-1"></i>{{ t('common.refresh', 'Refresh') }}</button>
+    </div>
+  </section>
+
+  <section class="bs-detail-shell">
+    <div class="bs-detail-tabs" id="bsDetailTabs"></div>
+    <div class="bs-detail-body" id="bsDetailPageBody">
+      <div class="bs-empty-state">{{ t('runtime.loading_base_station_detail', 'Loading base station detail...') }}</div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const BSD_I18N = {
+    loadingBaseStationDetail: {{ t('runtime.loading_base_station_detail', 'Loading base station detail...')|tojson }},
+    unableLoadBaseStationDetail: {{ t('runtime.unable_load_base_station_detail', 'Unable to load base station detail: {error}')|tojson }},
+    unableLoadBaseStationAudit: {{ t('runtime.unable_load_base_station_audit', 'Unable to load base station audit trail')|tojson }},
+    overview: {{ t('common.overview', 'Overview')|tojson }},
+    linkedSensors: {{ t('common.linked_sensors', 'Linked sensors')|tojson }},
+    certificates: {{ t('common.certificates', 'Certificates')|tojson }},
+    audit: {{ t('common.audit', 'Audit')|tojson }},
+    na: {{ t('common.not_available', 'N/A')|tojson }},
+    unknown: {{ t('common.unknown', 'Unknown')|tojson }},
+  };
+  function tr(key, fallback, params = null) {
+    let template = Object.prototype.hasOwnProperty.call(BSD_I18N, key) ? BSD_I18N[key] : fallback;
+    if (params && typeof template === 'string') {
+      Object.entries(params).forEach(([name, value]) => {
+        template = template.replaceAll(`{${name}}`, String(value));
+      });
+    }
+    return template;
+  }
+  const BASE_STATION_EUI = {{ base_station_eui|tojson }};
+  const CAN_VIEW_AUDIT = {{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('view_admin_audit') else 'false' }};
+  const state = { detail: null, sensors: [], certificate: null, activeTab: 'overview', auditLoaded: false, auditLoading: false, audit: [] };
+  const els = {
+    title: document.getElementById('bsDetailPageTitle'),
+    subtitle: document.getElementById('bsDetailPageSubtitle'),
+    body: document.getElementById('bsDetailPageBody'),
+    tabs: document.getElementById('bsDetailTabs'),
+    refresh: document.getElementById('bsDetailRefreshBtn'),
+    edit: document.getElementById('bsDetailEditLink'),
+    certs: document.getElementById('bsDetailCertificatesLink')
+  };
+
+  function escapeHtml(value) { return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#039;'); }
+  function formatMetric(value, decimals = 0, suffix = '') { const n = Number(value); return Number.isFinite(n) ? `${n.toFixed(decimals)}${suffix}` : tr('na', 'N/A'); }
+  function formatDateTime(value) { return value ? (typeof AppTime !== 'undefined' && AppTime.formatDateTime ? AppTime.formatDateTime(value) : new Date(value).toLocaleString()) : tr('na', 'N/A'); }
+  function formatTimeAgoSeconds(seconds) { const n = Number(seconds); if (!Number.isFinite(n) || n < 0) return {{ t('base_station_detail.no_recent_event', 'No recent event')|tojson }}; if (n < 60) return `${Math.round(n)}s`; const min = Math.floor(n / 60); if (min < 60) return `${min}m`; const hrs = Math.floor(min / 60); if (hrs < 24) return `${hrs}h`; return `${Math.floor(hrs / 24)}d`; }
+  function formatGps(lat, lng) { const latNum = Number(lat); const lngNum = Number(lng); return Number.isFinite(latNum) && Number.isFinite(lngNum) ? `${latNum.toFixed(6)}, ${lngNum.toFixed(6)}` : {{ t('common.not_configured', 'Not configured')|tojson }}; }
+  function getStatusMeta(status) { const normalized = String(status || 'offline').toLowerCase(); if (normalized === 'connected') return { label: {{ t('common.connected', 'Connected')|tojson }}, variant: 'is-connected', note: {{ t('base_station_detail.connected_note', 'TLS session is active and base station is online.')|tojson }} }; if (normalized === 'connecting') return { label: {{ t('common.connecting', 'Connecting')|tojson }}, variant: 'is-connecting', note: {{ t('base_station_detail.connecting_note', 'TLS handshake is in progress.')|tojson }} }; return { label: {{ t('common.offline', 'Offline')|tojson }}, variant: 'is-offline', note: {{ t('base_station_detail.offline_note', 'No active TLS session is currently registered.')|tojson }} }; }
+  function getCertMeta(cert) { const status = String(cert?.cert_status || 'missing').toLowerCase(); if (status === 'valid') return { label: {{ t('base_station_detail.valid_certificate', 'Valid certificate')|tojson }}, variant: 'is-success', note: cert?.cert_expires ? {{ t('base_station_detail.expires_at', 'Expires {date}')|tojson }}.replace('{date}', cert.cert_expires) : {{ t('base_station_detail.certificate_present', 'Certificate metadata present.')|tojson }} }; if (status === 'expiring_soon') return { label: {{ t('base_station_detail.expiring_soon', 'Expiring soon')|tojson }}, variant: 'is-warning', note: cert?.cert_expires ? {{ t('base_station_detail.expires_at', 'Expires {date}')|tojson }}.replace('{date}', cert.cert_expires) : {{ t('base_station_detail.certificate_review', 'Certificate needs review soon.')|tojson }} }; if (status === 'expired') return { label: {{ t('base_station_detail.expired', 'Expired')|tojson }}, variant: 'is-danger', note: cert?.cert_expires ? {{ t('base_station_detail.expired_at', 'Expired {date}')|tojson }}.replace('{date}', cert.cert_expires) : {{ t('base_station_detail.certificate_expired', 'Certificate has expired.')|tojson }} }; return { label: {{ t('base_station_detail.missing_certificate', 'Missing certificate')|tojson }}, variant: 'is-danger', note: {{ t('base_station_detail.missing_certificate_note', 'No certificate metadata was found for this base station.')|tojson }} }; }
+  function formatSensorBases(sensor) { const runtime = Array.isArray(sensor.registered_base_stations) ? sensor.registered_base_stations : []; const attached = Array.isArray(sensor.attached_base_stations) ? sensor.attached_base_stations : []; return runtime.length ? runtime : attached; }
+  function summarizeAuditDetails(entry) { const details = entry?.details || {}; if (details.summary) return String(details.summary); if (details.action_summary) return String(details.action_summary); const changed = Array.isArray(details.changed_fields) ? details.changed_fields : []; if (changed.length) return `Changed fields: ${changed.join(', ')}`; if (details.message) return String(details.message); return {{ t('sensor_detail.no_structured_summary', 'No structured summary.')|tojson }}; }
+
+  function renderTabs() {
+    const tabs = [{ id: 'overview', icon: 'fa-gauge-high', label: tr('overview', 'Overview') }, { id: 'sensors', icon: 'fa-microchip', label: tr('linkedSensors', 'Linked sensors') }, { id: 'certificates', icon: 'fa-shield-alt', label: tr('certificates', 'Certificates') }];
+    if (CAN_VIEW_AUDIT) tabs.push({ id: 'audit', icon: 'fa-clipboard-list', label: tr('audit', 'Audit') });
+    els.tabs.innerHTML = tabs.map((tab) => `<button type="button" class="bs-detail-tab ${state.activeTab === tab.id ? 'is-active' : ''}" data-tab="${tab.id}"><i class="fas ${tab.icon}"></i>${tab.label}</button>`).join('');
+    els.tabs.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => { state.activeTab = button.dataset.tab; renderTabs(); renderBody(); if (state.activeTab === 'audit') ensureAuditLoaded(); }));
+  }
+
+  function renderOverview(detail) {
+    const status = getStatusMeta(detail.status);
+    const certMeta = getCertMeta(state.certificate);
+    const health = detail.health || {};
+    const tenantScopeLabel = String(detail.tenant_id || '').trim().toLowerCase() === 'default'
+      ? {{ t('common.super_admin', 'Super admin')|tojson }}
+      : String(detail.tenant_id || 'default');
+    return `
+      <section class="bs-detail-banner">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="bs-inline-meta">
+            <span class="bs-status-chip ${status.variant}"><i class="fas fa-circle" style="font-size:.46rem;"></i>${escapeHtml(status.label)}</span>
+            <code>${escapeHtml(detail.eui || BASE_STATION_EUI)}</code>
+            <span class="bs-context-chip"><i class="fas fa-building"></i>Tenant ${escapeHtml(tenantScopeLabel)}</span>
+            <span class="bs-context-chip ${certMeta.variant}"><i class="fas fa-shield-alt"></i>${escapeHtml(certMeta.label)}</span>
+          </div>
+          <div class="small text-muted">${escapeHtml(status.note)}</div>
+        </div>
+        <div class="bs-summary-grid">
+          <div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('base_station_detail.configured_ip', 'Configured IP') }}</div><div class="bs-kpi-value">${escapeHtml(detail.configured_ip || {{ t('common.not_set', 'Not set')|tojson }})}</div><div class="bs-kpi-note">{{ t('base_station_detail.declared_management_endpoint', 'Declared management endpoint') }}</div></div>
+          <div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('base_station_detail.gps', 'GPS') }}</div><div class="bs-kpi-value">${escapeHtml(formatGps(detail.gps_lat, detail.gps_lng))}</div><div class="bs-kpi-note">{{ t('base_station_detail.coverage_map_source', 'Coverage map placement source') }}</div></div>
+          <div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('common.linked_sensors', 'Linked sensors') }}</div><div class="bs-kpi-value">${Number(detail.connected_sensors || 0)}</div><div class="bs-kpi-note">{{ t('base_station_detail.linked_sensor_note', 'Sensors preferring this base station') }}</div></div>
+          <div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('base_station_detail.status_age', 'Status age') }}</div><div class="bs-kpi-value">${escapeHtml(formatTimeAgoSeconds(detail.status_age_seconds))}</div><div class="bs-kpi-note">${detail.last_status_event ? `${escapeHtml({{ t('base_station_detail.last_event', 'Last event')|tojson }})} ${escapeHtml(detail.last_status_event)}` : escapeHtml({{ t('base_station_detail.no_runtime_status_events', 'No runtime status events yet')|tojson }})}</div></div>
+        </div>
+      </section>
+      <div class="bs-section-grid">
+        <section class="bs-panel">
+          <div class="bs-panel-head"><h2 class="bs-panel-title"><i class="fas fa-heart-pulse"></i>{{ t('base_station_detail.runtime_health', 'Runtime health') }}</h2><span class="bs-panel-note">{{ t('base_station_detail.runtime_health_note', 'CPU, memory, temperature and VM capability') }}</span></div>
+          <div class="bs-panel-body">
+            <div class="bs-kpi-grid">
+              <div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('base_station_detail.cpu', 'CPU') }}</div><div class="bs-kpi-value">${formatMetric(health.cpu, 1, '%')}</div><div class="bs-kpi-note">{{ t('base_station_detail.latest_runtime_health', 'Latest runtime health snapshot') }}</div></div>
+              <div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('base_station_detail.memory', 'Memory') }}</div><div class="bs-kpi-value">${formatMetric(health.memory, 1, '%')}</div><div class="bs-kpi-note">{{ t('base_station_detail.used_memory_estimate', 'Used memory estimate') }}</div></div>
+              <div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('sensor_detail.temperature', 'Temperature') }}</div><div class="bs-kpi-value">${formatMetric(health.temperature, 1, ' C')}</div><div class="bs-kpi-note">{{ t('base_station_detail.latest_reported_temperature', 'Latest reported device temperature') }}</div></div>
+              <div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('base_station_detail.vm_capable', 'VM capable') }}</div><div class="bs-kpi-value">${health.vm_capable ? {{ t('base_station_detail.yes', 'Yes')|tojson }} : {{ t('base_station_detail.no', 'No')|tojson }}}</div><div class="bs-kpi-note">{{ t('base_station_detail.supports_vm_routing', 'Supports virtual meter routing') }}</div></div>
+            </div>
+            <div class="bs-metric-rows mt-3">
+              <div class="bs-metric-row"><span class="bs-metric-name">{{ t('base_station_detail.last_status_change', 'Last status change') }}</span><span class="bs-metric-value">${detail.last_status_change ? escapeHtml(formatDateTime(detail.last_status_change)) : tr('na', 'N/A')}</span></div>
+              <div class="bs-metric-row"><span class="bs-metric-name">{{ t('base_station_detail.last_event', 'Last event') }}</span><span class="bs-metric-value">${escapeHtml(detail.last_status_event || tr('na', 'N/A'))}</span></div>
+              <div class="bs-metric-row"><span class="bs-metric-name">{{ t('base_station_detail.runtime_uptime', 'Runtime uptime') }}</span><span class="bs-metric-value">${Number.isFinite(Number(health.uptime)) ? `${Math.round(Number(health.uptime))} s` : tr('na', 'N/A')}</span></div>
+            </div>
+          </div>
+        </section>
+        <section class="bs-panel">
+          <div class="bs-panel-head"><h2 class="bs-panel-title"><i class="fas fa-sliders"></i>{{ t('common.configuration', 'Configuration') }}</h2><span class="bs-panel-note">{{ t('base_station_detail.configuration_note', 'Static settings stored in registry') }}</span></div>
+          <div class="bs-panel-body">
+            <div class="bs-metric-rows">
+              <div class="bs-metric-row"><span class="bs-metric-name">{{ t('base_station_detail.name', 'Name') }}</span><span class="bs-metric-value">${escapeHtml(detail.name || {{ t('base_station_detail.unnamed_base_station', 'Unnamed base station')|tojson }})}</span></div>
+              <div class="bs-metric-row"><span class="bs-metric-name">{{ t('base_station_detail.tenant', 'Tenant') }}</span><span class="bs-metric-value">${escapeHtml(tenantScopeLabel)}</span></div>
+              <div class="bs-metric-row"><span class="bs-metric-name">{{ t('base_station_detail.tags', 'Tags') }}</span><span class="bs-metric-value">${Array.isArray(detail.tags) && detail.tags.length ? escapeHtml(detail.tags.join(', ')) : {{ t('common.no_tags', 'No tags')|tojson }}}</span></div>
+              <div class="bs-metric-row"><span class="bs-metric-name">{{ t('base_station_detail.configured_ip', 'Configured IP') }}</span><span class="bs-metric-value">${escapeHtml(detail.configured_ip || {{ t('common.not_set', 'Not set')|tojson }})}</span></div>
+              <div class="bs-metric-row"><span class="bs-metric-name">{{ t('base_station_detail.gps', 'GPS') }}</span><span class="bs-metric-value">${escapeHtml(formatGps(detail.gps_lat, detail.gps_lng))}</span></div>
+              <div class="bs-metric-row"><span class="bs-metric-name">{{ t('common.certificates', 'Certificates') }}</span><span class="bs-metric-value">${escapeHtml(certMeta.note)}</span></div>
+            </div>
+          </div>
+        </section>
+      </div>`;
+  }
+
+  function renderSensorsTab(detail) {
+    const sensors = state.sensors || [];
+    if (!sensors.length) {
+      return `<div class="bs-empty-state">${escapeHtml({{ t('base_station_detail.no_linked_sensors', 'No sensors are currently linked or mapped to this base station.')|tojson }})}</div>`;
+    }
+    return `<div class="bs-linked-list">${sensors.map((sensor) => {
+      const runtimeBases = formatSensorBases(sensor);
+      const mapped = Array.isArray(sensor.attached_base_stations) && sensor.attached_base_stations.map((v) => String(v).toUpperCase()).includes(BASE_STATION_EUI);
+      const active = Array.isArray(runtimeBases) && runtimeBases.map((v) => String(v).toUpperCase()).includes(BASE_STATION_EUI);
+      const statusLabel = active ? {{ t('base_station_detail.live_route', 'Live route')|tojson }} : (mapped ? {{ t('base_station_detail.configured_only', 'Configured only')|tojson }} : {{ t('base_station_detail.observed_elsewhere', 'Observed elsewhere')|tojson }});
+      return `<article class="bs-linked-card"><div class="d-flex align-items-start justify-content-between gap-2 flex-wrap"><div><div class="bs-linked-label">${escapeHtml(sensor.name || {{ t('base_station_detail.unnamed_sensor', 'Unnamed sensor')|tojson }})}</div><div class="bs-linked-value"><code>${escapeHtml(sensor.eui)}</code></div><div class="bs-linked-meta"><span>${escapeHtml(sensor.sensor_profile_label || 'Auto / inferred')}</span><span>${escapeHtml(sensor.reporting_mode || 'periodic')}</span><span>${escapeHtml(statusLabel)}</span></div></div><div class="bs-linked-actions"><a class="btn btn-sm btn-outline-primary" href="/sensors/${encodeURIComponent(String(sensor.eui || '').trim().toUpperCase())}"><i class="fas fa-up-right-from-square me-1"></i>{{ t('base_station_detail.open_sensor', 'Open sensor') }}</a></div></div></article>`;
+    }).join('')}</div>`;
+  }
+
+  function renderCertificatesTab() {
+    const cert = state.certificate;
+    const meta = getCertMeta(cert);
+    return `<section class="bs-panel"><div class="bs-panel-head"><h2 class="bs-panel-title"><i class="fas fa-shield-alt"></i>{{ t('base_station_detail.certificate_status', 'Certificate status') }}</h2><span class="bs-panel-note">{{ t('base_station_detail.certificate_status_note', 'Current certificate metadata for this base station') }}</span></div><div class="bs-panel-body"><div class="bs-kpi-grid"><div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('common.status', 'Status') }}</div><div class="bs-kpi-value">${escapeHtml(meta.label)}</div><div class="bs-kpi-note">${escapeHtml(meta.note)}</div></div><div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('base_station_detail.generated', 'Generated') }}</div><div class="bs-kpi-value">${cert?.cert_generated ? escapeHtml(formatDateTime(cert.cert_generated)) : tr('na', 'N/A')}</div><div class="bs-kpi-note">{{ t('base_station_detail.registry_timestamp', 'Registry timestamp') }}</div></div><div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('base_station_detail.expires', 'Expires') }}</div><div class="bs-kpi-value">${cert?.cert_expires ? escapeHtml(cert.cert_expires) : tr('na', 'N/A')}</div><div class="bs-kpi-note">{{ t('base_station_detail.certificate_expiration_metadata', 'Certificate expiration metadata') }}</div></div><div class="bs-kpi-card"><div class="bs-kpi-label">{{ t('base_station_detail.certificate_file', 'Certificate file') }}</div><div class="bs-kpi-value">${cert?.cert_exists ? {{ t('common.present', 'Present')|tojson }} : {{ t('common.missing', 'Missing')|tojson }}}</div><div class="bs-kpi-note">{{ t('base_station_detail.filesystem_presence_check', 'Filesystem presence check') }}</div></div></div><div class="mt-3"><a class="btn btn-outline-primary btn-sm" href="${els.certs.href}"><i class="fas fa-shield-alt me-1"></i>{{ t('base_station_detail.open_certificate_workspace', 'Open certificate workspace') }}</a></div></div></section>`;
+  }
+
+  function renderAudit(entries) {
+    if (!entries?.length) return `<div class="bs-empty-state">{{ t('base_station_detail.no_audit_yet', 'No audit entries for this base station yet.') }}</div>`;
+    return `<div class="bs-audit-list">${entries.map((entry) => { const actor = entry.actor_username || entry.actor || 'system'; const timestamp = entry.ts || entry.timestamp || entry.created_at; const meta = [actor, entry.category || 'admin', timestamp ? formatDateTime(timestamp) : null].filter(Boolean); return `<article class="bs-audit-entry"><div class="bs-audit-entry-head"><div class="bs-audit-entry-action">${escapeHtml(entry.action || 'unknown_action')}</div><div class="bs-audit-entry-meta">${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}</div></div><p class="bs-audit-entry-summary">${escapeHtml(summarizeAuditDetails(entry))}</p></article>`; }).join('')}</div>`;
+  }
+
+  async function ensureAuditLoaded() {
+    if (!CAN_VIEW_AUDIT || state.auditLoaded || state.auditLoading) return;
+    state.auditLoading = true;
+    try {
+      const response = await fetch(`/api/audit/logs?limit=25&target_id=${encodeURIComponent(BASE_STATION_EUI)}`);
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || tr('unableLoadBaseStationAudit', 'Unable to load base station audit trail'));
+      state.audit = Array.isArray(result.entries) ? result.entries : [];
+      state.auditLoaded = true;
+    } catch (error) {
+      state.audit = { error: error.message || tr('unableLoadBaseStationAudit', 'Unable to load base station audit trail') };
+      state.auditLoaded = true;
+    } finally {
+      state.auditLoading = false;
+      if (state.activeTab === 'audit') renderBody();
+    }
+  }
+
+  function renderBody() {
+    const detail = state.detail;
+    if (!detail) {
+      els.body.innerHTML = `<div class="bs-empty-state">${escapeHtml(tr('loadingBaseStationDetail', 'Loading base station detail...'))}</div>`;
+      return;
+    }
+    const panels = {
+      overview: renderOverview(detail),
+      sensors: renderSensorsTab(detail),
+      certificates: renderCertificatesTab()
+    };
+    if (CAN_VIEW_AUDIT) {
+      panels.audit = !state.auditLoaded ? `<div class="bs-empty-state">{{ t('base_station_detail.audit_load_on_open', 'Audit trail will load when you open this tab.') }}</div>` : (state.audit?.error ? `<div class="bs-detail-error">${escapeHtml(state.audit.error)}</div>` : renderAudit(state.audit || []));
+    }
+    const order = ['overview', 'sensors', 'certificates'].concat(CAN_VIEW_AUDIT ? ['audit'] : []);
+    els.body.innerHTML = order.map((tabId) => `<section class="bs-detail-tabpanel ${state.activeTab === tabId ? 'is-active' : ''}" data-tabpanel="${tabId}">${panels[tabId]}</section>`).join('');
+  }
+
+  async function loadDetail() {
+    els.body.innerHTML = `<div class="bs-empty-state">${escapeHtml(tr('loadingBaseStationDetail', 'Loading base station detail...'))}</div>`;
+    try {
+      const [baseStationsResp, configResp, certResp, sensorsResp] = await Promise.all([
+        fetch('/api/base-stations'),
+        fetch(`/api/base-stations/${encodeURIComponent(BASE_STATION_EUI)}`),
+        fetch('/api/base-stations/certificates/status').catch(() => null),
+        fetch('/api/sensors')
+      ]);
+
+      const baseStationsPayload = await baseStationsResp.json();
+      const configPayload = await configResp.json();
+      const certPayload = certResp ? await certResp.json().catch(() => ({ success: false })) : { success: false };
+      const sensorsPayload = await sensorsResp.json();
+
+      const listEntry = Array.isArray(baseStationsPayload.base_stations)
+        ? baseStationsPayload.base_stations.find((item) => String(item.eui || '').toUpperCase() === BASE_STATION_EUI)
+        : null;
+      if (!listEntry || !configPayload || configPayload.success === false) {
+        throw new Error(configPayload?.error || {{ t('base_station_detail.load_failed', 'Base station detail load failed')|tojson }});
+      }
+
+      state.detail = { ...listEntry, ...(configPayload || {}), eui: BASE_STATION_EUI };
+      state.certificate = Array.isArray(certPayload?.certificates)
+        ? (certPayload.certificates.find((item) => String(item.eui || '').toUpperCase() === BASE_STATION_EUI) || null)
+        : null;
+
+      const allSensors = Object.values(sensorsPayload || {});
+      state.sensors = allSensors.filter((sensor) => {
+        const runtime = Array.isArray(sensor.registered_base_stations) ? sensor.registered_base_stations : [];
+        const attached = Array.isArray(sensor.attached_base_stations) ? sensor.attached_base_stations : [];
+        return runtime.map((v) => String(v).toUpperCase()).includes(BASE_STATION_EUI)
+          || attached.map((v) => String(v).toUpperCase()).includes(BASE_STATION_EUI);
+      }).sort((a, b) => String(a.name || a.eui || '').localeCompare(String(b.name || b.eui || '')));
+
+      const bsName = String(state.detail.name || '').trim();
+      els.title.textContent = bsName ? `${bsName} (${BASE_STATION_EUI})` : `${{ t('page.base_station_detail', 'Base Station Detail')|tojson }} ${BASE_STATION_EUI}`;
+      els.subtitle.textContent = {{ t('base_station_detail.subtitle_runtime', 'Use Overview for runtime state, Linked sensors for routing context, Certificates for PKI status and Audit for admin changes.')|tojson }};
+      if (els.edit) {
+        els.edit.href = `{{ url_for('base_stations') }}?edit_base_station=${encodeURIComponent(BASE_STATION_EUI)}`;
+      }
+      els.certs.href = `{{ url_for('certificates') }}?base_station=${encodeURIComponent(BASE_STATION_EUI)}`;
+      renderTabs();
+      renderBody();
+      if (state.activeTab === 'audit') ensureAuditLoaded();
+    } catch (error) {
+      els.body.innerHTML = `<div class="bs-detail-error">${escapeHtml(tr('unableLoadBaseStationDetail', 'Unable to load base station detail: {error}', { error: error.message || tr('unknown', 'unknown') }))}</div>`;
+    }
+  }
+
+  els.refresh.addEventListener('click', loadDetail);
+  renderTabs();
+  loadDetail();
+})();
+</script>
+{% endblock %}

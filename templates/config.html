@@ -1,28 +1,88 @@
-{% extends "base.html" %}
-{% block title %}Configuration{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}{{ t('page.configuration', 'Configuration') }}{% endblock %}
 
 {% block content %}
 <style>
 .config-shell {
     display: grid;
-    gap: 0.78rem;
+    gap: 0.92rem;
     width: 100%;
+}
+.config-status-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+.config-status-card {
+    border: 1px solid #d8e4f2;
+    border-radius: 1rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f6faff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    padding: 0.88rem 0.92rem;
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0.74rem;
+    align-items: start;
+}
+.config-status-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.86rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.92rem;
+    color: #2e5f97;
+    background: linear-gradient(145deg, rgba(var(--brand-rgb), 0.13) 0%, rgba(59, 111, 179, 0.06) 100%);
+    box-shadow: inset 0 0 0 1px rgba(var(--brand-rgb), 0.12);
+}
+.config-status-copy {
+    display: grid;
+    gap: 0.14rem;
+    min-width: 0;
+}
+.config-status-label {
+    font-size: 0.69rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6c829d;
+}
+.config-status-value {
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: #173556;
+    line-height: 1.2;
+}
+.config-status-meta {
+    font-size: 0.72rem;
+    color: #667d97;
+    line-height: 1.35;
 }
 .config-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.7rem;
-    padding: 0.62rem 0.72rem;
-    border: 1px solid #d9e3f1;
-    border-radius: 0.86rem;
-    background: #ffffff;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    gap: 1rem;
+    padding: 0.88rem 1rem;
+    border: 1px solid #d9e4f2;
+    border-radius: 1rem;
+    background:
+        radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.09), transparent 34%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 .config-header-actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+.config-header-actions .btn {
+    min-height: 2.5rem;
+    border-radius: 0.9rem;
+    padding-inline: 0.88rem;
+    font-weight: 700;
+    box-shadow: 0 8px 16px rgba(245, 124, 0, 0.14);
 }
 .config-dirty-badge {
     font-size: 0.7rem;
@@ -45,44 +105,159 @@
 }
 .config-header-copy {
     display: grid;
-    gap: 0.1rem;
+    gap: 0.18rem;
 }
 .config-header-title {
     margin: 0;
-    font-size: 0.98rem;
+    font-size: 1.14rem;
     font-weight: 800;
     color: #173556;
 }
 .config-header-subtitle {
     margin: 0;
-    font-size: 0.74rem;
+    font-size: 0.76rem;
     color: #607896;
+    max-width: 44rem;
 }
 .config-main {
     border: 1px solid #d9e3f1;
-    border-radius: 0.92rem;
+    border-radius: 1rem;
     background: linear-gradient(180deg, #f7faff 0%, #eef4fb 100%);
-    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
     overflow: hidden;
 }
 .config-main > .card-body {
-    padding: 0.66rem;
+    padding: 0.92rem;
+}
+.config-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 0.92rem;
+    align-items: start;
+}
+.config-workspace {
+    display: grid;
+    gap: 0.88rem;
+    min-width: 0;
+}
+.config-sidebar {
+    position: sticky;
+    top: 1rem;
+    display: grid;
+    gap: 0.88rem;
+}
+.config-summary-card {
+    border: 1px solid #d5e0ef;
+    border-radius: 0.92rem;
+    background: #ffffff;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+    padding: 0.88rem;
+    display: grid;
+    gap: 0.72rem;
+}
+.config-summary-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding-bottom: 0.22rem;
+    border-bottom: 1px solid #e4ebf5;
+}
+.config-summary-title h6 {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #1f3f65;
+}
+.config-summary-stack {
+    display: grid;
+    gap: 0.56rem;
+}
+.config-summary-item {
+    display: grid;
+    gap: 0.12rem;
+    padding: 0.62rem 0.68rem;
+    border: 1px solid #dce6f2;
+    border-radius: 0.76rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+.config-summary-item dt {
+    margin: 0;
+    font-size: 0.67rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #69819b;
+}
+.config-summary-item dd {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #173556;
+    line-height: 1.35;
+}
+.config-summary-note {
+    border: 1px dashed #ced9ea;
+    border-radius: 0.82rem;
+    background: linear-gradient(180deg, #f7fbff 0%, #f2f8ff 100%);
+    padding: 0.72rem 0.76rem;
+    font-size: 0.73rem;
+    color: #607896;
+    line-height: 1.45;
+}
+.config-summary-note strong {
+    color: #173556;
+}
+.config-change-list {
+    display: grid;
+    gap: 0.52rem;
+}
+.config-change-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.48rem;
+    padding: 0.56rem 0.66rem;
+    border: 1px solid #dce6f2;
+    border-radius: 0.76rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    font-size: 0.74rem;
+    color: #375575;
+    line-height: 1.35;
+}
+.config-change-pill i {
+    color: #cc7a08;
+    font-size: 0.76rem;
+}
+.config-change-empty {
+    border: 1px dashed #d2deed;
+    border-radius: 0.78rem;
+    padding: 0.7rem 0.76rem;
+    background: #f8fbff;
+    font-size: 0.73rem;
+    color: #6b829d;
 }
 .config-tabbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.36rem;
-    padding: 0.45rem;
+    gap: 0.42rem;
+    padding: 0.54rem;
     border: 1px solid #d5e0ef;
-    border-radius: 0.72rem;
-    background: #ffffff;
+    border-radius: 0.88rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
 }
 .config-tabbar .btn {
     border-radius: 999px;
     font-weight: 700;
-    font-size: 0.75rem;
-    padding: 0.28rem 0.64rem;
+    font-size: 0.77rem;
+    padding: 0.36rem 0.74rem;
     min-width: 130px;
+    min-height: 2.4rem;
+}
+.config-tabbar .btn-outline-secondary {
+    border-color: #ccd9ea;
+    background: #fff;
+    color: #29496f;
 }
 .config-tabbar .btn.active {
     color: #fff;
@@ -105,24 +280,83 @@
 }
 .config-form {
     display: grid;
-    gap: 0.72rem;
+    gap: 0.92rem;
 }
 .config-form .row {
-    --bs-gutter-x: 0.66rem;
-    --bs-gutter-y: 0.66rem;
+    --bs-gutter-x: 0.86rem;
+    --bs-gutter-y: 0.86rem;
 }
 .config-panel {
     border: 1px solid #d5e0ef;
-    border-radius: 0.82rem;
+    border-radius: 0.96rem;
     background: #ffffff;
-    padding: 0.66rem;
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    padding: 0.94rem;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
     height: 100%;
+}
+.config-panel.config-panel-emphasis {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+.config-panel.config-panel-danger {
+    border-color: #f0d0d5;
+    background: linear-gradient(180deg, #fffdfd 0%, #fff6f7 100%);
+}
+.config-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.9rem;
+    margin-bottom: 0.82rem;
+}
+.config-panel-copy {
+    display: grid;
+    gap: 0.12rem;
+}
+.config-panel-kicker {
+    font-size: 0.67rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #69819b;
+}
+.config-panel-description {
+    margin: 0;
+    font-size: 0.74rem;
+    color: #67809b;
+    line-height: 1.42;
+}
+.config-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.66rem;
+}
+.config-inline-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    border: 1px solid #d4deed;
+    border-radius: 999px;
+    padding: 0.16rem 0.48rem;
+    font-size: 0.69rem;
+    font-weight: 700;
+    color: #56708f;
+    background: #f7fbff;
+    white-space: nowrap;
+}
+.config-inline-stat.is-warning {
+    color: #8a5d0d;
+    border-color: #efd39d;
+    background: #fff8eb;
+}
+.config-inline-stat.is-success {
+    color: #1a6a49;
+    border-color: #bde6d4;
+    background: #ecfbf4;
 }
 .config-panel h5,
 .config-panel h6 {
-    margin: 0 0 0.55rem;
-    font-size: 0.84rem;
+    margin: 0 0 0.4rem;
+    font-size: 0.92rem;
     font-weight: 800;
     color: #1f3f65;
 }
@@ -133,32 +367,33 @@
 }
 .config-helper-note {
     border: 1px solid #d5e0ef;
-    border-radius: 0.58rem;
+    border-radius: 0.72rem;
     background: #f7faff;
-    padding: 0.52rem 0.56rem;
-    margin-top: 0.5rem;
+    padding: 0.68rem 0.72rem;
+    margin-top: 0.68rem;
 }
 .config-helper-note p {
     margin: 0;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     color: #5f7692;
+    line-height: 1.45;
 }
 .config-panel .form-label {
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     font-weight: 700;
     color: #48607f;
-    margin-bottom: 0.14rem;
+    margin-bottom: 0.18rem;
 }
 .config-panel .form-control,
 .config-panel .form-select {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     border: 1px solid #c8d6e8;
-    border-radius: 0.54rem;
-    min-height: 1.96rem;
-    padding: 0.25rem 0.5rem;
+    border-radius: 0.68rem;
+    min-height: 2.24rem;
+    padding: 0.38rem 0.62rem;
 }
 .config-panel textarea.form-control {
-    min-height: 4.6rem;
+    min-height: 5.1rem;
 }
 .config-panel .form-control:focus,
 .config-panel .form-select:focus {
@@ -171,7 +406,7 @@
     box-shadow: 0 0 0 0.14rem rgba(203, 58, 66, 0.15);
 }
 .config-panel .mb-3 {
-    margin-bottom: 0.48rem !important;
+    margin-bottom: 0.72rem !important;
 }
 .config-panel .form-check {
     margin-bottom: 0;
@@ -181,9 +416,10 @@
     margin-top: 0.15rem;
 }
 .config-panel .form-text {
-    font-size: 0.67rem;
+    font-size: 0.69rem;
     color: #6c829c;
-    margin-top: 0.14rem;
+    margin-top: 0.2rem;
+    line-height: 1.4;
 }
 .config-card-title {
     margin: 0 0 0.46rem;
@@ -201,11 +437,11 @@
 }
 #configSectionInflux .card {
     border: 1px solid #d5e0ef;
-    border-radius: 0.82rem;
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    border-radius: 0.96rem;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
 }
 #configSectionInflux .card-body {
-    padding: 0.66rem;
+    padding: 0.92rem;
 }
 #configSectionInflux .row.g-3 {
     --bs-gutter-x: 0.62rem;
@@ -237,10 +473,10 @@
     margin-top: 0.14rem;
 }
 #configSectionInflux .btn {
-    border-radius: 0.54rem;
+    border-radius: 0.82rem;
     font-weight: 700;
-    font-size: 0.76rem;
-    padding: 0.32rem 0.62rem;
+    font-size: 0.8rem;
+    padding: 0.56rem 0.82rem;
 }
 #configSectionInflux .col-12 .form-control,
 #configSectionInflux .col-12 .form-select,
@@ -249,17 +485,147 @@
     max-width: 100%;
 }
 #configSectionActions .btn {
-    border-radius: 0.54rem;
+    border-radius: 0.84rem;
     font-weight: 700;
-    font-size: 0.76rem;
-    padding: 0.32rem 0.62rem;
+    font-size: 0.8rem;
+    padding: 0.58rem 0.84rem;
 }
 .config-action-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.56rem;
+    gap: 0.72rem;
+}
+.config-action-row .btn {
+    min-height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.46rem;
+}
+.config-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.72rem;
+}
+.config-tool-btn {
+    min-height: 3.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.52rem;
+    border-radius: 0.9rem !important;
+    font-size: 0.83rem !important;
+    font-weight: 800 !important;
+    padding: 0.68rem 0.92rem !important;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
+}
+.config-tool-btn.btn-outline-secondary {
+    border-color: #cfd9e8;
+    background: linear-gradient(180deg, #ffffff 0%, #f5f8fc 100%);
+    color: #294867;
+}
+.config-tool-btn.btn-outline-primary {
+    border-color: rgba(var(--brand-rgb), 0.48);
+    background: linear-gradient(180deg, rgba(var(--brand-rgb), 0.06) 0%, rgba(var(--brand-rgb), 0.02) 100%);
+    color: #215da8;
+}
+.config-tool-btn.btn-outline-success {
+    border-color: rgba(46, 160, 102, 0.46);
+    background: linear-gradient(180deg, rgba(46, 160, 102, 0.08) 0%, rgba(46, 160, 102, 0.02) 100%);
+    color: #1d7f53;
+}
+.config-storage-stack {
+    display: grid;
+    gap: 0.92rem;
+}
+.config-storage-panel {
+    border: 1px solid #d5e0ef;
+    border-radius: 0.96rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+    padding: 0.96rem;
+    display: grid;
+    gap: 0.78rem;
+}
+.config-storage-panel.is-monitoring {
+    background: linear-gradient(180deg, #ffffff 0%, #fffaf1 100%);
+    border-color: #ead9b3;
+}
+.config-storage-panel .alert {
+    border-radius: 0.8rem;
+    font-size: 0.84rem;
+    color: #49627f;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+}
+.config-storage-panel .config-panel-header {
+    margin-bottom: 0;
+}
+.config-maintenance-stack {
+    display: grid;
+    gap: 0.82rem;
+}
+.config-warning-box {
+    border-radius: 0.84rem;
+    padding: 0.82rem 0.9rem;
+}
+.config-warning-box small {
+    display: block;
+    line-height: 1.5;
+}
+.config-storage-runtime-row {
+    align-items: stretch;
+}
+.config-storage-runtime-field {
+    max-width: 340px;
+}
+.config-storage-notice {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+    gap: 0.72rem;
+    align-items: center;
+    padding: 0.88rem 0.92rem;
+    border: 1px solid #dde8f5;
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+.config-storage-notice-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, rgba(var(--brand-rgb), 0.12) 0%, rgba(59, 111, 179, 0.06) 100%);
+    color: #2f5c93;
+    box-shadow: inset 0 0 0 1px rgba(var(--brand-rgb), 0.12);
+}
+.config-storage-notice-copy {
+    display: grid;
+    gap: 0.16rem;
+}
+.config-storage-notice-title {
+    font-size: 0.79rem;
+    font-weight: 800;
+    color: #173556;
+}
+.config-storage-notice-text {
+    font-size: 0.73rem;
+    color: #607896;
+    line-height: 1.45;
+}
+.config-warning-box.info {
+    border: 1px solid #cfe2f7;
+    background: #eef6ff;
+}
+.config-warning-box.warn {
+    border: 1px solid #f3ddb1;
+    background: #fff8e8;
 }
 @media (max-width: 991.98px) {
+    .config-status-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .config-header {
         flex-direction: column;
         align-items: stretch;
@@ -277,12 +643,36 @@
     .config-advanced-toggle {
         flex: 1 1 100% !important;
     }
+    .config-layout {
+        grid-template-columns: 1fr;
+    }
+    .config-sidebar {
+        position: static;
+    }
+    .config-panel-grid {
+        grid-template-columns: 1fr;
+    }
     .config-action-row {
         grid-template-columns: 1fr;
+    }
+    .config-tool-grid {
+        grid-template-columns: 1fr;
+    }
+    .config-status-card {
+        grid-template-columns: 2.25rem minmax(0, 1fr);
+    }
+    .config-storage-notice {
+        grid-template-columns: 1fr;
+        text-align: left;
     }
     #configSectionInflux .form-control,
     #configSectionInflux .form-select {
         max-width: 100%;
+    }
+}
+@media (max-width: 575.98px) {
+    .config-status-strip {
+        grid-template-columns: 1fr;
     }
 }
 </style>
@@ -290,49 +680,93 @@
 <div class="config-shell workspace-shell">
 <div class="config-header">
     <div class="config-header-copy">
-        <h2 class="config-header-title">Configuration Workspace</h2>
-        <p class="config-header-subtitle">Edit runtime, MQTT, telemetry storage and maintenance options.</p>
+        <h2 class="config-header-title">{{ t('config.workspace_title', 'Configuration Workspace') }}</h2>
+        <p class="config-header-subtitle">{{ t('config.workspace_subtitle', 'Edit runtime, MQTT, telemetry storage and maintenance options.') }}</p>
     </div>
     <div class="config-header-actions">
-        <span id="configDirtyBadge" class="config-dirty-badge">No changes</span>
-        <button type="button" class="btn btn-primary" id="configSaveBtnTop" onclick="saveConfig()"><i class="fas fa-save me-1"></i>Save Configuration</button>
+        <span id="configDirtyBadge" class="config-dirty-badge">{{ t('config.no_changes', 'No changes') }}</span>
+        <button type="button" class="btn btn-primary" id="configSaveBtnTop" onclick="saveConfig()"><i class="fas fa-save me-1"></i>{{ t('config.save_configuration', 'Save Configuration') }}</button>
+    </div>
+</div>
+
+<div class="config-status-strip">
+    <div class="config-status-card">
+        <span class="config-status-icon"><i class="fas fa-globe-europe"></i></span>
+        <div class="config-status-copy">
+            <span class="config-status-label">{{ t('config.summary.language_timezone', 'Language and timezone') }}</span>
+            <span class="config-status-value" id="configStatusLocaleValue">--</span>
+            <span class="config-status-meta">{{ t('config.summary.locale_note', 'Primary UI presentation defaults') }}</span>
+        </div>
+    </div>
+    <div class="config-status-card">
+        <span class="config-status-icon"><i class="fas fa-broadcast-tower"></i></span>
+        <div class="config-status-copy">
+            <span class="config-status-label">{{ t('config.summary.transport', 'Runtime transport') }}</span>
+            <span class="config-status-value" id="configStatusTransportValue">--</span>
+            <span class="config-status-meta">{{ t('config.summary.transport_note', 'MQTT bridge and telemetry source') }}</span>
+        </div>
+    </div>
+    <div class="config-status-card">
+        <span class="config-status-icon"><i class="fas fa-puzzle-piece"></i></span>
+        <div class="config-status-copy">
+            <span class="config-status-label">{{ t('config.summary.modules', 'Optional modules') }}</span>
+            <span class="config-status-value" id="configStatusModulesValue">--</span>
+            <span class="config-status-meta">{{ t('config.summary.modules_note', 'Visible optional features for this deployment') }}</span>
+        </div>
+    </div>
+    <div class="config-status-card">
+        <span class="config-status-icon"><i class="fas fa-pen-ruler"></i></span>
+        <div class="config-status-copy">
+            <span class="config-status-label">{{ t('config.summary.change_state', 'Change state') }}</span>
+            <span class="config-status-value" id="configStatusDirtyValue">--</span>
+            <span class="config-status-meta">{{ t('config.summary.change_note', 'Tracks validation, save state and restart impact') }}</span>
+        </div>
     </div>
 </div>
 
 <div class="card config-main">
     <div class="card-body">
+        <div class="config-layout">
+        <div class="config-workspace">
         <div class="config-tabbar" id="configTabbar">
-            <button type="button" class="btn btn-outline-secondary active" data-config-tab-btn="general"><i class="fas fa-server me-1"></i>General</button>
-            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="influx"><i class="fas fa-database me-1"></i>Storage</button>
-            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="maintenance"><i class="fas fa-tools me-1"></i>Maintenance</button>
+            <button type="button" class="btn btn-outline-secondary active" data-config-tab-btn="general"><i class="fas fa-server me-1"></i>{{ t('config.tab.general', 'General') }}</button>
+            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="influx"><i class="fas fa-database me-1"></i>{{ t('config.tab.storage', 'Storage') }}</button>
+            <button type="button" class="btn btn-outline-secondary" data-config-tab-btn="maintenance"><i class="fas fa-tools me-1"></i>{{ t('config.tab.maintenance', 'Maintenance') }}</button>
             <span class="config-tabbar-spacer"></span>
             <button type="button" class="btn btn-outline-secondary config-advanced-toggle" id="toggleAdvancedConfigBtn">
-                <i class="fas fa-sliders-h me-1"></i>Advanced: Off
+                <i class="fas fa-sliders-h me-1"></i>{{ t('config.advanced_off', 'Advanced: Off') }}
             </button>
         </div>
         <form id="configForm" class="config-form">
             <div class="row mt-3 g-3" id="configSectionGeneral">
-                <div class="col-md-6 config-panel">
-                    <h6><i class="fas fa-server me-1"></i>Server Configuration</h6>
+                <div class="col-md-6 config-panel config-panel-emphasis">
+                    <div class="config-panel-header">
+                        <div class="config-panel-copy">
+                            <span class="config-panel-kicker">{{ t('config.platform', 'Platform') }}</span>
+                            <h6><i class="fas fa-server me-1"></i>{{ t('config.server_configuration', 'Server Configuration') }}</h6>
+                            <p class="config-panel-description">{{ t('config.server_configuration_note', 'Runtime host, timing and localization settings for the platform UI and backend.') }}</p>
+                        </div>
+                        <span class="config-inline-stat" id="configGeneralInlineStat">{{ t('config.live_scope', 'Core runtime') }}</span>
+                    </div>
                     <div class="mb-3">
-                        <label for="LISTEN_HOST" class="form-label">Listen Host</label>
+                        <label for="LISTEN_HOST" class="form-label">{{ t('config.listen_host', 'Listen Host') }}</label>
                         <input type="text" class="form-control" id="LISTEN_HOST" value="{{ config.LISTEN_HOST }}">
                     </div>
                     <div class="mb-3">
-                        <label for="LISTEN_PORT" class="form-label">Listen Port</label>
+                        <label for="LISTEN_PORT" class="form-label">{{ t('config.listen_port', 'Listen Port') }}</label>
                         <input type="number" class="form-control" id="LISTEN_PORT" value="{{ config.LISTEN_PORT }}">
                     </div>
                     <div class="mb-3">
-                        <label for="STATUS_INTERVAL" class="form-label">Status Interval (seconds)</label>
+                        <label for="STATUS_INTERVAL" class="form-label">{{ t('config.status_interval', 'Status Interval (seconds)') }}</label>
                         <input type="number" class="form-control" id="STATUS_INTERVAL" value="{{ config.STATUS_INTERVAL }}">
                     </div>
                     <div class="mb-3">
-                        <label for="DEDUPLICATION_DELAY" class="form-label">Message Deduplication Delay (seconds)</label>
+                        <label for="DEDUPLICATION_DELAY" class="form-label">{{ t('config.deduplication_delay', 'Message Deduplication Delay (seconds)') }}</label>
                         <input type="number" step="0.1" min="0.5" max="10" class="form-control" id="DEDUPLICATION_DELAY" value="{{ config.DEDUPLICATION_DELAY }}">
-                        <div class="form-text">Time to wait for duplicate messages before forwarding the best one (0.5-10 seconds)</div>
+                        <div class="form-text">{{ t('config.deduplication_delay_note', 'Time to wait for duplicate messages before forwarding the best one (0.5-10 seconds)') }}</div>
                     </div>
                     <div class="mb-3">
-                        <label for="TIMEZONE" class="form-label">Timezone</label>
+                        <label for="TIMEZONE" class="form-label">{{ t('config.timezone', 'Timezone') }}</label>
                         <select class="form-control" id="TIMEZONE">
                             <option value="Europe/Berlin" {% if config.TIMEZONE == 'Europe/Berlin' %}selected{% endif %}>Europe/Berlin (CET/CEST)</option>
                             <option value="Europe/London" {% if config.TIMEZONE == 'Europe/London' %}selected{% endif %}>Europe/London (GMT/BST)</option>
@@ -344,30 +778,54 @@
                             <option value="Asia/Tokyo" {% if config.TIMEZONE == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
                             <option value="UTC" {% if config.TIMEZONE == 'UTC' %}selected{% endif %}>UTC</option>
                         </select>
-                        <div class="form-text">Timezone for timestamps in logs and UI</div>
+                        <div class="form-text">{{ t('config.timezone_note', 'Timezone for timestamps in logs and UI') }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="APP_LANGUAGE" class="form-label">{{ t('config.language', 'Application language') }}</label>
+                        <select class="form-control" id="APP_LANGUAGE">
+                            <option value="en" {% if config.APP_LANGUAGE == 'en' %}selected{% endif %}>{{ t('language.english', 'English') }}</option>
+                            <option value="sk" {% if config.APP_LANGUAGE == 'sk' %}selected{% endif %}>{{ t('language.slovak', 'Slovenčina') }}</option>
+                        </select>
+                        <div class="form-text">{{ t('config.language_note', 'Switches UI text and time formatting. The page reloads after save.') }}</div>
                     </div>
                 </div>
 
-                <div class="col-md-6 config-panel">
-                    <h6><i class="fas fa-broadcast-tower me-1"></i>MQTT Configuration</h6>
+                <div class="col-md-6 config-panel config-panel-emphasis">
+                    <div class="config-panel-header">
+                        <div class="config-panel-copy">
+                            <span class="config-panel-kicker">{{ t('config.integrations', 'Integrations') }}</span>
+                            <h6><i class="fas fa-broadcast-tower me-1"></i>{{ t('config.mqtt_configuration', 'MQTT Configuration') }}</h6>
+                            <p class="config-panel-description">{{ t('config.mqtt_configuration_note', 'Control the MQTT bridge, broker credentials and topic routing used by the deployment.') }}</p>
+                        </div>
+                        <span class="config-inline-stat" id="configMqttInlineStat">{{ t('common.disabled', 'Disabled') }}</span>
+                    </div>
                     <div class="mb-3">
-                        <label for="MQTT_BROKER" class="form-label">MQTT Broker</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="MQTT_ENABLED" {% if config.MQTT_ENABLED %}checked{% endif %}>
+                            <label class="form-check-label" for="MQTT_ENABLED">
+                                {{ t('config.enable_mqtt_transport', 'Enable MQTT transport') }}
+                            </label>
+                        </div>
+                        <div class="form-text">{{ t('config.enable_mqtt_transport_note', 'Starts the MQTT bridge client, receives broker commands and publishes runtime messages out of the platform.') }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="MQTT_BROKER" class="form-label">{{ t('config.mqtt_broker', 'MQTT Broker') }}</label>
                         <input type="text" class="form-control" id="MQTT_BROKER" value="{{ config.MQTT_BROKER }}">
                     </div>
                     <div class="mb-3">
-                        <label for="MQTT_PORT" class="form-label">MQTT Port</label>
+                        <label for="MQTT_PORT" class="form-label">{{ t('config.mqtt_port', 'MQTT Port') }}</label>
                         <input type="number" class="form-control" id="MQTT_PORT" value="{{ config.MQTT_PORT }}">
                     </div>
                     <div class="mb-3">
-                        <label for="MQTT_USERNAME" class="form-label">MQTT Username</label>
+                        <label for="MQTT_USERNAME" class="form-label">{{ t('config.mqtt_username', 'MQTT Username') }}</label>
                         <input type="text" class="form-control" id="MQTT_USERNAME" value="{{ config.MQTT_USERNAME }}">
                     </div>
                     <div class="mb-3">
-                        <label for="MQTT_PASSWORD" class="form-label">MQTT Password</label>
+                        <label for="MQTT_PASSWORD" class="form-label">{{ t('config.mqtt_password', 'MQTT Password') }}</label>
                         <input type="password" class="form-control" id="MQTT_PASSWORD" value="{{ config.MQTT_PASSWORD }}">
                     </div>
                     <div class="mb-3">
-                        <label for="BASE_TOPIC" class="form-label">Base Topic</label>
+                        <label for="BASE_TOPIC" class="form-label">{{ t('config.base_topic', 'Base Topic') }}</label>
                         <input type="text" class="form-control" id="BASE_TOPIC" value="{{ config.BASE_TOPIC }}">
                     </div>
                 </div>
@@ -375,50 +833,85 @@
 
             <div class="row mt-2 g-3 d-none" id="configSectionRowTwo">
                 <div class="col-md-6 config-panel" id="configSectionPolicy">
-                    <h5><i class="fas fa-unlink me-1"></i>Auto-Detach Configuration</h5>
+                    <div class="config-panel-header">
+                        <div class="config-panel-copy">
+                            <span class="config-panel-kicker">{{ t('config.sensor_rules', 'Sensor rules') }}</span>
+                            <h5><i class="fas fa-unlink me-1"></i>{{ t('config.auto_detach_configuration', 'Auto-Detach Configuration') }}</h5>
+                            <p class="config-panel-description">{{ t('config.auto_detach_configuration_note', 'Control warning and detach behavior for sensors that stop sending data.') }}</p>
+                        </div>
+                        <span class="config-inline-stat is-warning">{{ t('config.advanced', 'Advanced') }}</span>
+                    </div>
                     <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="AUTO_DETACH_ENABLED" {% if config.AUTO_DETACH_ENABLED %}checked{% endif %}>
                             <label class="form-check-label" for="AUTO_DETACH_ENABLED">
-                                Enable Auto-Detach
+                                {{ t('config.enable_auto_detach', 'Enable Auto-Detach') }}
                             </label>
                         </div>
-                        <div class="form-text">Automatically detach sensors after period of inactivity</div>
+                        <div class="form-text">{{ t('config.enable_auto_detach_note', 'Automatically detach sensors after period of inactivity') }}</div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="AUTO_DETACH_TIMEOUT" class="form-label">Auto-Detach Timeout (hours)</label>
+                        <label for="AUTO_DETACH_TIMEOUT" class="form-label">{{ t('config.auto_detach_timeout', 'Auto-Detach Timeout (hours)') }}</label>
                         <input type="number" class="form-control" id="AUTO_DETACH_TIMEOUT" value="{{ config.AUTO_DETACH_TIMEOUT // 3600 }}" min="1">
-                        <div class="form-text">Hours of inactivity before auto-detach (default: 72 hours)</div>
+                        <div class="form-text">{{ t('config.auto_detach_timeout_note', 'Hours of inactivity before auto-detach (default: 72 hours)') }}</div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="AUTO_DETACH_WARNING_TIMEOUT" class="form-label">Warning Timeout (hours)</label>
+                        <label for="AUTO_DETACH_WARNING_TIMEOUT" class="form-label">{{ t('config.warning_timeout', 'Warning Timeout (hours)') }}</label>
                         <input type="number" class="form-control" id="AUTO_DETACH_WARNING_TIMEOUT" value="{{ config.AUTO_DETACH_WARNING_TIMEOUT // 3600 }}" min="1">
-                        <div class="form-text">Hours of inactivity before warning (default: 36 hours)</div>
+                        <div class="form-text">{{ t('config.warning_timeout_note', 'Hours of inactivity before warning (default: 36 hours)') }}</div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="AUTO_DETACH_CHECK_INTERVAL" class="form-label">Check Interval (hours)</label>
+                        <label for="AUTO_DETACH_CHECK_INTERVAL" class="form-label">{{ t('config.check_interval', 'Check Interval (hours)') }}</label>
                         <input type="number" class="form-control" id="AUTO_DETACH_CHECK_INTERVAL" value="{{ config.AUTO_DETACH_CHECK_INTERVAL // 3600 }}" min="1">
-                        <div class="form-text">How often to check for inactive sensors (default: 1 hour)</div>
+                        <div class="form-text">{{ t('config.check_interval_note', 'How often to check for inactive sensors (default: 1 hour)') }}</div>
                     </div>
                 </div>
 
                 <div class="col-md-6 config-panel" id="configSectionOptional">
-                    <h6 class="mb-2"><i class="fas fa-puzzle-piece me-1"></i>Optional Modules</h6>
+                    <div class="config-panel-header">
+                        <div class="config-panel-copy">
+                            <span class="config-panel-kicker">{{ t('config.modules', 'Modules') }}</span>
+                            <h6 class="mb-0"><i class="fas fa-puzzle-piece me-1"></i>{{ t('config.optional_modules', 'Optional Modules') }}</h6>
+                            <p class="config-panel-description">{{ t('config.optional_modules_note', 'Hide pages and features that are not relevant for this deployment by default.') }}</p>
+                        </div>
+                        <span class="config-inline-stat is-warning">{{ t('config.optional', 'Optional') }}</span>
+                    </div>
                     <div class="mb-1">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="OMS_ENABLED" {% if config.OMS_ENABLED %}checked{% endif %}>
                             <label class="form-check-label" for="OMS_ENABLED">
-                                Show OMS module in navigation
+                                {{ t('config.show_oms_module', 'Show OMS module in navigation') }}
                             </label>
                         </div>
-                        <div class="form-text">Hide OMS page and API endpoints if your deployment does not use OMS meters.</div>
+                        <div class="form-text">{{ t('config.show_oms_module_note', 'Hide OMS page and API endpoints if your deployment does not use OMS meters.') }}</div>
+                    </div>
+
+                    <div class="mt-2 mb-1">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="MQTT_UI_ENABLED" {% if config.MQTT_UI_ENABLED %}checked{% endif %}>
+                            <label class="form-check-label" for="MQTT_UI_ENABLED">
+                                {{ t('config.show_mqtt_module', 'Show MQTT console in navigation') }}
+                            </label>
+                        </div>
+                        <div class="form-text">{{ t('config.show_mqtt_module_note', 'Hide MQTT monitoring page and its API endpoints if you do not use the MQTT console in this deployment.') }}</div>
+                    </div>
+
+                    <div class="mt-2 mb-1">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="BS_UPTIME_PANEL_ENABLED" {% if config.BS_UPTIME_PANEL_ENABLED %}checked{% endif %}>
+                            <label class="form-check-label" for="BS_UPTIME_PANEL_ENABLED">
+                                {{ t('config.show_bs_uptime_panel', 'Show Base Stations uptime trend panel') }}
+                            </label>
+                        </div>
+                        <div class="form-text">{{ t('config.show_bs_uptime_panel_note', 'Keeps fleet uptime chart in Base Stations visible. Recommended off if you want a cleaner default page.') }}</div>
                     </div>
 
                     <div class="config-helper-note">
-                        <p><strong>Tip:</strong> Keep OMS enabled only when OMS/W-MBus meters are part of your deployment.</p>
+                        <p><strong>{{ t('config.tip', 'Tip') }}:</strong> {{ t('config.tip_keep_oms', 'Keep OMS enabled only when OMS/W-MBus meters are part of your deployment.') }}</p>
+                        <p class="mb-0"><strong>{{ t('config.tip', 'Tip') }}:</strong> {{ t('config.tip_mqtt_console', 'Keep MQTT console enabled only when you need live broker monitoring or test publish directly from the UI.') }}</p>
                     </div>
                 </div>
 
@@ -426,126 +919,143 @@
 
             <div class="row mt-2 d-none" id="configSectionInflux">
                 <div class="col-12">
-                    <h5 class="config-card-title"><i class="fas fa-database me-1"></i>Storage and Telemetry</h5>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label for="TELEMETRY_SOURCE" class="form-label">Telemetry Source</label>
-                                    <select class="form-control" id="TELEMETRY_SOURCE">
-                                        <option value="auto" {% if config.TELEMETRY_SOURCE == 'auto' %}selected{% endif %}>Auto</option>
-                                        <option value="runtime" {% if config.TELEMETRY_SOURCE == 'runtime' %}selected{% endif %}>Runtime</option>
-                                        <option value="influx" {% if config.TELEMETRY_SOURCE == 'influx' %}selected{% endif %}>InfluxDB</option>
-                                    </select>
+                    <div class="config-panel-header mb-2">
+                        <div class="config-panel-copy">
+                            <span class="config-panel-kicker">{{ t('config.storage', 'Storage') }}</span>
+                            <h5 class="config-card-title mb-0"><i class="fas fa-database me-1"></i>{{ t('config.storage_and_telemetry', 'Storage and Telemetry') }}</h5>
+                            <p class="config-panel-description">{{ t('config.storage_and_telemetry_note', 'Select the telemetry source, manage InfluxDB or TimescaleDB, and define monitoring thresholds.') }}</p>
+                        </div>
+                        <span class="config-inline-stat" id="configStorageInlineStat">{{ t('config.telemetry_source.auto', 'Auto') }}</span>
+                    </div>
+                    <div class="config-storage-stack">
+                        <section class="config-storage-panel">
+                            <div class="config-panel-header">
+                                <div class="config-panel-copy">
+                                    <span class="config-panel-kicker">{{ t('config.storage.influx_kicker', 'Runtime source') }}</span>
+                                    <h6 class="mb-0"><i class="fas fa-wave-square me-1"></i>{{ t('config.telemetry_source', 'Telemetry Source') }}</h6>
+                                    <p class="config-panel-description">{{ t('config.storage.runtime_timescale_note', 'This deployment uses runtime telemetry with TimescaleDB as the primary persistent store. InfluxDB has been removed from the active configuration UI.') }}</p>
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="INFLUXDB_URL" class="form-label">Influx URL</label>
-                                    <input type="text" class="form-control" id="INFLUXDB_URL" value="{{ config.INFLUXDB_URL }}">
+                                <span class="config-inline-stat">{{ t('config.telemetry_source.runtime', 'Runtime') }}</span>
+                            </div>
+                            <div class="row g-3 config-storage-runtime-row">
+                                <div class="col-md-4 config-storage-runtime-field">
+                                    <label for="TELEMETRY_SOURCE_VISIBLE" class="form-label">{{ t('config.telemetry_source', 'Telemetry Source') }}</label>
+                                    <input type="text" class="form-control" id="TELEMETRY_SOURCE_VISIBLE" value="{{ t('config.telemetry_source.runtime', 'Runtime') }}" readonly>
+                                    <div class="form-text">{{ t('config.storage.runtime_timescale_source_note', 'Live telemetry is read from runtime memory. Historical and persistent telemetry is stored in TimescaleDB.') }}</div>
                                 </div>
-                                <div class="col-md-2">
-                                    <label for="INFLUXDB_ORG" class="form-label">Org</label>
-                                    <input type="text" class="form-control" id="INFLUXDB_ORG" value="{{ config.INFLUXDB_ORG }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="INFLUXDB_BUCKET" class="form-label">Bucket</label>
-                                    <input type="text" class="form-control" id="INFLUXDB_BUCKET" value="{{ config.INFLUXDB_BUCKET }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="INFLUXDB_VERIFY_SSL" class="form-label">TLS Verify</label>
-                                    <select class="form-control" id="INFLUXDB_VERIFY_SSL">
-                                        <option value="true" {% if config.INFLUXDB_VERIFY_SSL %}selected{% endif %}>true</option>
-                                        <option value="false" {% if not config.INFLUXDB_VERIFY_SSL %}selected{% endif %}>false</option>
-                                    </select>
-                                </div>
-
                                 <div class="col-md-8">
-                                    <label for="INFLUXDB_TOKEN" class="form-label">Token</label>
-                                    <input type="password" class="form-control" id="INFLUXDB_TOKEN" value="{{ config.INFLUXDB_TOKEN }}">
+                                    <div class="config-storage-notice">
+                                        <span class="config-storage-notice-icon"><i class="fas fa-check-circle"></i></span>
+                                        <div class="config-storage-notice-copy">
+                                            <span class="config-storage-notice-title">{{ t('config.storage.runtime_ready_title', 'Runtime + TimescaleDB is the active model') }}</span>
+                                            <span class="config-storage-notice-text">{{ t('config.storage.runtime_timescale_notice', 'InfluxDB fields were removed from this workspace because this deployment already runs in runtime + TimescaleDB mode.') }}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-primary w-100" onclick="syncInfluxNow()">
-                                        <i class="fas fa-upload"></i> Sync Inventory to Influx Now
-                                    </button>
+                                <div class="col-12 d-none">
+                                    <div class="row g-3" id="influxConfigFields">
+                                        <div class="col-md-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="INFLUX_ENABLED" {% if config.INFLUX_ENABLED %}checked{% endif %}>
+                                                <label class="form-check-label fw-semibold" for="INFLUX_ENABLED">{{ t('config.influx_enabled', 'Enable InfluxDB integration') }}</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="TELEMETRY_SOURCE" class="form-label">{{ t('config.telemetry_source', 'Telemetry Source') }}</label>
+                                            <select class="form-control" id="TELEMETRY_SOURCE">
+                                                <option value="auto" {% if config.TELEMETRY_SOURCE == 'auto' and config.INFLUX_ENABLED %}selected{% endif %}>{{ t('config.telemetry_source.auto', 'Auto') }}</option>
+                                                <option value="runtime" {% if config.TELEMETRY_SOURCE == 'runtime' %}selected{% endif %}>{{ t('config.telemetry_source.runtime', 'Runtime') }}</option>
+                                                <option value="influx" {% if config.TELEMETRY_SOURCE == 'influx' %}selected{% endif %}>{{ t('config.telemetry_source.influx', 'InfluxDB') }}</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12" id="influxDisabledNotice" style="display:none;">
+                                            <div class="alert alert-light border mb-0">{{ t('config.influx_disabled_notice', 'InfluxDB integration is disabled. The application will use runtime and TimescaleDB paths only.') }}</div>
+                                        </div>
+                                        <div class="col-md-3"><input type="text" class="form-control" id="INFLUXDB_URL" value="{{ config.INFLUXDB_URL }}"></div>
+                                        <div class="col-md-2"><input type="text" class="form-control" id="INFLUXDB_ORG" value="{{ config.INFLUXDB_ORG }}"></div>
+                                        <div class="col-md-2"><input type="text" class="form-control" id="INFLUXDB_BUCKET" value="{{ config.INFLUXDB_BUCKET }}"></div>
+                                        <div class="col-md-2">
+                                            <select class="form-control" id="INFLUXDB_VERIFY_SSL">
+                                                <option value="true" {% if config.INFLUXDB_VERIFY_SSL %}selected{% endif %}>true</option>
+                                                <option value="false" {% if not config.INFLUXDB_VERIFY_SSL %}selected{% endif %}>false</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-8"><input type="password" class="form-control" id="INFLUXDB_TOKEN" value="{{ config.INFLUXDB_TOKEN }}"></div>
+                                        <div class="col-md-4 d-flex align-items-end">
+                                            <button type="button" class="btn btn-outline-primary w-100" id="syncInfluxBtn" onclick="syncInfluxNow()">
+                                                <i class="fas fa-upload"></i> {{ t('config.sync_inventory_influx', 'Sync Inventory to Influx Now') }}
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4"><input type="text" class="form-control" id="INFLUX_INVENTORY_MEASUREMENT" value="{{ config.INFLUX_INVENTORY_MEASUREMENT }}"></div>
+                                        <div class="col-md-2">
+                                            <select class="form-control" id="INFLUX_INVENTORY_WRITE_ENABLED">
+                                                <option value="true" {% if config.INFLUX_INVENTORY_WRITE_ENABLED %}selected{% endif %}>{{ t('config.enabled', 'enabled') }}</option>
+                                                <option value="false" {% if not config.INFLUX_INVENTORY_WRITE_ENABLED %}selected{% endif %}>{{ t('config.disabled', 'disabled') }}</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4"><input type="text" class="form-control" id="INFLUX_SNAPSHOT_MEASUREMENT" value="{{ config.INFLUX_SNAPSHOT_MEASUREMENT }}"></div>
+                                        <div class="col-md-2">
+                                            <select class="form-control" id="INFLUX_SNAPSHOT_ENABLED">
+                                                <option value="true" {% if config.INFLUX_SNAPSHOT_ENABLED %}selected{% endif %}>{{ t('config.enabled', 'enabled') }}</option>
+                                                <option value="false" {% if not config.INFLUX_SNAPSHOT_ENABLED %}selected{% endif %}>{{ t('config.disabled', 'disabled') }}</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3"><input type="number" min="15" class="form-control" id="INFLUX_SNAPSHOT_INTERVAL_SECONDS" value="{{ config.INFLUX_SNAPSHOT_INTERVAL_SECONDS }}"></div>
+                                        <div class="col-md-3"><input type="text" class="form-control" id="INFLUX_UPTIME_MEASUREMENT" value="{{ config.INFLUX_UPTIME_MEASUREMENT }}"></div>
+                                        <div class="col-md-3"><input type="text" class="form-control" id="INFLUX_UPTIME_FIELD" value="{{ config.INFLUX_UPTIME_FIELD }}"></div>
+                                        <div class="col-md-3"><input type="text" class="form-control" id="INFLUX_UPTIME_EUI_TAG" value="{{ config.INFLUX_UPTIME_EUI_TAG }}"></div>
+                                        <div class="col-12"><textarea class="form-control" id="INFLUX_UPTIME_QUERY" rows="3">{{ config.INFLUX_UPTIME_QUERY }}</textarea></div>
+                                    </div>
                                 </div>
+                            </div>
+                        </section>
 
-                                <div class="col-md-4">
-                                    <label for="INFLUX_INVENTORY_MEASUREMENT" class="form-label">Inventory Events Measurement</label>
-                                    <input type="text" class="form-control" id="INFLUX_INVENTORY_MEASUREMENT" value="{{ config.INFLUX_INVENTORY_MEASUREMENT }}">
+                        <section class="config-storage-panel">
+                            <div class="config-panel-header">
+                                <div class="config-panel-copy">
+                                    <span class="config-panel-kicker">{{ t('config.storage.timescale_kicker', 'Operational store') }}</span>
+                                    <h6 class="mb-0"><i class="fas fa-database me-1"></i>{{ t('config.timescale_section', 'TimescaleDB / PostgreSQL (Multi-tenant Operational Store)') }}</h6>
+                                    <p class="config-panel-description">{{ t('config.storage.timescale_note', 'Configure the persistent telemetry store, retention, compression and the tenant-aware operational database.') }}</p>
                                 </div>
-                                <div class="col-md-2">
-                                    <label for="INFLUX_INVENTORY_WRITE_ENABLED" class="form-label">CRUD Events</label>
-                                    <select class="form-control" id="INFLUX_INVENTORY_WRITE_ENABLED">
-                                        <option value="true" {% if config.INFLUX_INVENTORY_WRITE_ENABLED %}selected{% endif %}>enabled</option>
-                                        <option value="false" {% if not config.INFLUX_INVENTORY_WRITE_ENABLED %}selected{% endif %}>disabled</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="INFLUX_SNAPSHOT_MEASUREMENT" class="form-label">Snapshot Measurement</label>
-                                    <input type="text" class="form-control" id="INFLUX_SNAPSHOT_MEASUREMENT" value="{{ config.INFLUX_SNAPSHOT_MEASUREMENT }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="INFLUX_SNAPSHOT_ENABLED" class="form-label">Snapshot</label>
-                                    <select class="form-control" id="INFLUX_SNAPSHOT_ENABLED">
-                                        <option value="true" {% if config.INFLUX_SNAPSHOT_ENABLED %}selected{% endif %}>enabled</option>
-                                        <option value="false" {% if not config.INFLUX_SNAPSHOT_ENABLED %}selected{% endif %}>disabled</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <label for="INFLUX_SNAPSHOT_INTERVAL_SECONDS" class="form-label">Snapshot Interval (sec)</label>
-                                    <input type="number" min="15" class="form-control" id="INFLUX_SNAPSHOT_INTERVAL_SECONDS" value="{{ config.INFLUX_SNAPSHOT_INTERVAL_SECONDS }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="INFLUX_UPTIME_MEASUREMENT" class="form-label">Uptime Measurement</label>
-                                    <input type="text" class="form-control" id="INFLUX_UPTIME_MEASUREMENT" value="{{ config.INFLUX_UPTIME_MEASUREMENT }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="INFLUX_UPTIME_FIELD" class="form-label">Uptime Field</label>
-                                    <input type="text" class="form-control" id="INFLUX_UPTIME_FIELD" value="{{ config.INFLUX_UPTIME_FIELD }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="INFLUX_UPTIME_EUI_TAG" class="form-label">Uptime EUI Tag</label>
-                                    <input type="text" class="form-control" id="INFLUX_UPTIME_EUI_TAG" value="{{ config.INFLUX_UPTIME_EUI_TAG }}">
-                                </div>
+                                <span class="config-inline-stat">{{ t('config.timescale', 'Timescale') }}</span>
+                            </div>
+                            <div class="row g-3">
                                 <div class="col-12">
-                                    <label for="INFLUX_UPTIME_QUERY" class="form-label">Custom Uptime Flux Query (optional)</label>
-                                    <textarea class="form-control" id="INFLUX_UPTIME_QUERY" rows="3">{{ config.INFLUX_UPTIME_QUERY }}</textarea>
-                                    <div class="form-text">If empty, default uptime query is generated automatically.</div>
-                                </div>
-
-                                <div class="col-12 mt-2">
-                                    <p class="config-subsection-title">TimescaleDB / PostgreSQL (Multi-tenant Operational Store)</p>
+                                    <p class="config-subsection-title">{{ t('config.storage.section_connection', 'Connection and identity') }}</p>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_ENABLED" class="form-label">Timescale</label>
+                                    <label for="TIMESCALE_ENABLED" class="form-label">{{ t('config.timescale', 'Timescale') }}</label>
                                     <select class="form-control" id="TIMESCALE_ENABLED">
-                                        <option value="true" {% if config.TIMESCALE_ENABLED %}selected{% endif %}>enabled</option>
-                                        <option value="false" {% if not config.TIMESCALE_ENABLED %}selected{% endif %}>disabled</option>
+                                        <option value="true" {% if config.TIMESCALE_ENABLED %}selected{% endif %}>{{ t('config.enabled', 'enabled') }}</option>
+                                        <option value="false" {% if not config.TIMESCALE_ENABLED %}selected{% endif %}>{{ t('config.disabled', 'disabled') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="TIMESCALE_HOST" class="form-label">Host</label>
+                                    <label for="TIMESCALE_HOST" class="form-label">{{ t('config.host', 'Host') }}</label>
                                     <input type="text" class="form-control" id="TIMESCALE_HOST" value="{{ config.TIMESCALE_HOST }}">
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_PORT" class="form-label">Port</label>
+                                    <label for="TIMESCALE_PORT" class="form-label">{{ t('config.port', 'Port') }}</label>
                                     <input type="number" class="form-control" id="TIMESCALE_PORT" value="{{ config.TIMESCALE_PORT }}">
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_DB" class="form-label">Database</label>
+                                    <label for="TIMESCALE_DB" class="form-label">{{ t('config.database', 'Database') }}</label>
                                     <input type="text" class="form-control" id="TIMESCALE_DB" value="{{ config.TIMESCALE_DB }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="TIMESCALE_USER" class="form-label">User</label>
+                                    <label for="TIMESCALE_USER" class="form-label">{{ t('config.user', 'User') }}</label>
                                     <input type="text" class="form-control" id="TIMESCALE_USER" value="{{ config.TIMESCALE_USER }}">
                                 </div>
 
+                                <div class="col-12">
+                                    <p class="config-subsection-title">{{ t('config.storage.section_runtime_behavior', 'Write behavior and snapshots') }}</p>
+                                </div>
                                 <div class="col-md-4">
-                                    <label for="TIMESCALE_PASSWORD" class="form-label">Password</label>
+                                    <label for="TIMESCALE_PASSWORD" class="form-label">{{ t('config.password', 'Password') }}</label>
                                     <input type="password" class="form-control" id="TIMESCALE_PASSWORD" value="{{ config.TIMESCALE_PASSWORD }}">
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_SSLMODE" class="form-label">SSL Mode</label>
+                                    <label for="TIMESCALE_SSLMODE" class="form-label">{{ t('config.ssl_mode', 'SSL Mode') }}</label>
                                     <select class="form-control" id="TIMESCALE_SSLMODE">
                                         <option value="disable" {% if config.TIMESCALE_SSLMODE == 'disable' %}selected{% endif %}>disable</option>
                                         <option value="allow" {% if config.TIMESCALE_SSLMODE == 'allow' %}selected{% endif %}>allow</option>
@@ -556,146 +1066,228 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_DEFAULT_TENANT" class="form-label">Default Tenant</label>
+                                    <label for="TIMESCALE_DEFAULT_TENANT" class="form-label">{{ t('config.default_tenant', 'Default Tenant') }}</label>
                                     <input type="text" class="form-control" id="TIMESCALE_DEFAULT_TENANT" value="{{ config.TIMESCALE_DEFAULT_TENANT }}">
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_INVENTORY_WRITE_ENABLED" class="form-label">Event Writes</label>
+                                    <label for="TIMESCALE_INVENTORY_WRITE_ENABLED" class="form-label">{{ t('config.event_writes', 'Event Writes') }}</label>
                                     <select class="form-control" id="TIMESCALE_INVENTORY_WRITE_ENABLED">
-                                        <option value="true" {% if config.TIMESCALE_INVENTORY_WRITE_ENABLED %}selected{% endif %}>enabled</option>
-                                        <option value="false" {% if not config.TIMESCALE_INVENTORY_WRITE_ENABLED %}selected{% endif %}>disabled</option>
+                                        <option value="true" {% if config.TIMESCALE_INVENTORY_WRITE_ENABLED %}selected{% endif %}>{{ t('config.enabled', 'enabled') }}</option>
+                                        <option value="false" {% if not config.TIMESCALE_INVENTORY_WRITE_ENABLED %}selected{% endif %}>{{ t('config.disabled', 'disabled') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_TELEMETRY_WRITE_ENABLED" class="form-label">Telemetry Writes</label>
+                                    <label for="TIMESCALE_TELEMETRY_WRITE_ENABLED" class="form-label">{{ t('config.telemetry_writes', 'Telemetry Writes') }}</label>
                                     <select class="form-control" id="TIMESCALE_TELEMETRY_WRITE_ENABLED">
-                                        <option value="true" {% if config.TIMESCALE_TELEMETRY_WRITE_ENABLED %}selected{% endif %}>enabled</option>
-                                        <option value="false" {% if not config.TIMESCALE_TELEMETRY_WRITE_ENABLED %}selected{% endif %}>disabled</option>
+                                        <option value="true" {% if config.TIMESCALE_TELEMETRY_WRITE_ENABLED %}selected{% endif %}>{{ t('config.enabled', 'enabled') }}</option>
+                                        <option value="false" {% if not config.TIMESCALE_TELEMETRY_WRITE_ENABLED %}selected{% endif %}>{{ t('config.disabled', 'disabled') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_SNAPSHOT_ENABLED" class="form-label">Snapshots</label>
+                                    <label for="TIMESCALE_SNAPSHOT_ENABLED" class="form-label">{{ t('config.snapshots', 'Snapshots') }}</label>
                                     <select class="form-control" id="TIMESCALE_SNAPSHOT_ENABLED">
-                                        <option value="true" {% if config.TIMESCALE_SNAPSHOT_ENABLED %}selected{% endif %}>enabled</option>
-                                        <option value="false" {% if not config.TIMESCALE_SNAPSHOT_ENABLED %}selected{% endif %}>disabled</option>
+                                        <option value="true" {% if config.TIMESCALE_SNAPSHOT_ENABLED %}selected{% endif %}>{{ t('config.enabled', 'enabled') }}</option>
+                                        <option value="false" {% if not config.TIMESCALE_SNAPSHOT_ENABLED %}selected{% endif %}>{{ t('config.disabled', 'disabled') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_SNAPSHOT_INTERVAL_SECONDS" class="form-label">Snapshot Interval (s)</label>
+                                    <label for="TIMESCALE_SNAPSHOT_INTERVAL_SECONDS" class="form-label">{{ t('config.snapshot_interval_sec', 'Snapshot Interval (s)') }}</label>
                                     <input type="number" min="15" class="form-control" id="TIMESCALE_SNAPSHOT_INTERVAL_SECONDS" value="{{ config.TIMESCALE_SNAPSHOT_INTERVAL_SECONDS }}">
                                 </div>
+
+                                <div class="col-12">
+                                    <p class="config-subsection-title">{{ t('config.storage.section_retention', 'Retention and compression') }}</p>
+                                </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_RETENTION_ENABLED" class="form-label">Retention</label>
+                                    <label for="TIMESCALE_RETENTION_ENABLED" class="form-label">{{ t('config.retention', 'Retention') }}</label>
                                     <select class="form-control" id="TIMESCALE_RETENTION_ENABLED">
-                                        <option value="true" {% if config.TIMESCALE_RETENTION_ENABLED %}selected{% endif %}>enabled</option>
-                                        <option value="false" {% if not config.TIMESCALE_RETENTION_ENABLED %}selected{% endif %}>disabled</option>
+                                        <option value="true" {% if config.TIMESCALE_RETENTION_ENABLED %}selected{% endif %}>{{ t('config.enabled', 'enabled') }}</option>
+                                        <option value="false" {% if not config.TIMESCALE_RETENTION_ENABLED %}selected{% endif %}>{{ t('config.disabled', 'disabled') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_TELEMETRY_RETENTION_DAYS" class="form-label">Telemetry Retention (days)</label>
+                                    <label for="TIMESCALE_TELEMETRY_RETENTION_DAYS" class="form-label">{{ t('config.telemetry_retention_days', 'Telemetry Retention (days)') }}</label>
                                     <input type="number" min="1" class="form-control" id="TIMESCALE_TELEMETRY_RETENTION_DAYS" value="{{ config.TIMESCALE_TELEMETRY_RETENTION_DAYS }}">
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_INVENTORY_RETENTION_DAYS" class="form-label">Inventory Retention (days)</label>
+                                    <label for="TIMESCALE_INVENTORY_RETENTION_DAYS" class="form-label">{{ t('config.inventory_retention_days', 'Inventory Retention (days)') }}</label>
                                     <input type="number" min="1" class="form-control" id="TIMESCALE_INVENTORY_RETENTION_DAYS" value="{{ config.TIMESCALE_INVENTORY_RETENTION_DAYS }}">
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_COMPRESSION_ENABLED" class="form-label">Compression</label>
+                                    <label for="TIMESCALE_COMPRESSION_ENABLED" class="form-label">{{ t('config.compression', 'Compression') }}</label>
                                     <select class="form-control" id="TIMESCALE_COMPRESSION_ENABLED">
-                                        <option value="true" {% if config.TIMESCALE_COMPRESSION_ENABLED %}selected{% endif %}>enabled</option>
-                                        <option value="false" {% if not config.TIMESCALE_COMPRESSION_ENABLED %}selected{% endif %}>disabled</option>
+                                        <option value="true" {% if config.TIMESCALE_COMPRESSION_ENABLED %}selected{% endif %}>{{ t('config.enabled', 'enabled') }}</option>
+                                        <option value="false" {% if not config.TIMESCALE_COMPRESSION_ENABLED %}selected{% endif %}>{{ t('config.disabled', 'disabled') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="TIMESCALE_COMPRESSION_AFTER_DAYS" class="form-label">Compress After (days)</label>
+                                    <label for="TIMESCALE_COMPRESSION_AFTER_DAYS" class="form-label">{{ t('config.compress_after_days', 'Compress After (days)') }}</label>
                                     <input type="number" min="1" class="form-control" id="TIMESCALE_COMPRESSION_AFTER_DAYS" value="{{ config.TIMESCALE_COMPRESSION_AFTER_DAYS }}">
                                 </div>
+
+                                <div class="col-12">
+                                    <p class="config-subsection-title">{{ t('config.storage.section_observability', 'Linked observability') }}</p>
+                                </div>
                                 <div class="col-md-3">
-                                    <label for="GRAFANA_URL" class="form-label">Grafana URL</label>
+                                    <label for="GRAFANA_URL" class="form-label">{{ t('config.grafana_url', 'Grafana URL') }}</label>
                                     <input type="text" class="form-control" id="GRAFANA_URL" value="{{ config.GRAFANA_URL }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="GRAFANA_DASHBOARD_UID" class="form-label">Grafana Dashboard UID</label>
+                                    <label for="GRAFANA_DASHBOARD_UID" class="form-label">{{ t('config.grafana_dashboard_uid', 'Grafana Dashboard UID') }}</label>
                                     <input type="text" class="form-control" id="GRAFANA_DASHBOARD_UID" value="{{ config.GRAFANA_DASHBOARD_UID }}">
                                 </div>
+                            </div>
+                        </section>
 
-                                <div class="col-12 mt-2">
-                                    <p class="config-subsection-title">Monitoring Alert Thresholds</p>
+                        <section class="config-storage-panel is-monitoring">
+                            <div class="config-panel-header">
+                                <div class="config-panel-copy">
+                                    <span class="config-panel-kicker">{{ t('config.storage.monitoring_kicker', 'Thresholds') }}</span>
+                                    <h6 class="mb-0"><i class="fas fa-bell me-1"></i>{{ t('config.monitoring_alert_thresholds', 'Monitoring Alert Thresholds') }}</h6>
+                                    <p class="config-panel-description">{{ t('config.storage.monitoring_note', 'Define queue, retry, latency and reconnect thresholds, then run operational checks directly from this workspace.') }}</p>
                                 </div>
+                                <span class="config-inline-stat is-warning">{{ t('config.operational_tools', 'Operational Tools') }}</span>
+                            </div>
+                            <div class="row g-3">
                                 <div class="col-md-3">
-                                    <label for="MONITOR_QUEUE_WARN_PCT" class="form-label">Queue Warn (%)</label>
+                                    <label for="MONITOR_QUEUE_WARN_PCT" class="form-label">{{ t('config.queue_warn_pct', 'Queue Warn (%)') }}</label>
                                     <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_QUEUE_WARN_PCT" value="{{ config.MONITOR_QUEUE_WARN_PCT }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="MONITOR_QUEUE_CRIT_PCT" class="form-label">Queue Critical (%)</label>
+                                    <label for="MONITOR_QUEUE_CRIT_PCT" class="form-label">{{ t('config.queue_critical_pct', 'Queue Critical (%)') }}</label>
                                     <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_QUEUE_CRIT_PCT" value="{{ config.MONITOR_QUEUE_CRIT_PCT }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="MONITOR_RETRY_FAIL_WARN_PCT" class="form-label">Retry Fail Warn (%)</label>
+                                    <label for="MONITOR_RETRY_FAIL_WARN_PCT" class="form-label">{{ t('config.retry_fail_warn_pct', 'Retry Fail Warn (%)') }}</label>
                                     <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_RETRY_FAIL_WARN_PCT" value="{{ config.MONITOR_RETRY_FAIL_WARN_PCT }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="MONITOR_RETRY_FAIL_CRIT_PCT" class="form-label">Retry Fail Critical (%)</label>
+                                    <label for="MONITOR_RETRY_FAIL_CRIT_PCT" class="form-label">{{ t('config.retry_fail_critical_pct', 'Retry Fail Critical (%)') }}</label>
                                     <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_RETRY_FAIL_CRIT_PCT" value="{{ config.MONITOR_RETRY_FAIL_CRIT_PCT }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="MONITOR_DB_WRITE_LATENCY_WARN_MS" class="form-label">DB Latency Warn (ms)</label>
+                                    <label for="MONITOR_DB_WRITE_LATENCY_WARN_MS" class="form-label">{{ t('config.db_latency_warn_ms', 'DB Latency Warn (ms)') }}</label>
                                     <input type="number" min="0" step="1" class="form-control" id="MONITOR_DB_WRITE_LATENCY_WARN_MS" value="{{ config.MONITOR_DB_WRITE_LATENCY_WARN_MS }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="MONITOR_DB_WRITE_LATENCY_CRIT_MS" class="form-label">DB Latency Critical (ms)</label>
+                                    <label for="MONITOR_DB_WRITE_LATENCY_CRIT_MS" class="form-label">{{ t('config.db_latency_critical_ms', 'DB Latency Critical (ms)') }}</label>
                                     <input type="number" min="0" step="1" class="form-control" id="MONITOR_DB_WRITE_LATENCY_CRIT_MS" value="{{ config.MONITOR_DB_WRITE_LATENCY_CRIT_MS }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="MONITOR_MQTT_RECONNECT_WARN_PER_HOUR" class="form-label">Reconnect Warn (/h)</label>
+                                    <label for="MONITOR_MQTT_RECONNECT_WARN_PER_HOUR" class="form-label">{{ t('config.reconnect_warn_per_hour', 'Reconnect Warn (/h)') }}</label>
                                     <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_MQTT_RECONNECT_WARN_PER_HOUR" value="{{ config.MONITOR_MQTT_RECONNECT_WARN_PER_HOUR }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR" class="form-label">Reconnect Critical (/h)</label>
+                                    <label for="MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR" class="form-label">{{ t('config.reconnect_critical_per_hour', 'Reconnect Critical (/h)') }}</label>
                                     <input type="number" min="0" step="0.1" class="form-control" id="MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR" value="{{ config.MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR }}">
                                 </div>
 
                                 <div class="col-12 mt-2">
-                                    <p class="config-subsection-title">Operational Tools</p>
+                                    <p class="config-subsection-title">{{ t('config.operational_tools', 'Operational Tools') }}</p>
                                 </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-secondary w-100" onclick="checkTimescaleStatus()">
-                                        <i class="fas fa-heartbeat me-1"></i>Check Timescale Status
-                                    </button>
-                                </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-primary w-100" onclick="syncTimescaleNow()">
-                                        <i class="fas fa-database me-1"></i>Sync Inventory to Timescale
-                                    </button>
-                                </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-success w-100" onclick="applyTimescalePolicies()">
-                                        <i class="fas fa-layer-group me-1"></i>Apply Timescale Policies
-                                    </button>
+                                <div class="col-12">
+                                    <div class="config-tool-grid">
+                                        <button type="button" class="btn btn-outline-secondary config-tool-btn" onclick="checkTimescaleStatus()">
+                                            <i class="fas fa-heartbeat"></i>{{ t('config.check_timescale_status', 'Check Timescale Status') }}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary config-tool-btn" onclick="syncTimescaleNow()">
+                                            <i class="fas fa-database"></i>{{ t('config.sync_inventory_timescale', 'Sync Inventory to Timescale') }}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success config-tool-btn" onclick="applyTimescalePolicies()">
+                                            <i class="fas fa-layer-group"></i>{{ t('config.apply_timescale_policies', 'Apply Timescale Policies') }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </section>
                     </div>
                 </div>
             </div>
 
             <div class="mt-2 d-none" id="configSectionActions">
-                <div class="config-panel">
-                <h5><i class="fas fa-tools me-1"></i>Maintenance</h5>
+                <div class="config-panel config-panel-danger">
+                <div class="config-panel-header">
+                    <div class="config-panel-copy">
+                        <span class="config-panel-kicker">{{ t('config.operations', 'Operations') }}</span>
+                        <h5><i class="fas fa-tools me-1"></i>{{ t('config.maintenance', 'Maintenance') }}</h5>
+                        <p class="config-panel-description">{{ t('config.maintenance_note', 'Keep save, service restart and container restart separate from regular settings edits.') }}</p>
+                    </div>
+                    <span class="config-inline-stat is-warning">{{ t('config.requires_attention', 'Requires attention') }}</span>
+                </div>
+                <div class="config-maintenance-stack">
                 <div class="config-action-row">
-                    <button type="button" class="btn btn-primary" id="configSaveBtnMaintenance" onclick="saveConfig()"><i class="fas fa-save me-1"></i>Save Configuration</button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="restartService(event)"><i class="fas fa-sync-alt me-1"></i>Restart Service</button>
-                    <button type="button" class="btn btn-outline-danger" onclick="restartContainer(event)"><i class="fas fa-power-off me-1"></i>Restart Container</button>
+                    <button type="button" class="btn btn-primary" id="configSaveBtnMaintenance" onclick="saveConfig()"><i class="fas fa-save me-1"></i>{{ t('config.save_configuration', 'Save Configuration') }}</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="restartService(event)"><i class="fas fa-sync-alt me-1"></i>{{ t('config.restart_service', 'Restart Service') }}</button>
+                    <button type="button" class="btn btn-outline-danger" onclick="restartContainer(event)"><i class="fas fa-power-off me-1"></i>{{ t('config.restart_container', 'Restart Container') }}</button>
                 </div>
-                <div class="alert alert-info mt-3 mb-0">
-                    <small><strong>Note:</strong> Auto-update is disabled for this customized deployment. Apply updates through your Git workflow and rebuild container images.</small>
+                <div class="config-warning-box info">
+                    <small><strong>{{ t('config.note', 'Note') }}:</strong> {{ t('config.auto_update_disabled_note', 'Auto-update is disabled for this customized deployment. Apply updates through your Git workflow and rebuild container images.') }}</small>
                 </div>
-                <div class="alert alert-warning mt-3 mb-0">
-                    <small><strong>Note:</strong> Configuration changes require a restart to take effect. Use "Restart Service" for quick process restart, or "Restart Container" for full environment reload (recommended after changing MQTT credentials or other .env variables).</small>
+                <div class="config-warning-box warn">
+                    <small><strong>{{ t('config.note', 'Note') }}:</strong> {{ t('config.restart_required_note', 'Configuration changes require a restart to take effect. Use "Restart Service" for quick process restart, or "Restart Container" for full environment reload (recommended after changing MQTT credentials or other .env variables).') }}</small>
+                </div>
                 </div>
                 </div>
             </div>
         </form>
+        </div>
+        <aside class="config-sidebar">
+            <div class="config-summary-card">
+                <div class="config-summary-title">
+                    <h6>{{ t('config.summary.title', 'Configuration Summary') }}</h6>
+                    <span id="configSummaryTabBadge" class="config-inline-stat">{{ t('config.tab.general', 'General') }}</span>
+                </div>
+                <div class="config-summary-stack">
+                    <dl class="config-summary-item">
+                        <dt>{{ t('config.summary.locale', 'Locale') }}</dt>
+                        <dd id="configSummaryLocale">--</dd>
+                    </dl>
+                    <dl class="config-summary-item">
+                        <dt>{{ t('config.summary.mqtt', 'MQTT transport') }}</dt>
+                        <dd id="configSummaryMqtt">--</dd>
+                    </dl>
+                    <dl class="config-summary-item">
+                        <dt>{{ t('config.summary.telemetry', 'Telemetry source') }}</dt>
+                        <dd id="configSummaryTelemetry">--</dd>
+                    </dl>
+                    <dl class="config-summary-item">
+                        <dt>{{ t('config.summary.modules_enabled', 'Optional modules') }}</dt>
+                        <dd id="configSummaryModules">--</dd>
+                    </dl>
+                    <dl class="config-summary-item">
+                        <dt>{{ t('config.summary.restart_impact', 'Restart impact') }}</dt>
+                        <dd id="configSummaryRestart">--</dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="config-summary-card">
+                <div class="config-summary-title">
+                    <h6>{{ t('config.summary.changed_fields', 'Changed fields') }}</h6>
+                    <span id="configSummaryChangedCount" class="config-inline-stat">0</span>
+                </div>
+                <div id="configSummaryChangedList" class="config-change-list">
+                    <div class="config-change-empty">{{ t('config.summary.changed_fields_empty', 'No configuration changes yet. Edited fields will appear here.') }}</div>
+                </div>
+            </div>
+            <div class="config-summary-card">
+                <div class="config-summary-title">
+                    <h6>{{ t('config.summary.guidance', 'Editing Guidance') }}</h6>
+                </div>
+                <div class="config-summary-note">
+                    <strong>{{ t('config.summary.guidance_status', 'General') }}</strong><br>
+                    {{ t('config.summary.guidance_status_text', 'Use General for platform identity, MQTT bridge and optional modules. Enable advanced mode only when you need policy controls.') }}
+                </div>
+                <div class="config-summary-note">
+                    <strong>{{ t('config.summary.guidance_storage', 'Storage') }}</strong><br>
+                    {{ t('config.summary.guidance_storage_text', 'Treat InfluxDB and TimescaleDB as operational integrations. Keep only one telemetry source as the primary read path for the UI.') }}
+                </div>
+                <div class="config-summary-note">
+                    <strong>{{ t('config.summary.guidance_maintenance', 'Maintenance') }}</strong><br>
+                    {{ t('config.summary.guidance_maintenance_text', 'Save configuration first, then restart only if runtime services or environment-backed values changed.') }}
+                </div>
+            </div>
+        </aside>
+        </div>
     </div>
 </div>
 </div>
@@ -704,9 +1296,10 @@
 {% block scripts %}
 <script>
 const CONFIG_FIELD_IDS = [
-    'LISTEN_HOST', 'LISTEN_PORT', 'MQTT_BROKER', 'MQTT_PORT', 'MQTT_USERNAME', 'MQTT_PASSWORD', 'BASE_TOPIC',
+    'LISTEN_HOST', 'LISTEN_PORT', 'MQTT_ENABLED', 'MQTT_BROKER', 'MQTT_PORT', 'MQTT_USERNAME', 'MQTT_PASSWORD', 'BASE_TOPIC',
     'STATUS_INTERVAL', 'DEDUPLICATION_DELAY', 'AUTO_DETACH_ENABLED', 'AUTO_DETACH_TIMEOUT',
-    'AUTO_DETACH_WARNING_TIMEOUT', 'AUTO_DETACH_CHECK_INTERVAL', 'OMS_ENABLED', 'TIMEZONE', 'TELEMETRY_SOURCE',
+    'AUTO_DETACH_WARNING_TIMEOUT', 'AUTO_DETACH_CHECK_INTERVAL', 'OMS_ENABLED', 'MQTT_UI_ENABLED', 'BS_UPTIME_PANEL_ENABLED', 'TIMEZONE', 'APP_LANGUAGE', 'TELEMETRY_SOURCE',
+    'INFLUX_ENABLED',
     'INFLUXDB_URL', 'INFLUXDB_ORG', 'INFLUXDB_BUCKET', 'INFLUXDB_TOKEN', 'INFLUXDB_VERIFY_SSL',
     'INFLUX_UPTIME_MEASUREMENT', 'INFLUX_UPTIME_FIELD', 'INFLUX_UPTIME_EUI_TAG', 'INFLUX_UPTIME_QUERY',
     'INFLUX_INVENTORY_WRITE_ENABLED', 'INFLUX_INVENTORY_MEASUREMENT', 'INFLUX_SNAPSHOT_ENABLED',
@@ -747,7 +1340,19 @@ function askConfirm(options) {
     if (window.AppUI && typeof window.AppUI.confirm === 'function') {
         return window.AppUI.confirm(options);
     }
-    return Promise.resolve(window.confirm((options && options.message) || 'Are you sure?'));
+    return Promise.resolve(window.confirm((options && options.message) || tr('confirm.are_you_sure', 'Are you sure?')));
+}
+
+function tr(key, fallback, params = null) {
+    if (window.AppI18n && typeof window.AppI18n.t === 'function') {
+        return window.AppI18n.t(key, fallback, params);
+    }
+    if (!params || typeof params !== 'object') {
+        return fallback;
+    }
+    return Object.entries(params).reduce((acc, [paramKey, paramValue]) => (
+        String(acc).replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue ?? ''))
+    ), fallback);
 }
 
 function hasUnsavedConfigChanges() {
@@ -805,10 +1410,10 @@ function initUnsavedChangesGuard() {
         unsavedGuardState.navigationInProgress = true;
 
         const confirmed = await askConfirm({
-            title: 'Unsaved changes',
-            message: 'You have unsaved configuration changes. Leave this page without saving?',
-            confirmText: 'Leave page',
-            cancelText: 'Stay',
+        title: tr('guard.unsaved_changes_title', 'Unsaved changes'),
+            message: tr('config.unsaved_changes_message', 'You have unsaved configuration changes. Leave this page without saving?'),
+            confirmText: tr('guard.leave_page', 'Leave page'),
+            cancelText: tr('guard.stay', 'Stay'),
             variant: 'warning'
         });
 
@@ -824,6 +1429,171 @@ function initUnsavedChangesGuard() {
 
 function getFieldEl(id) {
     return document.getElementById(id);
+}
+
+function currentTabLabel(tabName) {
+    const map = {
+        general: tr('config.tab.general', 'General'),
+        influx: tr('config.tab.storage', 'Storage'),
+        maintenance: tr('config.tab.maintenance', 'Maintenance')
+    };
+    return map[tabName] || map.general;
+}
+
+function getConfigFieldLabel(id) {
+    const label = document.querySelector(`label[for="${id}"]`);
+    if (label) {
+        return String(label.textContent || '').replace(/\s+/g, ' ').trim();
+    }
+    const visibleField = document.getElementById(`${id}_VISIBLE`);
+    if (visibleField) {
+        const visibleLabel = document.querySelector(`label[for="${id}_VISIBLE"]`);
+        if (visibleLabel) {
+            return String(visibleLabel.textContent || '').replace(/\s+/g, ' ').trim();
+        }
+    }
+    return id.replace(/_/g, ' ').trim();
+}
+
+function getChangedConfigFields() {
+    if (!configState.initialSignature) return [];
+    const initialSnapshot = JSON.parse(configState.initialSignature || '{}');
+    const currentSnapshot = getConfigSnapshot();
+    return CONFIG_FIELD_IDS
+        .filter((id) => JSON.stringify(initialSnapshot[id]) !== JSON.stringify(currentSnapshot[id]))
+        .map((id) => ({ id, label: getConfigFieldLabel(id) }));
+}
+
+function updateConfigSummaryPanel() {
+    const language = textFieldValue('APP_LANGUAGE') === 'sk'
+        ? tr('language.slovak', 'Slovenčina')
+        : tr('language.english', 'English');
+    const timezone = textFieldValue('TIMEZONE') || 'UTC';
+    const mqttEnabled = !!getFieldEl('MQTT_ENABLED')?.checked;
+    const mqttBroker = textFieldValue('MQTT_BROKER');
+    const telemetrySource = textFieldValue('TELEMETRY_SOURCE') || tr('config.telemetry_source.auto', 'Auto');
+    const modules = [
+        !!getFieldEl('OMS_ENABLED')?.checked ? 'OMS' : null,
+        !!getFieldEl('MQTT_UI_ENABLED')?.checked ? 'MQTT' : null,
+        !!getFieldEl('BS_UPTIME_PANEL_ENABLED')?.checked ? tr('config.show_bs_uptime_panel_short', 'Uptime') : null
+    ].filter(Boolean);
+    const dirtyState = configState.saving
+        ? tr('config.saving', 'Saving...')
+        : !configState.valid
+            ? tr('config.fix_validation_errors', 'Fix validation errors')
+            : configState.dirty
+                ? tr('config.unsaved_changes', 'Unsaved changes')
+                : tr('config.no_changes', 'No changes');
+    const restartState = configState.dirty
+        ? tr('config.summary.restart_pending', 'Configuration changed. Review restart impact before applying runtime operations.')
+        : tr('config.summary.restart_clear', 'No restart action pending.');
+    const changedFields = getChangedConfigFields();
+
+    const summaryValues = {
+        configStatusLocaleValue: `${language} / ${timezone}`,
+        configStatusTransportValue: mqttEnabled
+            ? `${tr('config.enabled', 'enabled')} · ${telemetrySource}`
+            : `${tr('common.disabled', 'Disabled')} · ${telemetrySource}`,
+        configStatusModulesValue: modules.length
+            ? `${modules.length} · ${modules.join(', ')}`
+            : tr('config.summary.modules_none', 'No optional modules enabled'),
+        configStatusDirtyValue: dirtyState,
+        configSummaryLocale: `${language} · ${timezone}`,
+        configSummaryMqtt: mqttEnabled
+            ? (mqttBroker ? `${tr('config.enabled', 'enabled')} · ${mqttBroker}` : tr('config.summary.mqtt_enabled_unconfigured', 'Enabled, broker not configured'))
+            : tr('common.disabled', 'Disabled'),
+        configSummaryTelemetry: telemetrySource,
+        configSummaryModules: modules.length ? modules.join(', ') : tr('config.summary.modules_none', 'No optional modules enabled'),
+        configSummaryRestart: restartState
+    };
+
+    Object.entries(summaryValues).forEach(([id, value]) => {
+        const node = document.getElementById(id);
+        if (node) node.textContent = value;
+    });
+
+    const tabBadge = document.getElementById('configSummaryTabBadge');
+    if (tabBadge) {
+        tabBadge.textContent = currentTabLabel(configState.activeTab);
+        tabBadge.classList.toggle('is-warning', configState.showAdvanced);
+        tabBadge.classList.toggle('is-success', configState.activeTab === 'maintenance');
+    }
+
+    const generalStat = document.getElementById('configGeneralInlineStat');
+    if (generalStat) generalStat.textContent = `${language} · ${timezone}`;
+    const mqttStat = document.getElementById('configMqttInlineStat');
+    if (mqttStat) {
+        mqttStat.textContent = mqttEnabled ? tr('config.enabled', 'enabled') : tr('common.disabled', 'Disabled');
+        mqttStat.classList.toggle('is-success', mqttEnabled);
+        mqttStat.classList.toggle('is-warning', !mqttEnabled);
+    }
+    const storageStat = document.getElementById('configStorageInlineStat');
+    if (storageStat) storageStat.textContent = telemetrySource;
+
+    const changedCount = document.getElementById('configSummaryChangedCount');
+    if (changedCount) {
+        changedCount.textContent = String(changedFields.length);
+        changedCount.classList.toggle('is-warning', changedFields.length > 0);
+        changedCount.classList.toggle('is-success', changedFields.length === 0);
+    }
+
+    const changedList = document.getElementById('configSummaryChangedList');
+    if (changedList) {
+        if (!changedFields.length) {
+            changedList.innerHTML = `<div class="config-change-empty">${tr('config.summary.changed_fields_empty', 'No configuration changes yet. Edited fields will appear here.')}</div>`;
+        } else {
+            const preview = changedFields.slice(0, 8).map((item) => (
+                `<div class="config-change-pill"><i class="fas fa-pen"></i><span>${item.label}</span></div>`
+            )).join('');
+            const remaining = changedFields.length - 8;
+            const more = remaining > 0
+                ? `<div class="config-change-empty">${tr('config.summary.changed_fields_more', 'And {count} more modified fields.', { count: remaining })}</div>`
+                : '';
+            changedList.innerHTML = `${preview}${more}`;
+        }
+    }
+}
+
+function updateMqttTransportFieldsState() {
+    const mqttEnabled = !!getFieldEl('MQTT_ENABLED')?.checked;
+    ['MQTT_BROKER', 'MQTT_PORT', 'MQTT_USERNAME', 'MQTT_PASSWORD', 'BASE_TOPIC'].forEach((id) => {
+        const el = getFieldEl(id);
+        if (!el) return;
+        el.disabled = !mqttEnabled;
+    });
+}
+
+function updateInfluxFieldsState() {
+    const influxEnabled = !!getFieldEl('INFLUX_ENABLED')?.checked;
+    const telemetrySource = getFieldEl('TELEMETRY_SOURCE');
+    const notice = document.getElementById('influxDisabledNotice');
+    const fields = document.getElementById('influxConfigFields');
+    const syncButton = document.getElementById('syncInfluxBtn');
+
+    if (telemetrySource) {
+        const autoOption = telemetrySource.querySelector('option[value="auto"]');
+        const influxOption = telemetrySource.querySelector('option[value="influx"]');
+        if (autoOption) {
+            autoOption.disabled = !influxEnabled;
+            autoOption.hidden = !influxEnabled;
+        }
+        if (influxOption) {
+            influxOption.disabled = !influxEnabled;
+            influxOption.hidden = !influxEnabled;
+        }
+        if (!influxEnabled && (telemetrySource.value === 'influx' || telemetrySource.value === 'auto')) {
+            telemetrySource.value = 'runtime';
+        }
+    }
+
+    if (fields) {
+        fields.querySelectorAll('input, select, textarea, button').forEach((el) => {
+            el.disabled = !influxEnabled;
+        });
+        fields.style.display = influxEnabled ? '' : 'none';
+    }
+    if (syncButton) syncButton.disabled = !influxEnabled;
+    if (notice) notice.style.display = influxEnabled ? 'none' : 'block';
 }
 
 function getFieldValueForSnapshot(id) {
@@ -892,77 +1662,84 @@ function validateConfig({ silent = true } = {}) {
         errors.push(message);
     };
 
-    if (!textFieldValue('LISTEN_HOST')) addError('LISTEN_HOST', 'Listen host is required.');
+    if (!textFieldValue('LISTEN_HOST')) addError('LISTEN_HOST', tr('config.validation.listen_host_required', 'Listen host is required.'));
     const listenPort = parseIntField('LISTEN_PORT');
-    if (!Number.isFinite(listenPort) || listenPort < 1 || listenPort > 65535) addError('LISTEN_PORT', 'Listen port must be between 1 and 65535.');
-    if (!textFieldValue('MQTT_BROKER')) addError('MQTT_BROKER', 'MQTT broker is required.');
-    const mqttPort = parseIntField('MQTT_PORT');
-    if (!Number.isFinite(mqttPort) || mqttPort < 1 || mqttPort > 65535) addError('MQTT_PORT', 'MQTT port must be between 1 and 65535.');
-    if (!textFieldValue('BASE_TOPIC')) addError('BASE_TOPIC', 'Base topic is required.');
+    if (!Number.isFinite(listenPort) || listenPort < 1 || listenPort > 65535) addError('LISTEN_PORT', tr('config.validation.listen_port_range', 'Listen port must be between 1 and 65535.'));
+    const mqttEnabled = !!getFieldEl('MQTT_ENABLED')?.checked;
+    if (mqttEnabled) {
+        if (!textFieldValue('MQTT_BROKER')) addError('MQTT_BROKER', tr('config.validation.mqtt_broker_required', 'MQTT broker is required.'));
+        const mqttPort = parseIntField('MQTT_PORT');
+        if (!Number.isFinite(mqttPort) || mqttPort < 1 || mqttPort > 65535) addError('MQTT_PORT', tr('config.validation.mqtt_port_range', 'MQTT port must be between 1 and 65535.'));
+        if (!textFieldValue('BASE_TOPIC')) addError('BASE_TOPIC', tr('config.validation.base_topic_required', 'Base topic is required.'));
+    }
 
     const statusInterval = parseIntField('STATUS_INTERVAL');
-    if (!Number.isFinite(statusInterval) || statusInterval < 1) addError('STATUS_INTERVAL', 'Status interval must be at least 1 second.');
+    if (!Number.isFinite(statusInterval) || statusInterval < 1) addError('STATUS_INTERVAL', tr('config.validation.status_interval_min', 'Status interval must be at least 1 second.'));
     const dedupDelay = parseFloatField('DEDUPLICATION_DELAY');
-    if (!Number.isFinite(dedupDelay) || dedupDelay < 0.5 || dedupDelay > 10) addError('DEDUPLICATION_DELAY', 'Deduplication delay must be in range 0.5 to 10 seconds.');
+    if (!Number.isFinite(dedupDelay) || dedupDelay < 0.5 || dedupDelay > 10) addError('DEDUPLICATION_DELAY', tr('config.validation.dedup_range', 'Deduplication delay must be in range 0.5 to 10 seconds.'));
 
     const detachTimeout = parseIntField('AUTO_DETACH_TIMEOUT');
     const detachWarn = parseIntField('AUTO_DETACH_WARNING_TIMEOUT');
     const detachCheck = parseIntField('AUTO_DETACH_CHECK_INTERVAL');
-    if (!Number.isFinite(detachTimeout) || detachTimeout < 1) addError('AUTO_DETACH_TIMEOUT', 'Auto-detach timeout must be at least 1 hour.');
-    if (!Number.isFinite(detachWarn) || detachWarn < 1) addError('AUTO_DETACH_WARNING_TIMEOUT', 'Warning timeout must be at least 1 hour.');
+    if (!Number.isFinite(detachTimeout) || detachTimeout < 1) addError('AUTO_DETACH_TIMEOUT', tr('config.validation.auto_detach_timeout_min', 'Auto-detach timeout must be at least 1 hour.'));
+    if (!Number.isFinite(detachWarn) || detachWarn < 1) addError('AUTO_DETACH_WARNING_TIMEOUT', tr('config.validation.warning_timeout_min', 'Warning timeout must be at least 1 hour.'));
     if (Number.isFinite(detachWarn) && Number.isFinite(detachTimeout) && detachWarn > detachTimeout) {
-        addError('AUTO_DETACH_WARNING_TIMEOUT', 'Warning timeout must be less than or equal to auto-detach timeout.');
+        addError('AUTO_DETACH_WARNING_TIMEOUT', tr('config.validation.warning_timeout_order', 'Warning timeout must be less than or equal to auto-detach timeout.'));
     }
-    if (!Number.isFinite(detachCheck) || detachCheck < 1) addError('AUTO_DETACH_CHECK_INTERVAL', 'Check interval must be at least 1 hour.');
+    if (!Number.isFinite(detachCheck) || detachCheck < 1) addError('AUTO_DETACH_CHECK_INTERVAL', tr('config.validation.check_interval_min', 'Check interval must be at least 1 hour.'));
 
     const telemetrySource = textFieldValue('TELEMETRY_SOURCE');
-    if (telemetrySource === 'influx') {
-        if (!textFieldValue('INFLUXDB_URL')) addError('INFLUXDB_URL', 'Influx URL is required when telemetry source is InfluxDB.');
-        if (!textFieldValue('INFLUXDB_ORG')) addError('INFLUXDB_ORG', 'Influx organization is required when telemetry source is InfluxDB.');
-        if (!textFieldValue('INFLUXDB_BUCKET')) addError('INFLUXDB_BUCKET', 'Influx bucket is required when telemetry source is InfluxDB.');
+    const influxEnabled = !!getFieldEl('INFLUX_ENABLED')?.checked;
+    if (influxEnabled && telemetrySource === 'influx') {
+        if (!textFieldValue('INFLUXDB_URL')) addError('INFLUXDB_URL', tr('config.validation.influx_url_required', 'Influx URL is required when telemetry source is InfluxDB.'));
+        if (!textFieldValue('INFLUXDB_ORG')) addError('INFLUXDB_ORG', tr('config.validation.influx_org_required', 'Influx organization is required when telemetry source is InfluxDB.'));
+        if (!textFieldValue('INFLUXDB_BUCKET')) addError('INFLUXDB_BUCKET', tr('config.validation.influx_bucket_required', 'Influx bucket is required when telemetry source is InfluxDB.'));
     }
 
-    const influxSnapshotInterval = parseIntField('INFLUX_SNAPSHOT_INTERVAL_SECONDS');
-    if (!Number.isFinite(influxSnapshotInterval) || influxSnapshotInterval < 15) {
-        addError('INFLUX_SNAPSHOT_INTERVAL_SECONDS', 'Influx snapshot interval must be at least 15 seconds.');
+    if (influxEnabled) {
+        const influxSnapshotInterval = parseIntField('INFLUX_SNAPSHOT_INTERVAL_SECONDS');
+        if (!Number.isFinite(influxSnapshotInterval) || influxSnapshotInterval < 15) {
+            addError('INFLUX_SNAPSHOT_INTERVAL_SECONDS', tr('config.validation.influx_snapshot_interval_min', 'Influx snapshot interval must be at least 15 seconds.'));
+        }
     }
 
     const timescaleEnabled = boolSelectValue('TIMESCALE_ENABLED');
     if (timescaleEnabled) {
-        if (!textFieldValue('TIMESCALE_HOST')) addError('TIMESCALE_HOST', 'Timescale host is required when Timescale is enabled.');
+        if (!textFieldValue('TIMESCALE_HOST')) addError('TIMESCALE_HOST', tr('config.validation.timescale_host_required', 'Timescale host is required when Timescale is enabled.'));
         const timescalePort = parseIntField('TIMESCALE_PORT');
-        if (!Number.isFinite(timescalePort) || timescalePort < 1 || timescalePort > 65535) addError('TIMESCALE_PORT', 'Timescale port must be between 1 and 65535.');
-        if (!textFieldValue('TIMESCALE_DB')) addError('TIMESCALE_DB', 'Timescale database is required when Timescale is enabled.');
-        if (!textFieldValue('TIMESCALE_USER')) addError('TIMESCALE_USER', 'Timescale user is required when Timescale is enabled.');
-        if (!textFieldValue('TIMESCALE_DEFAULT_TENANT')) addError('TIMESCALE_DEFAULT_TENANT', 'Default tenant is required when Timescale is enabled.');
+        if (!Number.isFinite(timescalePort) || timescalePort < 1 || timescalePort > 65535) addError('TIMESCALE_PORT', tr('config.validation.timescale_port_range', 'Timescale port must be between 1 and 65535.'));
+        if (!textFieldValue('TIMESCALE_DB')) addError('TIMESCALE_DB', tr('config.validation.timescale_db_required', 'Timescale database is required when Timescale is enabled.'));
+        if (!textFieldValue('TIMESCALE_USER')) addError('TIMESCALE_USER', tr('config.validation.timescale_user_required', 'Timescale user is required when Timescale is enabled.'));
+        if (!textFieldValue('TIMESCALE_DEFAULT_TENANT')) addError('TIMESCALE_DEFAULT_TENANT', tr('config.validation.default_tenant_required', 'Default tenant is required when Timescale is enabled.'));
         const tsSnapshot = parseIntField('TIMESCALE_SNAPSHOT_INTERVAL_SECONDS');
-        if (!Number.isFinite(tsSnapshot) || tsSnapshot < 15) addError('TIMESCALE_SNAPSHOT_INTERVAL_SECONDS', 'Timescale snapshot interval must be at least 15 seconds.');
+        if (!Number.isFinite(tsSnapshot) || tsSnapshot < 15) addError('TIMESCALE_SNAPSHOT_INTERVAL_SECONDS', tr('config.validation.timescale_snapshot_interval_min', 'Timescale snapshot interval must be at least 15 seconds.'));
         const tsTelemetryRetention = parseIntField('TIMESCALE_TELEMETRY_RETENTION_DAYS');
-        if (!Number.isFinite(tsTelemetryRetention) || tsTelemetryRetention < 1) addError('TIMESCALE_TELEMETRY_RETENTION_DAYS', 'Telemetry retention must be at least 1 day.');
+        if (!Number.isFinite(tsTelemetryRetention) || tsTelemetryRetention < 1) addError('TIMESCALE_TELEMETRY_RETENTION_DAYS', tr('config.validation.telemetry_retention_min', 'Telemetry retention must be at least 1 day.'));
         const tsInventoryRetention = parseIntField('TIMESCALE_INVENTORY_RETENTION_DAYS');
-        if (!Number.isFinite(tsInventoryRetention) || tsInventoryRetention < 1) addError('TIMESCALE_INVENTORY_RETENTION_DAYS', 'Inventory retention must be at least 1 day.');
+        if (!Number.isFinite(tsInventoryRetention) || tsInventoryRetention < 1) addError('TIMESCALE_INVENTORY_RETENTION_DAYS', tr('config.validation.inventory_retention_min', 'Inventory retention must be at least 1 day.'));
         const tsCompressionAfter = parseIntField('TIMESCALE_COMPRESSION_AFTER_DAYS');
-        if (!Number.isFinite(tsCompressionAfter) || tsCompressionAfter < 1) addError('TIMESCALE_COMPRESSION_AFTER_DAYS', 'Compression window must be at least 1 day.');
+        if (!Number.isFinite(tsCompressionAfter) || tsCompressionAfter < 1) addError('TIMESCALE_COMPRESSION_AFTER_DAYS', tr('config.validation.compression_window_min', 'Compression window must be at least 1 day.'));
     }
 
     const validateThresholdPair = (warnId, critId, label) => {
         const warn = parseFloatField(warnId);
         const crit = parseFloatField(critId);
-        if (!Number.isFinite(warn) || warn < 0) addError(warnId, `${label} warning must be a non-negative number.`);
-        if (!Number.isFinite(crit) || crit < 0) addError(critId, `${label} critical must be a non-negative number.`);
+        if (!Number.isFinite(warn) || warn < 0) addError(warnId, tr('config.validation.threshold_warn_non_negative', '{label} warning must be a non-negative number.', { label }));
+        if (!Number.isFinite(crit) || crit < 0) addError(critId, tr('config.validation.threshold_crit_non_negative', '{label} critical must be a non-negative number.', { label }));
         if (Number.isFinite(warn) && Number.isFinite(crit) && crit < warn) {
-            addError(critId, `${label} critical must be greater than or equal to warning.`);
+            addError(critId, tr('config.validation.threshold_order', '{label} critical must be greater than or equal to warning.', { label }));
         }
     };
 
-    validateThresholdPair('MONITOR_QUEUE_WARN_PCT', 'MONITOR_QUEUE_CRIT_PCT', 'Queue threshold');
-    validateThresholdPair('MONITOR_RETRY_FAIL_WARN_PCT', 'MONITOR_RETRY_FAIL_CRIT_PCT', 'Retry failure threshold');
-    validateThresholdPair('MONITOR_DB_WRITE_LATENCY_WARN_MS', 'MONITOR_DB_WRITE_LATENCY_CRIT_MS', 'DB write latency threshold');
-    validateThresholdPair('MONITOR_MQTT_RECONNECT_WARN_PER_HOUR', 'MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR', 'Reconnect threshold');
+    validateThresholdPair('MONITOR_QUEUE_WARN_PCT', 'MONITOR_QUEUE_CRIT_PCT', tr('config.validation.label.queue_threshold', 'Queue threshold'));
+    validateThresholdPair('MONITOR_RETRY_FAIL_WARN_PCT', 'MONITOR_RETRY_FAIL_CRIT_PCT', tr('config.validation.label.retry_threshold', 'Retry failure threshold'));
+    validateThresholdPair('MONITOR_DB_WRITE_LATENCY_WARN_MS', 'MONITOR_DB_WRITE_LATENCY_CRIT_MS', tr('config.validation.label.db_latency_threshold', 'DB write latency threshold'));
+    validateThresholdPair('MONITOR_MQTT_RECONNECT_WARN_PER_HOUR', 'MONITOR_MQTT_RECONNECT_CRIT_PER_HOUR', tr('config.validation.label.reconnect_threshold', 'Reconnect threshold'));
 
     configState.valid = errors.length === 0;
     updateConfigStateBadge();
     updateSaveButtonsState();
+    updateConfigSummaryPanel();
     if (!silent && errors.length > 0) {
         notify(errors[0], 'danger');
     }
@@ -973,6 +1750,7 @@ function updateDirtyState() {
     configState.dirty = getSnapshotSignature() !== configState.initialSignature;
     updateConfigStateBadge();
     updateSaveButtonsState();
+    updateConfigSummaryPanel();
 }
 
 function updateConfigStateBadge() {
@@ -981,20 +1759,20 @@ function updateConfigStateBadge() {
     badge.classList.remove('is-dirty', 'has-errors');
 
     if (configState.saving) {
-        badge.textContent = 'Saving...';
+        badge.textContent = tr('config.saving', 'Saving...');
         return;
     }
     if (!configState.valid) {
         badge.classList.add('has-errors');
-        badge.textContent = 'Fix validation errors';
+        badge.textContent = tr('config.fix_validation_errors', 'Fix validation errors');
         return;
     }
     if (configState.dirty) {
         badge.classList.add('is-dirty');
-        badge.textContent = 'Unsaved changes';
+        badge.textContent = tr('config.unsaved_changes', 'Unsaved changes');
         return;
     }
-    badge.textContent = 'No changes';
+    badge.textContent = tr('config.no_changes', 'No changes');
 }
 
 function getSaveButtons() {
@@ -1010,7 +1788,9 @@ function updateSaveButtonsState() {
             btn.dataset.defaultHtml = btn.innerHTML;
         }
         btn.disabled = disabled;
-        btn.innerHTML = configState.saving ? '<i class="fas fa-spinner fa-spin me-1"></i>Saving...' : btn.dataset.defaultHtml;
+        btn.innerHTML = configState.saving
+            ? `<i class="fas fa-spinner fa-spin me-1"></i>${tr('config.saving', 'Saving...')}`
+            : btn.dataset.defaultHtml;
     });
 }
 
@@ -1018,6 +1798,7 @@ function collectConfigData() {
     return {
         LISTEN_HOST: textFieldValue('LISTEN_HOST'),
         LISTEN_PORT: parseIntField('LISTEN_PORT'),
+        MQTT_ENABLED: !!getFieldEl('MQTT_ENABLED')?.checked,
         MQTT_BROKER: textFieldValue('MQTT_BROKER'),
         MQTT_PORT: parseIntField('MQTT_PORT'),
         MQTT_USERNAME: textFieldValue('MQTT_USERNAME'),
@@ -1030,8 +1811,12 @@ function collectConfigData() {
         AUTO_DETACH_WARNING_TIMEOUT: parseIntField('AUTO_DETACH_WARNING_TIMEOUT') * 3600,
         AUTO_DETACH_CHECK_INTERVAL: parseIntField('AUTO_DETACH_CHECK_INTERVAL') * 3600,
         OMS_ENABLED: !!getFieldEl('OMS_ENABLED')?.checked,
+        MQTT_UI_ENABLED: !!getFieldEl('MQTT_UI_ENABLED')?.checked,
+        BS_UPTIME_PANEL_ENABLED: !!getFieldEl('BS_UPTIME_PANEL_ENABLED')?.checked,
         TIMEZONE: textFieldValue('TIMEZONE'),
+        APP_LANGUAGE: textFieldValue('APP_LANGUAGE'),
         TELEMETRY_SOURCE: textFieldValue('TELEMETRY_SOURCE'),
+        INFLUX_ENABLED: !!getFieldEl('INFLUX_ENABLED')?.checked,
         INFLUXDB_URL: textFieldValue('INFLUXDB_URL'),
         INFLUXDB_ORG: textFieldValue('INFLUXDB_ORG'),
         INFLUXDB_BUCKET: textFieldValue('INFLUXDB_BUCKET'),
@@ -1093,13 +1878,17 @@ async function saveConfig() {
         });
         const result = await response.json();
         if (!response.ok || !result.success) {
-            throw new Error(result.message || 'Unable to save configuration.');
+            throw new Error(result.message || tr('config.save_failed', 'Save failed: {error}', { error: 'unable to save configuration' }));
         }
-        notify('Configuration saved. Restart service if runtime values changed.', 'success');
+        notify(tr('config.saved_restart_notice', 'Configuration saved. Restart service if runtime values changed.'), 'success');
+        const languageChanged = textFieldValue('APP_LANGUAGE') !== (window.AppI18n?.lang || 'en');
         configState.initialSignature = getSnapshotSignature();
         updateDirtyState();
+        if (languageChanged) {
+            setTimeout(() => window.location.reload(), 250);
+        }
     } catch (error) {
-        notify(`Save failed: ${error.message || error}`, 'danger');
+        notify(tr('config.save_failed', 'Save failed: {error}', { error: error.message || error }), 'danger');
     } finally {
         configState.saving = false;
         updateConfigStateBadge();
@@ -1108,6 +1897,10 @@ async function saveConfig() {
 }
 
 async function syncInfluxNow() {
+    if (!getFieldEl('INFLUX_ENABLED')?.checked) {
+        notify(tr('config.influx_disabled_notice', 'InfluxDB integration is disabled. The application will use runtime and TimescaleDB paths only.'), 'warning');
+        return;
+    }
     try {
         const response = await fetch('/api/influx/sync-inventory', {
             method: 'POST',
@@ -1117,9 +1910,13 @@ async function syncInfluxNow() {
         if (!response.ok || !result.success) {
             throw new Error(result.message || result.error || 'unknown error');
         }
-        notify(`Influx sync complete: ${result.line_count} points (${result.sensor_points} sensors, ${result.base_station_points} base stations).`, 'success');
+        notify(tr('config.influx_sync_complete', 'Influx sync complete: {line_count} points ({sensor_points} sensors, {base_station_points} base stations).', {
+            line_count: result.line_count,
+            sensor_points: result.sensor_points,
+            base_station_points: result.base_station_points
+        }), 'success');
     } catch (error) {
-        notify(`Influx sync failed: ${error.message || error}`, 'danger');
+        notify(tr('config.influx_sync_failed', 'Influx sync failed: {error}', { error: error.message || error }), 'danger');
     }
 }
 
@@ -1131,9 +1928,15 @@ async function checkTimescaleStatus() {
             throw new Error(result.error || 'not available');
         }
         const worker = result.telemetry_worker || {};
-        notify(`Timescale online (${result.host}/${result.database}) | queue ${worker.queue_size || 0}, written ${worker.written || 0}, dropped ${worker.dropped || 0}.`, 'info');
+        notify(tr('config.timescale_status_online', 'Timescale online ({host}/{database}) | queue {queue_size}, written {written}, dropped {dropped}.', {
+            host: result.host,
+            database: result.database,
+            queue_size: worker.queue_size || 0,
+            written: worker.written || 0,
+            dropped: worker.dropped || 0
+        }), 'info');
     } catch (error) {
-        notify(`Timescale status failed: ${error.message || error}`, 'danger');
+        notify(tr('config.timescale_status_failed', 'Timescale status failed: {error}', { error: error.message || error }), 'danger');
     }
 }
 
@@ -1147,9 +1950,13 @@ async function syncTimescaleNow() {
         if (!response.ok || !result.success) {
             throw new Error(result.message || result.error || 'unknown error');
         }
-        notify(`Timescale sync complete: ${result.line_count} records (${result.sensor_points} sensors, ${result.base_station_points} base stations).`, 'success');
+        notify(tr('config.timescale_sync_complete', 'Timescale sync complete: {line_count} records ({sensor_points} sensors, {base_station_points} base stations).', {
+            line_count: result.line_count,
+            sensor_points: result.sensor_points,
+            base_station_points: result.base_station_points
+        }), 'success');
     } catch (error) {
-        notify(`Timescale sync failed: ${error.message || error}`, 'danger');
+        notify(tr('config.timescale_sync_failed', 'Timescale sync failed: {error}', { error: error.message || error }), 'danger');
     }
 }
 
@@ -1163,9 +1970,9 @@ async function applyTimescalePolicies() {
         if (!response.ok || !result.success) {
             throw new Error(result.error || result.message || 'unknown error');
         }
-        notify('Timescale retention/compression policies applied.', 'success');
+        notify(tr('config.apply_policies_success', 'Timescale retention/compression policies applied.'), 'success');
     } catch (error) {
-        notify(`Apply policies failed: ${error.message || error}`, 'danger');
+        notify(tr('config.apply_policies_failed', 'Apply policies failed: {error}', { error: error.message || error }), 'danger');
     }
 }
 
@@ -1185,14 +1992,14 @@ async function runActionButton(evt, runningLabel, action) {
 
 async function restartService(evt) {
     const confirmed = await askConfirm({
-        title: 'Restart service',
-        message: 'Restart BSSCI service now? Connections will be interrupted briefly.',
-        confirmText: 'Restart service',
+        title: tr('config.restart_service_title', 'Restart service'),
+        message: tr('config.restart_service_message', 'Restart BSSCI service now? Connections will be interrupted briefly.'),
+        confirmText: tr('config.restart_service_confirm', 'Restart service'),
         variant: 'warning'
     });
     if (!confirmed) return;
 
-    await runActionButton(evt, 'Restarting...', async () => {
+    await runActionButton(evt, tr('config.restarting', 'Restarting...'), async () => {
         try {
             const response = await fetch('/api/service/restart', {
                 method: 'POST',
@@ -1202,23 +2009,23 @@ async function restartService(evt) {
             if (!response.ok || !result.success) {
                 throw new Error(result.message || 'Restart failed.');
             }
-            notify('Service restart initiated successfully.', 'success');
+            notify(tr('config.restart_service_success', 'Service restart initiated successfully.'), 'success');
         } catch (error) {
-            notify(`Service restart failed: ${error.message || error}`, 'danger');
+            notify(tr('config.restart_service_failed', 'Service restart failed: {error}', { error: error.message || error }), 'danger');
         }
     });
 }
 
 async function restartContainer(evt) {
     const confirmed = await askConfirm({
-        title: 'Restart container',
-        message: 'Restart entire container? Full reload takes about 10-15 seconds.',
-        confirmText: 'Restart container',
+        title: tr('config.restart_container_title', 'Restart container'),
+        message: tr('config.restart_container_message', 'Restart entire container? Full reload takes about 10-15 seconds.'),
+        confirmText: tr('config.restart_container_confirm', 'Restart container'),
         variant: 'danger'
     });
     if (!confirmed) return;
 
-    await runActionButton(evt, 'Restarting...', async () => {
+    await runActionButton(evt, tr('config.restarting', 'Restarting...'), async () => {
         try {
             const response = await fetch('/api/container/restart', {
                 method: 'POST',
@@ -1228,9 +2035,9 @@ async function restartContainer(evt) {
             if (!response.ok || !result.success) {
                 throw new Error(result.message || 'Container restart failed.');
             }
-            notify('Container restart initiated. Page will reconnect automatically.', 'warning', { delay: 4500 });
+            notify(tr('config.restart_container_notice', 'Container restart initiated. Page will reconnect automatically.'), 'warning', { delay: 4500 });
         } catch (error) {
-            notify('Container restart initiated. Page will reconnect automatically.', 'warning', { delay: 4500 });
+            notify(tr('config.restart_container_notice', 'Container restart initiated. Page will reconnect automatically.'), 'warning', { delay: 4500 });
         }
         setTimeout(() => window.location.reload(), 15000);
     });
@@ -1288,6 +2095,7 @@ function switchConfigTab(tabName) {
         btn.classList.toggle('active', isActive);
     });
     applyConfigTab(nextTab);
+    updateConfigSummaryPanel();
     try {
         localStorage.setItem('config_active_tab_v1', nextTab);
     } catch (err) {
@@ -1301,8 +2109,8 @@ function setAdvancedConfigVisibility(visible, persist = true) {
     if (btn) {
         btn.classList.toggle('active', configState.showAdvanced);
         btn.innerHTML = configState.showAdvanced
-            ? '<i class="fas fa-sliders-h me-1"></i>Advanced: On'
-            : '<i class="fas fa-sliders-h me-1"></i>Advanced: Off';
+            ? `<i class="fas fa-sliders-h me-1"></i>${tr('config.advanced_on', 'Advanced: On')}`
+            : `<i class="fas fa-sliders-h me-1"></i>${tr('config.advanced_off', 'Advanced: Off')}`;
     }
     if (persist) {
         try {
@@ -1312,6 +2120,7 @@ function setAdvancedConfigVisibility(visible, persist = true) {
         }
     }
     applyConfigTab(configState.activeTab);
+    updateConfigSummaryPanel();
 }
 
 function initConfigAdvancedToggle() {
@@ -1363,15 +2172,40 @@ function bindConfigFormEvents() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    updateMqttTransportFieldsState();
+    updateInfluxFieldsState();
     bindConfigFormEvents();
+    const mqttEnabledToggle = getFieldEl('MQTT_ENABLED');
+    if (mqttEnabledToggle) {
+        mqttEnabledToggle.addEventListener('change', () => {
+            updateMqttTransportFieldsState();
+        });
+    }
+    const influxEnabledToggle = getFieldEl('INFLUX_ENABLED');
+    if (influxEnabledToggle) {
+        influxEnabledToggle.addEventListener('change', () => {
+            updateInfluxFieldsState();
+            validateConfig({ silent: true });
+            updateDirtyState();
+        });
+    }
+    const telemetrySourceSelect = getFieldEl('TELEMETRY_SOURCE');
+    if (telemetrySourceSelect) {
+        telemetrySourceSelect.addEventListener('change', () => {
+            updateInfluxFieldsState();
+        });
+    }
     configState.initialSignature = getSnapshotSignature();
     validateConfig({ silent: true });
     updateDirtyState();
     initConfigAdvancedToggle();
     initConfigTabs();
+    updateConfigSummaryPanel();
     initUnsavedChangesGuard();
 });
 </script>
 {% endblock %}
+
+
 
 

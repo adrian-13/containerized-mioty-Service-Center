@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}Base Stations{% endblock %}
 
 {% block content %}
@@ -39,6 +39,33 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     justify-content: flex-end;
+}
+
+.bs-density-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    padding: 0.18rem;
+    border: 1px solid #d5deeb;
+    border-radius: 999px;
+    background: #f8fbff;
+}
+
+.bs-density-btn {
+    border: none;
+    background: transparent;
+    color: #4d6380;
+    border-radius: 999px;
+    padding: 0.28rem 0.68rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.bs-density-btn.is-active {
+    background: #fff;
+    color: #17497d;
+    box-shadow: 0 0 0 1px #b8d2ef;
 }
 
 .bs-toolbar-row {
@@ -345,6 +372,45 @@
     min-width: 12rem;
 }
 
+#bs-table tr.bs-row-link {
+    cursor: pointer;
+}
+
+#bs-table tr.bs-row-link:hover > td {
+    background: #f7fbff;
+}
+
+#bs-table tr.bs-row-link:focus-visible {
+    outline: 2px solid #2f6cab;
+    outline-offset: -2px;
+}
+
+.bs-page.is-compact .bs-metric {
+    padding: 0.62rem 0.74rem;
+}
+
+.bs-page.is-compact .bs-panel-body {
+    padding: 0.68rem;
+}
+
+.bs-page.is-compact #bs-table td,
+.bs-page.is-compact #bs-table th {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+}
+
+.bs-page.is-compact .bs-subline,
+.bs-page.is-compact .bs-tag-stack,
+.bs-page.is-compact .bs-tenant-chip {
+    display: none !important;
+}
+
+.bs-page.is-compact .bs-actions-toggle {
+    min-width: 2rem;
+    padding-left: 0.54rem;
+    padding-right: 0.54rem;
+}
+
 .bs-panel-body .table-responsive {
     overflow-x: auto;
     overflow-y: visible;
@@ -486,6 +552,106 @@
     overflow-y: auto;
 }
 
+.bs-config-dialog {
+    max-width: 1100px;
+}
+
+.bs-config-header {
+    padding: 1rem 1.2rem;
+}
+
+.bs-config-body {
+    padding: 1rem 1.2rem 1.1rem;
+}
+
+.bs-config-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem;
+    border: 1px solid #d7e2f1;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%);
+    margin-bottom: 1rem;
+}
+
+.bs-config-tab {
+    border: 0;
+    background: transparent;
+    color: #5d718e;
+    font-size: 0.82rem;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 0.52rem 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.bs-config-tab.active {
+    background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%);
+    color: #fff;
+    box-shadow: 0 9px 16px rgba(var(--brand-rgb), 0.24);
+}
+
+.bs-config-panel {
+    display: none;
+    border: 1px solid #d7e2f1;
+    border-radius: 0.95rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    padding: 1rem 1rem 0.35rem;
+}
+
+.bs-config-panel.active {
+    display: block;
+}
+
+.bs-config-panel-title {
+    margin: 0 0 0.2rem;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: #1f3550;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bs-config-panel-note {
+    margin: 0 0 0.9rem;
+    color: #607089;
+    font-size: 0.78rem;
+}
+
+.bs-config-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.bs-config-field-span-2 {
+    grid-column: span 2;
+}
+
+.bs-config-panel .form-label {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #42566f;
+    margin-bottom: 0.35rem;
+}
+
+.bs-config-panel .form-control {
+    min-height: 2.72rem;
+}
+
+.bs-config-panel .form-text {
+    font-size: 0.74rem;
+}
+
+.bs-config-footer {
+    padding: 0.95rem 1.2rem 1.1rem;
+}
+
 .is-hidden {
     display: none !important;
 }
@@ -519,6 +685,20 @@
         width: 100%;
     }
 
+    .bs-config-tabs {
+        width: 100%;
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+
+    .bs-config-field-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bs-config-field-span-2 {
+        grid-column: auto;
+    }
+
     .bs-metric-grid {
         grid-template-columns: 1fr;
     }
@@ -530,74 +710,90 @@
     <ul class="nav nav-pills workspace-tabs bs-tabs-inline" id="bsTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
-                <i class="fas fa-broadcast-tower me-1"></i>Fleet Overview
+                <i class="fas fa-broadcast-tower me-1"></i>{{ t('base_stations.fleet_overview', 'Fleet Overview') }}
             </button>
         </li>
     </ul>
 
     <div class="bs-actions workspace-actions">
-        <button class="btn btn-outline-secondary" onclick="refreshAll()">
-            <i class="fas fa-sync"></i> Refresh
-        </button>
-        <a class="btn btn-outline-primary" href="/certificates">
-            <i class="fas fa-shield-alt"></i> Certificates
-        </a>
+        {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('manage_tenants') %}
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bsModal" onclick="openBsModal()">
-            <i class="fas fa-plus"></i> Add Base Station
+            <i class="fas fa-plus"></i> {{ t('base_stations.add_base_station', 'Add Base Station') }}
         </button>
+        {% endif %}
+        {% if current_user and current_user.permissions.get('can_manage_certificates') %}
+        <a class="btn btn-outline-primary" href="/certificates">
+            <i class="fas fa-shield-alt"></i> {{ t('nav.certificates', 'Certificates') }}
+        </a>
+        {% endif %}
+        <button class="btn btn-outline-secondary" onclick="refreshAll()">
+            <i class="fas fa-sync"></i> {{ t('common.refresh', 'Refresh') }}
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ t('common.view_options', 'View options') }}">
+                <i class="fas fa-sliders-h"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-2 sensor-view-menu">
+                <div class="small fw-semibold text-muted mb-1">{{ t('common.density', 'Density') }}</div>
+                <div class="bs-density-toggle" role="group" aria-label="{{ t('base_stations.list_density', 'Base station list density') }}">
+                    <button type="button" class="bs-density-btn" id="bsViewDetailedBtn">{{ t('common.expanded', 'Roz??ren?') }}</button>
+                    <button type="button" class="bs-density-btn" id="bsViewCompactBtn">{{ t('common.compact', 'Compact') }}</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="tab-content" id="bsTabContent">
-    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+    <div class="tab-pane fade show active bs-page" id="overview" role="tabpanel">
         <div class="bs-metric-grid workspace-kpi-grid">
             <div class="bs-metric workspace-kpi">
-                <div class="bs-metric-label workspace-kpi-label">Total Configured</div>
+                <div class="bs-metric-label workspace-kpi-label">{{ t('base_stations.total_configured', 'Total Configured') }}</div>
                 <div class="bs-metric-value text-primary" id="totalConfigured">0</div>
             </div>
             <div class="bs-metric workspace-kpi">
-                <div class="bs-metric-label workspace-kpi-label">Connected</div>
+                <div class="bs-metric-label workspace-kpi-label">{{ t('common.connected', 'Connected') }}</div>
                 <div class="bs-metric-value text-success" id="totalConnected">0</div>
             </div>
             <div class="bs-metric workspace-kpi">
-                <div class="bs-metric-label workspace-kpi-label">Connecting</div>
+                <div class="bs-metric-label workspace-kpi-label">{{ t('common.connecting', 'Connecting') }}</div>
                 <div class="bs-metric-value text-warning" id="totalConnecting">0</div>
             </div>
             <div class="bs-metric workspace-kpi">
-                <div class="bs-metric-label workspace-kpi-label">Offline</div>
+                <div class="bs-metric-label workspace-kpi-label">{{ t('common.offline', 'Offline') }}</div>
                 <div class="bs-metric-value text-danger" id="totalOffline">0</div>
             </div>
         </div>
 
         <div class="bs-panel workspace-panel">
             <div class="bs-panel-head workspace-panel-head">
-                <h5><i class="fas fa-table me-2"></i>Gateway Inventory</h5>
+                <h5><i class="fas fa-table me-2"></i>{{ t('base_stations.gateway_inventory', 'Base Station Inventory') }}</h5>
             </div>
             <div class="bs-panel-body workspace-panel-body">
                 <div class="bs-inventory-tools">
-                    <input id="bsSearch" type="text" class="form-control form-control-sm bs-search" placeholder="Search by EUI, name, IP, GPS, tag...">
-                    <small id="bsTableMeta" class="text-muted fw-semibold">Live gateway inventory</small>
+                    <input id="bsSearch" type="text" class="form-control form-control-sm bs-search" placeholder="{{ t('base_stations.search_placeholder', 'Search by EUI, name, IP, GPS, tag...') }}">
+                    <small id="bsTableMeta" class="text-muted fw-semibold">{{ t('base_stations.live_gateway_inventory', 'Live base station inventory') }}</small>
                 </div>
                 <div id="bsFilterRow" class="bs-filter-row">
-                    <button type="button" class="bs-filter-chip is-active" data-filter="all">All <span class="count" id="bs-filter-count-all">0</span></button>
-                    <button type="button" class="bs-filter-chip" data-filter="connected">Connected <span class="count" id="bs-filter-count-connected">0</span></button>
-                    <button type="button" class="bs-filter-chip" data-filter="connecting">Connecting <span class="count" id="bs-filter-count-connecting">0</span></button>
-                    <button type="button" class="bs-filter-chip" data-filter="offline">Offline <span class="count" id="bs-filter-count-offline">0</span></button>
+                    <button type="button" class="bs-filter-chip is-active" data-filter="all">{{ t('common.all', 'All') }} <span class="count" id="bs-filter-count-all">0</span></button>
+                    <button type="button" class="bs-filter-chip" data-filter="connected">{{ t('common.connected', 'Connected') }} <span class="count" id="bs-filter-count-connected">0</span></button>
+                    <button type="button" class="bs-filter-chip" data-filter="connecting">{{ t('common.connecting', 'Connecting') }} <span class="count" id="bs-filter-count-connecting">0</span></button>
+                    <button type="button" class="bs-filter-chip" data-filter="offline">{{ t('common.offline', 'Offline') }} <span class="count" id="bs-filter-count-offline">0</span></button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Status</th>
-                                <th>Base Station (EUI)</th>
-                                <th>Network</th>
-                                <th>Health</th>
-                                <th>Last Update</th>
-                                <th>Score</th>
+                                <th>{{ t('common.status', 'Status') }}</th>
+                                <th>{{ t('base_stations.base_station_eui', 'Base Station (EUI)') }}</th>
+                                <th>{{ t('base_stations.network', 'Network') }}</th>
+                                <th>{{ t('health.runtime_health', 'Health') }}</th>
+                                <th>{{ t('base_stations.last_update', 'Last Update') }}</th>
+                                <th>{{ t('base_stations.score', 'Score') }}</th>
                                 <th>VM</th>
-                                <th>Sensors</th>
-                                <th>Certificate</th>
-                                <th>Actions</th>
+                                <th>{{ t('nav.sensors', 'Sensors') }}</th>
+                                <th>{{ t('nav.certificates', 'Certificate') }}</th>
+                                <th>{{ t('admin.actions', 'Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody id="bs-table"></tbody>
@@ -605,7 +801,7 @@
                 </div>
                 <div class="bs-pagination-bar">
                     <div class="bs-pagination-left">
-                        <span>Rows per page</span>
+                        <span>{{ t('telemetry.rows_per_page', 'Rows per page') }}</span>
                         <select id="bsPageSize" class="form-select form-select-sm">
                             <option value="10">10</option>
                             <option value="20" selected>20</option>
@@ -613,7 +809,7 @@
                             <option value="100">100</option>
                         </select>
                     </div>
-                    <div id="bsPaginationInfo" class="bs-pagination-info">Page 1/1</div>
+                    <div id="bsPaginationInfo" class="bs-pagination-info">{{ t('telemetry.current_page', 'Page') }} 1/1</div>
                     <div class="bs-pagination-actions">
                         <button type="button" id="bsPrevPage" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
                         <button type="button" id="bsNextPage" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
@@ -622,9 +818,10 @@
             </div>
         </div>
 
+        {% if bs_uptime_panel_enabled %}
         <div class="bs-panel workspace-panel">
             <div class="bs-panel-head workspace-panel-head">
-                <h5><i class="fas fa-chart-bar me-2"></i>Fleet Uptime Trend (Last 24 Hours)</h5>
+                <h5><i class="fas fa-chart-bar me-2"></i>{{ t('base_stations.fleet_uptime_trend', 'Fleet Uptime Trend (Last 24 Hours)') }}</h5>
             </div>
             <div class="bs-panel-body workspace-panel-body">
                 <div id="uptimeChartContainer" class="bs-uptime-shell">
@@ -633,35 +830,35 @@
                     </div>
                     <div class="bs-uptime-metrics">
                         <div class="bs-uptime-metric">
-                            <div class="bs-uptime-metric-label">Connected Now</div>
+                            <div class="bs-uptime-metric-label">{{ t('base_stations.connected_now', 'Connected Now') }}</div>
                             <div class="bs-uptime-metric-value" id="uptimeConnectedNow">0</div>
                         </div>
                         <div class="bs-uptime-metric">
-                            <div class="bs-uptime-metric-label">Peak Connected</div>
+                            <div class="bs-uptime-metric-label">{{ t('base_stations.peak_connected', 'Peak Connected') }}</div>
                             <div class="bs-uptime-metric-value" id="uptimeConnectedPeak">0</div>
                         </div>
                         <div class="bs-uptime-metric">
-                            <div class="bs-uptime-metric-label">Fleet Availability</div>
+                            <div class="bs-uptime-metric-label">{{ t('base_stations.fleet_availability', 'Fleet Availability') }}</div>
                             <div class="bs-uptime-metric-value" id="uptimeFleetAvailability">0%</div>
                         </div>
                     </div>
                 </div>
                 <div class="bs-uptime-meta">
-                    <small id="uptimeInfoText" class="text-muted fw-semibold">Calculating fleet uptime...</small>
+                    <small id="uptimeInfoText" class="text-muted fw-semibold">{{ t('base_stations.calculating_uptime', 'Calculating fleet uptime...') }}</small>
                     <div class="bs-uptime-controls" id="uptimeSourceControls">
-                        <label for="uptimeSourceSelect" class="text-muted fw-semibold mb-0">Source</label>
+                        <label for="uptimeSourceSelect" class="text-muted fw-semibold mb-0">{{ t('base_stations.source', 'Source') }}</label>
                         <select id="uptimeSourceSelect" class="form-select form-select-sm">
-                            <option value="auto" selected>Auto</option>
-                            <option value="runtime">Runtime</option>
-                            <option value="influx">InfluxDB</option>
+                            <option value="auto" selected>{{ t('display.auto_recommended', 'Auto') }}</option>
+                            <option value="runtime">{{ t('common.runtime', 'Runtime') }}</option>
+                            {% if influx_enabled %}<option value="influx">{{ t('config.telemetry_source.influx', 'InfluxDB') }}</option>{% endif %}
                         </select>
                         <span id="uptimeSourceLocked" class="bs-uptime-static" style="display:none;">
                             <i class="fas fa-lock"></i><span id="uptimeSourceLockedText"></span>
-                            <a href="/config" class="ms-1">settings</a>
+                            <a href="/config" class="ms-1">{{ t('common.settings', 'settings') }}</a>
                         </span>
-                        <small id="uptimeSourceLabel" class="text-muted fw-semibold">runtime memory events</small>
+                        <small id="uptimeSourceLabel" class="text-muted fw-semibold">{{ t('base_stations.runtime_memory_events', 'runtime memory events') }}</small>
                         <button type="button" id="toggleUptimeDetails" class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-table me-1"></i> Show base station breakdown
+                            <i class="fas fa-table me-1"></i> {{ t('base_stations.show_breakdown', 'Show base station breakdown') }}
                         </button>
                     </div>
                 </div>
@@ -670,10 +867,10 @@
                         <table class="table table-sm table-hover mb-0">
                             <thead>
                                 <tr>
-                                    <th>Base Station</th>
-                                    <th>Availability</th>
-                                    <th>Online Hours</th>
-                                    <th>Last Change</th>
+                                    <th>{{ t('sensor_detail.base_station', 'Base Station') }}</th>
+                                    <th>{{ t('base_stations.availability', 'Availability') }}</th>
+                                    <th>{{ t('base_stations.online_hours', 'Online Hours') }}</th>
+                                    <th>{{ t('base_stations.last_change', 'Last Change') }}</th>
                                 </tr>
                             </thead>
                             <tbody id="uptimeDetailTable"></tbody>
@@ -682,78 +879,115 @@
                 </div>
                 <div id="uptimeNoData" class="text-center text-muted py-4" style="display:none;">
                     <i class="fas fa-clock fa-2x mb-2"></i>
-                    <p>Uptime tracking starts when base stations connect</p>
+                    <p>{{ t('base_stations.uptime_tracking_starts', 'Uptime tracking starts when base stations connect') }}</p>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 
 </div>
 
 <div class="modal fade" id="bsModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable bs-config-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="bsModalTitle">Add Base Station</h5>
+            <div class="modal-header bs-config-header">
+                <h5 class="modal-title" id="bsModalTitle">{{ t('base_stations.add_base_station', 'Add Base Station') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body bs-config-body">
                 <form id="bsForm">
-                    <div class="mb-3">
-                        <label for="bsEui" class="form-label">EUI (16 hex characters)</label>
-                        <input type="text" class="form-control" id="bsEui" required maxlength="16">
+                    <div class="bs-config-tabs" role="tablist" aria-label="{{ t('base_stations.configuration_sections', 'Base station configuration sections') }}">
+                        <button type="button" class="bs-config-tab active" data-bs-config-tab="identity">
+                            <i class="fas fa-broadcast-tower"></i> {{ t('common.identity', 'Identity') }}
+                        </button>
+                        <button type="button" class="bs-config-tab" data-bs-config-tab="network">
+                            <i class="fas fa-network-wired"></i> {{ t('common.network', 'Network') }}
+                        </button>
+                        <button type="button" class="bs-config-tab" data-bs-config-tab="placement">
+                            <i class="fas fa-location-dot"></i> {{ t('common.placement', 'Placement') }}
+                        </button>
                     </div>
-                    <div class="mb-3">
-                        <label for="bsName" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="bsName" placeholder="e.g., Warehouse North">
-                    </div>
-                    <div class="mb-3">
-                        <label for="bsTags" class="form-label">Tags (comma-separated)</label>
-                        <input type="text" class="form-control" id="bsTags" placeholder="e.g., indoor, floor1, production">
-                    </div>
-                    <div class="mb-3">
-                        <label for="bsIp" class="form-label">IP Address</label>
-                        <input type="text" class="form-control" id="bsIp" placeholder="e.g., 192.168.1.100">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">GPS Coordinates (optional)</label>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <input type="number" class="form-control" id="bsGpsLat" step="0.000001" placeholder="Latitude">
+                    <section class="bs-config-panel active" data-bs-config-panel="identity">
+                        <h6 class="bs-config-panel-title"><i class="fas fa-broadcast-tower"></i>{{ t('base_stations.identity_inventory', 'Identity and inventory') }}</h6>
+                        <p class="bs-config-panel-note">{{ t('base_stations.identity_inventory_note', 'Core identity, label and search metadata for this base station.') }}</p>
+                        <div class="bs-config-field-grid">
+                            <div class="bs-config-field-span-2">
+                                <label for="bsEui" class="form-label">{{ t('base_stations.eui_hex16', 'EUI (16 hex characters)') }}</label>
+                                <input type="text" class="form-control" id="bsEui" required maxlength="16">
                             </div>
-                            <div class="col-6">
-                                <input type="number" class="form-control" id="bsGpsLng" step="0.000001" placeholder="Longitude">
+                            <div>
+                                <label for="bsName" class="form-label">{{ t('common.name', 'Name') }}</label>
+                                <input type="text" class="form-control" id="bsName" placeholder="{{ t('base_stations.name_placeholder', 'e.g., Warehouse North') }}">
+                            </div>
+                            <div>
+                                <label for="bsTags" class="form-label">{{ t('base_stations.tags_comma', 'Tags (comma-separated)') }}</label>
+                                <input type="text" class="form-control" id="bsTags" placeholder="{{ t('base_stations.tags_placeholder', 'e.g., indoor, floor1, production') }}">
+                            </div>
+                            <div class="bs-config-field-span-2">
+                                <div class="form-check mt-1">
+                                    <input type="checkbox" class="form-check-input" id="bsGenerateCert" checked>
+                                    <label class="form-check-label" for="bsGenerateCert">{{ t('base_stations.generate_certificates_automatically', 'Generate certificates automatically') }}</label>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-text">Set both fields to place this base station automatically in Coverage map.</div>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="bsGenerateCert" checked>
-                        <label class="form-check-label" for="bsGenerateCert">Generate certificates automatically</label>
-                    </div>
+                    </section>
+                    <section class="bs-config-panel" data-bs-config-panel="network">
+                        <h6 class="bs-config-panel-title"><i class="fas fa-network-wired"></i>{{ t('base_stations.network_reachability', 'Network and reachability') }}</h6>
+                        <p class="bs-config-panel-note">{{ t('base_stations.network_reachability_note', 'Optional network details used for operational visibility and diagnostics.') }}</p>
+                        <div class="bs-config-field-grid">
+                            <div class="bs-config-field-span-2">
+                                <label for="bsIp" class="form-label">{{ t('common.ip_address', 'IP Address') }}</label>
+                                <input type="text" class="form-control" id="bsIp" placeholder="{{ t('base_stations.ip_placeholder', 'e.g., 192.168.1.100') }}">
+                                <div class="form-text">{{ t('base_stations.ip_help', 'Optional inventory field for LAN reachability and quick operator context.') }}</div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="bs-config-panel" data-bs-config-panel="placement">
+                        <h6 class="bs-config-panel-title"><i class="fas fa-location-dot"></i>{{ t('base_stations.placement_mapping', 'Placement and mapping') }}</h6>
+                        <p class="bs-config-panel-note">{{ t('base_stations.placement_mapping_note', 'Optional GPS coordinates used to place the base station on Coverage and Topology maps.') }}</p>
+                        <div class="bs-config-field-grid">
+                            <div>
+                                <label for="bsGpsLat" class="form-label">{{ t('common.gps_latitude_optional', 'GPS Latitude (optional)') }}</label>
+                                <input type="number" class="form-control" id="bsGpsLat" step="0.000001" placeholder="{{ t('common.latitude', 'Latitude') }}">
+                            </div>
+                            <div>
+                                <label for="bsGpsLng" class="form-label">{{ t('common.gps_longitude_optional', 'GPS Longitude (optional)') }}</label>
+                                <input type="number" class="form-control" id="bsGpsLng" step="0.000001" placeholder="{{ t('common.longitude', 'Longitude') }}">
+                            </div>
+                            <div class="bs-config-field-span-2">
+                                <div class="form-text">{{ t('base_stations.gps_set_both_note', 'Set both fields to place this base station automatically in Coverage map.') }}</div>
+                            </div>
+                        </div>
+                    </section>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveBaseStation()">Save</button>
+            <div class="modal-footer bs-config-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('common.cancel', 'Cancel') }}</button>
+                <button type="button" class="btn btn-primary" onclick="saveBaseStation()">{{ t('common.save', 'Save') }}</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
-        <div class="d-flex">
-            <div class="toast-body" id="toastMessage"></div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
+function tr(key, fallback, params = null) {
+    if (typeof appTranslate === 'function') {
+        return appTranslate(key, fallback, params);
+    }
+    let template = fallback || key;
+    if (params && typeof template === 'string') {
+        Object.entries(params).forEach(([name, value]) => {
+            template = template.replaceAll(`{${name}}`, String(value));
+        });
+    }
+    return template;
+}
+
 let editingEui = null;
 let refreshInterval;
 let uptimeChart = null;
@@ -762,13 +996,32 @@ let bsActiveFilter = 'all';
 let bsCurrentPage = 1;
 let bsPageSize = 20;
 const BS_TELEMETRY_SOURCE = '{{ telemetry_source|default("auto") }}';
+const BS_INFLUX_ENABLED = {{ 'true' if influx_enabled else 'false' }};
 const BS_INFLUX_CONFIGURED = {{ 'true' if influx_configured else 'false' }};
 const BS_IS_ADMIN = {{ 'true' if current_user and current_user.role == 'admin' else 'false' }};
+const BS_CAN_MANAGE_BASE_STATIONS = {{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('manage_tenants') else 'false' }};
+const BS_CAN_MANAGE_CERTS = {{ 'true' if current_user and current_user.permissions.get('can_manage_certificates') else 'false' }};
+const BS_UPTIME_PANEL_ENABLED = {{ 'true' if bs_uptime_panel_enabled else 'false' }};
 let bsUptimeSource = BS_TELEMETRY_SOURCE === 'auto' ? 'auto' : BS_TELEMETRY_SOURCE;
 const BS_VIEW_PREFS_KEY = 'base_stations_view_prefs_v1';
+const defaultBsViewPrefs = { compact: false };
+let bsViewPrefs = { ...defaultBsViewPrefs };
 let bsFormBaseline = null;
 let bsModalCloseBySave = false;
+let pendingBaseStationEditEui = new URLSearchParams(window.location.search).get('edit_base_station') || '';
 const BS_FORM_FIELDS = ['bsEui', 'bsName', 'bsTags', 'bsIp', 'bsGpsLat', 'bsGpsLng', 'bsGenerateCert'];
+
+function setBsConfigActiveTab(tabName) {
+    const target = String(tabName || 'identity').trim().toLowerCase();
+    document.querySelectorAll('#bsModal [data-bs-config-tab]').forEach((button) => {
+        const active = String(button.getAttribute('data-bs-config-tab') || '').trim().toLowerCase() === target;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('#bsModal [data-bs-config-panel]').forEach((panel) => {
+        panel.classList.toggle('active', String(panel.getAttribute('data-bs-config-panel') || '').trim().toLowerCase() === target);
+    });
+}
 
 function getBsFormSnapshot() {
     const snapshot = {};
@@ -793,10 +1046,13 @@ function isBsFormDirty() {
     return JSON.stringify(getBsFormSnapshot()) !== bsFormBaseline;
 }
 
-function showToast(message) {
-    document.getElementById('toastMessage').textContent = message;
-    const toast = new bootstrap.Toast(document.getElementById('successToast'));
-    toast.show();
+function showToast(message, type = 'success') {
+    if (window.AppUI && typeof window.AppUI.toast === 'function') {
+        const allowHtml = /<(br|small|code)\b/i.test(String(message || ''));
+        window.AppUI.toast(message, type, { html: allowHtml });
+        return;
+    }
+    window.alert(String(message || ''));
 }
 
 function escapeHtml(value) {
@@ -830,6 +1086,8 @@ function clampNumber(value, min, max) {
 }
 
 function applyUptimeSourceMode() {
+    if (!BS_UPTIME_PANEL_ENABLED) return;
+
     const select = document.getElementById('uptimeSourceSelect');
     const lockedHint = document.getElementById('uptimeSourceLocked');
     const lockedText = document.getElementById('uptimeSourceLockedText');
@@ -841,6 +1099,10 @@ function applyUptimeSourceMode() {
         select.style.display = '';
         select.disabled = false;
         lockedHint.style.display = 'none';
+        if (!BS_INFLUX_ENABLED && select.value === 'influx') {
+            bsUptimeSource = 'runtime';
+            select.value = 'runtime';
+        }
         return;
     }
 
@@ -865,8 +1127,11 @@ function saveBsViewPrefs() {
         search: document.getElementById('bsSearch').value || '',
         filter: bsActiveFilter,
         pageSize: bsPageSize,
-        uptimeSource: bsUptimeSource
+        compact: bsViewPrefs.compact
     };
+    if (BS_UPTIME_PANEL_ENABLED) {
+        payload.uptimeSource = bsUptimeSource;
+    }
     localStorage.setItem(BS_VIEW_PREFS_KEY, JSON.stringify(payload));
 }
 
@@ -877,21 +1142,38 @@ function loadBsViewPrefs() {
         const prefs = JSON.parse(raw);
         bsActiveFilter = prefs.filter || 'all';
         bsPageSize = clampNumber(Number(prefs.pageSize) || 20, 1, 200);
-        if (BS_TELEMETRY_SOURCE === 'auto') {
-            bsUptimeSource = (prefs.uptimeSource || 'auto').toLowerCase();
-            if (!['auto', 'runtime', 'influx'].includes(bsUptimeSource)) {
-                bsUptimeSource = 'auto';
+        bsViewPrefs = { ...defaultBsViewPrefs, compact: Boolean(prefs.compact) };
+        if (BS_UPTIME_PANEL_ENABLED) {
+            if (BS_TELEMETRY_SOURCE === 'auto') {
+                bsUptimeSource = (prefs.uptimeSource || 'auto').toLowerCase();
+                const allowedSources = BS_INFLUX_ENABLED ? ['auto', 'runtime', 'influx'] : ['auto', 'runtime'];
+                if (!allowedSources.includes(bsUptimeSource)) {
+                    bsUptimeSource = 'auto';
+                }
+            } else {
+                bsUptimeSource = BS_TELEMETRY_SOURCE;
             }
-        } else {
-            bsUptimeSource = BS_TELEMETRY_SOURCE;
         }
         document.getElementById('bsSearch').value = prefs.search || '';
         document.getElementById('bsPageSize').value = String(bsPageSize);
-        document.getElementById('uptimeSourceSelect').value = bsUptimeSource;
+        if (BS_UPTIME_PANEL_ENABLED) {
+            const sourceSelect = document.getElementById('uptimeSourceSelect');
+            if (sourceSelect) sourceSelect.value = bsUptimeSource;
+        }
     } catch (error) {
         bsActiveFilter = 'all';
         bsUptimeSource = BS_TELEMETRY_SOURCE === 'auto' ? 'auto' : BS_TELEMETRY_SOURCE;
+        bsViewPrefs = { ...defaultBsViewPrefs };
     }
+}
+
+function applyBsViewPrefs() {
+    const page = document.getElementById('overview');
+    if (page) page.classList.toggle('is-compact', bsViewPrefs.compact);
+    const detailedBtn = document.getElementById('bsViewDetailedBtn');
+    const compactBtn = document.getElementById('bsViewCompactBtn');
+    if (detailedBtn) detailedBtn.classList.toggle('is-active', !bsViewPrefs.compact);
+    if (compactBtn) compactBtn.classList.toggle('is-active', bsViewPrefs.compact);
 }
 
 function getBsStatusKey(bs) {
@@ -901,9 +1183,9 @@ function getBsStatusKey(bs) {
 }
 
 function getBsStatusBadge(statusKey) {
-    if (statusKey === 'connected') return '<span class="badge bg-success">Connected</span>';
-    if (statusKey === 'connecting') return '<span class="badge bg-warning text-dark">Connecting</span>';
-    return '<span class="badge bg-secondary">Offline</span>';
+    if (statusKey === 'connected') return `<span class="badge bg-success">${tr('common.connected', 'Connected')}</span>`;
+    if (statusKey === 'connecting') return `<span class="badge bg-warning text-dark">${tr('common.connecting', 'Connecting')}</span>`;
+    return `<span class="badge bg-secondary">${tr('common.offline', 'Offline')}</span>`;
 }
 
 function formatStatusAge(seconds) {
@@ -953,22 +1235,22 @@ function getHealthScore(bs) {
 
 function getBsCertBadge(cert) {
     if (!cert || !cert.cert_exists) {
-        return '<span class="badge text-dark" style="background-color: #ffd9ad;">Missing</span>';
+        return `<span class="badge text-dark" style="background-color: #ffd9ad;">${tr('common.missing', 'Missing')}</span>`;
     }
-    if (cert.cert_status === 'valid') return '<span class="badge bg-success">Valid</span>';
-    if (cert.cert_status === 'expired') return '<span class="badge bg-danger">Expired</span>';
-    if (cert.cert_status === 'expiring_soon') return '<span class="badge bg-warning text-dark">Expiring</span>';
-    return '<span class="badge bg-secondary">Unknown</span>';
+    if (cert.cert_status === 'valid') return `<span class="badge bg-success">${tr('common.valid', 'Valid')}</span>`;
+    if (cert.cert_status === 'expired') return `<span class="badge bg-danger">${tr('common.expired', 'Expired')}</span>`;
+    if (cert.cert_status === 'expiring_soon') return `<span class="badge bg-warning text-dark">${tr('common.expiring', 'Expiring')}</span>`;
+    return `<span class="badge bg-secondary">${tr('common.unknown', 'Unknown')}</span>`;
 }
 
 function copyBaseStationEui(eui) {
     if (!navigator.clipboard || !navigator.clipboard.writeText) {
-        showToast('Clipboard is not available in this browser context.');
+        showToast(tr('runtime.clipboard_unavailable', 'Clipboard is not available in this browser context.'));
         return;
     }
     navigator.clipboard.writeText(eui)
-        .then(() => showToast(`Base station EUI copied: ${eui}`))
-        .catch(() => showToast('Could not copy EUI.'));
+        .then(() => showToast(tr('runtime.base_station_eui_copied', 'Base station EUI copied: {eui}', { eui })))
+        .catch(() => showToast(tr('runtime.clipboard_copy_failed', 'Could not copy EUI.')));
 }
 
 function getBaseStationCounts(baseStations) {
@@ -1057,12 +1339,18 @@ function initBsActionDropdowns() {
     });
 }
 
+function openBaseStationDetail(eui) {
+    const normalized = String(eui || '').trim().toUpperCase();
+    if (!normalized) return;
+    window.location.href = `/base-stations/${encodeURIComponent(normalized)}`;
+}
+
 function renderBaseStationTable() {
     const table = document.getElementById('bs-table');
     const filtered = getFilteredBaseStations();
     if (filtered.length === 0) {
-        table.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-3 fw-semibold">No base stations match current filters.</td></tr>';
-        document.getElementById('bsTableMeta').textContent = `Showing 0 of ${baseStationCache.length} base stations`;
+        table.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-3 fw-semibold">${escapeHtml(tr('runtime.no_base_stations_match_filters', 'No base stations match current filters.'))}</td></tr>`;
+        document.getElementById('bsTableMeta').textContent = `0 / ${baseStationCache.length}`;
         updateBsPaginationUi({ total: 0, totalPages: 0 });
         return;
     }
@@ -1081,51 +1369,71 @@ function renderBaseStationTable() {
         const ipDisplay = bs.configured_ip || '-';
         const gpsDisplay = formatGps(bs.gps_lat, bs.gps_lng);
         const vmBadge = bs.health?.vm_capable
-            ? '<span class="badge bg-primary">VM-capable</span>'
+            ? `<span class="badge bg-primary">${appTranslate('base_stations.vm_capable', 'VM-capable')}</span>`
             : '<span class="text-muted">-</span>';
         const tags = (bs.tags || []).map(tag => `<span class="bs-tag">${escapeHtml(tag)}</span>`).join('');
-        const certNote = cert && cert.cert_expires ? `<div class="bs-subline">Expires: ${escapeHtml(cert.cert_expires)}</div>` : '<div class="bs-subline">No cert metadata</div>';
+        const certNote = cert && cert.cert_expires ? `<div class="bs-subline">${appTranslate('common.expires', 'Expires')}: ${escapeHtml(cert.cert_expires)}</div>` : `<div class="bs-subline">${appTranslate('base_stations.no_cert_metadata', 'No cert metadata')}</div>`;
         const score = getHealthScore(bs);
         const lastUpdateText = formatStatusAge(bs.status_age_seconds);
+        const tenantScopeLabel = String(bs.tenant_id || '').trim().toLowerCase() === 'default'
+            ? appTranslate('common.super_admin', 'Super admin')
+            : String(bs.tenant_id || 'default');
         const tenantLabel = BS_IS_ADMIN
-            ? `<div class="bs-subline"><span class="bs-tenant-chip"><i class="fas fa-building"></i>Tenant ${escapeHtml(bs.tenant_id || 'default')}</span></div>`
+            ? `<div class="bs-subline"><span class="bs-tenant-chip"><i class="fas fa-building"></i>Tenant ${escapeHtml(tenantScopeLabel)}</span></div>`
             : '';
         const lastUpdateDetail = bs.last_status_event
             ? `Last event: ${escapeHtml(bs.last_status_event)}`
-            : 'No status events yet';
+            : tr('runtime.no_status_events_yet', 'No status events yet');
+        const compactNetworkState = statusKey === 'connected'
+            ? tr('common.connected', 'PripojenĂ©')
+            : statusKey === 'connecting'
+                ? tr('common.connecting', 'PripĂˇja sa')
+                : tr('common.offline', 'Offline');
+        const compactHealthSummary = `${appTranslate('common.cpu', 'CPU')}: ${cpuDisplay} · ${appTranslate('common.memory_short', 'MEM')}: ${memDisplay}`;
+
+        const actionItems = [];
+        if (BS_CAN_MANAGE_BASE_STATIONS) {
+            actionItems.push(`<li><button class="dropdown-item" onclick="editBaseStation('${bs.eui}')"><i class="fas fa-pen me-2"></i>${appTranslate('common.edit', 'Edit')}</button></li>`);
+            actionItems.push(`<li><button class="dropdown-item text-danger" onclick="deleteBaseStation('${bs.eui}')"><i class="fas fa-trash me-2"></i>${appTranslate('common.delete', 'Delete')}</button></li>`);
+        }
+        if (BS_CAN_MANAGE_CERTS) {
+            actionItems.push(`<li><button class="dropdown-item" onclick="openCertificatesPage('${bs.eui}')"><i class="fas fa-shield-alt me-2"></i>${appTranslate('base_stations.manage_certificates', 'Manage certificates')}</button></li>`);
+        }
 
         return `
-            <tr>
+            <tr class="bs-row-link" data-bs-row-eui="${escapeHtml(bs.eui)}" tabindex="0" role="button" aria-label="${appTranslate('base_stations.open_detail_for', 'Open detail for base station')} ${escapeHtml(bs.name || bs.eui)}">
                 <td>${statusBadge}</td>
                 <td>
                     <div class="bs-id-cell">
                         <div class="bs-eui-line">
                             <span class="bs-eui-label">BS</span>
                             <code class="bs-eui-code">${escapeHtml(bs.eui)}</code>
-                            <button type="button" class="bs-eui-copy" onclick="copyBaseStationEui('${escapeHtml(bs.eui)}')" title="Copy EUI">
+                            <button type="button" class="bs-eui-copy" onclick="copyBaseStationEui('${escapeHtml(bs.eui)}')" title="${appTranslate('base_stations.copy_eui', 'Copy EUI')}">
                                 <i class="fas fa-copy"></i>
                             </button>
                         </div>
                         <div class="bs-subline">${escapeHtml(bs.name || 'Unnamed base station')}</div>
-                        ${tenantLabel}
-                        <div class="bs-tag-stack">${tags || '<span class="bs-subline">No tags</span>'}</div>
+                        ${bsViewPrefs.compact ? '' : tenantLabel}
+                        <div class="bs-tag-stack">${tags || `<span class="bs-subline">${appTranslate('common.no_tags', 'No tags')}</span>`}</div>
                     </div>
                 </td>
                 <td>
                     <div>${escapeHtml(ipDisplay)}</div>
-                    <div class="bs-subline">GPS: ${gpsDisplay ? escapeHtml(gpsDisplay) : 'not set'}</div>
-                    <div class="bs-subline">${statusKey === 'connected' ? 'Session active' : statusKey === 'connecting' ? 'Handshake in progress' : 'No active session'}</div>
+                    ${bsViewPrefs.compact ? `<div class="bs-subline">${compactNetworkState}</div>` : `<div class="bs-subline">GPS: ${gpsDisplay ? escapeHtml(gpsDisplay) : 'not set'}</div><div class="bs-subline">${statusKey === 'connected' ? 'Session active' : statusKey === 'connecting' ? 'Handshake in progress' : 'No active session'}</div>`}
                 </td>
                 <td>
-                    <div class="bs-health-grid">
-                        <div class="bs-health-item">CPU: <strong>${cpuDisplay}</strong></div>
-                        <div class="bs-health-item">MEM: <strong>${memDisplay}</strong></div>
-                        <div class="bs-health-item">TEMP: <strong>${tempDisplay}</strong></div>
-                    </div>
+                    ${bsViewPrefs.compact
+                        ? `<div class="bs-health-item"><strong>${escapeHtml(compactHealthSummary)}</strong></div>`
+                        : `<div class="bs-health-grid">
+                            <div class="bs-health-item">${appTranslate('common.cpu', 'CPU')}: <strong>${cpuDisplay}</strong></div>
+                            <div class="bs-health-item">${appTranslate('common.memory_short', 'MEM')}: <strong>${memDisplay}</strong></div>
+                            <div class="bs-health-item">${appTranslate('common.temperature_short', 'TEMP')}: <strong>${tempDisplay}</strong></div>
+                        </div>`
+                    }
                 </td>
                 <td>
                     <div><strong>${lastUpdateText}</strong></div>
-                    <div class="bs-subline">${lastUpdateDetail}</div>
+                    ${bsViewPrefs.compact ? '' : `<div class="bs-subline">${lastUpdateDetail}</div>`}
                 </td>
                 <td>
                     <span class="bs-score-badge ${score.klass}">${score.score}</span>
@@ -1134,27 +1442,25 @@ function renderBaseStationTable() {
                 <td>${vmBadge}</td>
                 <td>
                     <div><strong>${bs.connected_sensors || 0}</strong></div>
-                    <div class="bs-subline">linked sensors</div>
+                    <div class="bs-subline">${appTranslate('base_stations.linked_sensors', 'linked sensors')}</div>
                 </td>
                 <td>
                     ${certBadge}
-                    ${certNote}
+                    ${bsViewPrefs.compact ? '' : certNote}
                 </td>
                 <td>
-                    <div class="dropdown bs-actions-menu">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle bs-actions-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">Actions</button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><button class="dropdown-item" onclick="editBaseStation('${bs.eui}')"><i class="fas fa-pen me-2"></i>Edit</button></li>
-                            <li><button class="dropdown-item text-danger" onclick="deleteBaseStation('${bs.eui}')"><i class="fas fa-trash me-2"></i>Delete</button></li>
-                            <li><button class="dropdown-item" onclick="openCertificatesPage('${bs.eui}')"><i class="fas fa-shield-alt me-2"></i>Manage certificates</button></li>
-                        </ul>
-                    </div>
+                    ${actionItems.length ? `
+                        <div class="dropdown bs-actions-menu">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle bs-actions-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">${tr('admin.actions', 'Akcie')}</button>
+                            <ul class="dropdown-menu dropdown-menu-end">${actionItems.join('')}</ul>
+                        </div>
+                    ` : '<span class="text-muted">-</span>'}
                 </td>
             </tr>
         `;
     }).join('');
 
-    document.getElementById('bsTableMeta').textContent = `Showing ${page.start + 1}-${page.end} of ${filtered.length} base station${filtered.length === 1 ? '' : 's'}`;
+    document.getElementById('bsTableMeta').textContent = `${page.start + 1}-${page.end} / ${filtered.length}`;
     updateBsPaginationUi(page);
     initBsActionDropdowns();
 }
@@ -1189,10 +1495,24 @@ function loadBaseStations() {
 
         refreshBsFilterChips();
         renderBaseStationTable();
+        maybeOpenBaseStationEditFromQuery();
     }).catch(err => {
         console.error('Failed to load base stations:', err);
-        document.getElementById('bs-table').innerHTML = '<tr><td colspan="10" class="text-center text-danger py-3 fw-semibold">Failed to load base station data.</td></tr>';
+        document.getElementById('bs-table').innerHTML = `<tr><td colspan="10" class="text-center text-danger py-3 fw-semibold">${escapeHtml(tr('runtime.failed_load_base_station_data', 'Failed to load base station data.'))}</td></tr>`;
     });
+}
+
+function maybeOpenBaseStationEditFromQuery() {
+    if (!BS_CAN_MANAGE_BASE_STATIONS) return;
+    const target = String(pendingBaseStationEditEui || '').trim().toUpperCase();
+    if (!target) return;
+    const exists = baseStationCache.some(bs => String(bs.eui || '').toUpperCase() === target);
+    if (!exists) return;
+    pendingBaseStationEditEui = '';
+    const url = new URL(window.location.href);
+    url.searchParams.delete('edit_base_station');
+    window.history.replaceState({}, '', url.toString());
+    editBaseStation(target);
 }
 
 function isConnectedUptimeEvent(eventType) {
@@ -1202,13 +1522,14 @@ function isConnectedUptimeEvent(eventType) {
 
 function formatUptimeLastChange(timestampMs) {
     if (!timestampMs) return 'No events';
-    return new Date(timestampMs).toLocaleString();
+    return AppTime.formatDateTime(timestampMs);
 }
 
 function renderUptimeDetailTable(rows) {
     const tbody = document.getElementById('uptimeDetailTable');
+    if (!tbody) return;
     if (!rows || rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3 fw-semibold">No uptime events available.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3 fw-semibold">${appTranslate('base_stations.no_uptime_events_available', 'No uptime events available.')}</td></tr>`;
         return;
     }
 
@@ -1224,6 +1545,8 @@ function renderUptimeDetailTable(rows) {
 }
 
 function loadUptimeChart() {
+    if (!BS_UPTIME_PANEL_ENABLED) return;
+
     const sourceQuery = encodeURIComponent(bsUptimeSource || 'auto');
     fetch(`/api/base-stations/uptime?source=${sourceQuery}`)
         .then(r => r.json())
@@ -1337,8 +1660,8 @@ function loadUptimeChart() {
             document.getElementById('uptimeConnectedPeak').textContent = `${peakConnected}/${euis.length}`;
             document.getElementById('uptimeFleetAvailability').textContent = `${fleetAvailability.toFixed(1)}%`;
             document.getElementById('uptimeInfoText').textContent = data && data.fallback_reason
-                ? `Tracking ${euis.length} base station(s), ${stateDeltas.length} state changes. Fallback: ${data.fallback_reason}`
-                : `Tracking ${euis.length} base station(s), ${stateDeltas.length} state changes in the last 24h.`;
+                ? `Tracking ${euis.length} base stations, ${stateDeltas.length} state changes. Fallback: ${data.fallback_reason}`
+                : `Tracking ${euis.length} base stations, ${stateDeltas.length} state changes in the last 24h.`;
             renderUptimeDetailTable(details);
 
             const ctx = document.getElementById('uptimeChart').getContext('2d');
@@ -1370,7 +1693,7 @@ function loadUptimeChart() {
                             max: endMs,
                             ticks: {
                                 maxTicksLimit: 8,
-                                callback: value => new Date(Number(value)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                callback: value => AppTime.formatTime(Number(value), { hour: '2-digit', minute: '2-digit' })
                             },
                             grid: { color: 'rgba(145, 162, 186, 0.2)' }
                         },
@@ -1395,6 +1718,7 @@ function openCertificatesPage() {
 }
 
 function openBsModal() {
+    if (!BS_CAN_MANAGE_BASE_STATIONS) return;
     editingEui = null;
     document.getElementById('bsModalTitle').textContent = 'Add Base Station';
     document.getElementById('bsEui').value = '';
@@ -1405,16 +1729,18 @@ function openBsModal() {
     document.getElementById('bsGpsLat').value = '';
     document.getElementById('bsGpsLng').value = '';
     document.getElementById('bsGenerateCert').checked = true;
+    setBsConfigActiveTab('identity');
     setBsFormBaseline();
     bsModalCloseBySave = false;
 }
 
 function editBaseStation(eui) {
+    if (!BS_CAN_MANAGE_BASE_STATIONS) return;
     fetch(`/api/base-stations/${eui}`)
         .then(r => r.json())
         .then(bs => {
             editingEui = eui;
-            document.getElementById('bsModalTitle').textContent = 'Edit Base Station';
+            document.getElementById('bsModalTitle').textContent = tr('base_stations.edit_base_station', 'Edit Base Station');
             document.getElementById('bsEui').value = bs.eui;
             document.getElementById('bsEui').disabled = true;
             document.getElementById('bsName').value = bs.name || '';
@@ -1423,6 +1749,7 @@ function editBaseStation(eui) {
             document.getElementById('bsGpsLat').value = bs.gps_lat ?? '';
             document.getElementById('bsGpsLng').value = bs.gps_lng ?? '';
             document.getElementById('bsGenerateCert').checked = false;
+            setBsConfigActiveTab('identity');
             setBsFormBaseline();
             bsModalCloseBySave = false;
             new bootstrap.Modal(document.getElementById('bsModal')).show();
@@ -1430,6 +1757,7 @@ function editBaseStation(eui) {
 }
 
 function saveBaseStation() {
+    if (!BS_CAN_MANAGE_BASE_STATIONS) return;
     const eui = document.getElementById('bsEui').value.toLowerCase().replace(/\s/g, '');
     const name = document.getElementById('bsName').value.trim();
     const tagsStr = document.getElementById('bsTags').value;
@@ -1440,19 +1768,19 @@ function saveBaseStation() {
     const generateCert = document.getElementById('bsGenerateCert').checked;
 
     if (!/^[0-9a-f]{16}$/i.test(eui)) {
-        alert('EUI must be exactly 16 hex characters');
+        alert(tr('base_station.validation.eui_length', 'EUI must be exactly 16 hex characters'));
         return;
     }
     if ((gpsLat === null) !== (gpsLng === null)) {
-        alert('Please provide both latitude and longitude, or leave both empty.');
+        alert(tr('runtime.gps_both_required', 'Please provide both latitude and longitude, or leave both empty.'));
         return;
     }
     if (Number.isNaN(gpsLat) || Number.isNaN(gpsLng)) {
-        alert('GPS coordinates must be valid numbers.');
+        alert(tr('runtime.gps_invalid_numbers', 'GPS coordinates must be valid numbers.'));
         return;
     }
     if (gpsLat !== null && (gpsLat < -90 || gpsLat > 90 || gpsLng < -180 || gpsLng > 180)) {
-        alert('GPS out of range. Latitude -90..90, longitude -180..180.');
+        alert(tr('runtime.gps_out_of_range', 'GPS out of range. Latitude -90..90, longitude -180..180.'));
         return;
     }
 
@@ -1469,51 +1797,56 @@ function saveBaseStation() {
     })
     .then(r => r.json())
     .then(data => {
-        if (data.success) {
-            bsModalCloseBySave = true;
-            setBsFormBaseline();
-            bootstrap.Modal.getInstance(document.getElementById('bsModal')).hide();
-            showToast(editingEui ? 'Base station updated' : 'Base station added successfully');
-            refreshAll();
+            if (data.success) {
+                bsModalCloseBySave = true;
+                setBsFormBaseline();
+                bootstrap.Modal.getInstance(document.getElementById('bsModal')).hide();
+                showToast(editingEui
+                    ? tr('runtime.base_station_updated', 'Base station updated')
+                    : tr('runtime.base_station_added', 'Base station added successfully'));
+                refreshAll();
             if (!editingEui && data.cert_download_url) {
                 setTimeout(() => { window.location.href = data.cert_download_url; }, 1000);
             }
         } else {
-            alert(data.error || 'Failed to save');
+            alert(data.error || tr('base_station.save_failed', 'Failed to save'));
         }
     });
 }
 
 function deleteBaseStation(eui) {
-    if (!confirm(`Delete base station ${eui}?`)) return;
+    if (!BS_CAN_MANAGE_BASE_STATIONS) return;
+    if (!confirm(`Vymaza? z?klad?ov? stanicu ${eui}?`)) return;
     fetch(`/api/base-stations/${eui}`, {method: 'DELETE'})
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                showToast('Base station deleted');
+                showToast(tr('runtime.base_station_deleted', 'Base station deleted'));
                 refreshAll();
             } else {
-                alert(data.error || 'Failed to delete');
+                alert(data.error || tr('base_station.delete_failed', 'Failed to delete'));
             }
         });
 }
 
 function refreshAll() {
     loadBaseStations();
-    loadUptimeChart();
+    if (BS_UPTIME_PANEL_ENABLED) {
+        loadUptimeChart();
+    }
 }
 
 function confirmLeaveBsForm() {
     if (window.AppUI && typeof window.AppUI.confirm === 'function') {
         return window.AppUI.confirm({
-            title: 'Discard base station changes',
-            message: 'You have unsaved base station changes. Close this form without saving?',
-            confirmText: 'Discard',
-            cancelText: 'Stay',
+            title: 'ZahodiĹĄ zmeny zĂˇkladĹovej stanice',
+            message: tr('base_station.unsaved_changes_message', 'You have unsaved base station changes. Close this form without saving?'),
+            confirmText: tr('runtime.discard', 'Discard'),
+            cancelText: tr('guard.stay', 'Stay'),
             variant: 'warning'
         });
     }
-    return Promise.resolve(window.confirm('You have unsaved base station changes. Close this form without saving?'));
+    return Promise.resolve(window.confirm(tr('base_station.unsaved_changes_message', 'You have unsaved base station changes. Close this form without saving?')));
 }
 
 function initBaseStationUnsavedGuards() {
@@ -1538,15 +1871,33 @@ function initBaseStationUnsavedGuards() {
 
     if (window.AppUI && typeof window.AppUI.unsavedGuard === 'function') {
         window.AppUI.unsavedGuard({
-            title: 'Unsaved base station changes',
-            message: 'You have unsaved base station form changes. Leave this page without saving?',
-            confirmText: 'Leave page',
-            cancelText: 'Stay',
+            title: 'NeuloĹľenĂ© zmeny zĂˇkladĹovej stanice',
+            message: 'MĂˇte neuloĹľenĂ© zmeny formulĂˇra zĂˇkladĹovej stanice. OpustiĹĄ strĂˇnku bez uloĹľenia?',
+            confirmText: tr('guard.leave_page', 'Leave page'),
+            cancelText: tr('guard.stay', 'Stay'),
             variant: 'warning',
             isDirty: () => Boolean(bsModalEl && bsModalEl.classList.contains('show') && isBsFormDirty())
         });
     }
 }
+
+document.querySelectorAll('#bsModal [data-bs-config-tab]').forEach((button) => {
+    button.addEventListener('click', () => setBsConfigActiveTab(button.getAttribute('data-bs-config-tab')));
+});
+
+document.getElementById('bsViewDetailedBtn').addEventListener('click', () => {
+    bsViewPrefs.compact = false;
+    saveBsViewPrefs();
+    applyBsViewPrefs();
+    renderBaseStationTable();
+});
+
+document.getElementById('bsViewCompactBtn').addEventListener('click', () => {
+    bsViewPrefs.compact = true;
+    saveBsViewPrefs();
+    applyBsViewPrefs();
+    renderBaseStationTable();
+});
 
 document.getElementById('bsSearch').addEventListener('input', () => {
     bsCurrentPage = 1;
@@ -1582,40 +1933,70 @@ document.getElementById('bsNextPage').addEventListener('click', () => {
     renderBaseStationTable();
 });
 
-document.getElementById('uptimeSourceSelect').addEventListener('change', event => {
-    if (BS_TELEMETRY_SOURCE !== 'auto') return;
-    bsUptimeSource = (event.target.value || 'auto').toLowerCase();
-    saveBsViewPrefs();
-    loadUptimeChart();
+document.getElementById('bs-table').addEventListener('click', event => {
+    const row = event.target.closest('tr.bs-row-link');
+    if (!row) return;
+    if (event.target.closest('button, a, .dropdown, .dropdown-menu, .bs-eui-copy, input, label')) return;
+    openBaseStationDetail(row.getAttribute('data-bs-row-eui'));
 });
 
-document.getElementById('toggleUptimeDetails').addEventListener('click', () => {
-    const panel = document.getElementById('uptimeDetails');
-    const button = document.getElementById('toggleUptimeDetails');
-    const hidden = panel.classList.toggle('is-hidden');
-    button.innerHTML = hidden
-        ? '<i class="fas fa-table me-1"></i> Show base station breakdown'
-        : '<i class="fas fa-eye-slash me-1"></i> Hide base station breakdown';
+document.getElementById('bs-table').addEventListener('keydown', event => {
+    const row = event.target.closest('tr.bs-row-link');
+    if (!row) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    if (event.target.closest('button, a, .dropdown, .dropdown-menu, .bs-eui-copy, input, label')) return;
+    event.preventDefault();
+    openBaseStationDetail(row.getAttribute('data-bs-row-eui'));
 });
+
+if (BS_UPTIME_PANEL_ENABLED) {
+    const uptimeSourceSelect = document.getElementById('uptimeSourceSelect');
+    if (uptimeSourceSelect) {
+        uptimeSourceSelect.addEventListener('change', event => {
+            if (BS_TELEMETRY_SOURCE !== 'auto') return;
+            bsUptimeSource = (event.target.value || 'auto').toLowerCase();
+            saveBsViewPrefs();
+            loadUptimeChart();
+        });
+    }
+
+    const toggleUptimeDetails = document.getElementById('toggleUptimeDetails');
+    if (toggleUptimeDetails) {
+        toggleUptimeDetails.addEventListener('click', () => {
+            const panel = document.getElementById('uptimeDetails');
+            const button = document.getElementById('toggleUptimeDetails');
+            if (!panel || !button) return;
+            const hidden = panel.classList.toggle('is-hidden');
+            button.innerHTML = hidden
+                ? '<i class="fas fa-table me-1"></i> Show base station breakdown'
+                : '<i class="fas fa-eye-slash me-1"></i> Hide base station breakdown';
+        });
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     loadBsViewPrefs();
-    applyUptimeSourceMode();
-    document.getElementById('uptimeSourceSelect').value = bsUptimeSource;
+    applyBsViewPrefs();
+    if (BS_UPTIME_PANEL_ENABLED) {
+        applyUptimeSourceMode();
+        const sourceSelect = document.getElementById('uptimeSourceSelect');
+        if (sourceSelect) sourceSelect.value = bsUptimeSource;
+    }
     bsPageSize = Math.max(1, Number(document.getElementById('bsPageSize').value) || 20);
     setBsFormBaseline();
     initBaseStationUnsavedGuards();
     loadBaseStations();
-    loadUptimeChart();
+    if (BS_UPTIME_PANEL_ENABLED) {
+        loadUptimeChart();
+    }
     refreshInterval = setInterval(() => {
         loadBaseStations();
-        loadUptimeChart();
+        if (BS_UPTIME_PANEL_ENABLED) {
+            loadUptimeChart();
+        }
     }, 5000);
 });
 </script>
 {% endblock %}
-
-
-
 
 

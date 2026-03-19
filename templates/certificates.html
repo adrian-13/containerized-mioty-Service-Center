@@ -230,64 +230,62 @@
 <div class="cert-shell workspace-shell">
     <div class="workspace-toolbar">
         <div class="cert-head-actions workspace-actions">
-            <button class="btn btn-outline-secondary" onclick="backupCertificates()"><i class="fas fa-file-archive me-1"></i>Backup ZIP</button>
-            <button class="btn btn-warning" onclick="generateCertificates()"><i class="fas fa-redo me-1"></i>Generate New</button>
-            <button class="btn btn-primary" onclick="refreshAll()"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
-            <span class="cert-last-refresh">Updated <span id="certLastRefresh">never</span></span>
+            <button class="btn btn-outline-secondary" onclick="backupCertificates()"><i class="fas fa-file-archive me-1"></i>{{ t('cert.backup_zip', 'Backup ZIP') }}</button>
+            <button class="btn btn-warning" onclick="generateCertificates()"><i class="fas fa-redo me-1"></i>{{ t('cert.generate_new', 'Generate New') }}</button>
+            <button class="btn btn-primary" onclick="refreshAll()"><i class="fas fa-sync-alt me-1"></i>{{ t('common.refresh', 'Refresh') }}</button>
+            <span class="cert-last-refresh">{{ t('mqtt.updated', 'Updated') }} <span id="certLastRefresh">{{ t('cert.never', 'never') }}</span></span>
         </div>
     </div>
 
-    <div id="alert-container"></div>
-
     <div class="cert-kpi-grid workspace-kpi-grid">
         <div class="cert-kpi workspace-kpi">
-            <div class="cert-kpi-label workspace-kpi-label">CA Certificate</div>
-            <div class="cert-kpi-value workspace-kpi-value" id="caStatusValue">Unknown</div>
-            <div class="cert-kpi-note workspace-kpi-note" id="caStatusNote">Checking...</div>
+                    <div class="cert-kpi-label workspace-kpi-label">{{ t('cert.ca_certificate', 'CA Certificate') }}</div>
+                    <div class="cert-kpi-value workspace-kpi-value" id="caStatusValue">{{ t('common.unknown', 'Unknown') }}</div>
+                    <div class="cert-kpi-note workspace-kpi-note" id="caStatusNote">{{ t('cert.checking', 'Checking...') }}</div>
         </div>
         <div class="cert-kpi workspace-kpi">
-            <div class="cert-kpi-label workspace-kpi-label">Service Certificate</div>
-            <div class="cert-kpi-value workspace-kpi-value" id="serviceStatusValue">Unknown</div>
-            <div class="cert-kpi-note workspace-kpi-note" id="serviceStatusNote">Checking...</div>
+                    <div class="cert-kpi-label workspace-kpi-label">{{ t('cert.service_certificate', 'Service Certificate') }}</div>
+                    <div class="cert-kpi-value workspace-kpi-value" id="serviceStatusValue">{{ t('common.unknown', 'Unknown') }}</div>
+                    <div class="cert-kpi-note workspace-kpi-note" id="serviceStatusNote">{{ t('cert.checking', 'Checking...') }}</div>
         </div>
         <div class="cert-kpi workspace-kpi">
-            <div class="cert-kpi-label workspace-kpi-label">Private Key</div>
-            <div class="cert-kpi-value workspace-kpi-value" id="keyStatusValue">Unknown</div>
-            <div class="cert-kpi-note workspace-kpi-note" id="keyStatusNote">Checking...</div>
+                    <div class="cert-kpi-label workspace-kpi-label">{{ t('cert.private_key', 'Private Key') }}</div>
+                    <div class="cert-kpi-value workspace-kpi-value" id="keyStatusValue">{{ t('common.unknown', 'Unknown') }}</div>
+                    <div class="cert-kpi-note workspace-kpi-note" id="keyStatusNote">{{ t('cert.checking', 'Checking...') }}</div>
         </div>
         <div class="cert-kpi workspace-kpi">
-            <div class="cert-kpi-label workspace-kpi-label">Managed BS Certs</div>
+                    <div class="cert-kpi-label workspace-kpi-label">{{ t('cert.managed_bs_certs', 'Managed BS Certs') }}</div>
             <div class="cert-kpi-value workspace-kpi-value" id="bsManagedValue">0</div>
-            <div class="cert-kpi-note workspace-kpi-note">Base stations in certificate inventory</div>
+                    <div class="cert-kpi-note workspace-kpi-note">{{ t('cert.base_stations_inventory', 'Base stations in certificate inventory') }}</div>
         </div>
         <div class="cert-kpi workspace-kpi">
-            <div class="cert-kpi-label workspace-kpi-label">Needs Attention</div>
+                    <div class="cert-kpi-label workspace-kpi-label">{{ t('cert.needs_attention', 'Needs Attention') }}</div>
             <div class="cert-kpi-value workspace-kpi-value" id="bsAttentionValue">0</div>
-            <div class="cert-kpi-note workspace-kpi-note">Missing, expired or expiring soon</div>
+                    <div class="cert-kpi-note workspace-kpi-note">{{ t('cert.needs_attention_note', 'Missing, expired or expiring soon') }}</div>
         </div>
     </div>
 
     <div class="cert-panel workspace-panel">
         <div class="cert-panel-head workspace-panel-head">
-            <h5><i class="fas fa-download me-2"></i>Download Certificates</h5>
-            <span class="cert-panel-sub workspace-panel-sub">Export active trust assets</span>
+                <h5><i class="fas fa-download me-2"></i>{{ t('cert.download_certificates', 'Download Certificates') }}</h5>
+                <span class="cert-panel-sub workspace-panel-sub">{{ t('cert.export_active_trust_assets', 'Export active trust assets') }}</span>
         </div>
         <div class="cert-panel-body workspace-panel-body">
             <div class="cert-file-grid">
                 <div class="cert-file-card">
-                    <p class="cert-file-title">CA Certificate</p>
-                    <p class="cert-file-note">Root certificate authority for signed service and BS certs.</p>
-                    <button class="btn btn-sm btn-outline-primary" onclick="downloadCertificate('ca_cert.pem')"><i class="fas fa-download me-1"></i>Download CA</button>
+                    <p class="cert-file-title">{{ t('cert.ca_certificate', 'CA Certificate') }}</p>
+                    <p class="cert-file-note">{{ t('cert.ca_note', 'Root certificate authority for signed service and BS certs.') }}</p>
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadCertificate('ca_cert.pem')"><i class="fas fa-download me-1"></i>{{ t('cert.download_ca', 'Download CA') }}</button>
                 </div>
                 <div class="cert-file-card">
-                    <p class="cert-file-title">Service Certificate</p>
-                    <p class="cert-file-note">Server certificate for TLS connections to service center.</p>
-                    <button class="btn btn-sm btn-outline-primary" onclick="downloadCertificate('service_center_cert.pem')"><i class="fas fa-download me-1"></i>Download Service Cert</button>
+                    <p class="cert-file-title">{{ t('cert.service_certificate', 'Service Certificate') }}</p>
+                    <p class="cert-file-note">{{ t('cert.service_cert_note', 'Server certificate for TLS connections to service center.') }}</p>
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadCertificate('service_center_cert.pem')"><i class="fas fa-download me-1"></i>{{ t('cert.download_service_cert', 'Download Service Cert') }}</button>
                 </div>
                 <div class="cert-file-card">
-                    <p class="cert-file-title">Service Private Key</p>
-                    <p class="cert-file-note">Private key paired with the service certificate.</p>
-                    <button class="btn btn-sm btn-outline-warning" onclick="downloadCertificate('service_center_key.pem')"><i class="fas fa-key me-1"></i>Download Key</button>
+                    <p class="cert-file-title">{{ t('cert.service_private_key', 'Service Private Key') }}</p>
+                    <p class="cert-file-note">{{ t('cert.private_key_note', 'Private key paired with the service certificate.') }}</p>
+                    <button class="btn btn-sm btn-outline-warning" onclick="downloadCertificate('service_center_key.pem')"><i class="fas fa-key me-1"></i>{{ t('cert.download_key', 'Download Key') }}</button>
                 </div>
             </div>
         </div>
@@ -295,44 +293,44 @@
 
     <div class="cert-panel workspace-panel">
         <div class="cert-panel-head workspace-panel-head">
-            <h5><i class="fas fa-upload me-2"></i>Upload Certificates</h5>
-            <span class="cert-panel-sub workspace-panel-sub">Replace selected certs without leaving UI</span>
+            <h5><i class="fas fa-upload me-2"></i>{{ t('cert.upload_certificates', 'Upload Certificates') }}</h5>
+            <span class="cert-panel-sub workspace-panel-sub">{{ t('cert.replace_selected_without_leaving_ui', 'Replace selected certs without leaving UI') }}</span>
         </div>
         <div class="cert-panel-body workspace-panel-body">
-            <div class="alert alert-warning py-2 mb-3"><strong>Note:</strong> After upload, restart service/container to fully apply TLS changes.</div>
+            <div class="alert alert-warning py-2 mb-3"><strong>{{ t('common.note', 'Note') }}:</strong> {{ t('cert.restart_after_upload', 'After upload, restart service/container to fully apply TLS changes.') }}</div>
             <div class="cert-upload-grid">
                 <div class="cert-upload-card">
-                    <p class="cert-upload-title">CA Certificate</p>
-                    <p class="cert-upload-note">Accepts .pem/.crt/.cer</p>
+                    <p class="cert-upload-title">{{ t('cert.ca_certificate', 'CA Certificate') }}</p>
+                    <p class="cert-upload-note">{{ t('cert.accepts_pem_crt_cer', 'Accepts .pem/.crt/.cer') }}</p>
                     <input type="file" class="form-control form-control-sm" id="caCertFile" accept=".pem,.crt,.cer">
-                    <button class="btn btn-sm btn-secondary mt-2" onclick="uploadCertificate('ca', 'caCertFile')">Upload CA</button>
+                    <button class="btn btn-sm btn-secondary mt-2" onclick="uploadCertificate('ca', 'caCertFile')">{{ t('cert.upload_ca', 'Upload CA') }}</button>
                 </div>
                 <div class="cert-upload-card">
-                    <p class="cert-upload-title">Service Certificate</p>
-                    <p class="cert-upload-note">Accepts .pem/.crt/.cer</p>
+                    <p class="cert-upload-title">{{ t('cert.service_certificate', 'Service Certificate') }}</p>
+                    <p class="cert-upload-note">{{ t('cert.accepts_pem_crt_cer', 'Accepts .pem/.crt/.cer') }}</p>
                     <input type="file" class="form-control form-control-sm" id="serviceCertFile" accept=".pem,.crt,.cer">
-                    <button class="btn btn-sm btn-secondary mt-2" onclick="uploadCertificate('service', 'serviceCertFile')">Upload Service Cert</button>
+                    <button class="btn btn-sm btn-secondary mt-2" onclick="uploadCertificate('service', 'serviceCertFile')">{{ t('cert.upload_service_cert', 'Upload Service Cert') }}</button>
                 </div>
                 <div class="cert-upload-card">
-                    <p class="cert-upload-title">Private Key</p>
-                    <p class="cert-upload-note">Accepts .pem/.key</p>
+                    <p class="cert-upload-title">{{ t('cert.private_key', 'Private Key') }}</p>
+                    <p class="cert-upload-note">{{ t('cert.accepts_pem_key', 'Accepts .pem/.key') }}</p>
                     <input type="file" class="form-control form-control-sm" id="privateKeyFile" accept=".pem,.key">
-                    <button class="btn btn-sm btn-warning mt-2" onclick="uploadCertificate('key', 'privateKeyFile')">Upload Key</button>
+                    <button class="btn btn-sm btn-warning mt-2" onclick="uploadCertificate('key', 'privateKeyFile')">{{ t('cert.upload_key', 'Upload Key') }}</button>
                 </div>
             </div>
         </div>
     </div>
     <div class="cert-panel workspace-panel">
         <div class="cert-panel-head workspace-panel-head">
-            <h5><i class="fas fa-shield-alt me-2"></i>Per-Base Station Certificates</h5>
-            <span class="cert-panel-sub workspace-panel-sub">Operational certificate registry</span>
+            <h5><i class="fas fa-shield-alt me-2"></i>{{ t('cert.per_base_station_certificates', 'Per-Base Station Certificates') }}</h5>
+            <span class="cert-panel-sub workspace-panel-sub">{{ t('cert.operational_certificate_registry', 'Operational certificate registry') }}</span>
         </div>
         <div class="cert-panel-body workspace-panel-body">
             <div class="cert-toolbar">
-                <input id="bsCertSearch" type="text" class="form-control form-control-sm cert-search" placeholder="Search by EUI, name, status...">
+                <input id="bsCertSearch" type="text" class="form-control form-control-sm cert-search" placeholder="{{ t('cert.search_placeholder', 'Search by EUI, name, status...') }}">
                 <div class="d-flex align-items-center gap-2">
-                    <span id="bsCertMeta" class="cert-meta">Waiting for data...</span>
-                    <label for="bsCertPageSize" class="small text-muted fw-semibold mb-0">Rows</label>
+                    <span id="bsCertMeta" class="cert-meta">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</span>
+                    <label for="bsCertPageSize" class="small text-muted fw-semibold mb-0">{{ t('telemetry.rows_per_page', 'Rows') }}</label>
                     <select id="bsCertPageSize" class="form-select form-select-sm" style="width: 88px;">
                         <option value="10">10</option>
                         <option value="20" selected>20</option>
@@ -346,11 +344,11 @@
                 <table class="table table-sm align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Base Station</th>
-                            <th>Status</th>
-                            <th>Generated</th>
-                            <th>Expires</th>
-                            <th>Actions</th>
+                            <th>{{ t('sensor_detail.base_station', 'Base Station') }}</th>
+                            <th>{{ t('common.status', 'Status') }}</th>
+                            <th>{{ t('cert.generated', 'Generated') }}</th>
+                            <th>{{ t('cert.expires', 'Expires') }}</th>
+                            <th>{{ t('admin.actions', 'Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody id="bsCertTable"></tbody>
@@ -358,7 +356,7 @@
             </div>
 
             <div class="cert-pagination">
-                <small id="bsCertPageInfo" class="text-muted fw-semibold">Page 1/1</small>
+                <small id="bsCertPageInfo" class="text-muted fw-semibold">{{ t('telemetry.current_page', 'Page') }} 1/1</small>
                 <div class="d-flex gap-2">
                     <button type="button" id="bsCertPrev" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
                     <button type="button" id="bsCertNext" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
@@ -369,21 +367,21 @@
 
     <div class="cert-panel workspace-panel">
         <div class="cert-panel-head workspace-panel-head">
-            <h5><i class="fas fa-toolbox me-2"></i>Backup and Restore</h5>
-            <span class="cert-panel-sub workspace-panel-sub">Recovery workflow</span>
+            <h5><i class="fas fa-toolbox me-2"></i>{{ t('cert.backup_restore', 'Backup and Restore') }}</h5>
+            <span class="cert-panel-sub workspace-panel-sub">{{ t('cert.recovery_workflow', 'Recovery workflow') }}</span>
         </div>
         <div class="cert-panel-body workspace-panel-body">
             <div class="cert-maint-grid">
                 <div class="cert-maint-card">
-                    <p class="cert-maint-title">Backup All Certificates</p>
-                    <p class="cert-maint-note">Create one ZIP archive with CA, service cert and service key.</p>
-                    <button class="btn btn-info" onclick="backupCertificates()"><i class="fas fa-file-archive me-1"></i>Download Backup ZIP</button>
+                    <p class="cert-maint-title">{{ t('cert.backup_all_certificates', 'Backup All Certificates') }}</p>
+                    <p class="cert-maint-note">{{ t('cert.backup_all_certificates_note', 'Create one ZIP archive with CA, service cert and service key.') }}</p>
+                    <button class="btn btn-info" onclick="backupCertificates()"><i class="fas fa-file-archive me-1"></i>{{ t('cert.backup_zip', 'Download Backup ZIP') }}</button>
                 </div>
                 <div class="cert-maint-card">
-                    <p class="cert-maint-title">Restore from ZIP</p>
-                    <p class="cert-maint-note">Upload previous backup package and replace current files.</p>
+                    <p class="cert-maint-title">{{ t('cert.restore_from_zip', 'Restore from ZIP') }}</p>
+                    <p class="cert-maint-note">{{ t('cert.restore_from_zip_note', 'Upload previous backup package and replace current files.') }}</p>
                     <input type="file" class="form-control form-control-sm mb-2" id="backupFile" accept=".zip">
-                    <button class="btn btn-success" onclick="restoreFromBackup()"><i class="fas fa-upload me-1"></i>Restore Backup</button>
+                    <button class="btn btn-success" onclick="restoreFromBackup()"><i class="fas fa-upload me-1"></i>{{ t('cert.restore_backup', 'Restore Backup') }}</button>
                 </div>
             </div>
         </div>
@@ -399,12 +397,12 @@ let bsCertPage = 1;
 let bsCertPageSize = 20;
 
 function showAlert(message, type = 'info') {
-    const container = document.getElementById('alert-container');
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-    container.appendChild(alert);
-    setTimeout(() => alert.remove(), 5000);
+    if (window.AppUI && typeof window.AppUI.toast === 'function') {
+        const allowHtml = /<(br|small|code)\b/i.test(String(message || ''));
+        window.AppUI.toast(message, type, { html: allowHtml });
+        return;
+    }
+    window.alert(String(message || ''));
 }
 
 function safeText(value, fallback = 'n/a') {
@@ -426,7 +424,7 @@ function normalizeDate(dateString) {
 function formatDateDisplay(dateString) {
     const parsed = normalizeDate(dateString);
     if (!parsed) return 'n/a';
-    return parsed.toLocaleString();
+    return AppTime.formatDateTime(parsed);
 }
 
 function getDaysToExpiry(dateString) {
@@ -496,7 +494,7 @@ function renderBsCertificateTable() {
     if (bsCertPage > totalPages) bsCertPage = totalPages;
 
     if (total === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No certificate records found.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">${appTranslate('cert.no_certificate_records', 'No certificate records found.')}</td></tr>`;
         meta.textContent = `Showing 0 of ${bsCertCache.length}`;
         pageInfo.textContent = 'Page 1/1';
         prevBtn.disabled = true;
@@ -546,7 +544,7 @@ function updateBsKpis() {
 }
 
 function setLastRefresh() {
-    document.getElementById('certLastRefresh').textContent = new Date().toLocaleTimeString();
+    document.getElementById('certLastRefresh').textContent = AppTime.formatTime(new Date());
 }
 
 function loadCertificateStatus() {

@@ -227,32 +227,30 @@
 <div class="oms-shell workspace-shell">
     <div class="workspace-toolbar">
         <button class="btn btn-primary" onclick="refreshData()">
-            <i class="fas fa-sync-alt me-1"></i>Refresh Now
+            <i class="fas fa-sync-alt me-1"></i>{{ t('mqtt.refresh_now', 'Refresh Now') }}
         </button>
     </div>
 
-    <div id="alert-container"></div>
-
     <div class="oms-metric-grid workspace-kpi-grid">
         <div class="oms-metric workspace-kpi">
-            <div class="oms-metric-label workspace-kpi-label">Total OMS Meters</div>
+            <div class="oms-metric-label workspace-kpi-label">{{ t('oms.total_meters', 'Total OMS Meters') }}</div>
             <div class="oms-metric-value workspace-kpi-value" id="total-meters">0</div>
-            <div class="oms-metric-note workspace-kpi-note">Unique devices detected</div>
+            <div class="oms-metric-note workspace-kpi-note">{{ t('oms.unique_devices_detected', 'Unique devices detected') }}</div>
         </div>
         <div class="oms-metric workspace-kpi">
-            <div class="oms-metric-label workspace-kpi-label">Total Messages</div>
+            <div class="oms-metric-label workspace-kpi-label">{{ t('oms.total_messages', 'Total Messages') }}</div>
             <div class="oms-metric-value workspace-kpi-value" id="total-messages">0</div>
-            <div class="oms-metric-note workspace-kpi-note">VM uplink payloads processed</div>
+            <div class="oms-metric-note workspace-kpi-note">{{ t('oms.vm_uplink_payloads_processed', 'VM uplink payloads processed') }}</div>
         </div>
         <div class="oms-metric workspace-kpi">
-            <div class="oms-metric-label workspace-kpi-label">Average / Meter</div>
+            <div class="oms-metric-label workspace-kpi-label">{{ t('oms.average_per_meter', 'Average / Meter') }}</div>
             <div class="oms-metric-value workspace-kpi-value" id="avg-messages">0</div>
-            <div class="oms-metric-note workspace-kpi-note">Messages per known meter</div>
+            <div class="oms-metric-note workspace-kpi-note">{{ t('oms.messages_per_meter', 'Messages per known meter') }}</div>
         </div>
         <div class="oms-metric workspace-kpi">
-            <div class="oms-metric-label workspace-kpi-label">Active Last Hour</div>
+            <div class="oms-metric-label workspace-kpi-label">{{ t('oms.active_last_hour', 'Active Last Hour') }}</div>
             <div class="oms-metric-value workspace-kpi-value" id="active-meters">0</div>
-            <div class="oms-metric-note workspace-kpi-note">Meters seen in 60 minutes</div>
+            <div class="oms-metric-note workspace-kpi-note">{{ t('oms.meters_seen_60m', 'Meters seen in 60 minutes') }}</div>
         </div>
     </div>
 
@@ -260,34 +258,34 @@
         <div class="col-xl-5">
             <div class="oms-panel h-100">
                 <div class="oms-panel-head workspace-panel-head">
-                    <h5><i class="fas fa-sliders-h me-2"></i>VM Controls</h5>
-                    <span class="oms-panel-sub workspace-panel-sub">Control virtual channel discovery</span>
+                    <h5><i class="fas fa-sliders-h me-2"></i>{{ t('oms.vm_controls', 'VM Controls') }}</h5>
+                    <span class="oms-panel-sub workspace-panel-sub">{{ t('oms.control_virtual_channel_discovery', 'Control virtual channel discovery') }}</span>
                 </div>
                 <div class="oms-panel-body workspace-panel-body">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label for="macTypeInput" class="form-label">MAC Type</label>
+                            <label for="macTypeInput" class="form-label">{{ t('oms.mac_type', 'MAC Type') }}</label>
                             <input type="number" class="form-control" id="macTypeInput" value="0" min="0">
-                            <small class="text-muted">Default is 0. Use only values supported by your base stations.</small>
+                            <small class="text-muted">{{ t('oms.mac_type_note', 'Default is 0. Use only values supported by your base stations.') }}</small>
                         </div>
                         <div class="col-12 d-flex flex-wrap gap-2">
                             <button class="btn btn-primary" onclick="vmActivate()">
-                                <i class="fas fa-play me-1"></i>Activate VM
+                                <i class="fas fa-play me-1"></i>{{ t('oms.activate_vm', 'Activate VM') }}
                             </button>
                             <button class="btn btn-outline-secondary" onclick="vmStatus()">
-                                <i class="fas fa-heartbeat me-1"></i>Query VM Status
+                                <i class="fas fa-heartbeat me-1"></i>{{ t('oms.query_vm_status', 'Query VM Status') }}
                             </button>
                         </div>
                         <div class="col-12 border-top pt-3 mt-1">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="periodicStatusCheck" onchange="togglePeriodicStatus()">
-                                <label class="form-check-label" for="periodicStatusCheck">Periodic status query</label>
+                                <label class="form-check-label" for="periodicStatusCheck">{{ t('oms.periodic_status_query', 'Periodic status query') }}</label>
                             </div>
                             <div class="input-group mt-2" style="max-width: 240px;">
                                 <input type="number" class="form-control" id="statusIntervalInput" value="60" min="10" max="3600">
-                                <span class="input-group-text">seconds</span>
+                                <span class="input-group-text">{{ t('common.seconds', 'seconds') }}</span>
                             </div>
-                            <small class="text-muted">Auto-query interval range: 10 to 3600 seconds.</small>
+                            <small class="text-muted">{{ t('oms.auto_query_interval_range', 'Auto-query interval range: 10 to 3600 seconds.') }}</small>
                         </div>
                     </div>
                 </div>
@@ -297,12 +295,12 @@
         <div class="col-xl-7">
             <div class="oms-panel h-100">
                 <div class="oms-panel-head workspace-panel-head">
-                    <h5><i class="fas fa-list-ul me-2"></i>VM Event Log</h5>
-                    <span class="oms-panel-sub workspace-panel-sub">Recent control and state transitions</span>
+                    <h5><i class="fas fa-list-ul me-2"></i>{{ t('oms.vm_event_log', 'VM Event Log') }}</h5>
+                    <span class="oms-panel-sub workspace-panel-sub">{{ t('oms.recent_control_state_transitions', 'Recent control and state transitions') }}</span>
                 </div>
                 <div class="oms-panel-body workspace-panel-body">
                     <div id="vm-log-container">
-                        <p class="text-muted mb-0">No VM events logged yet.</p>
+                        <p class="text-muted mb-0">{{ t('oms.no_vm_events', 'No VM events logged yet.') }}</p>
                     </div>
                 </div>
             </div>
@@ -311,29 +309,29 @@
 
     <div class="oms-panel workspace-panel">
         <div class="oms-panel-head workspace-panel-head">
-            <h5><i class="fas fa-broadcast-tower me-2"></i>VM-Capable Base Stations</h5>
-            <span class="oms-panel-sub workspace-panel-sub">Capability discovery status</span>
+            <h5><i class="fas fa-broadcast-tower me-2"></i>{{ t('oms.vm_capable_base_stations', 'VM-Capable Base Stations') }}</h5>
+            <span class="oms-panel-sub workspace-panel-sub">{{ t('oms.capability_discovery_status', 'Capability discovery status') }}</span>
         </div>
         <div class="oms-panel-body workspace-panel-body">
             <div id="vm-capable-container">
-                <p class="text-muted mb-0">Loading VM-capable base stations...</p>
+                <p class="text-muted mb-0">{{ t('oms.loading_vm_capable_base_stations', 'Loading VM-capable base stations...') }}</p>
             </div>
         </div>
     </div>
 
     <div class="oms-panel workspace-panel">
         <div class="oms-panel-head workspace-panel-head">
-            <h5><i class="fas fa-table me-2"></i>Detected OMS Meters (WMBUS)</h5>
-            <span class="oms-panel-sub workspace-panel-sub">Live telemetry inventory</span>
+            <h5><i class="fas fa-table me-2"></i>{{ t('oms.detected_meters', 'Detected OMS Meters (WMBUS)') }}</h5>
+            <span class="oms-panel-sub workspace-panel-sub">{{ t('oms.live_telemetry_inventory', 'Live telemetry inventory') }}</span>
         </div>
         <div class="oms-panel-body workspace-panel-body">
             <div class="oms-toolbar">
                 <div class="oms-toolbar-left">
-                    <input id="meterSearch" type="text" class="form-control form-control-sm oms-search" placeholder="Search by serial, manufacturer, base station...">
-                    <span id="meters-count-meta" class="oms-table-meta">Waiting for data...</span>
+                    <input id="meterSearch" type="text" class="form-control form-control-sm oms-search" placeholder="{{ t('oms.search_placeholder', 'Search by serial, manufacturer, base station...') }}">
+                    <span id="meters-count-meta" class="oms-table-meta">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</span>
                 </div>
                 <div class="oms-toolbar-right">
-                    <label for="meterPageSize" class="small text-muted fw-semibold mb-0">Rows</label>
+                    <label for="meterPageSize" class="small text-muted fw-semibold mb-0">{{ t('telemetry.rows_per_page', 'Rows') }}</label>
                     <select id="meterPageSize" class="form-select form-select-sm" style="width: 88px;">
                         <option value="10">10</option>
                         <option value="20" selected>20</option>
@@ -344,23 +342,23 @@
             </div>
 
             <div id="no-meters-message" class="text-center p-4" style="display: none;">
-                <p class="text-muted mb-0">No OMS meters detected yet. Meters will appear here when VM uplink data is received.</p>
+                <p class="text-muted mb-0">{{ t('oms.no_meters_detected', 'No OMS meters detected yet. Meters will appear here when VM uplink data is received.') }}</p>
             </div>
 
             <div class="table-responsive">
                 <table class="table table-striped align-middle" id="meters-table-container">
                     <thead>
                         <tr>
-                            <th>Meter</th>
-                            <th>Manufacturer</th>
-                            <th>Type</th>
-                            <th>Version</th>
-                            <th>SNR</th>
-                            <th>RSSI</th>
-                            <th>Last Payload</th>
-                            <th>Last Seen</th>
-                            <th>Base Station</th>
-                            <th>Msgs</th>
+                            <th>{{ t('oms.meter', 'Meter') }}</th>
+                            <th>{{ t('oms.manufacturer', 'Manufacturer') }}</th>
+                            <th>{{ t('oms.type', 'Type') }}</th>
+                            <th>{{ t('oms.version', 'Version') }}</th>
+                            <th>{{ t('dashboard.avg_snr', 'SNR') }}</th>
+                                        <th>{{ t('common.rssi', 'RSSI') }}</th>
+                            <th>{{ t('oms.last_payload', 'Last Payload') }}</th>
+                            <th>{{ t('sensor_detail.last_seen', 'Last Seen') }}</th>
+                            <th>{{ t('sensor_detail.base_station', 'Base Station') }}</th>
+                            <th>{{ t('sensor_detail.messages', 'Msgs') }}</th>
                         </tr>
                     </thead>
                     <tbody id="meters-table"></tbody>
@@ -368,7 +366,7 @@
             </div>
 
             <div class="oms-pagination">
-                <small id="meterPaginationInfo" class="text-muted fw-semibold">Page 1/1</small>
+                <small id="meterPaginationInfo" class="text-muted fw-semibold">{{ t('telemetry.current_page', 'Page') }} 1/1</small>
                 <div class="d-flex gap-2">
                     <button type="button" id="meterPrevPage" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
                     <button type="button" id="meterNextPage" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
@@ -378,8 +376,8 @@
     </div>
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <p class="oms-note"><strong>Note:</strong> OMS meters are WMBUS devices (water, gas, electricity). IDs are extracted from payload headers.</p>
-        <p class="oms-note">Last refresh: <span id="oms-last-refresh">never</span> | Auto-refresh every 30s</p>
+        <p class="oms-note"><strong>{{ t('common.note', 'Note:') }}</strong> {{ t('oms.note_wmbus_devices', 'OMS meters are WMBUS devices (water, gas, electricity). IDs are extracted from payload headers.') }}</p>
+        <p class="oms-note">{{ t('common.last_refresh', 'Last refresh:') }} <span id="oms-last-refresh">{{ t('common.never', 'never') }}</span> | {{ t('oms.auto_refresh_every_30s', 'Auto-refresh every 30s') }}</p>
     </div>
 </div>
 {% endblock %}
@@ -403,26 +401,24 @@ function escapeHtml(value) {
 }
 
 function formatTimestamp(timestamp) {
-    if (!timestamp) return 'Never';
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleString();
+    if (!timestamp) return appTranslate('common.never_capitalized', 'Never');
+    return AppTime.formatDateTime(timestamp * 1000);
 }
 
 function formatTimeSince(timestamp) {
-    if (!timestamp) return 'N/A';
+    if (!timestamp) return appTranslate('common.not_available_short', 'N/A');
     const now = Date.now() / 1000;
     const diff = now - timestamp;
 
-    if (diff < 60) return Math.floor(diff) + 's ago';
-    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-    return Math.floor(diff / 86400) + 'd ago';
+    if (diff < 60) return appTranslate('common.seconds_ago', '{count}s ago', { count: Math.floor(diff) });
+    if (diff < 3600) return appTranslate('common.minutes_ago', '{count}m ago', { count: Math.floor(diff / 60) });
+    if (diff < 86400) return appTranslate('common.hours_ago', '{count}h ago', { count: Math.floor(diff / 3600) });
+    return appTranslate('common.days_ago', '{count}d ago', { count: Math.floor(diff / 86400) });
 }
 
 function formatIsoTimestamp(isoString) {
     if (!isoString) return '';
-    const date = new Date(isoString);
-    return date.toLocaleTimeString();
+    return AppTime.formatTime(isoString);
 }
 
 function truncateData(data, maxLen) {
@@ -433,12 +429,12 @@ function truncateData(data, maxLen) {
 }
 
 function showAlert(message, type) {
-    const container = document.getElementById('alert-container');
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-    container.appendChild(alert);
-    setTimeout(() => alert.remove(), 5000);
+    if (window.AppUI && typeof window.AppUI.toast === 'function') {
+        const allowHtml = /<(br|small|code)\b/i.test(String(message || ''));
+        window.AppUI.toast(message, type, { html: allowHtml });
+        return;
+    }
+    window.alert(String(message || ''));
 }
 function togglePeriodicStatus() {
     const checkbox = document.getElementById('periodicStatusCheck');
@@ -491,7 +487,7 @@ function refreshVmCapable() {
         .then(data => {
             const container = document.getElementById('vm-capable-container');
             if (!data.success) {
-                container.innerHTML = '<p class="text-danger mb-0">Error loading VM-capable base stations.</p>';
+                container.innerHTML = `<p class="text-danger mb-0">${appTranslate('oms.error_loading_vm_capable', 'Error loading VM-capable base stations.')}</p>`;
                 return;
             }
 
@@ -500,16 +496,16 @@ function refreshVmCapable() {
             const totalConnected = data.total_connected || 0;
 
             if (connected.length === 0) {
-                container.innerHTML = '<p class="text-muted mb-0">No base stations connected.</p>';
+                container.innerHTML = `<p class="text-muted mb-0">${appTranslate('oms.no_base_stations_connected', 'No base stations connected.')}</p>`;
                 return;
             }
 
             if (vmCapable.length === 0) {
                 container.innerHTML = `
                     <p class="text-muted mb-1">
-                        <strong>${totalConnected}</strong> base station(s) connected, but VM support is not confirmed.
+                        ${appTranslate('oms.vm_not_confirmed_prefix', '<strong>{count}</strong> base station(s) connected, but VM support is not confirmed.', { count: totalConnected })}
                     </p>
-                    <small class="text-muted d-block mb-2">Run VM status query to detect support.</small>
+                    <small class="text-muted d-block mb-2">${appTranslate('oms.run_vm_status_query', 'Run VM status query to detect support.')}</small>
                     <div class="oms-badge-list">${connected.map(bs => `<span class="badge bg-secondary">${escapeHtml(bs)}</span>`).join('')}</div>
                 `;
                 return;
@@ -519,20 +515,20 @@ function refreshVmCapable() {
             container.innerHTML = `
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <h6 class="text-success mb-2"><i class="fas fa-check-circle me-1"></i>VM-capable (${vmCapable.length})</h6>
+                        <h6 class="text-success mb-2"><i class="fas fa-check-circle me-1"></i>${appTranslate('oms.vm_capable_count', 'VM-capable ({count})', { count: vmCapable.length })}</h6>
                         <div class="oms-badge-list">${vmCapable.map(bs => `<span class="badge bg-success">${escapeHtml(bs)}</span>`).join('')}</div>
                     </div>
                     <div class="col-md-6">
-                        <h6 class="text-secondary mb-2"><i class="fas fa-question-circle me-1"></i>Not confirmed (${notVmCapable.length})</h6>
-                        <div class="oms-badge-list">${notVmCapable.map(bs => `<span class="badge bg-secondary">${escapeHtml(bs)}</span>`).join('') || '<span class="text-muted">None</span>'}</div>
+                        <h6 class="text-secondary mb-2"><i class="fas fa-question-circle me-1"></i>${appTranslate('oms.not_confirmed_count', 'Not confirmed ({count})', { count: notVmCapable.length })}</h6>
+                        <div class="oms-badge-list">${notVmCapable.map(bs => `<span class="badge bg-secondary">${escapeHtml(bs)}</span>`).join('') || `<span class="text-muted">${appTranslate('common.none', 'None')}</span>`}</div>
                     </div>
                 </div>
-                <small class="text-muted d-block mt-2">Total connected: ${totalConnected}</small>
+                <small class="text-muted d-block mt-2">${appTranslate('oms.total_connected', 'Total connected: {count}', { count: totalConnected })}</small>
             `;
         })
         .catch(error => {
             console.error('Error fetching VM capable base stations:', error);
-            document.getElementById('vm-capable-container').innerHTML = '<p class="text-danger mb-0">Error loading data.</p>';
+            document.getElementById('vm-capable-container').innerHTML = `<p class="text-danger mb-0">${appTranslate('oms.error_loading_data', 'Error loading data.')}</p>`;
         });
 }
 
@@ -549,12 +545,12 @@ function vmActivate() {
                 showAlert(data.message, 'success');
                 setTimeout(refreshVmLog, 1000);
             } else {
-                showAlert(data.message || 'Failed to activate VM.', 'danger');
+                showAlert(data.message || appTranslate('runtime.error_activating_vm', 'Error activating VM.'), 'danger');
             }
         })
         .catch(error => {
             console.error('Error activating VM:', error);
-            showAlert('Error activating VM.', 'danger');
+            showAlert(appTranslate('runtime.error_activating_vm', 'Error activating VM.'), 'danger');
         });
 }
 
@@ -569,12 +565,12 @@ function vmStatus() {
                 showAlert(data.message, 'success');
                 setTimeout(refreshVmLog, 1000);
             } else {
-                showAlert(data.message || 'Failed to query VM status.', 'danger');
+                showAlert(data.message || appTranslate('runtime.error_querying_vm_status', 'Error querying VM status.'), 'danger');
             }
         })
         .catch(error => {
             console.error('Error querying VM status:', error);
-            showAlert('Error querying VM status.', 'danger');
+            showAlert(appTranslate('runtime.error_querying_vm_status', 'Error querying VM status.'), 'danger');
         });
 }
 
@@ -584,7 +580,7 @@ function refreshVmLog() {
         .then(data => {
             const container = document.getElementById('vm-log-container');
             if (!(data.success && data.log && data.log.length > 0)) {
-                container.innerHTML = '<p class="text-muted mb-0">No VM events logged yet.</p>';
+                container.innerHTML = `<p class="text-muted mb-0">${appTranslate('oms.no_vm_events', 'No VM events logged yet.')}</p>`;
                 return;
             }
 
@@ -651,9 +647,9 @@ function renderMetersTable() {
     if (omsMetersCache.length === 0) {
         table.style.display = 'none';
         noMetersMsg.style.display = 'block';
-        noMetersMsg.innerHTML = '<p class="text-muted mb-0">No OMS meters detected yet. Meters will appear here when VM uplink data is received.</p>';
-        meta.textContent = 'No meters available';
-        pageInfo.textContent = 'Page 1/1';
+        noMetersMsg.innerHTML = `<p class="text-muted mb-0">${appTranslate('oms.no_meters_detected', 'No OMS meters detected yet. Meters will appear here when VM uplink data is received.')}</p>`;
+        meta.textContent = appTranslate('oms.no_meters_available', 'No meters available');
+        pageInfo.textContent = `${appTranslate('telemetry.current_page', 'Page')} 1/1`;
         prevBtn.disabled = true;
         nextBtn.disabled = true;
         tbody.innerHTML = '';
@@ -669,9 +665,9 @@ function renderMetersTable() {
     if (filtered.length === 0) {
         table.style.display = 'none';
         noMetersMsg.style.display = 'block';
-        noMetersMsg.innerHTML = '<p class="text-muted mb-0">No meters match the current search.</p>';
+        noMetersMsg.innerHTML = `<p class="text-muted mb-0">${appTranslate('oms.no_meters_match_search', 'No meters match the current search.')}</p>`;
         meta.textContent = `Showing 0 of ${omsMetersCache.length}`;
-        pageInfo.textContent = 'Page 1/1';
+        pageInfo.textContent = `${appTranslate('telemetry.current_page', 'Page')} 1/1`;
         prevBtn.disabled = true;
         nextBtn.disabled = true;
         tbody.innerHTML = '';
@@ -688,7 +684,7 @@ function renderMetersTable() {
     tbody.innerHTML = pageItems.map(meter => `
         <tr>
             <td>
-                <div class="oms-meter-id" title="Hex: ${escapeHtml(meter.serial_hex || meter.meter_id || '')}">${escapeHtml(meter.serial || meter.meter_id || 'Unknown')}</div>
+        <div class="oms-meter-id" title="${appTranslate('common.hex', 'Hex')}: ${escapeHtml(meter.serial_hex || meter.meter_id || '')}">${escapeHtml(meter.serial || meter.meter_id || appTranslate('common.unknown', 'Unknown'))}</div>
                 <div class="oms-meter-sub">${escapeHtml(meter.meter_id || '')}</div>
             </td>
             <td>
@@ -714,7 +710,7 @@ function renderMetersTable() {
 
 function updateLastRefresh() {
     const now = new Date();
-    document.getElementById('oms-last-refresh').textContent = now.toLocaleTimeString();
+    document.getElementById('oms-last-refresh').textContent = AppTime.formatTime(now);
 }
 
 function refreshData() {

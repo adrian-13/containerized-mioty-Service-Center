@@ -23,7 +23,7 @@ Operational control plane for MIOTY base stations and sensors, with secure TLS i
 - Admin audit log stream and export.
 - Optional storage/analytics integrations:
   - TimescaleDB (operational store + telemetry)
-  - InfluxDB (optional telemetry/inventory path)
+  - InfluxDB (legacy optional integration, disabled by default)
   - Grafana (dashboard integration/proxy)
 
 ## In-App Documentation
@@ -55,7 +55,7 @@ Base Stations
 - `Sensors`
   - Inventory, attach/detach, status, details.
 - `Base Stations`
-  - Gateway inventory, state, metadata, certificates entry-point.
+  - Base station inventory, state, metadata and certificates entry-point.
 - `Network Topology`
   - Coverage mode + topology mode with link/issue filters.
 - `System Health`

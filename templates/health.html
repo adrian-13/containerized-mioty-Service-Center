@@ -686,76 +686,69 @@
 
 <div class="health-shell workspace-shell">
     <div id="healthAlert" class="alert d-none" role="alert"></div>
-    {% set can_open_grafana = current_user and current_user.get('role') == 'admin' %}
     <div class="health-controls-bar">
         <div class="health-controls-main">
             <label class="health-toggle" for="autoRefreshToggle">
                 <input class="form-check-input mt-0 me-1" type="checkbox" id="autoRefreshToggle" checked>
-                Auto-refresh
+                {{ t('common.auto_refresh', 'Auto-refresh') }}
             </label>
-            <div class="health-interval-group" id="refreshIntervalButtons" aria-label="Refresh interval">
+            <div class="health-interval-group" id="refreshIntervalButtons" aria-label="{{ t('health.refresh_interval', 'Refresh interval') }}">
                 <button type="button" class="health-interval-btn" data-interval-ms="5000">5s</button>
                 <button type="button" class="health-interval-btn active" data-interval-ms="10000">10s</button>
                 <button type="button" class="health-interval-btn" data-interval-ms="15000">15s</button>
                 <button type="button" class="health-interval-btn" data-interval-ms="30000">30s</button>
             </div>
             <button class="btn btn-primary btn-sm" id="refreshHealthBtn">
-                <i class="fas fa-sync-alt me-1"></i>Refresh now
+                <i class="fas fa-sync-alt me-1"></i>{{ t('common.refresh_now', 'Refresh now') }}
             </button>
         </div>
         <div class="health-controls-secondary">
-            {% if can_open_grafana %}
-                <a class="btn btn-outline-primary btn-sm" id="openGrafanaDashboardBtn" href="#" target="_blank" rel="noopener">
-                    <i class="fas fa-arrow-up-right-from-square me-1"></i>Open Grafana
-                </a>
-            {% else %}
-                <span class="health-embed-note">
-                    <i class="fas fa-shield-alt"></i>Tenant-scoped telemetry view
-                </span>
-            {% endif %}
-            <p class="health-controls-updated">Updated <strong id="lastRefresh">never</strong></p>
-            <p class="health-controls-cache" id="healthCacheAge">Cache -</p>
+            <span class="health-embed-note">
+                <i class="fas fa-shield-alt"></i>{{ t('health.tenant_scoped_view', 'Tenant-scoped telemetry view') }}
+            </span>
+            <p class="health-controls-updated">{{ t('common.updated', 'Updated') }} <strong id="lastRefresh">{{ t('common.never', 'never') }}</strong></p>
+            <p class="health-controls-cache" id="healthCacheAge">{{ t('common.cache', 'Cache') }} -</p>
         </div>
     </div>
 
     <div class="health-kpis workspace-kpi-grid">
         <article class="health-kpi workspace-kpi">
-            <p class="health-kpi-label workspace-kpi-label">System Uptime</p>
+            <p class="health-kpi-label workspace-kpi-label">{{ t('health.system_uptime', 'System Uptime') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiUptime">-</p>
-            <p class="health-kpi-note workspace-kpi-note">Service center runtime</p>
+            <p class="health-kpi-note workspace-kpi-note">{{ t('health.service_center_runtime', 'Service center runtime') }}</p>
         </article>
         <article class="health-kpi workspace-kpi">
-            <p class="health-kpi-label workspace-kpi-label">Sensors</p>
+            <p class="health-kpi-label workspace-kpi-label">{{ t('common.sensors', 'Sensors') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiSensors">0 / 0</p>
-            <p class="health-kpi-note workspace-kpi-note">Active / Registered</p>
+            <p class="health-kpi-note workspace-kpi-note">{{ t('health.active_registered', 'Active / Registered') }}</p>
         </article>
         <article class="health-kpi workspace-kpi">
-            <p class="health-kpi-label workspace-kpi-label">Base Stations</p>
+            <p class="health-kpi-label workspace-kpi-label">{{ t('common.base_stations', 'Base Stations') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiBaseStations">0 / 0</p>
-            <p class="health-kpi-note workspace-kpi-note">Connected / Total</p>
+            <p class="health-kpi-note workspace-kpi-note">{{ t('health.connected_total', 'Connected / Total') }}</p>
         </article>
         <article class="health-kpi workspace-kpi">
-            <p class="health-kpi-label workspace-kpi-label">Uplinks (24h)</p>
+            <p class="health-kpi-label workspace-kpi-label">{{ t('health.uplinks_24h', 'Uplinks (24h)') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiUplinks">0</p>
-            <p class="health-kpi-note workspace-kpi-note">Timescale telemetry volume</p>
+            <p class="health-kpi-note workspace-kpi-note">{{ t('health.timescale_telemetry_volume', 'Timescale telemetry volume') }}</p>
         </article>
         <article class="health-kpi workspace-kpi">
-            <p class="health-kpi-label workspace-kpi-label">Average SNR</p>
+            <p class="health-kpi-label workspace-kpi-label">{{ t('health.average_snr', 'Average SNR') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiSnr">0 dB</p>
-            <p class="health-kpi-note workspace-kpi-note">Signal quality baseline</p>
+            <p class="health-kpi-note workspace-kpi-note">{{ t('health.signal_quality_baseline', 'Signal quality baseline') }}</p>
         </article>
         <article class="health-kpi workspace-kpi">
-            <p class="health-kpi-label workspace-kpi-label">Packet Loss</p>
+            <p class="health-kpi-label workspace-kpi-label">{{ t('dashboard.packet_loss', 'Packet Loss') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiLoss">0%</p>
-            <p class="health-kpi-note workspace-kpi-note">Across tracked sensors</p>
+            <p class="health-kpi-note workspace-kpi-note">{{ t('health.across_tracked_sensors', 'Across tracked sensors') }}</p>
         </article>
     </div>
 
     <section class="health-panel workspace-panel grafana-workspace-panel">
         <div class="health-panel-head workspace-panel-head grafana-workspace-head">
             <div class="grafana-workspace-title">
-                <h5><i class="fas fa-chart-line me-2"></i>Telemetry Analytics Workspace</h5>
-                <p class="grafana-workspace-sub">Native charts from Service Center telemetry API (tenant-aware)</p>
+                <h5><i class="fas fa-chart-line me-2"></i>{{ t('health.telemetry_analytics_workspace', 'Telemetry Analytics Workspace') }}</h5>
+                <p class="grafana-workspace-sub">{{ t('health.native_charts_subtitle', 'Native charts from the platform telemetry API (tenant-aware)') }}</p>
             </div>
             <div class="grafana-workspace-controls">
                 <div class="range-group" id="timeRangeButtons">
@@ -772,25 +765,25 @@
                             id="grafanaLayoutMenuBtn"
                             data-bs-toggle="dropdown"
                             aria-expanded="false"
-                            title="Layout options"
+                            title="{{ t('dashboard.layout_options', 'Layout options') }}"
                         >
                             <i class="fas fa-sliders-h"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="grafanaLayoutMenuBtn">
                             <li>
                                 <button class="dropdown-item" id="toggleGrafanaLayoutEditBtn" type="button">
-                                    <i class="fas fa-grip-vertical"></i><span>Customize layout</span>
+                                    <i class="fas fa-grip-vertical"></i><span>{{ t('dashboard.customize_layout', 'Customize layout') }}</span>
                                 </button>
                             </li>
                             <li>
                                 <button class="dropdown-item" id="revertGrafanaLayoutBtn" type="button">
-                                    <i class="fas fa-history"></i><span>Revert to saved</span>
+                                    <i class="fas fa-history"></i><span>{{ t('dashboard.revert_saved', 'Revert to saved') }}</span>
                                 </button>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <button class="dropdown-item" id="resetGrafanaLayoutBtn" type="button">
-                                    <i class="fas fa-undo"></i><span>Reset to default</span>
+                                    <i class="fas fa-undo"></i><span>{{ t('dashboard.reset_default', 'Reset to default') }}</span>
                                 </button>
                             </li>
                         </ul>
@@ -801,17 +794,17 @@
         <div class="health-panel-body workspace-panel-body">
             <div class="grafana-edit-banner" id="grafanaEditBanner">
                 <div class="grafana-edit-banner-text">
-                    Layout edit mode is active. Drag panels or resize from bottom-right corner. Changes are auto-saved on Finish.
+                    {{ t('health.layout_edit_mode_active', 'Layout edit mode is active. Drag panels or resize from bottom-right corner. Changes are auto-saved on Finish.') }}
                 </div>
                 <div class="grafana-edit-banner-actions">
                     <button class="btn btn-primary btn-sm" id="finishGrafanaLayoutEditBtn" type="button">
-                        <i class="fas fa-check me-1"></i>Finish
+                        <i class="fas fa-check me-1"></i>{{ t('dashboard.finish', 'Finish') }}
                     </button>
                     <button class="btn btn-outline-primary btn-sm" id="quickRevertGrafanaLayoutBtn" type="button">
-                        <i class="fas fa-history me-1"></i>Revert
+                        <i class="fas fa-history me-1"></i>{{ t('dashboard.revert', 'Revert') }}
                     </button>
                     <button class="btn btn-outline-secondary btn-sm" id="quickResetGrafanaLayoutBtn" type="button">
-                        <i class="fas fa-undo me-1"></i>Reset to default
+                        <i class="fas fa-undo me-1"></i>{{ t('dashboard.reset_default', 'Reset to default') }}
                     </button>
                 </div>
             </div>
@@ -820,7 +813,7 @@
                 <article class="grafana-card grid-stack-item" gs-id="throughput" gs-x="0" gs-y="0" gs-w="8" gs-h="9">
                     <div class="grid-stack-item-content grafana-card-content">
                         <div class="grafana-card-body">
-                            <p class="analytics-card-title">Uplinks / min</p>
+                            <p class="analytics-card-title">{{ t('health.uplinks_per_min', 'Uplinks / min') }}</p>
                             <div class="analytics-chart-wrap">
                                 <canvas id="chartThroughput"></canvas>
                             </div>
@@ -830,7 +823,7 @@
                 <article class="grafana-card grid-stack-item" gs-id="active_sensors" gs-x="8" gs-y="0" gs-w="4" gs-h="5">
                     <div class="grid-stack-item-content grafana-card-content">
                         <div class="grafana-card-body">
-                            <p class="analytics-card-title">Active Sensors</p>
+                            <p class="analytics-card-title">{{ t('dashboard.active_sensors', 'Active Sensors') }}</p>
                             <div class="analytics-stat-wrap">
                                 <div class="analytics-stat-value" id="activeSensorsStat">0</div>
                             </div>
@@ -840,7 +833,7 @@
                 <article class="grafana-card grid-stack-item" gs-id="active_base_stations" gs-x="8" gs-y="5" gs-w="4" gs-h="4">
                     <div class="grid-stack-item-content grafana-card-content">
                         <div class="grafana-card-body">
-                            <p class="analytics-card-title">Active Base Stations</p>
+                            <p class="analytics-card-title">{{ t('health.active_base_stations', 'Active Base Stations') }}</p>
                             <div class="analytics-stat-wrap">
                                 <div class="analytics-stat-value" id="activeBaseStationsStat">0</div>
                             </div>
@@ -850,7 +843,7 @@
                 <article class="grafana-card grid-stack-item" gs-id="signal" gs-x="0" gs-y="9" gs-w="8" gs-h="9">
                     <div class="grid-stack-item-content grafana-card-content">
                         <div class="grafana-card-body">
-                            <p class="analytics-card-title">Signal Quality Trends</p>
+                            <p class="analytics-card-title">{{ t('health.signal_quality_trends', 'Signal Quality Trends') }}</p>
                             <div class="analytics-chart-wrap">
                                 <canvas id="chartSignal"></canvas>
                             </div>
@@ -860,7 +853,7 @@
                 <article class="grafana-card grid-stack-item" gs-id="top_sensors" gs-x="0" gs-y="18" gs-w="6" gs-h="8">
                     <div class="grid-stack-item-content grafana-card-content">
                         <div class="grafana-card-body">
-                            <p class="analytics-card-title">Top Sensors by Uplink Count</p>
+                            <p class="analytics-card-title">{{ t('health.top_sensors_uplink_count', 'Top Sensors by Uplink Count') }}</p>
                             <div class="analytics-chart-wrap">
                                 <canvas id="chartTopSensors"></canvas>
                             </div>
@@ -870,20 +863,20 @@
                 <article class="grafana-card grid-stack-item" gs-id="recent_messages" gs-x="6" gs-y="18" gs-w="6" gs-h="8">
                     <div class="grid-stack-item-content grafana-card-content">
                         <div class="grafana-card-body">
-                            <p class="analytics-card-title">Recent Uplink Messages</p>
+                            <p class="analytics-card-title">{{ t('health.recent_uplink_messages', 'Recent Uplink Messages') }}</p>
                             <div class="analytics-table-wrap">
                                 <table class="table table-sm align-middle">
                                     <thead>
                                         <tr>
-                                            <th>Time</th>
-                                            <th>Sensor</th>
-                                            <th>BS</th>
-                                            <th>SNR</th>
-                                            <th>RSSI</th>
+                                            <th>{{ t('common.time', 'Time') }}</th>
+                                            <th>{{ t('common.sensor', 'Sensor') }}</th>
+                                            <th>{{ t('common.base_station_short', 'BS') }}</th>
+                                            <th>{{ t('common.snr', 'SNR') }}</th>
+                                            <th>{{ t('common.rssi', 'RSSI') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody id="recentMessagesRows">
-                                        <tr><td colspan="5" class="text-muted">No telemetry data yet.</td></tr>
+                                        <tr><td colspan="5" class="text-muted">{{ t('health.no_telemetry_data_yet', 'No telemetry data yet.') }}</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -898,24 +891,24 @@
         <div class="col-xl-6">
             <section class="health-panel workspace-panel h-100">
                 <div class="health-panel-head workspace-panel-head">
-                    <h5><i class="fas fa-server me-2"></i>Base Station Runtime Health</h5>
-                    <span class="health-panel-sub workspace-panel-sub">CPU, memory, duty cycle, uptime</span>
+                    <h5><i class="fas fa-server me-2"></i>{{ t('health.base_station_runtime_health', 'Base Station Runtime Health') }}</h5>
+                    <span class="health-panel-sub workspace-panel-sub">{{ t('health.runtime_health_subtitle', 'CPU, memory, duty cycle, uptime') }}</span>
                 </div>
                 <div class="health-panel-body workspace-panel-body">
                     <div class="health-table-scroll">
                         <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
-                                    <th>Station</th>
-                                    <th>Status</th>
-                                    <th>CPU</th>
-                                    <th>Mem</th>
-                                    <th>Duty</th>
-                                    <th>Uptime</th>
+                                    <th>{{ t('health.station', 'Station') }}</th>
+                                    <th>{{ t('common.status', 'Status') }}</th>
+                                    <th>{{ t('common.cpu', 'CPU') }}</th>
+                                    <th>{{ t('common.memory_short', 'Mem') }}</th>
+                                    <th>{{ t('health.duty', 'Duty') }}</th>
+                                    <th>{{ t('health.uptime', 'Uptime') }}</th>
                                 </tr>
                             </thead>
                             <tbody id="runtimeBaseStationsRows">
-                                <tr><td colspan="6" class="text-muted">No base stations in runtime snapshot.</td></tr>
+                                <tr><td colspan="6" class="text-muted">{{ t('health.no_base_stations_runtime_snapshot', 'No base stations in runtime snapshot.') }}</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -925,24 +918,24 @@
         <div class="col-xl-6">
             <section class="health-panel workspace-panel h-100">
                 <div class="health-panel-head workspace-panel-head">
-                    <h5><i class="fas fa-signal me-2"></i>Sensor Reliability</h5>
-                    <span class="health-panel-sub workspace-panel-sub">Worst packet-loss links first</span>
+                    <h5><i class="fas fa-signal me-2"></i>{{ t('health.sensor_reliability', 'Sensor Reliability') }}</h5>
+                    <span class="health-panel-sub workspace-panel-sub">{{ t('health.worst_packet_loss_first', 'Worst packet-loss links first') }}</span>
                 </div>
                 <div class="health-panel-body workspace-panel-body">
                     <div class="health-table-scroll">
                         <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
-                                    <th>Sensor</th>
-                                    <th>Received</th>
-                                    <th>Lost</th>
-                                    <th>Loss %</th>
-                                    <th>Avg SNR</th>
-                                    <th>Avg RSSI</th>
+                                    <th>{{ t('common.sensor', 'Sensor') }}</th>
+                                    <th>{{ t('health.received', 'Received') }}</th>
+                                    <th>{{ t('health.lost', 'Lost') }}</th>
+                                    <th>{{ t('health.loss_percent', 'Loss %') }}</th>
+                                    <th>{{ t('health.avg_snr', 'Avg SNR') }}</th>
+                                    <th>{{ t('health.avg_rssi', 'Avg RSSI') }}</th>
                                 </tr>
                             </thead>
                             <tbody id="runtimeSensorsRows">
-                                <tr><td colspan="6" class="text-muted">No sensor packet statistics available.</td></tr>
+                                <tr><td colspan="6" class="text-muted">{{ t('health.no_sensor_packet_stats', 'No sensor packet statistics available.') }}</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1120,11 +1113,11 @@ function saveGrafanaLayout() {
         const layout = captureGrafanaLayout();
         localStorage.setItem(GRAFANA_LAYOUT_STATE.storageKey, JSON.stringify(layout));
         saveGrafanaLayoutSession(layout);
-        setAlert("Layout saved.", "success");
+        setAlert(appTranslate('runtime.layout_saved', 'Layout saved.'), "success");
         updateGrafanaLayoutActionState();
     } catch (error) {
         console.error("Failed to save grafana layout:", error);
-        setAlert("Cannot save layout in this browser.", "warning");
+        setAlert(appTranslate('runtime.cannot_save_layout_browser', 'Cannot save layout in this browser.'), "warning");
     }
 }
 
@@ -1134,7 +1127,7 @@ function initGrafanaLayoutEngine() {
 
     if (typeof GridStack === "undefined") {
         console.error("GridStack library is not available.");
-        setAlert("Layout engine failed to load. Refresh page and verify internet access.", "warning");
+        setAlert(appTranslate('runtime.layout_engine_failed', 'Layout engine failed to load. Refresh page and verify internet access.'), "warning");
         return;
     }
 
@@ -1203,9 +1196,9 @@ function revertGrafanaLayout() {
     clearGrafanaLayoutSession();
     loadGrafanaLayout(true);
     if (hasSaved) {
-        setAlert("Layout reverted to last saved state.", "info");
+        setAlert(appTranslate('runtime.layout_reverted_saved', 'Layout reverted to last saved state.'), "info");
     } else {
-        setAlert("No saved layout found. Default layout loaded.", "warning");
+        setAlert(appTranslate('runtime.no_saved_layout_found', 'No saved layout found. Default layout loaded.'), "warning");
     }
 }
 
@@ -1217,7 +1210,7 @@ function resetGrafanaLayout() {
     }
     clearGrafanaLayoutSession();
     loadGrafanaLayout();
-    setAlert("Layout reset to default.", "info");
+    setAlert(appTranslate('runtime.layout_reset_default', 'Layout reset to default.'), "info");
     updateGrafanaLayoutActionState();
 }
 
@@ -1236,8 +1229,8 @@ function setGrafanaLayoutEditMode(enabled) {
     if (toggleBtn) {
         toggleBtn.classList.toggle("active", GRAFANA_LAYOUT_STATE.editing);
         toggleBtn.innerHTML = GRAFANA_LAYOUT_STATE.editing
-            ? '<i class="fas fa-check"></i><span>Finish customizing</span>'
-            : '<i class="fas fa-grip-vertical"></i><span>Customize layout</span>';
+        ? `<i class="fas fa-check"></i><span>${appTranslate('dashboard.finish_customizing', 'Finish customizing')}</span>`
+        : `<i class="fas fa-grip-vertical"></i><span>${appTranslate('dashboard.customize_layout', 'Customize layout')}</span>`;
     }
     const menuBtn = document.getElementById("grafanaLayoutMenuBtn");
     if (menuBtn) {
@@ -1325,7 +1318,7 @@ function updateLastRefresh(timestamp = Date.now()) {
     const target = document.getElementById("lastRefresh");
     if (!target) return;
     const now = new Date(Number(timestamp) || Date.now());
-    target.textContent = now.toLocaleTimeString();
+    target.textContent = AppTime.formatTime(now);
 }
 
 function setHealthCacheMeta(meta = {}) {
@@ -1372,7 +1365,7 @@ function renderBaseStations(rows) {
     const body = document.getElementById("runtimeBaseStationsRows");
     if (!body) return;
     if (!Array.isArray(rows) || rows.length === 0) {
-        body.innerHTML = '<tr><td colspan="6" class="text-muted">No base stations in runtime snapshot.</td></tr>';
+    body.innerHTML = `<tr><td colspan="6" class="text-muted">${appTranslate('health.no_base_stations_runtime_snapshot', 'No base stations in runtime snapshot.')}</td></tr>`;
         return;
     }
 
@@ -1397,7 +1390,7 @@ function renderSensors(rows) {
     const body = document.getElementById("runtimeSensorsRows");
     if (!body) return;
     if (!Array.isArray(rows) || rows.length === 0) {
-        body.innerHTML = '<tr><td colspan="6" class="text-muted">No sensor packet statistics available.</td></tr>';
+    body.innerHTML = `<tr><td colspan="6" class="text-muted">${appTranslate('health.no_sensor_packet_stats', 'No sensor packet statistics available.')}</td></tr>`;
         return;
     }
 
@@ -1443,7 +1436,7 @@ function formatShortClock(value) {
     if (!value) return "-";
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return "-";
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    return AppTime.formatTime(d, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 function formatMetricNumber(value, digits = 2) {
@@ -1626,7 +1619,7 @@ function renderRecentMessages(rows) {
     if (!body) return;
     const list = Array.isArray(rows) ? rows : [];
     if (list.length === 0) {
-        body.innerHTML = '<tr><td colspan="5" class="text-muted">No telemetry data yet.</td></tr>';
+    body.innerHTML = `<tr><td colspan="5" class="text-muted">${appTranslate('health.no_telemetry_data_yet', 'No telemetry data yet.')}</td></tr>`;
         return;
     }
 
@@ -1646,7 +1639,7 @@ function applyGrafanaPanels(payload) {
     const activeBaseStationsStat = document.getElementById("activeBaseStationsStat");
 
     if (!payload || !payload.success) {
-        updateGrafanaNotice(`Telemetry workspace unavailable: ${payload?.error || "Unknown error"}`, "warning");
+        updateGrafanaNotice(appTranslate('runtime.telemetry_workspace_unavailable', 'Telemetry workspace unavailable: {error}', { error: payload?.error || appTranslate('common.unknown', 'Unknown') }), "warning");
         if (activeSensorsStat) activeSensorsStat.textContent = "0";
         if (activeBaseStationsStat) activeBaseStationsStat.textContent = "0";
         renderRecentMessages([]);
@@ -1670,24 +1663,6 @@ function applyGrafanaPanels(payload) {
     renderRecentMessages(recentMessages);
 }
 
-async function loadGrafanaDashboardLink() {
-    const openBtn = document.getElementById("openGrafanaDashboardBtn");
-    if (!openBtn) return;
-    try {
-        const payload = await fetchJson("/api/grafana/dashboard-url");
-        if (payload && payload.success && payload.url) {
-            openBtn.href = payload.url;
-            openBtn.classList.remove("disabled");
-        } else {
-            openBtn.href = "#";
-            openBtn.classList.add("disabled");
-        }
-    } catch (error) {
-        openBtn.href = "#";
-        openBtn.classList.add("disabled");
-    }
-}
-
 async function fetchJson(url) {
     const response = await fetch(url);
     const payload = await response.json();
@@ -1707,7 +1682,7 @@ async function refreshRuntimeOnly(options = {}) {
 
     const applyRuntimePayload = (healthPayload, meta = {}) => {
         if (!healthPayload || !healthPayload.success) {
-            throw new Error(healthPayload?.error || "Failed to load health data");
+            throw new Error(healthPayload?.error || appTranslate('health.failed_load_data', 'Failed to load health data'));
         }
         updateKpis(healthPayload);
         renderBaseStations(healthPayload.base_stations || []);
@@ -1727,7 +1702,7 @@ async function refreshRuntimeOnly(options = {}) {
             async () => {
                 const payload = await fetchJson("/api/health");
                 if (!payload?.success) {
-                    throw new Error(payload?.error || "Failed to load health data");
+                    throw new Error(payload?.error || appTranslate('health.failed_load_data', 'Failed to load health data'));
                 }
                 return payload;
             },
@@ -1848,7 +1823,7 @@ async function refreshWorkspace() {
         setAlert("", "info");
     } catch (error) {
         console.error("Health workspace refresh failed:", error);
-        setAlert(`Unable to refresh System Health: ${error.message}`, "danger");
+        setAlert(appTranslate('runtime.unable_refresh_system_health', 'Unable to refresh System Health: {error}', { error: error.message }), "danger");
     }
 }
 
@@ -1867,7 +1842,7 @@ function resetRefreshTimer() {
             await Promise.all(jobs);
         } catch (error) {
             console.error("Health refresh failed:", error);
-            setAlert(`Auto refresh failed: ${error.message}`, "warning");
+            setAlert(appTranslate('runtime.auto_refresh_failed', 'Auto refresh failed: {error}', { error: error.message }), "warning");
         }
     }, HEALTH_STATE.intervalMs);
 }
@@ -1929,7 +1904,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             refreshGrafanaWorkspace().catch((error) => {
                 console.error("Telemetry workspace refresh failed:", error);
-                setAlert(`Telemetry workspace refresh failed: ${error.message}`, "warning");
+                setAlert(appTranslate('runtime.telemetry_refresh_failed', 'Telemetry workspace refresh failed: {error}', { error: error.message }), "warning");
             });
         });
     });
@@ -1960,7 +1935,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resetRefreshTimer();
             refreshGrafanaWorkspace().catch((error) => {
                 console.error("Telemetry workspace refresh failed:", error);
-                setAlert(`Telemetry workspace refresh failed: ${error.message}`, "warning");
+                setAlert(appTranslate('runtime.telemetry_refresh_failed', 'Telemetry workspace refresh failed: {error}', { error: error.message }), "warning");
             });
         });
     });
@@ -1992,7 +1967,6 @@ document.addEventListener("DOMContentLoaded", () => {
         requestAnimationFrame(() => grafanaGridEl.classList.add("layout-ready"));
     }
 
-    loadGrafanaDashboardLink();
     const cacheState = hydrateWorkspaceFromSessionCache();
     healthRuntimeHydrated = Boolean(cacheState.runtimeHydrated);
     healthAnalyticsHydrated = Boolean(cacheState.analyticsHydrated);
@@ -2011,7 +1985,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!cacheState.analyticsFresh) {
                 refreshGrafanaWorkspace().catch((error) => {
                     console.error("Telemetry workspace lazy refresh failed:", error);
-                    setAlert(`Telemetry workspace refresh failed: ${error.message}`, "warning");
+                    setAlert(appTranslate('runtime.telemetry_refresh_failed', 'Telemetry workspace refresh failed: {error}', { error: error.message }), "warning");
                 });
             }
         }, { rootMargin: "180px" });
@@ -2022,13 +1996,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!cacheState.runtimeFresh) {
         refreshRuntimeOnly().catch((error) => {
             console.error("Runtime refresh failed:", error);
-            setAlert(`Runtime refresh failed: ${error.message}`, "warning");
+            setAlert(appTranslate('runtime.runtime_refresh_failed', 'Runtime refresh failed: {error}', { error: error.message }), "warning");
         });
     }
     if (!cacheState.analyticsFresh && healthAnalyticsVisible) {
         refreshGrafanaWorkspace().catch((error) => {
             console.error("Telemetry workspace refresh failed:", error);
-            setAlert(`Telemetry workspace refresh failed: ${error.message}`, "warning");
+            setAlert(appTranslate('runtime.telemetry_refresh_failed', 'Telemetry workspace refresh failed: {error}', { error: error.message }), "warning");
         });
     }
     resetRefreshTimer();

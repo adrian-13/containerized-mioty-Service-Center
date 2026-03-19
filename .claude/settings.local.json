@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/AdriánJavorček/OneDrive - Kinet s.r.o/Pracovná plocha/MIOTY/containerized-mioty-Service-Center/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\AdriánJavorček\\OneDrive - Kinet s.r.o\\Pracovná plocha\\MIOTY\\containerized-mioty-Service-Center"
+    ]
+  }
+}

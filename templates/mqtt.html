@@ -471,28 +471,28 @@
         <div class="workspace-panel-body">
             <div class="mqtt-head">
                 <div>
-                    <h2 class="mqtt-head-title">MQTT Broker Monitoring</h2>
-                    <p class="mqtt-head-sub">Live broker runtime telemetry and publish diagnostics</p>
+                    <h2 class="mqtt-head-title">{{ t('mqtt.title', 'MQTT Broker Monitoring') }}</h2>
+                    <p class="mqtt-head-sub">{{ t('mqtt.subtitle', 'Live broker runtime telemetry and publish diagnostics') }}</p>
                 </div>
             </div>
             <div class="mqtt-controls-bar">
                 <div class="mqtt-controls-main">
                     <label class="mqtt-toggle mb-0" for="mqttAutoRefresh">
                         <input class="form-check-input mt-0 me-1" type="checkbox" id="mqttAutoRefresh" checked>
-                        Auto-refresh
+                        {{ t('dashboard.auto_refresh', 'Auto-refresh') }}
                     </label>
-                    <div class="mqtt-interval-group" id="mqttIntervalButtons" aria-label="Refresh interval">
+                    <div class="mqtt-interval-group" id="mqttIntervalButtons" aria-label="{{ t('mqtt.refresh_interval', 'Refresh interval') }}">
                         <button type="button" class="mqtt-interval-btn" data-interval-sec="2">2s</button>
                         <button type="button" class="mqtt-interval-btn active" data-interval-sec="5">5s</button>
                         <button type="button" class="mqtt-interval-btn" data-interval-sec="10">10s</button>
                         <button type="button" class="mqtt-interval-btn" data-interval-sec="30">30s</button>
                     </div>
                     <button type="button" class="btn btn-primary btn-sm" id="mqttBtnRefresh">
-                        <i class="fas fa-sync-alt me-1"></i>Refresh now
+                        <i class="fas fa-sync-alt me-1"></i>{{ t('mqtt.refresh_now', 'Refresh now') }}
                     </button>
                 </div>
                 <div class="mqtt-controls-secondary">
-                    <p class="mqtt-updated">Updated <strong id="mqttUpdatedLabel">--:--:--</strong></p>
+                    <p class="mqtt-updated">{{ t('mqtt.updated', 'Updated') }} <strong id="mqttUpdatedLabel">--:--:--</strong></p>
                 </div>
             </div>
         </div>
@@ -500,59 +500,59 @@
 
     <section class="mqtt-status-row">
         <article class="mqtt-status-card">
-            <p class="mqtt-label">Connection</p>
+            <p class="mqtt-label">{{ t('mqtt.connection', 'Connection') }}</p>
             <div class="mqtt-value">
-                <span id="mqttConnectionPill" class="mqtt-status-pill offline">Offline</span>
+                <span id="mqttConnectionPill" class="mqtt-status-pill offline">{{ t('common.offline', 'Offline') }}</span>
             </div>
-            <p class="mqtt-note" id="mqttConnectionMeta">Waiting for data...</p>
+            <p class="mqtt-note" id="mqttConnectionMeta">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</p>
         </article>
         <article class="mqtt-status-card">
-            <p class="mqtt-label">Broker</p>
+            <p class="mqtt-label">{{ t('mqtt.broker', 'Broker') }}</p>
             <p class="mqtt-value" id="mqttBrokerValue">--</p>
-            <p class="mqtt-note" id="mqttTopicValue">Topic: --</p>
+            <p class="mqtt-note" id="mqttTopicValue">{{ t('mqtt.topic_label', 'Topic') }}: --</p>
         </article>
         <article class="mqtt-status-card">
-            <p class="mqtt-label">Input Queue</p>
+            <p class="mqtt-label">{{ t('mqtt.input_queue', 'Input Queue') }}</p>
             <p class="mqtt-value" id="mqttInQueueValue">0</p>
-            <p class="mqtt-note">Incoming commands/config</p>
+            <p class="mqtt-note">{{ t('mqtt.input_queue_note', 'Incoming commands/config') }}</p>
         </article>
         <article class="mqtt-status-card">
-            <p class="mqtt-label">Output Queue</p>
+            <p class="mqtt-label">{{ t('mqtt.output_queue', 'Output Queue') }}</p>
             <p class="mqtt-value" id="mqttOutQueueValue">0</p>
-            <p class="mqtt-note">Outgoing publishes/acks</p>
+            <p class="mqtt-note">{{ t('mqtt.output_queue_note', 'Outgoing publishes/acks') }}</p>
         </article>
     </section>
 
     <section class="workspace-panel">
         <div class="workspace-panel-head">
-            <h5><i class="fas fa-bell me-2"></i>Monitoring + Alerting</h5>
-            <small class="workspace-panel-sub">Queue depth, retry failures, DB latency and MQTT reconnect behavior</small>
+            <h5><i class="fas fa-bell me-2"></i>{{ t('mqtt.monitoring_alerting', 'Monitoring + Alerting') }}</h5>
+            <small class="workspace-panel-sub">{{ t('mqtt.monitoring_subtitle', 'Queue depth, retry failures, DB latency and MQTT reconnect behavior') }}</small>
         </div>
         <div class="workspace-panel-body">
             <div class="mqtt-health-grid">
                 <article class="mqtt-health-card neutral" id="mqttHealthQueueCard">
-                    <p class="mqtt-label">Queue Depth</p>
+                    <p class="mqtt-label">{{ t('mqtt.queue_depth', 'Queue Depth') }}</p>
                     <p class="mqtt-value" id="mqttHealthQueueValue">0.0%</p>
-                    <p class="mqtt-health-note" id="mqttHealthQueueNote">MQTT in/out and DB queue utilization</p>
+                    <p class="mqtt-health-note" id="mqttHealthQueueNote">{{ t('mqtt.queue_util_note', 'MQTT in/out and DB queue utilization') }}</p>
                 </article>
                 <article class="mqtt-health-card neutral" id="mqttHealthRetryCard">
-                    <p class="mqtt-label">Retry Fail Rate</p>
+                    <p class="mqtt-label">{{ t('mqtt.retry_fail_rate', 'Retry Fail Rate') }}</p>
                     <p class="mqtt-value" id="mqttHealthRetryValue">0.00%</p>
-                    <p class="mqtt-health-note" id="mqttHealthRetryNote">Publish and DB write retries</p>
+                    <p class="mqtt-health-note" id="mqttHealthRetryNote">{{ t('mqtt.retry_note', 'Publish and DB write retries') }}</p>
                 </article>
                 <article class="mqtt-health-card neutral" id="mqttHealthLatencyCard">
-                    <p class="mqtt-label">DB Write Latency</p>
+                    <p class="mqtt-label">{{ t('mqtt.db_write_latency', 'DB Write Latency') }}</p>
                     <p class="mqtt-value" id="mqttHealthLatencyValue">N/A</p>
-                    <p class="mqtt-health-note" id="mqttHealthLatencyNote">Timescale write time</p>
+                    <p class="mqtt-health-note" id="mqttHealthLatencyNote">{{ t('mqtt.latency_note', 'Timescale write time') }}</p>
                 </article>
                 <article class="mqtt-health-card neutral" id="mqttHealthReconnectCard">
-                    <p class="mqtt-label">MQTT Reconnect Count</p>
+                    <p class="mqtt-label">{{ t('mqtt.reconnect_count', 'MQTT Reconnect Count') }}</p>
                     <p class="mqtt-value" id="mqttHealthReconnectValue">0/h</p>
-                    <p class="mqtt-health-note" id="mqttHealthReconnectNote">Reconnect frequency (last hour)</p>
+                    <p class="mqtt-health-note" id="mqttHealthReconnectNote">{{ t('mqtt.reconnect_note', 'Reconnect frequency (last hour)') }}</p>
                 </article>
             </div>
             <ul class="mqtt-alert-list" id="mqttAlertsList">
-                <li class="mqtt-alert-item good">No critical runtime signals detected.</li>
+                <li class="mqtt-alert-item good">{{ t('mqtt.no_critical_runtime_signals', 'No critical runtime signals detected.') }}</li>
             </ul>
         </div>
     </section>
@@ -561,22 +561,22 @@
     <section class="mqtt-publish-panel">
         <div class="mqtt-publish-head">
             <div>
-                <h6 class="mqtt-publish-title">MQTT Publish Test</h6>
-                <p class="mqtt-publish-note" id="mqttBaseTopicNote">Base topic: --</p>
+                <h6 class="mqtt-publish-title">{{ t('mqtt.publish_test', 'MQTT Publish Test') }}</h6>
+                <p class="mqtt-publish-note" id="mqttBaseTopicNote">{{ t('mqtt.base_topic_label', 'Base topic') }}: --</p>
             </div>
-            <div class="mqtt-publish-note">Admin tool</div>
+            <div class="mqtt-publish-note">{{ t('mqtt.admin_tool', 'Admin tool') }}</div>
         </div>
         <form id="mqttPublishForm" class="mqtt-publish-form">
             <div class="row g-2">
                 <div class="col-12 col-lg-6">
-                    <label class="form-label" for="mqttPublishTopic">Topic suffix</label>
-                    <input class="form-control form-control-sm" id="mqttPublishTopic" type="text" placeholder="ep/00124B001CBCE171/cmd" required>
+                    <label class="form-label" for="mqttPublishTopic">{{ t('mqtt.topic_suffix', 'Topic suffix') }}</label>
+                    <input class="form-control form-control-sm" id="mqttPublishTopic" type="text" placeholder="{{ t('mqtt.topic_suffix_example', 'ep/00124B001CBCE171/cmd') }}" required>
                 </div>
                 <div class="col-6 col-lg-2">
-                    <label class="form-label" for="mqttPublishMode">Payload</label>
+                    <label class="form-label" for="mqttPublishMode">{{ t('mqtt.payload', 'Payload') }}</label>
                     <select class="form-select form-select-sm" id="mqttPublishMode">
-                        <option value="text">Text</option>
-                        <option value="json">JSON</option>
+                        <option value="text">{{ t('mqtt.payload_text', 'Text') }}</option>
+                        <option value="json">{{ t('common.json', 'JSON') }}</option>
                     </select>
                 </div>
                 <div class="col-6 col-lg-2">
@@ -590,16 +590,16 @@
                 <div class="col-12 col-lg-2 d-flex align-items-end">
                     <label class="mqtt-toggle mb-0">
                         <input class="form-check-input mt-0" id="mqttPublishRetain" type="checkbox">
-                        Retain
+                        {{ t('mqtt.retain', 'Retain') }}
                     </label>
                 </div>
                 <div class="col-12">
-                    <label class="form-label" for="mqttPublishPayload">Payload</label>
-                    <textarea class="form-control form-control-sm mqtt-mono" id="mqttPublishPayload" rows="3" placeholder='Example JSON: {"command":"status"}'></textarea>
+                    <label class="form-label" for="mqttPublishPayload">{{ t('mqtt.payload', 'Payload') }}</label>
+                    <textarea class="form-control form-control-sm mqtt-mono" id="mqttPublishPayload" rows="3" placeholder='{{ t('mqtt.payload_example_json', 'Example JSON: {\"command\":\"status\"}') }}'></textarea>
                 </div>
                 <div class="col-12 d-flex justify-content-end">
                     <button class="btn btn-sm btn-primary" type="submit" id="mqttPublishBtn">
-                        <i class="fas fa-paper-plane me-1"></i>Queue publish
+                        <i class="fas fa-paper-plane me-1"></i>{{ t('mqtt.queue_publish', 'Queue publish') }}
                     </button>
                 </div>
             </div>
@@ -609,43 +609,42 @@
 
     <section class="workspace-panel mqtt-guide-panel">
         <div class="workspace-panel-head">
-            <h5><i class="fas fa-book-open me-2"></i>MQTT Test Guide</h5>
-            <small class="workspace-panel-sub">How to test topics and payloads safely</small>
+            <h5><i class="fas fa-book-open me-2"></i>{{ t('mqtt.test_guide', 'MQTT Test Guide') }}</h5>
+            <small class="workspace-panel-sub">{{ t('mqtt.test_guide_subtitle', 'How to test topics and payloads safely') }}</small>
         </div>
         <div class="workspace-panel-body">
             <p class="mqtt-guide-intro">
-                Use <strong>Topic suffix</strong> (without base topic), choose payload mode, then queue message.
-                In this deployment only users with admin/config permissions can publish test messages.
+                {{ t('mqtt.guide_intro_prefix', 'Use') }} <strong>{{ t('mqtt.topic_suffix', 'Topic suffix') }}</strong> {{ t('mqtt.guide_intro_suffix', '(without base topic), choose payload mode, then queue message. In this deployment only users with admin/config permissions can publish test messages.') }}
             </p>
 
             <div class="mqtt-guide-grid">
                 <article class="mqtt-guide-item">
-                    <h6>1) Sensor command - text payload</h6>
-                    <p>Quick command to one sensor endpoint.</p>
+                    <h6>{{ t('mqtt.guide_step_1_title', '1) Sensor command - text payload') }}</h6>
+                    <p>{{ t('mqtt.guide_step_1_note', 'Quick command to one sensor endpoint.') }}</p>
                     <pre class="mqtt-guide-code">Topic suffix: ep/00124B001CBCE171/cmd
 Payload mode: text
 Payload: status</pre>
                 </article>
 
                 <article class="mqtt-guide-item">
-                    <h6>2) Sensor command - JSON payload</h6>
-                    <p>Attach sensor to selected base station(s).</p>
+                    <h6>{{ t('mqtt.guide_step_2_title', '2) Sensor command - JSON payload') }}</h6>
+                    <p>{{ t('mqtt.guide_step_2_note', 'Attach sensor to selected base station(s).') }}</p>
                     <pre class="mqtt-guide-code">Topic suffix: ep/00124B001CBCE171/cmd
 Payload mode: json
 Payload: {"command":"attach","baseStations":["129AF3FFFE01F124"]}</pre>
                 </article>
 
                 <article class="mqtt-guide-item">
-                    <h6>3) Legacy register payload</h6>
-                    <p>Register/configure endpoint through legacy register topic.</p>
+                    <h6>{{ t('mqtt.guide_step_3_title', '3) Legacy register payload') }}</h6>
+                    <p>{{ t('mqtt.guide_step_3_note', 'Register/configure endpoint through legacy register topic.') }}</p>
                     <pre class="mqtt-guide-code">Topic suffix: ep/00124B001CBCE171/register
 Payload mode: json
 Payload: {"nwKey":"00112233445566778899AABBCCDDEEFF","shortAddr":"A171"}</pre>
                 </article>
 
                 <article class="mqtt-guide-item">
-                    <h6>4) What to verify after publish</h6>
-                    <p>Check that message appears in outgoing topics and that ACK/response is returned on response topic.</p>
+                    <h6>{{ t('mqtt.guide_step_4_title', '4) What to verify after publish') }}</h6>
+                    <p>{{ t('mqtt.guide_step_4_note', 'Check that message appears in outgoing topics and that ACK/response is returned on response topic.') }}</p>
                     <pre class="mqtt-guide-code">Expected ACK topic:
 ep/&lt;EUI&gt;/response
 
@@ -660,44 +659,44 @@ Watch:
 
     <section class="workspace-panel">
         <div class="workspace-panel-head">
-            <h5><i class="fas fa-chart-line me-2"></i>Runtime Counters</h5>
-            <small class="workspace-panel-sub">Incoming, queueing and publish throughput</small>
+                    <h5><i class="fas fa-chart-line me-2"></i>{{ t('mqtt.runtime_counters', 'Runtime Counters') }}</h5>
+                    <small class="workspace-panel-sub">{{ t('mqtt.runtime_counters_subtitle', 'Incoming, queueing and publish throughput') }}</small>
         </div>
         <div class="workspace-panel-body">
             <div class="row g-2">
                 <div class="col-6 col-md-4 col-xl-2">
                     <div class="mqtt-status-card">
-                        <p class="mqtt-label">Incoming Total</p>
+                        <p class="mqtt-label">{{ t('mqtt.incoming_total', 'Incoming Total') }}</p>
                         <p class="mqtt-value" id="mqttIncomingTotal">0</p>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-xl-2">
                     <div class="mqtt-status-card">
-                        <p class="mqtt-label">Incoming Queued</p>
+                        <p class="mqtt-label">{{ t('mqtt.incoming_queued', 'Incoming Queued') }}</p>
                         <p class="mqtt-value" id="mqttIncomingQueued">0</p>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-xl-2">
                     <div class="mqtt-status-card">
-                        <p class="mqtt-label">Incoming Failed</p>
+                        <p class="mqtt-label">{{ t('mqtt.incoming_failed', 'Incoming Failed') }}</p>
                         <p class="mqtt-value" id="mqttIncomingFailed">0</p>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-xl-2">
                     <div class="mqtt-status-card">
-                        <p class="mqtt-label">Published</p>
+                        <p class="mqtt-label">{{ t('mqtt.published', 'Published') }}</p>
                         <p class="mqtt-value" id="mqttOutgoingPublished">0</p>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-xl-2">
                     <div class="mqtt-status-card">
-                        <p class="mqtt-label">Publish Failed</p>
+                        <p class="mqtt-label">{{ t('mqtt.publish_failed', 'Publish Failed') }}</p>
                         <p class="mqtt-value" id="mqttOutgoingFailed">0</p>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-xl-2">
                     <div class="mqtt-status-card">
-                        <p class="mqtt-label">Recent Errors</p>
+                        <p class="mqtt-label">{{ t('mqtt.recent_errors', 'Recent Errors') }}</p>
                         <p class="mqtt-value" id="mqttRecentErrorsCount">0</p>
                     </div>
                 </div>
@@ -708,7 +707,7 @@ Watch:
     <section class="mqtt-grid">
         <article class="mqtt-stream">
             <div class="mqtt-stream-head">
-                <h6>Recent Incoming Topics</h6>
+                <h6>{{ t('mqtt.recent_incoming_topics', 'Recent Incoming Topics') }}</h6>
                 <span class="mqtt-stream-meta" id="mqttIncomingCount">0 items</span>
             </div>
             <div class="mqtt-stream-body">
@@ -717,7 +716,7 @@ Watch:
         </article>
         <article class="mqtt-stream">
             <div class="mqtt-stream-head">
-                <h6>Recent Outgoing Topics</h6>
+                <h6>{{ t('mqtt.recent_outgoing_topics', 'Recent Outgoing Topics') }}</h6>
                 <span class="mqtt-stream-meta" id="mqttOutgoingCount">0 items</span>
             </div>
             <div class="mqtt-stream-body">
@@ -726,7 +725,7 @@ Watch:
         </article>
         <article class="mqtt-stream">
             <div class="mqtt-stream-head">
-                <h6>Recent Errors</h6>
+                <h6>{{ t('mqtt.recent_errors', 'Recent Errors') }}</h6>
                 <span class="mqtt-stream-meta" id="mqttErrorsCount">0 items</span>
             </div>
             <div class="mqtt-stream-body">
@@ -766,7 +765,7 @@ Watch:
         if (!num) return '--:--:--';
         const date = new Date(num * 1000);
         if (Number.isNaN(date.getTime())) return '--:--:--';
-        return date.toLocaleTimeString();
+        return AppTime.formatTime(date);
     }
 
     function formatAgo(seconds) {
@@ -804,7 +803,7 @@ Watch:
         setText('mqttIncomingCount', `${items.length} items`);
         if (!table) return;
         if (!items.length) {
-            table.innerHTML = `<tbody><tr><td class="mqtt-empty">No incoming MQTT messages recorded yet.</td></tr></tbody>`;
+        table.innerHTML = `<tbody><tr><td class="mqtt-empty">${appTranslate('mqtt.no_incoming_messages', 'No incoming MQTT messages recorded yet.')}</td></tr></tbody>`;
             return;
         }
         const body = items.slice().reverse().map((item) => `
@@ -814,7 +813,7 @@ Watch:
             </tr>
         `).join('');
         table.innerHTML = `
-            <thead><tr><th>Topic</th><th>Time</th></tr></thead>
+            <thead><tr><th>${appTranslate('common.topic', 'Topic')}</th><th>${appTranslate('common.time', 'Time')}</th></tr></thead>
             <tbody>${body}</tbody>
         `;
     }
@@ -825,7 +824,7 @@ Watch:
         setText('mqttOutgoingCount', `${items.length} items`);
         if (!table) return;
         if (!items.length) {
-            table.innerHTML = `<tbody><tr><td class="mqtt-empty">No outgoing MQTT publishes recorded yet.</td></tr></tbody>`;
+        table.innerHTML = `<tbody><tr><td class="mqtt-empty">${appTranslate('mqtt.no_outgoing_messages', 'No outgoing MQTT publishes recorded yet.')}</td></tr></tbody>`;
             return;
         }
         const body = items.slice().reverse().map((item) => `
@@ -837,7 +836,7 @@ Watch:
             </tr>
         `).join('');
         table.innerHTML = `
-            <thead><tr><th>Topic</th><th>QoS</th><th>Retain</th><th>Time</th></tr></thead>
+            <thead><tr><th>${appTranslate('common.topic', 'Topic')}</th><th>${appTranslate('mqtt.qos', 'QoS')}</th><th>${appTranslate('mqtt.retain', 'Retain')}</th><th>${appTranslate('common.time', 'Time')}</th></tr></thead>
             <tbody>${body}</tbody>
         `;
     }
@@ -849,7 +848,7 @@ Watch:
         setText('mqttRecentErrorsCount', items.length);
         if (!table) return;
         if (!items.length) {
-            table.innerHTML = `<tbody><tr><td class="mqtt-empty">No MQTT errors captured.</td></tr></tbody>`;
+        table.innerHTML = `<tbody><tr><td class="mqtt-empty">${appTranslate('mqtt.no_errors_captured', 'No MQTT errors captured.')}</td></tr></tbody>`;
             return;
         }
         const body = items.slice().reverse().map((item) => `
@@ -860,7 +859,7 @@ Watch:
             </tr>
         `).join('');
         table.innerHTML = `
-            <thead><tr><th>Source</th><th>Error</th><th>Time</th></tr></thead>
+            <thead><tr><th>${appTranslate('common.source', 'Source')}</th><th>${appTranslate('common.error', 'Error')}</th><th>${appTranslate('common.time', 'Time')}</th></tr></thead>
             <tbody>${body}</tbody>
         `;
     }
@@ -933,7 +932,7 @@ Watch:
         if (!alertsNode) return;
         const alerts = Array.isArray(insights && insights.alerts) ? insights.alerts : [];
         if (!alerts.length) {
-            alertsNode.innerHTML = `<li class="mqtt-alert-item good">No critical runtime signals detected.</li>`;
+        alertsNode.innerHTML = `<li class="mqtt-alert-item good">${appTranslate('mqtt.no_critical_runtime_signals', 'No critical runtime signals detected.')}</li>`;
             return;
         }
         alertsNode.innerHTML = alerts.map((alert) => `
@@ -949,7 +948,7 @@ Watch:
                 throw new Error((data && data.error) || 'Unable to load MQTT runtime state');
             }
 
-            setText('mqttUpdatedLabel', new Date().toLocaleTimeString());
+            setText('mqttUpdatedLabel', AppTime.formatTime(new Date()));
             if (!data.available) {
                 renderStatus({
                     connected: false,
