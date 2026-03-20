@@ -2360,7 +2360,7 @@ class TLSServer:
                         )
                         await writer.drain()
                         # Update last seen timestamp for auto-detach functionality
-                        self.sensor_last_seen[eui.upper()] = asyncio.get_event_loop().time()
+                        self.sensor_last_seen[eui.upper()] = time.time()
 
                         # Reset warning flag if sensor becomes active again
                         if eui.upper() in self.sensor_warning_sent:
@@ -2606,7 +2606,7 @@ class TLSServer:
                         meter_id = meter_info['meter_id'] if meter_info else None
                         identifier = eui.upper() if eui else (meter_id or f"vm_{op_id}")
                         if eui:
-                            self.sensor_last_seen[eui.upper()] = asyncio.get_event_loop().time()
+                            self.sensor_last_seen[eui.upper()] = time.time()
 
                         telemetry_sensor_id = (eui or (f"oms_{meter_id}" if meter_id else identifier)).lower()
                         self._emit_timescale_telemetry(
@@ -3785,7 +3785,7 @@ class TLSServer:
     def get_sensor_registration_status(self) -> Dict[str, Dict[str, Any]]:
         """Get registration status of all sensors"""
         status = {}
-        current_time = asyncio.get_event_loop().time()
+        current_time = time.time()
 
         for sensor in self.sensor_config:
             eui = sensor['eui'].upper()

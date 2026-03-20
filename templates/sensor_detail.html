@@ -82,6 +82,129 @@
 .sensor-detail-error{text-align:center;padding:1.3rem 1rem;color:#b4232f}
 @media (max-width:1200px){.sensor-summary-grid,.sensor-kpi-grid,.sensor-payload-grid,.sensor-debug-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sensor-section-grid{grid-template-columns:1fr}}
 @media (max-width:767.98px){.sensor-detail-head{flex-direction:column}.sensor-detail-head-actions{width:100%;justify-content:flex-start}.sensor-summary-grid,.sensor-kpi-grid,.sensor-health-grid,.sensor-payload-grid,.sensor-debug-grid{grid-template-columns:1fr}.sensor-audit-table th:nth-child(3),.sensor-audit-table td:nth-child(3){display:none}}
+
+/* ── Header ───────────────────────────────────────────── */
+.sensor-detail-head {
+    border: 1px solid #d6dfec;
+    border-left: 4px solid var(--brand-500, #2563eb);
+    border-radius: 0.88rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    box-shadow: 0 4px 14px rgba(15,23,42,0.06), 0 1px 3px rgba(15,23,42,0.04);
+    padding: 0.88rem 1.1rem;
+}
+.sensor-detail-kicker {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand-600, #1e4d8a);
+    margin: 0;
+    line-height: 1.1;
+}
+.sensor-detail-title { font-size: 1.32rem; margin: 0.18rem 0 0; }
+.sensor-detail-subtitle { font-size: 0.75rem; margin: 0.2rem 0 0; color: #8a9ab0; }
+.sensor-detail-head-actions { gap: 0.38rem; }
+.sensor-detail-head-actions .btn { font-size: 0.74rem; padding: 0.3rem 0.72rem; }
+
+/* ── Tabs → underline style ───────────────────────────── */
+.sensor-detail-tabs {
+    padding: 0 1rem;
+    gap: 0;
+    align-items: flex-end;
+    border-bottom: 2px solid #e2eaf6;
+    background: linear-gradient(180deg, #f8fbff 0%, #f3f7fe 100%);
+}
+.sensor-detail-tab {
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: #4e6a88;
+    padding: 0.72rem 1.0rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    margin-bottom: -2px;
+    transition: color 0.14s;
+    box-shadow: none !important;
+}
+.sensor-detail-tab i { font-size: 0.72rem; opacity: 0.75; }
+.sensor-detail-tab:hover:not(.is-active) { color: #1c3a5e; background: rgba(37,99,235,0.04); }
+.sensor-detail-tab.is-active {
+    background: transparent;
+    border-bottom-color: var(--brand-500, #2563eb);
+    color: var(--brand-700, #1a4591);
+    font-weight: 800;
+    box-shadow: none !important;
+}
+.sensor-detail-tab.is-active i { opacity: 1; }
+
+/* ── KPI card color accents ───────────────────────────── */
+.sensor-kpi-card { border-radius: 0.78rem; }
+.sensor-kpi-card.kpi-brand   { border-left: 3px solid var(--brand-500, #2563eb); }
+.sensor-kpi-card.kpi-success { border-left: 3px solid var(--success-500, #198754); }
+.sensor-kpi-card.kpi-warning { border-left: 3px solid var(--warning-500, #e8a000); }
+.sensor-kpi-card.kpi-danger  { border-left: 3px solid var(--danger-500, #dc3545); }
+.sensor-kpi-card.kpi-info    { border-left: 3px solid #0ea5e9; }
+.sensor-kpi-card.kpi-muted   { background: #f8fbff; }
+.sensor-kpi-card.kpi-muted .sensor-kpi-value { color: #94a3b8 !important; }
+.sensor-kpi-card.kpi-muted .sensor-progress-track { opacity: 0.3; }
+
+/* ── Panel ────────────────────────────────────────────── */
+.sensor-panel {
+    border: 1px solid #d6dfec;
+    border-radius: 0.88rem;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.05);
+}
+.sensor-panel-head {
+    background: linear-gradient(180deg, #f8fbff 0%, #f3f7fe 100%);
+    border-bottom: 1px solid #e2eaf5;
+    border-radius: 0.88rem 0.88rem 0 0;
+    padding: 0.8rem 1rem;
+}
+.sensor-panel-title { font-size: 0.9rem; gap: 0.46rem; }
+.sensor-panel-title i { font-size: 0.8rem; color: var(--brand-500, #2563eb); opacity: 0.8; }
+.sensor-panel-body { padding: 0.9rem 1rem; }
+
+/* ── Banner ───────────────────────────────────────────── */
+.sensor-detail-banner {
+    border: 1px solid #d6dfec;
+    border-radius: 0.88rem;
+    background: linear-gradient(180deg, #f9fbff 0%, #f4f8ff 100%);
+    box-shadow: none;
+    padding: 0.78rem 1rem;
+    margin-bottom: 0.88rem;
+}
+.sensor-top-meta { gap: 0.38rem; margin-bottom: 0.62rem; }
+.sensor-context-chip {
+    font-size: 0.69rem;
+    padding: 0.22rem 0.52rem;
+    border-radius: 0.44rem;
+}
+.sensor-status-chip {
+    font-size: 0.72rem;
+    padding: 0.26rem 0.6rem;
+    border-radius: 0.52rem;
+}
+.sensor-summary-grid { gap: 0.62rem; }
+.sensor-kpi-card { padding: 0.78rem 0.9rem; }
+.sensor-kpi-label { font-size: 0.64rem; letter-spacing: 0.07em; }
+.sensor-kpi-value { font-size: 0.98rem; margin-top: 0.22rem; }
+.sensor-kpi-note { font-size: 0.68rem; margin-top: 0.18rem; }
+
+/* ── Health grid ──────────────────────────────────────── */
+.sensor-health-grid { gap: 0.62rem; }
+.sensor-metric-row { padding: 0.1rem 0 0.52rem; }
+.sensor-metric-name { font-size: 0.74rem; color: #5a7290; }
+.sensor-metric-value { font-size: 0.86rem; }
+
+/* ── Coverage table ───────────────────────────────────── */
+.sensor-table th { background: #f3f7fe; font-size: 0.65rem; }
+.sensor-table td { font-size: 0.83rem; }
 </style>
 
 <div class="sensor-detail-page">
@@ -93,7 +216,7 @@
     </div>
     <div class="sensor-detail-head-actions">
       <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('sensors') }}"><i class="fas fa-arrow-left me-1"></i>{{ t('sensor_detail.back_to_sensors', 'Späť na senzory') }}</a>
-      <a class="btn btn-outline-primary btn-sm" id="sensorDetailEditLink" href="{{ url_for('sensors') }}?edit_sensor={{ sensor_eui }}"><i class="fas fa-pen me-1"></i>{{ t('sensor_detail.edit_sensor', 'Upraviť senzor') }}</a>
+      <a class="btn btn-outline-primary btn-sm" id="sensorDetailEditLink" href="{{ url_for('sensors') }}?edit_sensor={{ sensor_eui }}&back_to_detail=1"><i class="fas fa-pen me-1"></i>{{ t('sensor_detail.edit_sensor', 'Upraviť senzor') }}</a>
       <a class="btn btn-outline-primary btn-sm" id="sensorDetailAttachLink" href="{{ url_for('sensors') }}?attach_sensor={{ sensor_eui }}"><i class="fas fa-link me-1"></i>{{ t('sensor_detail.manage_attach', 'Správa priradenia') }}</a>
       <a class="btn btn-outline-primary btn-sm" id="sensorDetailTelemetryLink" href="{{ url_for('sensor_telemetry') }}?sensor_eui={{ sensor_eui }}"><i class="fas fa-wave-square me-1"></i>{{ t('sensor_detail.telemetry_history', 'História telemetrie') }}</a>
       <button type="button" class="btn btn-primary btn-sm" id="sensorDetailRefreshBtn"><i class="fas fa-rotate-right me-1"></i>{{ t('common.refresh', 'Obnoviť') }}</button>
@@ -296,6 +419,11 @@
     const lastSeen = detail.last_seen ? formatTimeAgo(Number(detail.last_seen)) : tr('na', 'Nedostupné');
     const coverageRows = Object.entries(detail.receiving_bases_details || {});
     const signalScore = Number(detail.signal_score || 0);
+    const hasSignalData = signalScore > 0 || (Number.isFinite(Number(detail.avg_snr)) && Number(detail.avg_snr) !== 0);
+    const lastSeenVariantMap = { 'is-online': 'kpi-success', 'is-recent': 'kpi-success', 'is-delayed': 'kpi-warning', 'is-quiet': 'kpi-warning', 'is-offline': 'kpi-danger', 'is-stale': 'kpi-danger' };
+    const lastSeenKpiClass = lastSeenVariantMap[status.variant] || '';
+    const lossRate = Number(detail.packet_loss_rate);
+    const lossKpiClass = !Number.isFinite(lossRate) ? '' : (lossRate < 5 ? 'kpi-success' : (lossRate < 15 ? 'kpi-warning' : 'kpi-danger'));
     return `
       <section class="sensor-detail-banner">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -310,10 +438,10 @@
           <div class="small text-muted">${mode === 'event' ? tr('serviceWindow', 'Servisné okno') : tr('expectedInterval', 'Očakávaný interval')}: ${escapeHtml(summaryInterval)}</div>
         </div>
         <div class="sensor-summary-grid">
-          <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('firstSeen', 'Prvé videnie'))}</div><div class="sensor-kpi-value">${escapeHtml(firstSeen)}</div><div class="sensor-kpi-note">${escapeHtml(tr('initialRegistrationTimestamp', 'Čas prvej registrácie senzora'))}</div></div>
-          <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('lastSeen', 'Posledné videnie'))}</div><div class="sensor-kpi-value">${escapeHtml(lastSeen)}</div><div class="sensor-kpi-note">${escapeHtml(status.note)}</div></div>
-          <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('gatewayCoverage', 'Pokrytie základňovými stanicami'))}</div><div class="sensor-kpi-value">${Number(detail.gateway_count || 0)}</div><div class="sensor-kpi-note">${escapeHtml(tr('baseStationsReceivingUplinks', 'Základňové stanice prijímajúce uplinky'))}</div></div>
-          <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('counterGapLoss', 'Strata podľa packet countera'))}</div><div class="sensor-kpi-value">${formatMetric(detail.packet_loss_rate, 2, '%')}</div><div class="sensor-kpi-note">${escapeHtml(tr('counterGapLossNote', 'Odhad podľa chýbajúcich hodnôt packet countera ({source}).', { source: getPacketLossSourceLabel(detail.packet_loss_source || 'runtime') }))}</div></div>
+          <div class="sensor-kpi-card kpi-brand"><div class="sensor-kpi-label">${escapeHtml(tr('firstSeen', 'Prvé videnie'))}</div><div class="sensor-kpi-value">${escapeHtml(firstSeen)}</div><div class="sensor-kpi-note">${escapeHtml(tr('initialRegistrationTimestamp', 'Čas prvej registrácie senzora'))}</div></div>
+          <div class="sensor-kpi-card ${lastSeenKpiClass}"><div class="sensor-kpi-label">${escapeHtml(tr('lastSeen', 'Posledné videnie'))}</div><div class="sensor-kpi-value">${escapeHtml(lastSeen)}</div><div class="sensor-kpi-note">${escapeHtml(status.note)}</div></div>
+          <div class="sensor-kpi-card kpi-info"><div class="sensor-kpi-label">${escapeHtml(tr('gatewayCoverage', 'Pokrytie základňovými stanicami'))}</div><div class="sensor-kpi-value">${Number(detail.gateway_count || 0)}</div><div class="sensor-kpi-note">${escapeHtml(tr('baseStationsReceivingUplinks', 'Základňové stanice prijímajúce uplinky'))}</div></div>
+          <div class="sensor-kpi-card ${lossKpiClass}"><div class="sensor-kpi-label">${escapeHtml(tr('counterGapLoss', 'Strata podľa packet countera'))}</div><div class="sensor-kpi-value">${formatMetric(detail.packet_loss_rate, 2, '%')}</div><div class="sensor-kpi-note">${escapeHtml(tr('counterGapLossNote', 'Odhad podľa chýbajúcich hodnôt packet countera ({source}).', { source: getPacketLossSourceLabel(detail.packet_loss_source || 'runtime') }))}</div></div>
         </div>
       </section>
       <div class="sensor-section-grid">
@@ -322,7 +450,7 @@
           <div class="sensor-panel-body">
             <div class="sensor-health-grid">
               <div class="sensor-kpi-card"><div class="sensor-kpi-label">${escapeHtml(tr('status', 'Stav'))}</div><div class="sensor-kpi-value" style="color:${status.variant === 'is-online' || status.variant === 'is-recent' ? '#12834d' : (status.variant === 'is-delayed' || status.variant === 'is-quiet' ? '#9a6700' : '#b4232f')};">${escapeHtml(status.label)}</div><div class="sensor-kpi-note">${escapeHtml(status.note)}</div></div>
-              <div class="sensor-kpi-card"><div class="sensor-kpi-label">{{ t('sensor_detail.signal_score', 'Skóre signálu') }}</div><div class="sensor-kpi-value" style="color:${getSignalColor(signalScore)};">${escapeHtml(getSignalLabel(signalScore))} (${signalScore.toFixed(1)}/5)</div><div class="sensor-progress-track mt-2"><span class="sensor-progress-bar" style="width:${Math.max(0, Math.min(100, signalScore * 20))}%;"></span></div><div class="sensor-kpi-note">${escapeHtml(tr('avgSnrOperatorScore', 'Priemerné SNR prepočítané na operátorské skóre.'))}</div></div>
+              <div class="sensor-kpi-card ${hasSignalData ? '' : 'kpi-muted'}"><div class="sensor-kpi-label">{{ t('sensor_detail.signal_score', 'Skóre signálu') }}</div>${hasSignalData ? `<div class="sensor-kpi-value" style="color:${getSignalColor(signalScore)};">${escapeHtml(getSignalLabel(signalScore))} (${signalScore.toFixed(1)}/5)</div><div class="sensor-progress-track mt-2"><span class="sensor-progress-bar" style="width:${Math.max(0, Math.min(100, signalScore * 20))}%;"></span></div>` : '<div class="sensor-kpi-value">—</div>'}<div class="sensor-kpi-note">${escapeHtml(tr('avgSnrOperatorScore', 'Priemerné SNR prepočítané na operátorské skóre.'))}</div></div>
             </div>
             <div class="sensor-metric-rows mt-3">
               <div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.profile', 'Profil') }}</span><span class="sensor-metric-value">${escapeHtml(profileLabel)}</span></div>

@@ -3,240 +3,515 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kinet MIOTY Center - {{ t('page.login', 'Login') }}</title>
+    <title>Kinet MIOTY Center — {{ t('page.login', 'Sign in') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --brand-400: #f4a24d;
             --brand-500: #eb7e17;
             --brand-600: #ca6208;
+            --brand-rgb: 235, 126, 23;
+            --sidebar-900: #14253f;
+            --sidebar-800: #1d3150;
+            --sidebar-700: #29466d;
             --surface-0: #eef3f9;
-            --surface-1: #ffffff;
-            --surface-2: #f5f8fd;
-            --line: #d6deea;
             --text-900: #0f172a;
             --text-700: #344155;
             --text-500: #627087;
             --danger-500: #cb3a42;
-            --shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
-            --radius: 1.1rem;
+            --line: #d6deea;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            height: 100%;
         }
 
         body {
             font-family: "Manrope", "Segoe UI", sans-serif;
-            background:
-                radial-gradient(900px 500px at 0% -10%, #ffe2bd 0%, transparent 60%),
-                radial-gradient(900px 560px at 100% 0%, #d8e8fb 0%, transparent 55%),
-                var(--surface-0);
-            color: var(--text-900);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 1.2rem;
-        }
-
-        .login-shell {
-            width: min(940px, 100%);
-            background: var(--surface-1);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
             display: grid;
-            grid-template-columns: minmax(240px, 0.9fr) 1.1fr;
+            grid-template-columns: minmax(340px, 0.92fr) 1.08fr;
+            min-height: 100vh;
+            color: var(--text-900);
         }
 
+        /* ═══════════════════════════════════════════════
+           LEFT — Brand panel
+           ═══════════════════════════════════════════════ */
         .login-brand {
+            position: relative;
             background:
-                linear-gradient(170deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 100%),
-                linear-gradient(145deg, #14253f 0%, #29466d 100%);
-            color: #f8fbff;
-            padding: 2.2rem 1.6rem;
+                linear-gradient(185deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%),
+                linear-gradient(160deg, var(--sidebar-900) 0%, var(--sidebar-800) 48%, var(--sidebar-700) 100%);
+            color: #f0f7ff;
+            padding: 3rem 3.2rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            overflow: hidden;
         }
 
-        .brand-title {
-            font-family: "Sora", "Manrope", sans-serif;
-            font-size: 1.28rem;
-            font-weight: 700;
-            line-height: 1.35;
-            margin-bottom: 0.85rem;
+        /* Dot-grid overlay */
+        .login-brand::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.11) 1.2px, transparent 1.2px);
+            background-size: 26px 26px;
+            pointer-events: none;
         }
 
-        .brand-subtitle {
-            color: rgba(243, 248, 255, 0.78);
-            font-size: 0.9rem;
-            margin: 0;
-            max-width: 22ch;
+        /* Orange glow blob */
+        .login-brand::after {
+            content: '';
+            position: absolute;
+            width: 460px;
+            height: 460px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(var(--brand-rgb), 0.2) 0%, transparent 68%);
+            bottom: -160px;
+            right: -160px;
+            pointer-events: none;
         }
 
-        .brand-badge {
+        /* Second glow — top-left blue */
+        .brand-glow-top {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(80,130,220,0.14) 0%, transparent 68%);
+            top: -80px;
+            left: -80px;
+            pointer-events: none;
+        }
+
+        .brand-top,
+        .brand-bottom { position: relative; z-index: 1; }
+
+        .brand-mark {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.88rem;
+            background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%);
             display: inline-flex;
             align-items: center;
-            width: fit-content;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.08);
-            color: rgba(255, 255, 255, 0.94);
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 0.3rem 0.62rem;
-            letter-spacing: 0.03em;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.28rem;
+            box-shadow: 0 8px 28px rgba(var(--brand-rgb), 0.48);
+            margin-bottom: 1.6rem;
         }
 
-        .login-panel {
-            padding: 2.2rem 2rem;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        .brand-name {
+            font-family: "Sora", "Manrope", sans-serif;
+            font-size: clamp(1.55rem, 2.2vw, 2rem);
+            font-weight: 700;
+            line-height: 1.22;
+            color: #f8fcff;
+            margin-bottom: 0.72rem;
+            letter-spacing: -0.01em;
+        }
+
+        .brand-tagline {
+            color: rgba(210, 230, 255, 0.65);
+            font-size: 0.88rem;
+            line-height: 1.6;
+            max-width: 28ch;
+        }
+
+        .brand-divider {
+            width: 2.4rem;
+            height: 2px;
+            background: linear-gradient(90deg, var(--brand-500), transparent);
+            border-radius: 999px;
+            margin: 1.8rem 0;
+        }
+
+        .brand-features {
+            list-style: none;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .brand-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.88rem;
+        }
+
+        .brand-feature-icon {
+            width: 2.1rem;
+            height: 2.1rem;
+            border-radius: 0.58rem;
+            background: rgba(255,255,255,0.09);
+            border: 1px solid rgba(255,255,255,0.13);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.8rem;
+            color: var(--brand-400);
+        }
+
+        .brand-feature-text {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: rgba(215, 232, 255, 0.78);
+            line-height: 1.35;
+        }
+
+        .brand-bottom {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.69rem;
+            color: rgba(180, 210, 245, 0.38);
+            font-weight: 600;
+        }
+
+        .brand-bottom-dot {
+            width: 0.26rem;
+            height: 0.26rem;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+
+        /* ═══════════════════════════════════════════════
+           RIGHT — Form panel
+           ═══════════════════════════════════════════════ */
+        .login-right {
+            background:
+                radial-gradient(800px 600px at 110% -10%, #ffe2bd 0%, transparent 55%),
+                radial-gradient(700px 500px at -5% 110%, #d8e8fb 0%, transparent 55%),
+                #f5f8fd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3.5rem 4rem;
             position: relative;
         }
 
+        .login-right-inner {
+            width: 100%;
+            max-width: 370px;
+        }
+
+        /* Language switch */
         .login-lang-switch {
+            position: absolute;
+            top: 1.6rem;
+            right: 1.6rem;
             display: inline-flex;
             align-items: center;
-            gap: 0.35rem;
+            gap: 0.2rem;
             border: 1px solid var(--line);
             border-radius: 999px;
-            background: var(--surface-2);
-            padding: 0.22rem;
-            margin-bottom: 1rem;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(6px);
+            padding: 0.18rem;
+            box-shadow: 0 2px 8px rgba(15,23,42,0.06);
         }
 
         .login-lang-link {
             text-decoration: none;
             color: var(--text-700);
-            font-size: 0.76rem;
+            font-size: 0.72rem;
             font-weight: 800;
-            padding: 0.36rem 0.68rem;
+            padding: 0.3rem 0.62rem;
             border-radius: 999px;
-            line-height: 1;
+            transition: all 0.18s ease;
+            letter-spacing: 0.03em;
         }
+
+        .login-lang-link:hover { background: rgba(15,23,42,0.05); }
 
         .login-lang-link.is-active {
             background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%);
             color: #fff;
-            box-shadow: 0 8px 18px rgba(234, 127, 18, 0.22);
+            box-shadow: 0 4px 10px rgba(var(--brand-rgb), 0.28);
         }
 
-        .login-header {
-            margin-bottom: 1.65rem;
+        /* Header */
+        .login-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.67rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--brand-500);
+            margin-bottom: 0.72rem;
         }
 
-        .login-header h1 {
+        .login-eyebrow::before {
+            content: '';
+            display: block;
+            width: 1.1rem;
+            height: 2px;
+            background: var(--brand-500);
+            border-radius: 999px;
+        }
+
+        .login-heading {
             font-family: "Sora", "Manrope", sans-serif;
-            font-size: 1.42rem;
+            font-size: clamp(1.55rem, 2.2vw, 1.95rem);
             font-weight: 700;
             color: var(--text-900);
-            margin-bottom: 0.45rem;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.52rem;
         }
 
-        .login-header p {
+        .login-sub {
             color: var(--text-500);
-            margin: 0;
+            font-size: 0.87rem;
+            line-height: 1.5;
+            margin-bottom: 2rem;
         }
+
+        /* Form */
+        .field-group { margin-bottom: 1.1rem; }
+        .field-group:last-of-type { margin-bottom: 1.6rem; }
 
         .form-label {
+            display: block;
+            font-size: 0.79rem;
             font-weight: 700;
             color: var(--text-700);
-            font-size: 0.84rem;
+            margin-bottom: 0.42rem;
         }
 
-        .form-control {
-            border: 1px solid #bfcbdb;
-            border-radius: 0.72rem;
-            min-height: 2.6rem;
-            color: var(--text-900);
+        .input-wrap {
+            position: relative;
         }
 
-        .form-control:focus {
-            border-color: #87bfd3;
-            box-shadow: 0 0 0 0.22rem rgba(0, 138, 147, 0.15);
+        .input-icon {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #96aec5;
+            font-size: 0.78rem;
+            pointer-events: none;
+            z-index: 1;
         }
 
-        .btn-login {
-            border-color: var(--brand-500);
-            background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%);
-            color: white;
+        .form-input {
             width: 100%;
+            padding: 0.72rem 0.9rem 0.72rem 2.42rem;
+            border: 1px solid #ccd6e5;
+            border-radius: 0.72rem;
             min-height: 2.75rem;
+            font-size: 0.88rem;
+            font-family: inherit;
+            color: var(--text-900);
+            background: rgba(255,255,255,0.9);
+            outline: none;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--brand-400);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.1);
+        }
+
+        .form-input::placeholder { color: #aab8cc; }
+
+        /* Submit */
+        .btn-login {
+            width: 100%;
+            min-height: 2.85rem;
+            padding: 0 1.2rem;
+            background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%);
+            border: none;
+            border-radius: 0.72rem;
+            color: #fff;
             font-size: 0.92rem;
             font-weight: 700;
-            border-radius: 0.72rem;
-            box-shadow: 0 10px 18px rgba(234, 127, 18, 0.3);
-            transition: all 0.2s ease;
+            font-family: inherit;
+            letter-spacing: 0.01em;
+            box-shadow: 0 6px 22px rgba(var(--brand-rgb), 0.34);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.52rem;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
         }
 
-        .btn-login:hover,
-        .btn-login:focus {
-            border-color: var(--brand-600);
-            background: linear-gradient(145deg, var(--brand-600) 0%, var(--brand-500) 100%);
-            color: white;
+        .btn-login:hover {
             transform: translateY(-1px);
+            box-shadow: 0 10px 28px rgba(var(--brand-rgb), 0.42);
         }
 
-        .alert-danger {
+        .btn-login:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(var(--brand-rgb), 0.25);
+        }
+
+        /* Error */
+        .login-error {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
             border: 1px solid #f2bec2;
             border-left: 4px solid var(--danger-500);
-            background: #fff1f2;
+            background: linear-gradient(180deg, #fff 0%, #fff1f2 100%);
             color: #7d2227;
-            border-radius: 0.74rem;
+            border-radius: 0.72rem;
+            padding: 0.72rem 0.88rem;
+            margin-bottom: 1.4rem;
             font-size: 0.84rem;
+            font-weight: 600;
         }
 
-        @media (max-width: 900px) {
-            .login-shell {
-                grid-template-columns: 1fr;
-            }
+        .login-error i { flex-shrink: 0; color: var(--danger-500); font-size: 0.9rem; }
+
+        /* ═══════════════════════════════════════════════
+           Responsive
+           ═══════════════════════════════════════════════ */
+        @media (max-width: 860px) {
+            body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
 
             .login-brand {
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
                 gap: 1rem;
-                min-height: 155px;
+                padding: 1.6rem 1.8rem;
+                min-height: auto;
             }
+
+            .brand-mark { margin-bottom: 0; }
+            .brand-name { font-size: 1.18rem; }
+            .brand-tagline, .brand-divider, .brand-features, .brand-bottom { display: none; }
+
+            .login-right {
+                padding: 2.4rem 1.6rem;
+                justify-content: flex-start;
+                padding-top: 3.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-right { padding: 3rem 1.2rem 1.6rem; }
         }
     </style>
 </head>
 <body>
-    <div class="login-shell">
-        <aside class="login-brand">
-            <div>
-                <h2 class="brand-title">{{ t('login.brand_title', 'Kinet MIOTY Center') }}</h2>
-                <p class="brand-subtitle">{{ t('login.brand_subtitle', 'Manage MIOTY base stations, sensors and telemetry from one operational workspace.') }}</p>
-            </div>
-        </aside>
 
-        <section class="login-panel">
-            <div class="login-lang-switch" aria-label="{{ t('login.language_switch', 'Interface language') }}">
-                {% for lang_code, lang_meta in app_languages.items() %}
-                <a class="login-lang-link {% if app_language == lang_code %}is-active{% endif %}" href="{{ url_for('login', lang=lang_code) }}">{{ lang_code|upper }}</a>
-                {% endfor %}
+    <aside class="login-brand">
+        <span class="brand-glow-top"></span>
+
+        <div class="brand-top">
+            <div class="brand-mark">
+                <i class="fas fa-wave-square"></i>
             </div>
-            <div class="login-header">
-                <h1>{{ t('login.heading', 'Sign in') }}</h1>
-                <p>{{ t('login.subtitle', 'Use your account credentials to continue.') }}</p>
-            </div>
+
+            <h1 class="brand-name">Kinet MIOTY<br>Center</h1>
+            <p class="brand-tagline">{{ t('login.brand_subtitle', 'Manage MIOTY base stations, sensors and telemetry from one operational workspace.') }}</p>
+
+            <div class="brand-divider"></div>
+
+            <ul class="brand-features">
+                <li class="brand-feature">
+                    <span class="brand-feature-icon"><i class="fas fa-broadcast-tower"></i></span>
+                    <span class="brand-feature-text">{{ t('login.feature_bs', 'Real-time base station monitoring') }}</span>
+                </li>
+                <li class="brand-feature">
+                    <span class="brand-feature-icon"><i class="fas fa-microchip"></i></span>
+                    <span class="brand-feature-text">{{ t('login.feature_sensors', 'Sensor fleet management &amp; telemetry') }}</span>
+                </li>
+                <li class="brand-feature">
+                    <span class="brand-feature-icon"><i class="fas fa-project-diagram"></i></span>
+                    <span class="brand-feature-text">{{ t('login.feature_network', 'Live network topology visualization') }}</span>
+                </li>
+            </ul>
+        </div>
+
+        <p class="brand-bottom">
+            <span>Kinet s.r.o</span>
+            <span class="brand-bottom-dot"></span>
+            <span>MIOTY Operations Console</span>
+        </p>
+    </aside>
+
+    <section class="login-right">
+        <div class="login-lang-switch" aria-label="{{ t('login.language_switch', 'Interface language') }}">
+            {% for lang_code, lang_meta in app_languages.items() %}
+            <a class="login-lang-link {% if app_language == lang_code %}is-active{% endif %}"
+               href="{{ url_for('login', lang=lang_code) }}"
+               title="{{ lang_meta.native_label }}"
+            >{{ lang_code|upper }}</a>
+            {% endfor %}
+        </div>
+
+        <div class="login-right-inner">
+
+            <div class="login-eyebrow">{{ t('login.eyebrow', 'Operations Console') }}</div>
+            <h2 class="login-heading">{{ t('login.heading', 'Sign in') }}</h2>
+            <p class="login-sub">{{ t('login.subtitle', 'Use your account credentials to continue.') }}</p>
 
             {% if error %}
-            <div class="alert alert-danger" role="alert">{{ error }}</div>
+            <div class="login-error" role="alert">
+                <i class="fas fa-circle-exclamation"></i>
+                <span>{{ error }}</span>
+            </div>
             {% endif %}
 
-            <form method="POST">
+            <form method="POST" novalidate>
                 <input type="hidden" name="ui_language" value="{{ app_language }}">
-                <div class="mb-3">
+
+                <div class="field-group">
                     <label for="username" class="form-label">{{ t('login.username', 'Username') }}</label>
-                    <input type="text" class="form-control" id="username" name="username" required autofocus>
+                    <div class="input-wrap">
+                        <span class="input-icon"><i class="fas fa-user"></i></span>
+                        <input
+                            class="form-input"
+                            type="text"
+                            id="username"
+                            name="username"
+                            autocomplete="username"
+                            required
+                            autofocus
+                            placeholder="{{ t('login.username_placeholder', 'Enter your username') }}"
+                        >
+                    </div>
                 </div>
-                <div class="mb-4">
+
+                <div class="field-group">
                     <label for="password" class="form-label">{{ t('login.password', 'Password') }}</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
+                    <div class="input-wrap">
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <input
+                            class="form-input"
+                            type="password"
+                            id="password"
+                            name="password"
+                            autocomplete="current-password"
+                            required
+                            placeholder="{{ t('login.password_placeholder', '••••••••') }}"
+                        >
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-login">{{ t('login.submit', 'Sign in') }}</button>
+
+                <button type="submit" class="btn-login">
+                    {{ t('login.submit', 'Sign in') }}
+                    <i class="fas fa-arrow-right" style="font-size:0.78rem;"></i>
+                </button>
             </form>
-        </section>
-    </div>
+
+        </div>
+    </section>
+
 </body>
 </html>

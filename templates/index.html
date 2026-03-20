@@ -22,14 +22,22 @@
 .dashboard-utility {
     border: none;
     border-radius: 0;
-    background: transparent;
     box-shadow: none;
-    padding: 0.15rem 0;
+    padding: 0.3rem 0 0.2rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
     flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: rgba(244, 247, 252, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    margin: 0 -0.25rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
 }
 
 .dashboard-utility-actions {
@@ -118,12 +126,12 @@
     align-items: start;
 }
 
-#kpi-grid        { grid-column: span 12; }
-#topology-panel  { grid-column: span 7; align-self: stretch; }
-#alert-panel     { grid-column: span 5; align-self: stretch; }
-#gateway-panel   { grid-column: span 6; }
-#signal-panel    { grid-column: span 6; }
-#traffic-panel   { grid-column: span 12; }
+#kpi-grid        { grid-column: 1 / span 12; grid-row: 1; }
+#topology-panel  { grid-column: 1 / span 8;  grid-row: 2; align-self: stretch; }
+#traffic-panel   { grid-column: 9 / span 4;  grid-row: 2; align-self: stretch; }
+#alert-panel     { grid-column: 1 / span 4;  grid-row: 3; }
+#gateway-panel   { grid-column: 5 / span 4;  grid-row: 3; }
+#signal-panel    { grid-column: 9 / span 4;  grid-row: 3; }
 
 /* ── Panel wrappers (invisible) ────────────────────── */
 .deck-panel {
@@ -141,15 +149,26 @@
 .deck-panel.clickable { cursor: pointer; }
 .deck-panel.clickable:hover { transform: none; box-shadow: none; }
 
-/* ── Detail panels — subtle glass grouping ─────────── */
+/* ── Detail panels — bottom row ─────────────────────── */
 #alert-panel,
 #gateway-panel,
 #signal-panel {
-    background: rgba(255, 255, 255, 0.38);
-    border-radius: 0.75rem;
-    padding: 0.55rem 0.65rem;
-    border: 1px solid rgba(226, 232, 240, 0.5);
+    background: rgba(255, 255, 255, 0.40);
+    border-radius: 0.88rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(220, 229, 240, 0.55);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
 }
+
+/* ── Traffic panel — narrow sidebar adaptations ─────── */
+#traffic-panel {
+    background: rgba(255, 255, 255, 0.42);
+    border-radius: 0.88rem;
+    border: 1px solid rgba(220, 229, 240, 0.55);
+    box-shadow: 0 2px 14px rgba(15, 23, 42, 0.06);
+}
+#traffic-panel .ops-stat-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+#traffic-panel .ops-meta-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
 
 #traffic-panel {
     background: rgba(255, 255, 255, 0.3);
@@ -217,7 +236,7 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 0;
+    min-height: 32rem;
 }
 
 #topology-panel {
@@ -233,9 +252,17 @@
     overscroll-behavior: contain;
 }
 
-#alert-panel {
+#alert-panel,
+#gateway-panel,
+#signal-panel {
     display: flex;
     flex-direction: column;
+}
+
+#alert-panel .deck-body,
+#gateway-panel .deck-body,
+#signal-panel .deck-body {
+    flex: 1;
 }
 
 #gateway-panel .deck-body,
@@ -268,32 +295,33 @@
 
 .overview-card {
     border: 1px solid #e2e8f0;
-    border-radius: 0.62rem;
+    border-radius: 0.72rem;
     background: #ffffff;
     box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
-    padding: 0.52rem 0.68rem;
+    padding: 0.48rem 0.64rem;
     min-width: 0;
     display: grid;
-    gap: 0.14rem;
+    gap: 0.1rem;
     transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .overview-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 
-.overview-card.is-success { border-left: 3px solid #10b981; }
-.overview-card.is-warning { border-left: 3px solid #f59e0b; }
-.overview-card.is-danger  { border-left: 3px solid #ef4444; }
-.overview-card.is-cool    { border-left: 3px solid #3b82f6; }
+.overview-card.is-success { border-left: 3px solid #10b981; background: linear-gradient(160deg, #ffffff 0%, #f0fbf6 100%); }
+.overview-card.is-warning { border-left: 3px solid #f59e0b; background: linear-gradient(160deg, #ffffff 0%, #fffbf0 100%); }
+.overview-card.is-danger  { border-left: 3px solid #ef4444; background: linear-gradient(160deg, #ffffff 0%, #fff5f5 100%); }
+.overview-card.is-cool    { border-left: 3px solid #3b82f6; background: linear-gradient(160deg, #ffffff 0%, #f5f9ff 100%); }
 .overview-card.is-muted   { border-left: 3px solid #94a3b8; }
 
 .overview-card-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.48rem;
+    gap: 0.4rem;
+    margin-bottom: 0.14rem;
 }
 
 .overview-card-title {
@@ -305,58 +333,67 @@
 }
 
 .overview-card-icon {
-    width: 1.32rem;
-    height: 1.32rem;
+    width: 1.6rem;
+    height: 1.6rem;
     border-radius: 0.44rem;
-    background: rgba(23, 40, 66, 0.08);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #223b5c;
-    font-size: 0.7rem;
+    font-size: 0.74rem;
+    flex-shrink: 0;
 }
 
+.overview-card.is-success .overview-card-icon { background: rgba(16,  185, 129, 0.13); color: #0d9466; }
+.overview-card.is-warning .overview-card-icon { background: rgba(245, 158, 11,  0.13); color: #c07a00; }
+.overview-card.is-danger  .overview-card-icon { background: rgba(239, 68,  68,  0.13); color: #d43b3b; }
+.overview-card.is-cool    .overview-card-icon { background: rgba(59,  130, 246, 0.13); color: #1d5fc8; }
+.overview-card.is-muted   .overview-card-icon { background: rgba(148, 163, 184, 0.13); color: #5f748d; }
+
 .overview-card-value {
-    font-size: clamp(0.92rem, 1.1vw, 1.18rem);
+    font-size: clamp(0.95rem, 1.1vw, 1.22rem);
     line-height: 1;
     font-weight: 800;
     color: #13253d;
 }
 
 .overview-card-detail {
-    font-size: 0.71rem;
+    font-size: 0.68rem;
     font-weight: 700;
     color: #334b6c;
+    margin-top: 0.04rem;
 }
 
 .overview-card-note {
-    font-size: 0.65rem;
+    font-size: 0.63rem;
     color: #607089;
+    margin-top: 0.02rem;
 }
 
 .overview-footer {
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.72rem;
+    background: linear-gradient(135deg, rgba(235, 126, 23, 0.05) 0%, rgba(255, 255, 255, 0.4) 60%);
     border-radius: 0.75rem;
-    padding: 0.5rem 0.6rem;
-    border: 1px solid rgba(226, 232, 240, 0.4);
+    padding: 0.68rem 0.84rem 0.68rem 0.96rem;
+    border: 1px solid rgba(235, 126, 23, 0.22);
+    border-left: 3px solid var(--brand-500);
 }
 
 .overview-focus-card {
+    flex: 1 1 0;
+    min-width: 0;
     border: none;
     border-radius: 0;
     background: transparent;
-    padding: 0.2rem 0;
+    padding: 0;
     display: grid;
-    gap: 0.14rem;
+    gap: 0.12rem;
 }
 
 .overview-focus-head {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 0.55rem;
 }
 
@@ -371,24 +408,26 @@
 
 .overview-summary-value {
     display: block;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 800;
     color: #20344f;
     overflow-wrap: anywhere;
 }
 
 .overview-rail {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+    display: flex;
+    gap: 0;
+    flex-shrink: 0;
+    border-left: 1px solid rgba(210, 218, 234, 0.8);
+    padding-left: 0.72rem;
 }
 
 .overview-pill {
     border-left: 2px solid #d0daea;
     border-radius: 0;
     background: transparent;
-    padding: 0.2rem 0 0.2rem 0.55rem;
-    min-width: 0;
+    padding: 0.14rem 0.72rem 0.14rem 0.56rem;
+    min-width: 6.5rem;
 }
 
 .overview-posture-badge {
@@ -549,7 +588,7 @@
 .topology-wrap {
     position: relative;
     flex: 1;
-    min-height: 16rem;
+    min-height: 32rem;
     width: 100%;
     display: flex;
     border-radius: 0.75rem;
@@ -613,6 +652,106 @@
 .stat-value { font-size: 1.05rem; font-weight: 800; color: #122038; line-height: 1; }
 .stat-label { margin-top: 0.25rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: #5f7088; font-weight: 700; }
 
+.signal-no-data {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.4rem 0.8rem;
+    gap: 0.52rem;
+}
+.signal-no-data.is-visible { display: flex; }
+.signal-no-data-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #edf3fa;
+    color: #8ea3bf;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+}
+.signal-no-data-title { font-size: 0.83rem; font-weight: 700; color: #3a4d65; margin: 0; }
+.signal-no-data-note  { font-size: 0.72rem; color: #607089; margin: 0; }
+
+/* ── Live indicator dot ─────────────────────────── */
+.live-dot {
+    display: inline-block;
+    width: 0.46rem;
+    height: 0.46rem;
+    border-radius: 50%;
+    background: #14a36f;
+    margin-right: 0.3rem;
+    vertical-align: middle;
+    flex-shrink: 0;
+    animation: live-pulse 2.2s ease-in-out infinite;
+}
+@keyframes live-pulse {
+    0%, 100% { opacity: 1;    box-shadow: 0 0 0 0   rgba(20, 163, 111, 0.55); }
+    55%       { opacity: 0.82; box-shadow: 0 0 0 5px rgba(20, 163, 111, 0); }
+}
+
+/* ── Gateway status dot ─────────────────────────── */
+.gateway-dot {
+    width: 0.54rem;
+    height: 0.54rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
+}
+.gateway-dot.connected  { background: #14a36f; animation: gw-pulse 2.5s ease-in-out infinite; }
+.gateway-dot.connecting { background: #e4a313; }
+.gateway-dot.offline    { background: #8e9db1; }
+@keyframes gw-pulse {
+    0%, 100% { box-shadow: 0 0 0 0   rgba(20, 163, 111, 0.45); }
+    60%      { box-shadow: 0 0 0 5px rgba(20, 163, 111, 0); }
+}
+.gateway-head-left { display: flex; align-items: center; gap: 0.52rem; min-width: 0; }
+
+/* ── Deck-head icon container ───────────────────── */
+.deck-head-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.72rem;
+    height: 1.72rem;
+    border-radius: 0.46rem;
+    margin-right: 0.46rem;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+}
+#kpi-grid       .deck-head-icon { background: rgba(59,  130, 246, 0.12); color: #1d5fc8; }
+#topology-panel .deck-head-icon { background: rgba(99,  102, 241, 0.12); color: #4f46e5; }
+#alert-panel    .deck-head-icon { background: rgba(245, 158, 11,  0.12); color: #b97900; }
+#gateway-panel  .deck-head-icon { background: rgba(16,  185, 129, 0.12); color: #0d9466; }
+#signal-panel   .deck-head-icon { background: rgba(139, 92,  246, 0.12); color: #6d28d9; }
+#traffic-panel  .deck-head-icon { background: rgba(59,  130, 246, 0.12); color: #1d5fc8; }
+
+/* ── Traffic stat card with icon ────────────────── */
+.ops-stat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    margin-bottom: 0.28rem;
+}
+.ops-stat-icon {
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+.ops-stat-card.icon-blue   .ops-stat-icon { background: rgba(59,  130, 246, 0.12); color: #1d5fc8; }
+.ops-stat-card.icon-red    .ops-stat-icon { background: rgba(239, 68,  68,  0.12); color: #c53030; }
+.ops-stat-card.icon-teal   .ops-stat-icon { background: rgba(16,  185, 129, 0.12); color: #0d9466; }
+.ops-stat-card.icon-indigo .ops-stat-icon { background: rgba(99,  102, 241, 0.12); color: #4338ca; }
+
 /* ═══════════════════════════════════════════════════════
    Traffic & Capacity
    ═══════════════════════════════════════════════════════ */
@@ -637,15 +776,28 @@
 .ops-meta-label { font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; color: #67809c; }
 .ops-meta-value { font-size: 0.9rem; font-weight: 800; color: #223756; }
 
-/* Traffic panel — stacked vertical layout */
+/* Traffic panel — sidebar vertical layout */
+#traffic-panel {
+    display: flex;
+    flex-direction: column;
+}
 #traffic-panel .deck-body {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    overflow: auto;
+    overscroll-behavior: contain;
 }
 #traffic-panel .ops-hero { margin-bottom: 0; }
-#traffic-panel .ops-stat-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
-#traffic-panel .ops-meta-grid { margin-top: 0; grid-template-columns: repeat(3, minmax(0,1fr)); }
+#traffic-panel .ops-stat-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+#traffic-panel .ops-meta-grid { margin-top: 0; grid-template-columns: repeat(2, minmax(0,1fr)); }
+
+/* Traffic empty state — when no base stations connected */
+#traffic-panel.ops-empty .ops-stat-value,
+#traffic-panel.ops-empty .ops-meta-value { color: #8ea3bf; font-weight: 700; }
+#traffic-panel.ops-empty .ops-stat-card  { background: rgba(238, 244, 252, 0.5); border-color: #dce7f4; }
+#traffic-panel.ops-empty .ops-meta-card  { background: rgba(238, 244, 252, 0.4); border-color: #dce7f4; }
 
 /* ═══════════════════════════════════════════════════════
    Misc / Helpers
@@ -672,6 +824,87 @@
 .layout-empty { border: 1px dashed #cdd8e7; border-radius: 0.9rem; background: rgba(255,255,255,0.5); color: #53657e; padding: 0.9rem; text-align: center; font-size: 0.82rem; font-weight: 700; }
 .is-hidden { display: none !important; }
 
+/* ── Refresh countdown bar ──────────────────────────── */
+.refresh-bar {
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--brand-500, #e97c13) 0%, #6366f1 100%);
+    transform-origin: left center;
+    transform: scaleX(1);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    margin: 0 0 0.25rem;
+}
+.refresh-bar.is-counting {
+    opacity: 1;
+    animation: refresh-drain 5s linear forwards;
+}
+.refresh-bar.is-fading {
+    opacity: 0;
+    transform: scaleX(0);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+@keyframes refresh-drain {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+}
+
+/* ── Alert all-clear state ──────────────────────────── */
+.rail-list.is-all-clear { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.all-clear-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.55rem;
+    flex: 1;
+    padding: 1.1rem 0.8rem;
+}
+.all-clear-icon {
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.12);
+    color: #0d9466;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.07);
+}
+.all-clear-title { margin: 0; font-size: 0.88rem; font-weight: 800; color: #183d2f; }
+.all-clear-note  { margin: 0; font-size: 0.72rem; color: #496b59; }
+
+/* ── KPI sparklines ─────────────────────────────────── */
+.kpi-spark {
+    display: block;
+    width: 100%;
+    height: 20px;
+    margin-top: 0.3rem;
+    overflow: visible;
+}
+.kpi-spark-line {
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.7;
+}
+.kpi-spark-dot {
+    opacity: 0.9;
+}
+.overview-card.is-success .kpi-spark-line { stroke: #0d9466; }
+.overview-card.is-success .kpi-spark-dot  { fill: #0d9466; }
+.overview-card.is-warning .kpi-spark-line { stroke: #c07a00; }
+.overview-card.is-warning .kpi-spark-dot  { fill: #c07a00; }
+.overview-card.is-danger  .kpi-spark-line { stroke: #d43b3b; }
+.overview-card.is-danger  .kpi-spark-dot  { fill: #d43b3b; }
+.overview-card.is-cool    .kpi-spark-line { stroke: #1d5fc8; }
+.overview-card.is-cool    .kpi-spark-dot  { fill: #1d5fc8; }
+.overview-card.is-muted   .kpi-spark-line { stroke: #8ea3bf; }
+.overview-card.is-muted   .kpi-spark-dot  { fill: #8ea3bf; }
+
 /* ═══════════════════════════════════════════════════════
    Responsive
    ═══════════════════════════════════════════════════════ */
@@ -681,39 +914,39 @@
 
 @media (max-width: 1350px) {
     .overview-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .overview-footer { grid-template-columns: 1fr; }
+    .overview-footer { flex-wrap: wrap; }
 
-    #topology-panel { grid-column: span 8; }
-    #alert-panel    { grid-column: span 4; }
-    #gateway-panel  { grid-column: span 6; }
-    #signal-panel   { grid-column: span 6; }
-
-    #traffic-panel .ops-stat-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
-    #traffic-panel .ops-meta-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    #topology-panel { grid-column: 1 / span 8;  grid-row: 2; }
+    #traffic-panel  { grid-column: 9 / span 4;  grid-row: 2; }
+    #alert-panel    { grid-column: 1 / span 4;  grid-row: 3; }
+    #gateway-panel  { grid-column: 5 / span 4;  grid-row: 3; }
+    #signal-panel   { grid-column: 9 / span 4;  grid-row: 3; }
 }
 
 @media (max-width: 900px) {
     .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
 
-    #kpi-grid       { grid-column: span 2; }
-    #topology-panel { grid-column: span 2; align-self: auto; }
-    .topology-wrap  { flex: none; min-height: 13rem; height: 13rem; }
-    #alert-panel    { grid-column: span 2; align-self: auto; }
-    #gateway-panel  { grid-column: span 1; }
-    #signal-panel   { grid-column: span 1; }
-    #traffic-panel  { grid-column: span 2; }
+    #kpi-grid       { grid-column: span 2; grid-row: auto; }
+    #topology-panel { grid-column: span 2; grid-row: auto; align-self: auto; }
+    .topology-wrap  { flex: none; min-height: 20rem; height: 20rem; }
+    #traffic-panel  { grid-column: span 2; grid-row: auto; align-self: auto; }
+    #traffic-panel .ops-stat-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    #traffic-panel .ops-meta-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    #alert-panel    { grid-column: span 1; grid-row: auto; }
+    #gateway-panel  { grid-column: span 1; grid-row: auto; }
+    #signal-panel   { grid-column: span 2; grid-row: auto; }
 
-    .overview-panel .overview-footer { grid-template-columns: 1fr; }
+    .overview-panel .overview-footer { flex-wrap: wrap; }
     .ops-stat-grid, .ops-meta-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
 @media (max-width: 575.98px) {
     .dashboard-grid { grid-template-columns: 1fr; }
 
-    #kpi-grid, #topology-panel, #alert-panel,
-    #gateway-panel, #signal-panel, #traffic-panel { grid-column: span 1; }
+    #kpi-grid, #topology-panel, #traffic-panel,
+    #alert-panel, #gateway-panel, #signal-panel { grid-column: span 1; grid-row: auto; }
 
-    .topology-wrap { height: 11rem; }
+    .topology-wrap { height: 16rem; }
     .overview-panel .overview-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .signal-bar { grid-template-columns: 64px 1fr 28px; }
 
@@ -740,11 +973,12 @@
             <span class="dashboard-toolbar-pill control-meta control-meta-cache" id="dashboard-cache-age">{{ t('dashboard.cache_label', 'Cache') }} -</span>
         </div>
     </section>
+    <div id="refresh-bar" class="refresh-bar" role="progressbar" aria-hidden="true"></div>
 
     <section id="dashboard-canvas" class="dashboard-grid">
         <section id="kpi-grid" class="deck-panel panel-size-normal layout-widget overview-panel">
             <div class="deck-head">
-                <h5><i class="fas fa-wave-square me-2"></i>{{ t('dashboard.platform_overview', 'Platform overview') }}</h5>
+                <h5><span class="deck-head-icon"><i class="fas fa-wave-square"></i></span>{{ t('dashboard.platform_overview', 'Platform overview') }}</h5>
                 <a class="deck-head-link" href="/health"><i class="fas fa-arrow-up-right-from-square"></i>{{ t('dashboard.open_system_health', 'Open system health') }}</a>
             </div>
             <div class="deck-body">
@@ -758,6 +992,7 @@
                             <div class="overview-card-value" id="tls-status">--</div>
                             <div class="overview-card-detail" id="tls-detail">{{ t('dashboard.port_label', 'Port') }} --</div>
                             <div class="overview-card-note" id="tls-note">{{ t('dashboard.baseline_establishing', 'Baseline establishing...') }}</div>
+                            <svg id="tls-spark" class="kpi-spark" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"></svg>
                         </div>
                     </a>
                     <a href="/config" class="kpi-link">
@@ -769,6 +1004,7 @@
                             <div class="overview-card-value" id="mqtt-status">--</div>
                             <div class="overview-card-detail" id="mqtt-detail">--</div>
                             <div class="overview-card-note" id="mqtt-note">{{ t('dashboard.baseline_establishing', 'Baseline establishing...') }}</div>
+                            <svg id="mqtt-spark" class="kpi-spark" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"></svg>
                         </div>
                     </a>
                     <a href="/base-stations" class="kpi-link">
@@ -780,6 +1016,7 @@
                             <div class="overview-card-value" id="bs-count">0</div>
                             <div class="overview-card-detail" id="bs-detail">{{ t('dashboard.connected_gateways', 'Connected base stations') }}</div>
                             <div class="overview-card-note" id="bs-note">{{ t('dashboard.baseline_establishing', 'Baseline establishing...') }}</div>
+                            <svg id="bs-spark" class="kpi-spark" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"></svg>
                         </div>
                     </a>
                     <a href="/sensors" class="kpi-link">
@@ -791,34 +1028,16 @@
                             <div class="overview-card-value" id="sensor-count">0</div>
                             <div class="overview-card-detail" id="sensor-detail">0 {{ t('dashboard.configured', 'configured') }}</div>
                             <div class="overview-card-note" id="sensor-note">{{ t('dashboard.baseline_establishing', 'Baseline establishing...') }}</div>
+                            <svg id="sensor-spark" class="kpi-spark" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"></svg>
                         </div>
                     </a>
-                </div>
-                <div class="overview-footer" id="platform-summary">
-                    <div class="overview-focus-card">
-                        <div class="overview-focus-head">
-                            <span class="overview-summary-label">{{ t('dashboard.summary_focus', 'Focus') }}</span>
-                            <span class="overview-posture-badge" id="platform-summary-posture">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</span>
-                        </div>
-                        <span class="overview-summary-value" id="platform-summary-focus">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</span>
-                    </div>
-                    <div class="overview-rail">
-                        <div class="overview-pill">
-                            <span class="overview-summary-label">{{ t('dashboard.summary_fleet', 'Fleet') }}</span>
-                            <span class="overview-summary-value" id="platform-summary-fleet">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</span>
-                        </div>
-                        <div class="overview-pill">
-                            <span class="overview-summary-label">{{ t('dashboard.summary_next_step', 'Next step') }}</span>
-                            <span class="overview-summary-value" id="platform-summary-next">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
 
         <div id="topology-panel" class="deck-panel clickable panel-size-normal layout-widget" data-nav="/network">
             <div class="deck-head">
-                <h5><i class="fas fa-project-diagram me-2"></i>{{ t('dashboard.live_topology_canvas', 'Live Topology Canvas') }}</h5>
+                <h5><span class="deck-head-icon"><i class="fas fa-project-diagram"></i></span>{{ t('dashboard.live_topology_canvas', 'Live Topology Canvas') }}</h5>
                 <div class="topology-head-actions" data-stop-panel-nav>
                     <div class="topology-mini-switch">
                         <button type="button" class="topology-mini-btn is-active" data-mini-view="map">{{ t('dashboard.map', 'Map') }}</button>
@@ -846,7 +1065,7 @@
 
         <div id="alert-panel" class="deck-panel panel-size-normal layout-widget">
             <div class="deck-head">
-                <h5><i class="fas fa-exclamation-triangle me-2"></i>{{ t('dashboard.alert_feed', 'Attention queue') }}</h5>
+                <h5><span class="deck-head-icon"><i class="fas fa-exclamation-triangle"></i></span>{{ t('dashboard.alert_feed', 'Attention queue') }}</h5>
                 <small>{{ t('dashboard.issues_requiring_attention', 'Critical first, warnings below') }}</small>
             </div>
             <div class="deck-body">
@@ -863,7 +1082,7 @@
 
         <div id="gateway-panel" class="deck-panel panel-size-normal layout-widget">
             <div class="deck-head">
-                <h5><i class="fas fa-list me-2"></i>{{ t('dashboard.gateway_actions', 'Base station snapshot') }}</h5>
+                <h5><span class="deck-head-icon"><i class="fas fa-broadcast-tower"></i></span>{{ t('dashboard.gateway_actions', 'Base station snapshot') }}</h5>
                 <small>{{ t('dashboard.quick_gateway_context', 'Online state, load and addressability') }}</small>
             </div>
             <div class="deck-body">
@@ -883,63 +1102,68 @@
 
         <div id="signal-panel" class="deck-panel clickable panel-size-normal layout-widget" data-nav="/health">
             <div class="deck-head">
-                <h5><i class="fas fa-signal me-2"></i>{{ t('dashboard.signal_quality_distribution', 'Signal Quality Distribution') }}</h5>
+                <h5><span class="deck-head-icon"><i class="fas fa-signal"></i></span>{{ t('dashboard.signal_quality_distribution', 'Signal Quality Distribution') }}</h5>
                 <small>{{ t('dashboard.open_health_analytics', 'Open health analytics') }}</small>
             </div>
             <div class="deck-body">
-                <div class="signal-bar">
-                    <span class="signal-label" style="color: #14a36f;">{{ t('dashboard.excellent', 'Excellent') }}</span>
-                    <div class="signal-track"><div class="signal-fill" id="signal-excellent" style="background: #14a36f;"></div></div>
-                    <span class="signal-val" id="signal-excellent-val">0</span>
-                </div>
-                <div class="signal-bar">
-                    <span class="signal-label" style="color: #1ab884;">{{ t('dashboard.good', 'Good') }}</span>
-                    <div class="signal-track"><div class="signal-fill" id="signal-good" style="background: #1ab884;"></div></div>
-                    <span class="signal-val" id="signal-good-val">0</span>
-                </div>
-                <div class="signal-bar">
-                    <span class="signal-label" style="color: #e4a313;">{{ t('dashboard.fair', 'Fair') }}</span>
-                    <div class="signal-track"><div class="signal-fill" id="signal-fair" style="background: #e4a313;"></div></div>
-                    <span class="signal-val" id="signal-fair-val">0</span>
-                </div>
-                <div class="signal-bar">
-                    <span class="signal-label" style="color: #f58634;">{{ t('dashboard.poor', 'Poor') }}</span>
-                    <div class="signal-track"><div class="signal-fill" id="signal-poor" style="background: #f58634;"></div></div>
-                    <span class="signal-val" id="signal-poor-val">0</span>
-                </div>
-                <div class="signal-bar">
-                    <span class="signal-label" style="color: #cb3a42;">{{ t('dashboard.critical', 'Critical') }}</span>
-                    <div class="signal-track"><div class="signal-fill" id="signal-critical" style="background: #cb3a42;"></div></div>
-                    <span class="signal-val" id="signal-critical-val">0</span>
-                </div>
-
-                <div class="stat-grid">
-                    <div class="stat-chip">
-                        <div class="stat-value" id="avg-snr">--</div>
-                        <div class="stat-label">{{ t('dashboard.avg_snr', 'Avg SNR') }}</div>
+                <div id="signal-content" class="is-hidden">
+                    <div class="signal-bar">
+                        <span class="signal-label" style="color: #14a36f;">{{ t('dashboard.excellent', 'Excellent') }}</span>
+                        <div class="signal-track"><div class="signal-fill" id="signal-excellent" style="background: #14a36f;"></div></div>
+                        <span class="signal-val" id="signal-excellent-val">0</span>
                     </div>
-                    <div class="stat-chip">
-                        <div class="stat-value" id="avg-rssi">--</div>
-                        <div class="stat-label">{{ t('dashboard.avg_rssi', 'Avg RSSI') }}</div>
+                    <div class="signal-bar">
+                        <span class="signal-label" style="color: #1ab884;">{{ t('dashboard.good', 'Good') }}</span>
+                        <div class="signal-track"><div class="signal-fill" id="signal-good" style="background: #1ab884;"></div></div>
+                        <span class="signal-val" id="signal-good-val">0</span>
                     </div>
-                    <div class="stat-chip">
-                        <div class="stat-value" id="avg-loss">--</div>
-                        <div class="stat-label">{{ t('dashboard.avg_loss', 'Avg Loss') }}</div>
+                    <div class="signal-bar">
+                        <span class="signal-label" style="color: #e4a313;">{{ t('dashboard.fair', 'Fair') }}</span>
+                        <div class="signal-track"><div class="signal-fill" id="signal-fair" style="background: #e4a313;"></div></div>
+                        <span class="signal-val" id="signal-fair-val">0</span>
+                    </div>
+                    <div class="signal-bar">
+                        <span class="signal-label" style="color: #f58634;">{{ t('dashboard.poor', 'Poor') }}</span>
+                        <div class="signal-track"><div class="signal-fill" id="signal-poor" style="background: #f58634;"></div></div>
+                        <span class="signal-val" id="signal-poor-val">0</span>
+                    </div>
+                    <div class="signal-bar">
+                        <span class="signal-label" style="color: #cb3a42;">{{ t('dashboard.critical', 'Critical') }}</span>
+                        <div class="signal-track"><div class="signal-fill" id="signal-critical" style="background: #cb3a42;"></div></div>
+                        <span class="signal-val" id="signal-critical-val">0</span>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-chip">
+                            <div class="stat-value" id="avg-snr">--</div>
+                            <div class="stat-label">{{ t('dashboard.avg_snr', 'Avg SNR') }}</div>
+                        </div>
+                        <div class="stat-chip">
+                            <div class="stat-value" id="avg-rssi">--</div>
+                            <div class="stat-label">{{ t('dashboard.avg_rssi', 'Avg RSSI') }}</div>
+                        </div>
+                        <div class="stat-chip">
+                            <div class="stat-value" id="avg-loss">--</div>
+                            <div class="stat-label">{{ t('dashboard.avg_loss', 'Avg Loss') }}</div>
+                        </div>
+                    </div>
+                    <div class="signal-issues">
+                        <h6>{{ t('dashboard.top_problem_sensors', 'Top Problem Sensors') }}</h6>
+                        <ul id="problem-sensors" class="problem-list">
+                            <li>{{ t('dashboard.no_sensor_incidents', 'No sensor incidents detected yet.') }}</li>
+                        </ul>
                     </div>
                 </div>
-
-                <div class="signal-issues">
-                    <h6>{{ t('dashboard.top_problem_sensors', 'Top Problem Sensors') }}</h6>
-                    <ul id="problem-sensors" class="problem-list">
-                        <li>{{ t('dashboard.no_sensor_incidents', 'No sensor incidents detected yet.') }}</li>
-                    </ul>
+                <div id="signal-no-data" class="signal-no-data is-visible">
+                    <span class="signal-no-data-icon"><i class="fas fa-signal"></i></span>
+                    <p class="signal-no-data-title">{{ t('dashboard.no_signal_data', 'No signal data yet') }}</p>
+                    <p class="signal-no-data-note">{{ t('dashboard.connect_bs_for_signal', 'Connect a base station to start seeing signal quality.') }}</p>
                 </div>
             </div>
         </div>
 
         <div id="traffic-panel" class="deck-panel clickable panel-size-normal layout-widget" data-nav="/health">
             <div class="deck-head">
-                <h5><i class="fas fa-chart-line me-2"></i>{{ t('dashboard.traffic_capacity', 'Traffic and Capacity') }}</h5>
+                <h5><span class="deck-head-icon"><i class="fas fa-chart-line"></i></span>{{ t('dashboard.traffic_capacity', 'Traffic and Capacity') }}</h5>
                 <small>{{ t('dashboard.open_system_health', 'Open system health') }}</small>
             </div>
             <div class="deck-body">
@@ -951,23 +1175,35 @@
                     <span class="ops-health-badge" id="traffic-status-badge">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</span>
                 </div>
                 <div class="ops-stat-grid">
-                    <div class="ops-stat-card">
-                        <div class="ops-stat-label">{{ t('dashboard.packets_per_hour', 'Packets/hr') }}</div>
+                    <div class="ops-stat-card icon-blue">
+                        <div class="ops-stat-head">
+                            <div class="ops-stat-label">{{ t('dashboard.packets_per_hour', 'Packets/hr') }}</div>
+                            <span class="ops-stat-icon"><i class="fas fa-paper-plane"></i></span>
+                        </div>
                         <div class="ops-stat-value" id="gauge-packets">0</div>
                         <div class="ops-stat-note" id="traffic-rate-note">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</div>
                     </div>
-                    <div class="ops-stat-card">
-                        <div class="ops-stat-label">{{ t('dashboard.packet_loss', 'Packet Loss') }}</div>
+                    <div class="ops-stat-card icon-red">
+                        <div class="ops-stat-head">
+                            <div class="ops-stat-label">{{ t('dashboard.packet_loss', 'Packet Loss') }}</div>
+                            <span class="ops-stat-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                        </div>
                         <div class="ops-stat-value" id="gauge-loss">0%</div>
                         <div class="ops-stat-note" id="traffic-delivery-note">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</div>
                     </div>
-                    <div class="ops-stat-card">
-                        <div class="ops-stat-label">{{ t('dashboard.active_sensors', 'Active Sensors') }}</div>
+                    <div class="ops-stat-card icon-teal">
+                        <div class="ops-stat-head">
+                            <div class="ops-stat-label">{{ t('dashboard.active_sensors', 'Active Sensors') }}</div>
+                            <span class="ops-stat-icon"><i class="fas fa-microchip"></i></span>
+                        </div>
                         <div class="ops-stat-value" id="active-sensors-today">0</div>
                         <div class="ops-stat-note" id="traffic-sensors-note">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</div>
                     </div>
-                    <div class="ops-stat-card">
-                        <div class="ops-stat-label">{{ t('dashboard.live_links', 'Live Links') }}</div>
+                    <div class="ops-stat-card icon-indigo">
+                        <div class="ops-stat-head">
+                            <div class="ops-stat-label">{{ t('dashboard.live_links', 'Live Links') }}</div>
+                            <span class="ops-stat-icon"><i class="fas fa-project-diagram"></i></span>
+                        </div>
                         <div class="ops-stat-value" id="total-connections">0</div>
                         <div class="ops-stat-note" id="traffic-links-note">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</div>
                     </div>
@@ -1154,6 +1390,8 @@ function applyDashboardPayload(payload, meta = {}) {
     updateLastUpdatedLabel(meta && Number.isFinite(meta.ts) ? meta.ts : undefined);
     updateDashboardCacheIndicator(meta);
     dashboardHydrated = true;
+    finishRefreshBar();
+    if (autoRefreshEnabled) startRefreshBar();
 }
 
 function fetchDashboardPayload() {
@@ -1247,7 +1485,7 @@ function renderDashboardCacheIndicator() {
         return;
     }
 
-    el.textContent = appTranslate('dashboard.live_badge', 'Live');
+    el.innerHTML = '<span class="live-dot"></span>' + appTranslate('dashboard.live_badge', 'Live');
 }
 
 function initMiniNetwork() {
@@ -1804,42 +2042,7 @@ function updateStatusCards(data) {
         : appTranslate('dashboard.no_sensor_traffic_yet', 'No recent sensor traffic');
     previousSnapshot.registeredSensors = registeredSensors;
 
-    document.getElementById('platform-summary-fleet').textContent = appTranslate(
-        'dashboard.platform_fleet_summary',
-        `${bsCount} BS · ${registeredSensors}/${totalSensors} sensors live`,
-        { baseStations: bsCount, sensors: registeredSensors, total: totalSensors }
-    );
-
-    const focusText = bsCount === 0
-        ? appTranslate('dashboard.focus_connect_base_station', 'Connect at least one base station to start live routing')
-        : (registeredSensors === 0
-            ? appTranslate('dashboard.focus_waiting_for_sensors', 'Base stations are ready, waiting for sensor traffic')
-            : (mqttEnabled && !mqttActive
-                ? appTranslate('dashboard.focus_check_mqtt_transport', 'Core routing works, but MQTT transport needs attention')
-                : appTranslate('dashboard.focus_runtime_operational', 'Runtime transport and fleet are operational')));
-    document.getElementById('platform-summary-focus').textContent = focusText;
-
-    const nextStepText = bsCount === 0
-        ? appTranslate('dashboard.next_step_connect_and_position', 'Bring one base station online and keep GPS enabled for the map.')
-        : (registeredSensors === 0
-            ? appTranslate('dashboard.next_step_wait_sensor_traffic', 'Verify sensor assignment and wait for the first live telegrams.')
-            : appTranslate('dashboard.next_step_open_health', 'Open System Health for deeper analytics or inspect individual devices.'));
-    document.getElementById('platform-summary-next').textContent = nextStepText;
-
-    const postureEl = document.getElementById('platform-summary-posture');
-    postureEl.classList.remove('is-success', 'is-warning', 'is-danger');
-    if (bsCount === 0) {
-        postureEl.textContent = appTranslate('dashboard.posture_attention_required', 'Attention required');
-        postureEl.classList.add('is-danger');
-    } else if ((mqttEnabled && !mqttActive) || (registeredSensors < totalSensors && totalSensors > 0)) {
-        postureEl.textContent = mqttEnabled && !mqttActive
-            ? appTranslate('dashboard.posture_transport_degraded', 'MQTT needs attention')
-            : appTranslate('dashboard.posture_partial_coverage', 'Partial live coverage');
-        postureEl.classList.add('is-warning');
-    } else {
-        postureEl.textContent = appTranslate('dashboard.posture_stable', 'Stable operational posture');
-        postureEl.classList.add('is-success');
-    }
+    updateSparklines(tlsActive, mqttEnabled ? mqttActive : null, bsCount, registeredSensors);
 }
 
 function updateVmMetrics(data) {
@@ -1902,6 +2105,12 @@ function updateHealthMetrics(data) {
 
     const distribution = data.signal_distribution || {};
     const total = Object.values(distribution).reduce((a, b) => a + toNumber(b), 0);
+
+    const signalContent = document.getElementById('signal-content');
+    const signalNoData = document.getElementById('signal-no-data');
+    if (signalContent) signalContent.classList.toggle('is-hidden', total === 0);
+    if (signalNoData)  signalNoData.classList.toggle('is-visible', total === 0);
+
     const mapBar = (fillId, valId, key) => {
         const value = toNumber(distribution[key]);
         document.getElementById(valId).textContent = value;
@@ -1958,6 +2167,9 @@ function updateOperationsPanel(trafficInfo, healthInfo, vmCapable) {
     const registeredSensors = latestStatusData && latestStatusData.tls_server
         ? toNumber(latestStatusData.tls_server.registered_sensors)
         : 0;
+
+    const trafficPanelEl = document.getElementById('traffic-panel');
+    if (trafficPanelEl) trafficPanelEl.classList.toggle('ops-empty', connectedBs === 0);
 
     const badge = document.getElementById('traffic-status-badge');
     badge.classList.remove('is-success', 'is-warning', 'is-danger');
@@ -2033,7 +2245,7 @@ function updateGatewayActions(data) {
             : (status === 'connecting'
                 ? appTranslate('common.connecting', 'connecting')
                 : appTranslate('common.offline', 'offline'));
-        return `<li class="gateway-item"><div class="gateway-head"><span class="gateway-name">${name}</span><span class="gateway-status ${status}">${statusLabel}</span></div><div class="gateway-meta"><span class="gateway-pill"><code>${escapeHtml(shortId(eui, 12))}</code></span><span class="gateway-pill">${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span><span class="gateway-pill">${ip}</span></div></li>`;
+        return `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span></div><span class="gateway-status ${status}">${statusLabel}</span></div><div class="gateway-meta"><span class="gateway-pill"><i class="fas fa-fingerprint" style="opacity:.6;margin-right:.22rem;"></i>${escapeHtml(shortId(eui, 12))}</span><span class="gateway-pill"><i class="fas fa-microchip" style="opacity:.6;margin-right:.22rem;"></i>${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span><span class="gateway-pill"><i class="fas fa-network-wired" style="opacity:.6;margin-right:.22rem;"></i>${ip}</span></div></li>`;
     }).join('');
 }
 
@@ -2097,11 +2309,18 @@ function renderIncidents(incidents) {
 
     if (!incidents || incidents.length === 0) {
         if (summary) {
-            summary.innerHTML = '<span class="alert-counter is-good">' + appTranslate('dashboard.no_critical_incidents', 'No critical incidents detected') + '</span>';
+            summary.innerHTML = '<span class="alert-counter is-good"><i class="fas fa-check me-1"></i>' + appTranslate('dashboard.system_healthy', 'System healthy') + '</span>';
         }
-        rail.innerHTML = '<li class="rail-item"><span class="rail-dot good"></span><span>' + appTranslate('dashboard.no_critical_incidents', 'No critical incidents detected') + '</span><span class="rail-note">' + appTranslate('common.healthy', 'healthy') + '</span></li>';
+        rail.className = 'rail-list is-all-clear';
+        rail.innerHTML =
+            '<li class="all-clear-state">' +
+            '<span class="all-clear-icon"><i class="fas fa-shield-halved"></i></span>' +
+            '<p class="all-clear-title">' + appTranslate('dashboard.all_clear_title', 'All systems operational') + '</p>' +
+            '<p class="all-clear-note">' + appTranslate('dashboard.all_clear_note', 'No incidents across monitored components.') + '</p>' +
+            '</li>';
         return;
     }
+    rail.className = 'rail-list';
 
     const criticalCount = incidents.filter(item => item.level === 'danger').length;
     const warningCount = incidents.filter(item => item.level !== 'danger').length;
@@ -2116,6 +2335,72 @@ function renderIncidents(incidents) {
     rail.innerHTML = incidents.slice(0, 3).map(item =>
         '<li class="rail-item"><span class="rail-dot ' + (item.level === 'danger' ? 'bad' : 'warn') + '"></span><span>' + item.text + '</span><span class="rail-note">' + (item.level === 'danger' ? appTranslate('dashboard.alert_note_critical', 'critical') : appTranslate('dashboard.alert_note_attention', 'attention')) + '</span></li>'
     ).join('');
+}
+
+/* ── Refresh progress bar ──────────────────────────── */
+function startRefreshBar() {
+    const bar = document.getElementById('refresh-bar');
+    if (!bar) return;
+    bar.classList.remove('is-counting', 'is-fading');
+    void bar.offsetWidth; // force reflow to restart animation
+    bar.classList.add('is-counting');
+}
+
+function finishRefreshBar() {
+    const bar = document.getElementById('refresh-bar');
+    if (!bar) return;
+    bar.classList.remove('is-counting');
+    bar.classList.add('is-fading');
+    setTimeout(() => bar.classList.remove('is-fading'), 400);
+}
+
+/* ── KPI sparklines ────────────────────────────────── */
+const SPARK_MAX_POINTS = 10;
+const kpiSparkHistory = {
+    tls:    [],
+    mqtt:   [],
+    bs:     [],
+    sensor: []
+};
+
+function pushSparkValue(key, value) {
+    kpiSparkHistory[key].push(value);
+    if (kpiSparkHistory[key].length > SPARK_MAX_POINTS) {
+        kpiSparkHistory[key].shift();
+    }
+}
+
+function renderSparkline(svgId, values) {
+    const svg = document.getElementById(svgId);
+    if (!svg || values.length < 2) { if (svg) svg.innerHTML = ''; return; }
+
+    const W = 100, H = 20, PAD = 2;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+
+    const toX = (i) => PAD + (i / (values.length - 1)) * (W - PAD * 2);
+    const toY = (v) => H - PAD - ((v - min) / range) * (H - PAD * 2);
+
+    const points = values.map((v, i) => `${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+    const lastX = toX(values.length - 1).toFixed(1);
+    const lastY = toY(values[values.length - 1]).toFixed(1);
+
+    svg.innerHTML =
+        `<polyline class="kpi-spark-line" points="${points}"/>` +
+        `<circle class="kpi-spark-dot" cx="${lastX}" cy="${lastY}" r="2.2"/>`;
+}
+
+function updateSparklines(tlsActive, mqttActive, bsCount, sensorCount) {
+    pushSparkValue('tls',    tlsActive  ? 1 : 0);
+    pushSparkValue('mqtt',   mqttActive ? 1 : 0);
+    pushSparkValue('bs',     bsCount);
+    pushSparkValue('sensor', sensorCount);
+
+    renderSparkline('tls-spark',    kpiSparkHistory.tls);
+    renderSparkline('mqtt-spark',   kpiSparkHistory.mqtt);
+    renderSparkline('bs-spark',     kpiSparkHistory.bs);
+    renderSparkline('sensor-spark', kpiSparkHistory.sensor);
 }
 
 function scheduleAutoRefresh() {
@@ -2192,6 +2477,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     dashboardCacheTickTimer = setInterval(renderDashboardCacheIndicator, 1000);
     setDashboardSkeletonState(true, { soft: true });
+    startRefreshBar();
     refreshNow(false);
     scheduleAutoRefresh();
 

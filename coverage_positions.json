@@ -37,26 +37,12 @@
       "lat": 48.767193,
       "lng": 18.636599
     },
-    "sensor_00124B001CBCE171": {
-      "type": "osm",
-      "deviceType": "sensor",
-      "eui": "00124B001CBCE171",
-      "lat": 48.769216,
-      "lng": 18.636943
-    },
-    "sensor_00124B001CBCE175": {
-      "type": "osm",
-      "deviceType": "sensor",
-      "eui": "00124B001CBCE175",
-      "lat": 48.768767,
-      "lng": 18.637635
-    },
     "sensor_A0412D1D00000465": {
       "type": "osm",
-      "lat": 48.767526,
-      "lng": 18.636889,
       "deviceType": "sensor",
-      "eui": "A0412D1D00000465"
+      "eui": "A0412D1D00000465",
+      "lat": 48.767526,
+      "lng": 18.636889
     },
     "sensor_A0412D2A000005C3": {
       "type": "osm",

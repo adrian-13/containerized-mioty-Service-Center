@@ -1,31 +1,5 @@
 [
     {
-        "eui": "00124B001CBCE171",
-        "nwKey": "08596059015260490152709608136098",
-        "shortAddr": "A171",
-        "bidi": false,
-        "name": "Testovac\u00ed senzor",
-        "tags": [
-            "test"
-        ],
-        "gps_lat": 48.769216,
-        "gps_lng": 18.636943,
-        "tenant_id": "default"
-    },
-    {
-        "eui": "00124B001CBCE175",
-        "nwKey": "08596059015260490152709608156098",
-        "shortAddr": "A171",
-        "name": "Testovac\u00ed senzor 2",
-        "tags": [
-            "test"
-        ],
-        "bidi": true,
-        "tenant_id": "default",
-        "gps_lat": 48.768767,
-        "gps_lng": 18.637635
-    },
-    {
         "eui": "A0412D2A000005C3",
         "nwKey": "E4365D1FEBE65BA074AE9A971084FBE2",
         "shortAddr": "05C3",

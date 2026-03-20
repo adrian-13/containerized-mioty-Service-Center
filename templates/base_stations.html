@@ -115,11 +115,7 @@
 }
 
 .bs-metric {
-    border: 1px solid #d5deeb;
-    border-radius: 0.94rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-    padding: 0.82rem 0.9rem;
+    /* visual handled by workspace-kpi */
 }
 
 .bs-metric-label {
@@ -706,6 +702,14 @@
 }
 </style>
 
+<div class="workspace-head" style="margin-bottom: 0.85rem;">
+    <div>
+        <p class="workspace-kicker">{{ t('nav.devices', 'Devices') }}</p>
+        <h1 class="workspace-title">{{ t('nav.base_stations', 'Base Stations') }}</h1>
+        <p class="workspace-subtitle">{{ t('base_stations.page_subtitle', 'Live gateway inventory and fleet management') }}</p>
+    </div>
+</div>
+
 <div class="workspace-toolbar bs-toolbar-row">
     <ul class="nav nav-pills workspace-tabs bs-tabs-inline" id="bsTabs" role="tablist">
         <li class="nav-item" role="presentation">
@@ -747,21 +751,21 @@
 <div class="tab-content" id="bsTabContent">
     <div class="tab-pane fade show active bs-page" id="overview" role="tabpanel">
         <div class="bs-metric-grid workspace-kpi-grid">
-            <div class="bs-metric workspace-kpi">
+            <div class="bs-metric workspace-kpi kpi-brand">
                 <div class="bs-metric-label workspace-kpi-label">{{ t('base_stations.total_configured', 'Total Configured') }}</div>
-                <div class="bs-metric-value text-primary" id="totalConfigured">0</div>
+                <div class="bs-metric-value workspace-kpi-value" id="totalConfigured">0</div>
             </div>
-            <div class="bs-metric workspace-kpi">
+            <div class="bs-metric workspace-kpi kpi-success">
                 <div class="bs-metric-label workspace-kpi-label">{{ t('common.connected', 'Connected') }}</div>
-                <div class="bs-metric-value text-success" id="totalConnected">0</div>
+                <div class="bs-metric-value workspace-kpi-value text-success" id="totalConnected">0</div>
             </div>
-            <div class="bs-metric workspace-kpi">
+            <div class="bs-metric workspace-kpi kpi-warning">
                 <div class="bs-metric-label workspace-kpi-label">{{ t('common.connecting', 'Connecting') }}</div>
-                <div class="bs-metric-value text-warning" id="totalConnecting">0</div>
+                <div class="bs-metric-value workspace-kpi-value text-warning" id="totalConnecting">0</div>
             </div>
-            <div class="bs-metric workspace-kpi">
+            <div class="bs-metric workspace-kpi kpi-danger">
                 <div class="bs-metric-label workspace-kpi-label">{{ t('common.offline', 'Offline') }}</div>
-                <div class="bs-metric-value text-danger" id="totalOffline">0</div>
+                <div class="bs-metric-value workspace-kpi-value text-danger" id="totalOffline">0</div>
             </div>
         </div>
 

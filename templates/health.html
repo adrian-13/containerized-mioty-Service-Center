@@ -173,11 +173,7 @@
 }
 
 .health-kpi {
-    border: 1px solid #d6dfec;
-    border-radius: 0.9rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-    padding: 0.76rem 0.82rem;
+    /* visual handled by workspace-kpi */
 }
 
 .health-kpi-label {
@@ -204,10 +200,7 @@
 }
 
 .health-panel {
-    border: 1px solid #d5deeb;
-    border-radius: 0.95rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    /* visual handled by workspace-panel */
     overflow: hidden;
 }
 
@@ -686,6 +679,13 @@
 
 <div class="health-shell workspace-shell">
     <div id="healthAlert" class="alert d-none" role="alert"></div>
+    <div class="workspace-head">
+        <div>
+            <p class="workspace-kicker">{{ t('nav.monitoring', 'Monitoring') }}</p>
+            <h1 class="workspace-title">{{ t('nav.system_health', 'System Health') }}</h1>
+            <p class="workspace-subtitle">{{ t('health.page_subtitle', 'Real-time telemetry, platform uptime and signal quality') }}</p>
+        </div>
+    </div>
     <div class="health-controls-bar">
         <div class="health-controls-main">
             <label class="health-toggle" for="autoRefreshToggle">
@@ -712,32 +712,32 @@
     </div>
 
     <div class="health-kpis workspace-kpi-grid">
-        <article class="health-kpi workspace-kpi">
+        <article class="health-kpi workspace-kpi kpi-brand">
             <p class="health-kpi-label workspace-kpi-label">{{ t('health.system_uptime', 'System Uptime') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiUptime">-</p>
             <p class="health-kpi-note workspace-kpi-note">{{ t('health.service_center_runtime', 'Service center runtime') }}</p>
         </article>
-        <article class="health-kpi workspace-kpi">
+        <article class="health-kpi workspace-kpi kpi-success">
             <p class="health-kpi-label workspace-kpi-label">{{ t('common.sensors', 'Sensors') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiSensors">0 / 0</p>
             <p class="health-kpi-note workspace-kpi-note">{{ t('health.active_registered', 'Active / Registered') }}</p>
         </article>
-        <article class="health-kpi workspace-kpi">
+        <article class="health-kpi workspace-kpi kpi-success">
             <p class="health-kpi-label workspace-kpi-label">{{ t('common.base_stations', 'Base Stations') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiBaseStations">0 / 0</p>
             <p class="health-kpi-note workspace-kpi-note">{{ t('health.connected_total', 'Connected / Total') }}</p>
         </article>
-        <article class="health-kpi workspace-kpi">
+        <article class="health-kpi workspace-kpi kpi-brand">
             <p class="health-kpi-label workspace-kpi-label">{{ t('health.uplinks_24h', 'Uplinks (24h)') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiUplinks">0</p>
             <p class="health-kpi-note workspace-kpi-note">{{ t('health.timescale_telemetry_volume', 'Timescale telemetry volume') }}</p>
         </article>
-        <article class="health-kpi workspace-kpi">
+        <article class="health-kpi workspace-kpi kpi-brand">
             <p class="health-kpi-label workspace-kpi-label">{{ t('health.average_snr', 'Average SNR') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiSnr">0 dB</p>
             <p class="health-kpi-note workspace-kpi-note">{{ t('health.signal_quality_baseline', 'Signal quality baseline') }}</p>
         </article>
-        <article class="health-kpi workspace-kpi">
+        <article class="health-kpi workspace-kpi kpi-warning">
             <p class="health-kpi-label workspace-kpi-label">{{ t('dashboard.packet_loss', 'Packet Loss') }}</p>
             <p class="health-kpi-value workspace-kpi-value" id="kpiLoss">0%</p>
             <p class="health-kpi-note workspace-kpi-note">{{ t('health.across_tracked_sensors', 'Across tracked sensors') }}</p>
