@@ -205,6 +205,66 @@
 /* ── Coverage table ───────────────────────────────────── */
 .sensor-table th { background: #f3f7fe; font-size: 0.65rem; }
 .sensor-table td { font-size: 0.83rem; }
+
+/* ── Attach modal ───────────────────────────────────────── */
+.attach-modal-meta { border: 1px solid #d5deeb; border-radius: .75rem; background: linear-gradient(180deg,#f9fcff 0%,#f4f8ff 100%); padding: .7rem .82rem; margin-bottom: .7rem; }
+.attach-modal-label { font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; color: #607089; font-weight: 800; }
+.attach-modal-sensor { margin-top: .16rem; font-size: .9rem; font-weight: 700; color: #1f3550; }
+.attach-bs-list { max-height: 330px; overflow: auto; border: 1px solid #d9e3f1; border-radius: .72rem; background: #fff; }
+.attach-bs-item { display: flex; align-items: flex-start; gap: .58rem; padding: .62rem .72rem; border-bottom: 1px solid #e7eef8; cursor: pointer; }
+.attach-bs-item:last-child { border-bottom: none; }
+.attach-bs-item:hover { background: #f8fbff; }
+.attach-bs-item--attached { background: #f2fbf6; }
+.attach-bs-item--attached:hover { background: #ecf8f2; }
+.attach-bs-main { display: grid; gap: .16rem; min-width: 0; }
+.attach-bs-name { font-size: .82rem; font-weight: 700; color: #1f3550; }
+.attach-bs-meta { font-size: .72rem; color: #5f7088; word-break: break-all; }
+.attach-bs-state { display: inline-flex; align-items: center; border-radius: 999px; padding: .1rem .45rem; font-size: .66rem; font-weight: 700; letter-spacing: .02em; }
+.attach-bs-state--on { background: #d9f5e4; color: #146c43; }
+.attach-bs-state--off { background: #eef3fb; color: #4a6281; }
+
+/* ── Inline edit modal ──────────────────────────────────── */
+#sensorDetailEditModal .modal-content { border: none; border-radius: 1rem; box-shadow: 0 20px 50px rgba(15,23,42,.18); overflow: hidden; }
+.sensor-config-dialog { max-width: 1100px; }
+.sensor-config-header { border-bottom: 1px solid #e2eaf6; border-left: 4px solid var(--brand-500,#2563eb); background: linear-gradient(180deg,#fff 0%,#f8fbff 100%); padding: .88rem 1.35rem; align-items: flex-start; gap: .7rem; }
+.sensor-config-modal-kicker { font-size: .6rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--brand-600,#1e4d8a); margin: 0; line-height: 1.1; }
+.sensor-config-modal-title { font-size: 1.12rem; font-weight: 800; color: #13263f; margin: .12rem 0 0; font-family: "Sora","Manrope",sans-serif; }
+.sensor-config-modal-subtitle { font-size: .72rem; color: #8a9ab0; margin: .1rem 0 0; font-family: ui-monospace,monospace; min-height: 1rem; }
+.sensor-config-layout { display: grid; grid-template-columns: minmax(0,1fr) 280px; gap: 1rem; align-items: start; }
+.sensor-config-main { min-width: 0; }
+.sensor-config-sidebar { position: sticky; top: .2rem; border: 1px solid #d7e2f1; border-radius: .95rem; background: linear-gradient(180deg,#fbfdff 0%,#f5f9ff 100%); box-shadow: 0 10px 24px rgba(15,23,42,.07); padding: .9rem; }
+.sensor-config-sidebar-title { margin: 0 0 .18rem; font-size: .88rem; font-weight: 800; color: #1f3550; }
+.sensor-config-sidebar-note { margin: 0 0 .8rem; font-size: .76rem; color: #607089; }
+.sensor-config-summary-list { display: grid; gap: .62rem; }
+.sensor-config-summary-item { border: 1px solid #d7e2f1; border-radius: .82rem; background: #fff; padding: .68rem .74rem; }
+.sensor-config-summary-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: #607089; font-weight: 800; }
+.sensor-config-summary-value { margin-top: .24rem; font-size: .92rem; font-weight: 800; color: #152a46; line-height: 1.35; }
+.sensor-config-summary-note { margin-top: .24rem; font-size: .74rem; line-height: 1.45; color: #607089; }
+.sensor-config-tabs { display: flex; align-items: flex-end; gap: 0; padding: 0; border: none; border-radius: 0; background: transparent; border-bottom: 2px solid #e2eaf6; margin-bottom: 1rem; }
+.sensor-config-tab { border: none; border-bottom: 2.5px solid transparent; border-radius: 0; background: transparent; color: #4e6a88; padding: .6rem 1rem; font-size: .78rem; font-weight: 700; display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; margin-bottom: -2px; transition: color .14s; box-shadow: none !important; }
+.sensor-config-tab:hover:not(.active) { color: #1c3a5e; background: rgba(37,99,235,.04); }
+.sensor-config-tab.active { background: transparent; border-bottom-color: var(--brand-500,#2563eb); color: var(--brand-700,#1a4591); font-weight: 800; box-shadow: none !important; }
+.sensor-config-tabpanel { display: none; }
+.sensor-config-tabpanel.active { display: block; }
+.sensor-config-field-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .85rem; }
+.sensor-config-field-span-2 { grid-column: span 2; }
+.sensor-config-section { border: 1px solid #d6dfec; border-radius: .88rem; background: #fff; box-shadow: 0 4px 12px rgba(15,23,42,.04); overflow: hidden; }
+.sensor-config-section-head { background: linear-gradient(180deg,#f8fbff 0%,#f3f7fe 100%); border-bottom: 1px solid #e2eaf5; padding: .68rem 1rem; }
+.sensor-config-section-title { font-size: .88rem; font-weight: 800; color: #18385f; margin: 0 0 .1rem; display: flex; align-items: center; gap: .44rem; }
+.sensor-config-section-title i { color: var(--brand-500,#2563eb); font-size: .76rem; opacity: .85; }
+.sensor-config-section-note { font-size: .72rem; color: #607089; margin: 0; }
+.sensor-config-section .sensor-config-field-grid { padding: .9rem 1rem .6rem; }
+.sensor-config-section .form-label { font-size: .78rem; font-weight: 700; color: #42566f; margin-bottom: .3rem; }
+.sensor-config-section .form-text { font-size: .73rem; color: #8a9ab0; }
+.sensor-config-section .form-control,.sensor-config-section .form-select { min-height: 2.5rem; }
+.sensor-config-footer { background: linear-gradient(180deg,#f8fbff 0%,#f3f7fe 100%); border-top: 1px solid #e2eaf6; padding: .78rem 1.35rem; }
+.sensor-config-body { padding: 1rem 1.2rem 1.15rem; }
+@media (max-width: 991.98px) {
+    .sensor-config-layout { grid-template-columns: 1fr; }
+    .sensor-config-sidebar { position: static; }
+    .sensor-config-field-grid { grid-template-columns: 1fr; }
+    .sensor-config-field-span-2 { grid-column: auto; }
+}
 </style>
 
 <div class="sensor-detail-page">
@@ -216,8 +276,8 @@
     </div>
     <div class="sensor-detail-head-actions">
       <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('sensors') }}"><i class="fas fa-arrow-left me-1"></i>{{ t('sensor_detail.back_to_sensors', 'Späť na senzory') }}</a>
-      <a class="btn btn-outline-primary btn-sm" id="sensorDetailEditLink" href="{{ url_for('sensors') }}?edit_sensor={{ sensor_eui }}&back_to_detail=1"><i class="fas fa-pen me-1"></i>{{ t('sensor_detail.edit_sensor', 'Upraviť senzor') }}</a>
-      <a class="btn btn-outline-primary btn-sm" id="sensorDetailAttachLink" href="{{ url_for('sensors') }}?attach_sensor={{ sensor_eui }}"><i class="fas fa-link me-1"></i>{{ t('sensor_detail.manage_attach', 'Správa priradenia') }}</a>
+      <button type="button" class="btn btn-outline-primary btn-sm" id="sensorDetailEditBtn"><i class="fas fa-pen me-1"></i>{{ t('sensor_detail.edit_sensor', 'Upraviť senzor') }}</button>
+      <button type="button" class="btn btn-outline-primary btn-sm" id="sensorDetailAttachBtn"><i class="fas fa-link me-1"></i>{{ t('sensor_detail.manage_attach', 'Správa priradenia') }}</button>
       <a class="btn btn-outline-primary btn-sm" id="sensorDetailTelemetryLink" href="{{ url_for('sensor_telemetry') }}?sensor_eui={{ sensor_eui }}"><i class="fas fa-wave-square me-1"></i>{{ t('sensor_detail.telemetry_history', 'História telemetrie') }}</a>
       <button type="button" class="btn btn-primary btn-sm" id="sensorDetailRefreshBtn"><i class="fas fa-rotate-right me-1"></i>{{ t('common.refresh', 'Obnoviť') }}</button>
     </div>
@@ -338,8 +398,6 @@
     tabs: document.getElementById('sensorDetailTabs'),
     refresh: document.getElementById('sensorDetailRefreshBtn'),
     telemetry: document.getElementById('sensorDetailTelemetryLink'),
-    edit: document.getElementById('sensorDetailEditLink'),
-    attach: document.getElementById('sensorDetailAttachLink'),
   };
 
   function escapeHtml(value) { return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#039;'); }
@@ -560,7 +618,7 @@
   }
   async function ensureAuditLoaded() { if (!CAN_VIEW_AUDIT || state.auditLoaded || state.auditLoading) return; state.auditLoading = true; try { const response = await fetch(`/api/audit/logs?limit=25&target_id=${encodeURIComponent(SENSOR_EUI)}`); const result = await response.json(); if (!result.success) throw new Error(result.message || tr('unableLoadSensorAudit', 'Auditný záznam senzora sa nepodarilo načítať')); state.audit = Array.isArray(result.entries) ? result.entries : []; state.auditLoaded = true; } catch (error) { state.audit = { error: error.message || tr('unableLoadSensorAudit', 'Auditný záznam senzora sa nepodarilo načítať') }; state.auditLoaded = true; } finally { state.auditLoading = false; if (state.activeTab === 'audit') renderBody(); } }
   function renderBody() { const detail = state.detail; if (!detail) { els.body.innerHTML = `<div class="sensor-empty-state">${escapeHtml(tr('loadingSensorDetail', 'Načítavam detail senzora...'))}</div>`; return; } const panels = { overview: renderOverview(detail), telemetry: renderTelemetry(detail), debug: renderDebug(detail) }; if (CAN_VIEW_AUDIT) panels.audit = !state.auditLoaded ? `<div class="sensor-empty-state">${escapeHtml(tr('auditWillLoad', 'Auditné záznamy sa načítajú po otvorení tejto karty.'))}</div>` : (state.audit?.error ? `<div class="sensor-detail-error">${escapeHtml(state.audit.error)}</div>` : renderAudit(state.audit || [])); const order = ['overview', 'telemetry', 'debug'].concat(CAN_VIEW_AUDIT ? ['audit'] : []); els.body.innerHTML = order.map((tabId) => `<section class="sensor-detail-tabpanel ${state.activeTab === tabId ? 'is-active' : ''}" data-tabpanel="${tabId}">${panels[tabId]}</section>`).join(''); }
-  async function loadDetail() { els.body.innerHTML = `<div class="sensor-empty-state">${escapeHtml(tr('loadingSensorDetail', 'Načítavam detail senzora...'))}</div>`; try { const response = await fetch(`/api/sensors/${encodeURIComponent(SENSOR_EUI)}/details`); const detail = await response.json(); if (!detail.success) throw new Error(detail.message || 'Nepodarilo sa načítať detail senzora'); state.detail = detail; state.auditLoaded = false; state.audit = []; const sensorName = String(detail?.config?.name || '').trim(); els.title.textContent = sensorName ? `${sensorName} (${detail.eui})` : `${tr('sensor', 'Senzor')} ${detail.eui}`; const modeLabel = deriveMonitoringMode(detail) === 'event' ? tr('eventDrivenSensor', 'Udalostný senzor') : tr('periodicSensor', 'Periodický senzor'); els.subtitle.textContent = `${modeLabel}. ${tr('subtitle', 'Použite Prehľad pre operatívu, Telemetriu pre dekódované hodnoty, Debug pre raw payload a Audit pre administrátorské zmeny.')}`; els.telemetry.href = `{{ url_for('sensor_telemetry') }}?sensor_eui=${encodeURIComponent(detail.eui || SENSOR_EUI)}`; els.edit.href = `{{ url_for('sensors') }}?edit_sensor=${encodeURIComponent(detail.eui || SENSOR_EUI)}`; els.attach.href = `{{ url_for('sensors') }}?attach_sensor=${encodeURIComponent(detail.eui || SENSOR_EUI)}`; renderTabs(); renderBody(); if (state.activeTab === 'audit') ensureAuditLoaded(); } catch (error) { els.body.innerHTML = `<div class="sensor-detail-error">${escapeHtml(tr('unableLoadSensorDetail', 'Detail senzora sa nepodarilo načítať: {error}', { error: error.message || tr('unknown', 'neznáme') }))}</div>`; } }
+  async function loadDetail() { els.body.innerHTML = `<div class="sensor-empty-state">${escapeHtml(tr('loadingSensorDetail', 'Načítavam detail senzora...'))}</div>`; try { const response = await fetch(`/api/sensors/${encodeURIComponent(SENSOR_EUI)}/details`); const detail = await response.json(); if (!detail.success) throw new Error(detail.message || 'Nepodarilo sa načítať detail senzora'); state.detail = detail; state.auditLoaded = false; state.audit = []; const sensorName = String(detail?.config?.name || '').trim(); els.title.textContent = sensorName ? `${sensorName} (${detail.eui})` : `${tr('sensor', 'Senzor')} ${detail.eui}`; const modeLabel = deriveMonitoringMode(detail) === 'event' ? tr('eventDrivenSensor', 'Udalostný senzor') : tr('periodicSensor', 'Periodický senzor'); els.subtitle.textContent = `${modeLabel}. ${tr('subtitle', 'Použite Prehľad pre operatívu, Telemetriu pre dekódované hodnoty, Debug pre raw payload a Audit pre administrátorské zmeny.')}`; els.telemetry.href = `{{ url_for('sensor_telemetry') }}?sensor_eui=${encodeURIComponent(detail.eui || SENSOR_EUI)}`; renderTabs(); renderBody(); if (state.activeTab === 'audit') ensureAuditLoaded(); } catch (error) { els.body.innerHTML = `<div class="sensor-detail-error">${escapeHtml(tr('unableLoadSensorDetail', 'Detail senzora sa nepodarilo načítať: {error}', { error: error.message || tr('unknown', 'neznáme') }))}</div>`; } }
   els.refresh.addEventListener('click', loadDetail);
   els.body.addEventListener('click', (event) => {
     const filterButton = event.target.closest('[data-audit-filter]');
@@ -570,6 +628,440 @@
   });
   renderTabs();
   loadDetail();
+
+  // ── Inline Edit Modal ────────────────────────────────────
+  const SD_PROFILE_OPTIONS = {{ sensor_profiles|tojson|safe }};
+  const SD_PROFILE_LIB = Object.fromEntries((SD_PROFILE_OPTIONS || []).map(p => [String(p.id||'').toLowerCase(), p]));
+  let detailEditModalInstance = null;
+
+  function sdGetProfileMeta(id) {
+    const n = String(id||'auto').toLowerCase();
+    return SD_PROFILE_LIB[n] || SD_PROFILE_LIB['auto'] || { label: n };
+  }
+  function sdEnvLabel(v) {
+    if (v === 'indoor') return {{ t('common.indoor','Indoor')|tojson }};
+    if (v === 'outdoor') return {{ t('common.outdoor','Outdoor')|tojson }};
+    return {{ t('display.auto_recommended','Auto')|tojson }};
+  }
+  function sdEnvDesc(v) { return getSensorEnvironmentMeta(v).description; }
+  function sdParseGps(val) { const n = Number(String(val||'').trim()); return Number.isFinite(n) ? n : null; }
+
+  function openDetailEditModal() {
+    const detail = state.detail;
+    if (!detail) return;
+    const c = detail.config || {};
+    document.getElementById('detailEditEui').value        = detail.eui || '';
+    document.getElementById('detailEditNwKey').value      = c.nwKey || '';
+    document.getElementById('detailEditShortAddr').value  = c.shortAddr || '';
+    document.getElementById('detailEditName').value       = c.name || '';
+    document.getElementById('detailEditTags').value       = Array.isArray(c.tags) ? c.tags.join(', ') : (c.tags || '');
+    document.getElementById('detailEditProfile').value    = c.sensor_profile || 'auto';
+    sdInjectCustomDecoderOptions('detailEditDecoder', c.payload_decoder || 'auto');
+    document.getElementById('detailEditEnv').value        = c.environment_context || 'auto';
+    document.getElementById('detailEditMode').value       = c.reporting_mode || 'auto';
+    document.getElementById('detailEditInterval').value   = c.expected_interval_seconds || '';
+    document.getElementById('detailEditStale').value      = c.stale_after_hours || '';
+    document.getElementById('detailEditGpsLat').value     = c.gps_lat ?? '';
+    document.getElementById('detailEditGpsLng').value     = c.gps_lng ?? '';
+    document.getElementById('detailEditBidi').checked     = Boolean(c.bidi);
+    const sub = document.getElementById('detailEditModalSubtitle');
+    if (sub) sub.textContent = c.name ? `${c.name} · ${detail.eui}` : detail.eui;
+    sdUpdateModeUi();
+    sdUpdateSidebar();
+    sdSetTab('identity');
+    if (!detailEditModalInstance) detailEditModalInstance = new bootstrap.Modal(document.getElementById('sensorDetailEditModal'));
+    detailEditModalInstance.show();
+  }
+
+  function sdSetTab(tab) {
+    document.querySelectorAll('[data-detail-tab]').forEach(b => b.classList.toggle('active', b.dataset.detailTab === tab));
+    document.querySelectorAll('[data-detail-panel]').forEach(p => p.classList.toggle('active', p.dataset.detailPanel === tab));
+  }
+
+  function sdUpdateModeUi() {
+    const isEvent = document.getElementById('detailEditMode')?.value === 'event';
+    document.getElementById('detailEditIntervalGroup')?.classList.toggle('d-none', isEvent);
+    document.getElementById('detailEditStaleGroup')?.classList.toggle('d-none', !isEvent);
+    sdUpdateSidebar();
+  }
+
+  function sdUpdateSidebar() {
+    const c = document.getElementById('detailEditSidebar');
+    if (!c) return;
+    const profileVal = document.getElementById('detailEditProfile')?.value || 'auto';
+    const modeVal    = document.getElementById('detailEditMode')?.value    || 'auto';
+    const envVal     = document.getElementById('detailEditEnv')?.value     || 'auto';
+    const intVal     = document.getElementById('detailEditInterval')?.value;
+    const staleVal   = document.getElementById('detailEditStale')?.value;
+    const isEvent    = modeVal === 'event';
+    const modeLabel  = isEvent ? {{ t('sensors.reporting_event_short','Udalostné')|tojson }} : (modeVal === 'periodic' ? {{ t('sensors.reporting_periodic_short','Periodické')|tojson }} : {{ t('display.auto_recommended','Auto')|tojson }});
+    const items = [
+      { label: {{ t('sensor_detail.profile','Profil')|tojson }}, value: escapeHtml(sdGetProfileMeta(profileVal).label || profileVal) },
+      { label: {{ t('sensors.reporting_mode','Reporting Mode')|tojson }}, value: modeLabel },
+      { label: {{ t('sensor_detail.environment_context','Kontext')|tojson }}, value: sdEnvLabel(envVal), note: escapeHtml(sdEnvDesc(envVal)) },
+      isEvent
+        ? { label: {{ t('sensor_detail.service_window','Servisné okno')|tojson }}, value: staleVal ? `${staleVal} h` : {{ t('display.auto_recommended','Auto')|tojson }} }
+        : { label: {{ t('sensor_detail.expected_interval','Očakávaný interval')|tojson }}, value: intVal ? formatDurationShort(intVal) : {{ t('display.auto_recommended','Auto')|tojson }} },
+    ];
+    c.innerHTML = items.map(i => `<div class="sensor-config-summary-item"><div class="sensor-config-summary-label">${i.label}</div><div class="sensor-config-summary-value">${i.value}</div>${i.note ? `<div class="sensor-config-summary-note">${i.note}</div>` : ''}</div>`).join('');
+  }
+
+  function saveDetailEditModal() {
+    const gpsLat = sdParseGps(document.getElementById('detailEditGpsLat').value);
+    const gpsLng = sdParseGps(document.getElementById('detailEditGpsLng').value);
+    if ((gpsLat === null) !== (gpsLng === null)) {
+      window.AppUI?.toast({{ t('runtime.gps_both_required','Zadajte obe GPS súradnice alebo obe nechajte prázdne.')|tojson }}, 'warning');
+      return;
+    }
+    const formData = {
+      eui:                       document.getElementById('detailEditEui').value.toUpperCase().trim(),
+      nwKey:                     document.getElementById('detailEditNwKey').value.toUpperCase().trim(),
+      shortAddr:                 document.getElementById('detailEditShortAddr').value.toUpperCase().trim(),
+      name:                      document.getElementById('detailEditName').value.trim(),
+      tags:                      document.getElementById('detailEditTags').value.split(',').map(t => t.trim()).filter(Boolean),
+      sensor_profile:            document.getElementById('detailEditProfile').value,
+      payload_decoder:           document.getElementById('detailEditDecoder').value,
+      environment_context:       document.getElementById('detailEditEnv').value,
+      reporting_mode:            document.getElementById('detailEditMode').value,
+      expected_interval_seconds: document.getElementById('detailEditInterval').value.trim() || null,
+      stale_after_hours:         document.getElementById('detailEditStale').value.trim() || null,
+      bidi:                      document.getElementById('detailEditBidi').checked,
+      gps_lat:                   gpsLat,
+      gps_lng:                   gpsLng,
+    };
+    fetch('/api/sensors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+      .then(r => r.json())
+      .then(result => {
+        if (!result.success) throw new Error(result.message || 'Chyba pri ukladaní');
+        if (detailEditModalInstance) detailEditModalInstance.hide();
+        window.AppUI?.toast(result.message || `Senzor ${formData.eui} uložený.`, 'success');
+        loadDetail();
+      })
+      .catch(err => window.AppUI?.toast(err.message, 'danger'));
+  }
+
+  // ── Custom decoder option injection ────────────────────────────────────────
+  let _sdCachedCustomDecoders = null;
+  async function sdInjectCustomDecoderOptions(selectId, currentValue) {
+    const el = document.getElementById(selectId);
+    if (!el) return;
+    el.querySelectorAll('option[data-custom-decoder]').forEach(o => o.remove());
+    try {
+      if (!_sdCachedCustomDecoders) {
+        const resp = await fetch('/api/payload-profiles');
+        const data = await resp.json();
+        _sdCachedCustomDecoders = Array.isArray(data.profiles) ? data.profiles : [];
+      }
+      if (_sdCachedCustomDecoders.length) {
+        _sdCachedCustomDecoders.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.label || p.id;
+          opt.setAttribute('data-custom-decoder', '1');
+          el.appendChild(opt);
+        });
+      }
+    } catch (_) {}
+    if (currentValue != null) el.value = currentValue;
+  }
+
+  document.getElementById('sensorDetailEditBtn')?.addEventListener('click', openDetailEditModal);
+  document.addEventListener('click', e => { const b = e.target.closest('[data-detail-tab]'); if (b) sdSetTab(b.dataset.detailTab); });
+  document.addEventListener('change', e => {
+    if (e.target.id === 'detailEditMode') sdUpdateModeUi();
+    if (e.target.id === 'detailEditProfile' || e.target.id === 'detailEditEnv') sdUpdateSidebar();
+  });
+  window.saveDetailEditModal = saveDetailEditModal;
+
+  // ── Attach modal ─────────────────────────────────────────────────────────
+  let detailAttachModalInstance = null;
+  let detailAttachPresenceMap = new Map();
+
+  function openDetailAttachModal() {
+    const eui = state.detail?.config?.eui || state.eui;
+    if (!eui) return;
+    if (!detailAttachModalInstance) {
+      detailAttachModalInstance = new bootstrap.Modal(document.getElementById('sensorDetailAttachModal'));
+    }
+    // populate meta
+    const cfg = state.detail?.config || {};
+    const nameStr = cfg.name ? ` (${cfg.name})` : '';
+    const labelEl = document.getElementById('sdAttachTargetLabel');
+    if (labelEl) labelEl.textContent = `${eui.toUpperCase()}${nameStr}`;
+    // build presence map from receiving_gateways
+    detailAttachPresenceMap = new Map();
+    const attached = Array.isArray(state.detail?.receiving_gateways) ? state.detail.receiving_gateways : [];
+    attached.forEach(g => {
+      const bsEui = String(g.eui || g || '').toUpperCase();
+      if (bsEui) detailAttachPresenceMap.set(bsEui, 1);
+    });
+    const hintEl = document.getElementById('sdAttachStateHint');
+    if (hintEl) {
+      hintEl.innerHTML = detailAttachPresenceMap.size > 0
+        ? `Aktuálne priradenie: <strong>${detailAttachPresenceMap.size}</strong> základňových staníc. Zrušte všetky výbery a uložte pre odpojenie.`
+        : 'Senzor je momentálne odpojený. Vyberte jednu alebo viac základňových staníc a uložte.';
+    }
+    detailAttachModalInstance.show();
+    sdLoadAttachBaseStations();
+  }
+
+  function sdLoadAttachBaseStations() {
+    const listEl = document.getElementById('sdAttachBsList');
+    if (listEl) listEl.innerHTML = '<div class="p-3 text-muted small">Načítavam základňové stanice...</div>';
+    fetch('/api/base-stations')
+      .then(r => r.json())
+      .then(data => {
+        const bsList = Array.isArray(data.base_stations) ? data.base_stations : [];
+        sdRenderAttachOptions(bsList);
+      })
+      .catch(err => {
+        if (listEl) listEl.innerHTML = `<div class="p-3 text-danger small">Chyba pri načítaní: ${err.message}</div>`;
+        sdUpdateAttachState();
+      });
+  }
+
+  function sdRenderAttachOptions(baseStations) {
+    const listEl = document.getElementById('sdAttachBsList');
+    if (!listEl) return;
+    if (!baseStations.length) {
+      listEl.innerHTML = '<div class="p-3 text-warning small">Neboli nájdené žiadne základňové stanice.</div>';
+      sdUpdateAttachState();
+      return;
+    }
+    listEl.innerHTML = baseStations.map(bs => {
+      const eui = String(bs.eui || '').toUpperCase();
+      const name = String(bs.name || '').trim();
+      const label = name ? escapeHtml(name) : `<code>${escapeHtml(eui)}</code>`;
+      const rawStatus = String(bs.status || '').toLowerCase();
+      const statusText = rawStatus === 'connected' ? 'Pripojená' : rawStatus === 'connecting' ? 'Pripája sa' : rawStatus === 'offline' ? 'Offline' : escapeHtml(bs.status || 'neznámy');
+      const isAttached = detailAttachPresenceMap.has(eui);
+      const mappingState = isAttached ? 'Priradená' : 'Nepriradená';
+      return `<label class="attach-bs-item ${isAttached ? 'attach-bs-item--attached' : ''}">
+        <input class="form-check-input sdAttachCheck" type="checkbox" value="${escapeHtml(eui)}" ${isAttached ? 'checked' : ''} onchange="sdUpdateAttachState()">
+        <div class="attach-bs-main">
+          <div class="attach-bs-name">${label}</div>
+          <div class="attach-bs-meta">${escapeHtml(eui)} &middot; ${statusText} &middot; <span class="attach-bs-state ${isAttached ? 'attach-bs-state--on' : 'attach-bs-state--off'}">${escapeHtml(mappingState)}</span></div>
+        </div>
+      </label>`;
+    }).join('');
+    sdUpdateAttachState();
+  }
+
+  function sdUpdateAttachState() {
+    const selected = Array.from(document.querySelectorAll('#sdAttachBsList .sdAttachCheck:checked')).map(i => i.value);
+    const countEl = document.getElementById('sdAttachCount');
+    const confirmBtn = document.getElementById('sdAttachConfirmBtn');
+    if (countEl) countEl.textContent = `${selected.length} vybraných · ${detailAttachPresenceMap.size} aktuálne priradených`;
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = selected.length === 0
+        ? '<i class="fas fa-unlink me-1"></i>Uložiť ako odpojený'
+        : '<i class="fas fa-save me-1"></i>Uložiť priradenie';
+    }
+  }
+  window.sdUpdateAttachState = sdUpdateAttachState;
+
+  function sdSetAllAttach(selected) {
+    document.querySelectorAll('#sdAttachBsList .sdAttachCheck').forEach(i => { i.checked = Boolean(selected); });
+    sdUpdateAttachState();
+  }
+  window.sdSetAllAttach = sdSetAllAttach;
+
+  async function sdSubmitAttach() {
+    const eui = state.detail?.config?.eui || state.eui;
+    if (!eui) return;
+    const selected = Array.from(document.querySelectorAll('#sdAttachBsList .sdAttachCheck:checked')).map(i => i.value);
+    const confirmBtn = document.getElementById('sdAttachConfirmBtn');
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Ukladám...'; }
+    fetch(`/api/sensors/${eui}/attach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base_stations: selected })
+    })
+      .then(r => r.json())
+      .then(result => {
+        if (!result.success) throw new Error(result.message || 'Chyba pri ukladaní');
+        if (detailAttachModalInstance) detailAttachModalInstance.hide();
+        window.AppUI?.toast(result.message || 'Priradenie uložené.', 'success');
+        loadDetail();
+      })
+      .catch(err => {
+        window.AppUI?.toast(err.message, 'danger');
+        sdUpdateAttachState();
+      });
+  }
+  window.sdSubmitAttach = sdSubmitAttach;
+
+  document.getElementById('sensorDetailAttachBtn')?.addEventListener('click', openDetailAttachModal);
 })();
 </script>
+
+<!-- Sensor inline edit modal -->
+<div class="modal fade" id="sensorDetailEditModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable sensor-config-dialog">
+    <div class="modal-content">
+      <div class="modal-header sensor-config-header">
+        <div>
+          <p class="sensor-config-modal-kicker">{{ t('sensors.edit_sensor_kicker','Úprava senzora') }}</p>
+          <h5 class="modal-title sensor-config-modal-title">{{ t('sensor_detail.edit_sensor','Upraviť senzor') }}</h5>
+          <p class="sensor-config-modal-subtitle" id="detailEditModalSubtitle"></p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body sensor-config-body">
+        <div class="sensor-config-layout">
+          <div class="sensor-config-main">
+            <div class="sensor-config-tabs">
+              <button type="button" class="sensor-config-tab active" data-detail-tab="identity"><i class="fas fa-id-badge"></i>{{ t('common.identity','Identity') }}</button>
+              <button type="button" class="sensor-config-tab" data-detail-tab="telemetry"><i class="fas fa-sliders-h"></i>{{ t('common.telemetry','Telemetry') }}</button>
+              <button type="button" class="sensor-config-tab" data-detail-tab="placement"><i class="fas fa-location-dot"></i>{{ t('common.placement','Placement') }}</button>
+            </div>
+            <section class="sensor-config-section sensor-config-tabpanel active" data-detail-panel="identity">
+              <div class="sensor-config-section-head">
+                <h6 class="sensor-config-section-title"><i class="fas fa-id-badge"></i>{{ t('sensors.identity_registration','Identity and registration') }}</h6>
+                <p class="sensor-config-section-note">{{ t('sensors.identity_registration_note','Core registration values used for endpoint identification and protocol binding.') }}</p>
+              </div>
+              <div class="sensor-config-field-grid">
+                <div class="sensor-config-field-span-2">
+                  <label class="form-label">{{ t('sensors.eui_hex16','EUI') }}</label>
+                  <input type="text" class="form-control" id="detailEditEui" readonly>
+                </div>
+                <div class="sensor-config-field-span-2">
+                  <label class="form-label">{{ t('sensors.network_key_hex32','Network Key (32 hex)') }}</label>
+                  <input type="text" class="form-control" id="detailEditNwKey" maxlength="32">
+                </div>
+                <div>
+                  <label class="form-label">{{ t('sensors.short_address_hex4','Short Address') }}</label>
+                  <input type="text" class="form-control" id="detailEditShortAddr" maxlength="4">
+                </div>
+                <div>
+                  <label class="form-label">{{ t('common.name_label_optional','Name (optional)') }}</label>
+                  <input type="text" class="form-control" id="detailEditName" maxlength="80">
+                </div>
+                <div class="sensor-config-field-span-2">
+                  <label class="form-label">{{ t('common.tags_optional','Tags (optional)') }}</label>
+                  <input type="text" class="form-control" id="detailEditTags" maxlength="240">
+                  <div class="form-text">{{ t('common.tags_comma_separated','Comma-separated.') }}</div>
+                </div>
+                <div class="sensor-config-field-span-2">
+                  <div class="form-check mt-1">
+                    <input class="form-check-input" type="checkbox" id="detailEditBidi">
+                    <label class="form-check-label" for="detailEditBidi">{{ t('sensors.bidirectional','Obojsmerná prevádzka') }}</label>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="sensor-config-section sensor-config-tabpanel" data-detail-panel="telemetry">
+              <div class="sensor-config-section-head">
+                <h6 class="sensor-config-section-title"><i class="fas fa-sliders-h"></i>{{ t('sensors.telemetry_behavior','Telemetry behavior') }}</h6>
+                <p class="sensor-config-section-note">{{ t('sensors.telemetry_behavior_note','Profile, decoder and timing controls.') }}</p>
+              </div>
+              <div class="sensor-config-field-grid">
+                <div class="sensor-config-field-span-2">
+                  <label class="form-label">{{ t('sensors.sensor_profile','Sensor Profile') }}</label>
+                  <select class="form-select" id="detailEditProfile">
+                    {% for profile in sensor_profiles %}
+                    <option value="{{ profile.id }}">{{ t('sensor_profiles.' ~ profile.id ~ '.label', profile.label) }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">{{ t('sensors.payload_decoder','Payload Decoder') }}</label>
+                  <select class="form-select" id="detailEditDecoder">
+                    <option value="auto">{{ t('sensors.decoder_auto','Auto') }}</option>
+                    <option value="raw">{{ t('sensors.raw_only','Raw only') }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">{{ t('sensors.deployment_context','Deployment Context') }}</label>
+                  <select class="form-select" id="detailEditEnv">
+                    <option value="auto">{{ t('common.auto_unknown','Auto / unknown') }}</option>
+                    <option value="indoor">{{ t('common.indoor','Indoor') }}</option>
+                    <option value="outdoor">{{ t('common.outdoor','Outdoor') }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">{{ t('sensors.reporting_mode','Reporting Mode') }}</label>
+                  <select class="form-select" id="detailEditMode">
+                    <option value="auto">{{ t('sensors.reporting_auto','Auto') }}</option>
+                    <option value="periodic">{{ t('sensors.reporting_periodic','Periodické') }}</option>
+                    <option value="event">{{ t('sensors.reporting_event','Udalostné') }}</option>
+                  </select>
+                </div>
+                <div id="detailEditIntervalGroup">
+                  <label class="form-label">{{ t('sensors.expected_uplink_interval','Expected Interval (s)') }}</label>
+                  <input type="number" class="form-control" id="detailEditInterval" min="10" max="86400" step="1" placeholder="{{ t('sensors.expected_interval_placeholder','Auto') }}">
+                </div>
+                <div id="detailEditStaleGroup" class="d-none">
+                  <label class="form-label">{{ t('sensors.event_sensor_service_window','Service Window (h)') }}</label>
+                  <input type="number" class="form-control" id="detailEditStale" min="1" max="2160" step="1" placeholder="{{ t('sensors.service_window_placeholder','Auto') }}">
+                </div>
+              </div>
+            </section>
+            <section class="sensor-config-section sensor-config-tabpanel" data-detail-panel="placement">
+              <div class="sensor-config-section-head">
+                <h6 class="sensor-config-section-title"><i class="fas fa-location-dot"></i>{{ t('sensors.placement_mapping','Placement and mapping') }}</h6>
+                <p class="sensor-config-section-note">{{ t('sensors.placement_mapping_note','Optional GPS placement for coverage view.') }}</p>
+              </div>
+              <div class="sensor-config-field-grid">
+                <div>
+                  <label class="form-label">{{ t('common.gps_latitude_optional','GPS Latitude') }}</label>
+                  <input type="number" class="form-control" id="detailEditGpsLat" step="0.000001" placeholder="{{ t('common.latitude','Latitude') }}">
+                </div>
+                <div>
+                  <label class="form-label">{{ t('common.gps_longitude_optional','GPS Longitude') }}</label>
+                  <input type="number" class="form-control" id="detailEditGpsLng" step="0.000001" placeholder="{{ t('common.longitude','Longitude') }}">
+                </div>
+              </div>
+            </section>
+          </div>
+          <aside class="sensor-config-sidebar">
+            <h6 class="sensor-config-sidebar-title">{{ t('common.live_summary','Live summary') }}</h6>
+            <p class="sensor-config-sidebar-note">{{ t('sensors.live_summary_note','This panel mirrors the currently selected profile and reporting settings.') }}</p>
+            <div id="detailEditSidebar" class="sensor-config-summary-list"></div>
+          </aside>
+        </div>
+      </div>
+      <div class="modal-footer sensor-config-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('common.cancel','Cancel') }}</button>
+        <button type="button" class="btn btn-primary" onclick="saveDetailEditModal()"><i class="fas fa-save me-1"></i>{{ t('common.save','Save') }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sensor inline attach modal -->
+<div class="modal fade" id="sensorDetailAttachModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-link me-2"></i>{{ t('sensors.manage_attachments','Správa priradenia') }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="attach-modal-meta">
+          <div class="attach-modal-label">{{ t('common.sensor','Sensor') }}</div>
+          <div id="sdAttachTargetLabel" class="attach-modal-sensor">-</div>
+          <div id="sdAttachStateHint" class="small text-muted mt-1">{{ t('sensors.loading_attachment_state','Načítavam stav priradenia...') }}</div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+          <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-primary" onclick="sdSetAllAttach(true)">
+              <i class="fas fa-check-double me-1"></i>{{ t('sensors.all_base_stations','Všetky základňové stanice') }}
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="sdSetAllAttach(false)">{{ t('sensors.clear_selection_detach','Zrušiť výber a odpojiť') }}</button>
+          </div>
+          <span id="sdAttachCount" class="sensor-meta-note">0 vybraných</span>
+        </div>
+        <div id="sdAttachBsList" class="attach-bs-list p-3 text-muted small">{{ t('runtime.loading_base_stations','Načítavam základňové stanice...') }}</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('common.cancel','Cancel') }}</button>
+        <button type="button" class="btn btn-success" id="sdAttachConfirmBtn" onclick="sdSubmitAttach()" disabled>
+          <i class="fas fa-save me-1"></i>{{ t('sensors.save_mapping','Uložiť priradenie') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

@@ -1541,13 +1541,14 @@
 
 .sensor-config-section .form-label {
     font-size: 0.78rem;
-    font-weight: 800;
+    font-weight: 700;
     color: #42566f;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.3rem;
 }
 
 .sensor-config-section .form-text {
-    font-size: 0.74rem;
+    font-size: 0.73rem;
+    color: #8a9ab0;
 }
 
 .sensor-config-section .mb-3 {
@@ -1556,7 +1557,7 @@
 
 .sensor-config-section .form-control,
 .sensor-config-section .form-select {
-    min-height: 2.72rem;
+    min-height: 2.5rem;
 }
 
 .sensor-config-footer {
@@ -1685,8 +1686,6 @@
 .sensor-config-section-title i { color: var(--brand-500, #2563eb); font-size: 0.76rem; opacity: 0.85; }
 .sensor-config-section-note { margin: 0; font-size: 0.72rem; color: #607089; }
 .sensor-config-section .sensor-config-field-grid { padding: 0.9rem 1rem 0.6rem; }
-.sensor-config-section .form-label { font-size: 0.74rem; margin-bottom: 0.28rem; }
-.sensor-config-section .form-text { font-size: 0.71rem; color: #8a9ab0; }
 /* Footer */
 .sensor-config-footer {
     background: linear-gradient(180deg, #f8fbff 0%, #f3f7fe 100%);
@@ -2076,8 +2075,6 @@
                                         <label for="sensorPayloadDecoder" class="form-label">{{ t('sensors.payload_decoder', 'Payload Decoder') }}</label>
                                         <select class="form-select" id="sensorPayloadDecoder">
                                             <option value="auto" selected>{{ t('sensors.decoder_auto', 'Auto (infer by name/tags)') }}</option>
-                                            <option value="lansen_e2_co2_v1">{{ t('sensors.decoder_lansen_e2_co2', 'LANSEN E2 CO2') }}</option>
-                                            <option value="lansen_m2_v1">{{ t('sensors.decoder_lansen_m2', 'LANSEN M2') }}</option>
                                             <option value="raw">{{ t('sensors.raw_only', 'Raw only (no decoding)') }}</option>
                                         </select>
                                         <div class="form-text" id="sensorPayloadDecoderHelp">{{ t('sensors.payload_decoder_help', 'Select explicit decoding profile for this sensor type.') }}</div>
@@ -3207,6 +3204,7 @@ function openSensorModal(sensor = null) {
     setSensorConfigActiveTab('identity');
     setSensorFormBaseline();
     sensorModalCloseBySave = false;
+    injectCustomDecoderOptions('sensorPayloadDecoder', sensor ? String(sensor.payload_decoder || 'auto') : 'auto');
 }
 
 function sensorRowInteractiveTarget(target) {
@@ -4039,6 +4037,7 @@ if (legacyDetailTarget) {
     updateSensorReportingModeUi();
     updateSensorConfigSidebar();
     initSensorUnsavedChangesGuards();
+    injectCustomDecoderOptions('sensorPayloadDecoder', null);
 }
 
 const attachModalEl = document.getElementById('attachSensorModal');
@@ -4817,6 +4816,33 @@ function renderLatestUplinkSection(latestUplink, uplinkHistory, sensorConfig = {
             </div>
         </div>
     `;
+}
+
+// ── Custom decoder option injection ──────────────────────────────────────────
+let _cachedCustomDecoders = null;
+
+async function injectCustomDecoderOptions(selectId, currentValue) {
+    const el = document.getElementById(selectId);
+    if (!el) return;
+    // Remove previously injected decoder options
+    el.querySelectorAll('option[data-custom-decoder]').forEach(o => o.remove());
+    try {
+        if (!_cachedCustomDecoders) {
+            const resp = await fetch('/api/payload-profiles');
+            const data = await resp.json();
+            _cachedCustomDecoders = Array.isArray(data.profiles) ? data.profiles : [];
+        }
+        if (_cachedCustomDecoders.length) {
+            _cachedCustomDecoders.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.label || p.id;
+                opt.setAttribute('data-custom-decoder', '1');
+                el.appendChild(opt);
+            });
+        }
+    } catch (_) {}
+    if (currentValue != null) el.value = currentValue;
 }
 
 </script>

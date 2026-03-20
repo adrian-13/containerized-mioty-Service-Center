@@ -211,9 +211,10 @@
     color: #496386;
 }
 .admin-modal .form-label {
-    font-size: 0.84rem;
+    font-size: 0.78rem;
     font-weight: 700;
     color: #374a67;
+    margin-bottom: 0.3rem;
 }
 .admin-modal .modal-footer {
     border-top: 1px solid #dfe8f5;
@@ -389,6 +390,9 @@
             <button type="button" class="btn btn-outline-secondary" data-admin-tab-btn="tenants">
                 <i class="fas fa-building me-1"></i>{{ t('admin.tenant_management', 'Tenant Management') }}
             </button>
+            <button type="button" class="btn btn-outline-secondary" data-admin-tab-btn="decoders">
+                <i class="fas fa-code me-1"></i>{{ t('admin.decoder_profiles', 'Dekódery payloadu') }}
+            </button>
         </div>
         <small class="tenant-meta-note">{{ t('admin.admin_only_operations', 'Admin-only operations. Changes apply immediately.') }}</small>
     </div>
@@ -475,6 +479,27 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="adminPanelDecoders" class="admin-panel d-none">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card admin-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-code me-2"></i>{{ t('admin.decoder_profiles', 'Vlastné dekódery payloadu') }}</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="tenant-chip" id="decoderProfileCount">0</span>
+                            <button class="btn btn-primary btn-sm" onclick="openDecoderModal(null)">
+                                <i class="fas fa-plus me-1"></i>{{ t('admin.add_decoder', 'Pridať dekóder') }}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="decoderProfileList" class="p-3 text-muted small">{{ t('runtime.loading', 'Načítavam...') }}</div>
                     </div>
                 </div>
             </div>
@@ -597,6 +622,70 @@
                         <i class="fas fa-save me-1"></i>{{ t('admin.save_tenant', 'Save Tenant') }}
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Decoder Profile Modal -->
+<div class="modal fade admin-modal" id="decoderProfileModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <p class="admin-modal-kicker" id="decoderModalKicker">{{ t('admin.new_decoder', 'Nový dekóder') }}</p>
+                    <h5 class="modal-title" id="decoderModalTitle">{{ t('admin.decoder_profile', 'Profil dekódera') }}</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <section class="admin-modal-section">
+                            <p class="admin-modal-section-title">{{ t('admin.decoder_identity', 'Identita dekódera') }}</p>
+                            <div class="mb-2">
+                                <label class="form-label">{{ t('admin.decoder_id', 'ID (slug, napr. my_sensor_v1)') }}</label>
+                                <input type="text" class="form-control" id="decoderEditId" maxlength="64" placeholder="my_sensor_v1">
+                                <div class="form-text">{{ t('admin.decoder_id_note', 'Malé písmená, číslice, podčiarkovník. Nesmie sa zhodovať so vstavaným dekóderom.') }}</div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ t('admin.decoder_label', 'Zobrazovaný názov') }}</label>
+                                <input type="text" class="form-control" id="decoderEditLabel" maxlength="80" placeholder="My Sensor v1">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ t('admin.decoder_description', 'Popis (voliteľný)') }}</label>
+                                <input type="text" class="form-control" id="decoderEditDescription" maxlength="200">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ t('admin.decoder_model_hint', 'Model / typ zariadenia (voliteľný)') }}</label>
+                                <input type="text" class="form-control" id="decoderEditModelHint" maxlength="80" placeholder="My Sensor">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ t('admin.decoder_payload_length', 'Dĺžka payloadu (bajty, 1–128)') }}</label>
+                                <input type="number" class="form-control" id="decoderEditPayloadLength" min="1" max="128" step="1" value="1">
+                                <div class="form-text" id="decoderPayloadBitsNote">{{ t('admin.decoder_payload_bits_note', '8 bitov k dispozícii') }}</div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="col-md-6">
+                        <section class="admin-modal-section">
+                            <p class="admin-modal-section-title">{{ t('admin.decoder_fields', 'Polia payloadu') }}</p>
+                            <div class="form-text mb-2">{{ t('admin.decoder_fields_note', 'Definujte polia v poradí od MSB. Súčet bitov nesmie presiahnuť kapacitu payloadu.') }}</div>
+                            <div id="decoderFieldList" class="mb-2"></div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addDecoderField()">
+                                    <i class="fas fa-plus me-1"></i>{{ t('admin.add_field', 'Pridať pole') }}
+                                </button>
+                                <span id="decoderBitsUsed" class="form-text mb-0">0 / 8 bitov</span>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('common.cancel', 'Zrušiť') }}</button>
+                <button type="button" class="btn btn-primary" onclick="saveDecoderProfile()">
+                    <i class="fas fa-save me-1"></i>{{ t('common.save', 'Uložiť') }}
+                </button>
             </div>
         </div>
     </div>
@@ -851,13 +940,18 @@ function hideModal(modalId) {
 function setAdminTab(tabName) {
     const canManageUsers = canCurrentAdminScope('manage_users');
     const canManageTenants = canCurrentAdminScope('manage_tenants');
-    let nextTab = tabName === 'tenants' ? 'tenants' : 'users';
-    if (nextTab === 'users' && !canManageUsers) nextTab = 'tenants';
-    if (nextTab === 'tenants' && !canManageTenants) nextTab = 'users';
+    const canManageSystem = canCurrentAdminScope('manage_system');
+    let nextTab = tabName === 'tenants' ? 'tenants' : (tabName === 'decoders' ? 'decoders' : 'users');
+    if (nextTab === 'users' && !canManageUsers) nextTab = canManageTenants ? 'tenants' : 'decoders';
+    if (nextTab === 'tenants' && !canManageTenants) nextTab = canManageUsers ? 'users' : 'decoders';
+    if (nextTab === 'decoders' && !canManageSystem) nextTab = canManageUsers ? 'users' : 'tenants';
     const usersPanel = document.getElementById('adminPanelUsers');
     const tenantsPanel = document.getElementById('adminPanelTenants');
+    const decodersPanel = document.getElementById('adminPanelDecoders');
     if (usersPanel) usersPanel.classList.toggle('d-none', nextTab !== 'users');
     if (tenantsPanel) tenantsPanel.classList.toggle('d-none', nextTab !== 'tenants');
+    if (decodersPanel) decodersPanel.classList.toggle('d-none', nextTab !== 'decoders');
+    if (nextTab === 'decoders') loadDecoderProfiles();
 
     document.querySelectorAll('[data-admin-tab-btn]').forEach(btn => {
         const active = btn.getAttribute('data-admin-tab-btn') === nextTab;
@@ -874,6 +968,7 @@ function setAdminTab(tabName) {
 function initAdminTabs() {
     const canManageUsers = canCurrentAdminScope('manage_users');
     const canManageTenants = canCurrentAdminScope('manage_tenants');
+    const canManageSystem = canCurrentAdminScope('manage_system');
     document.querySelectorAll('[data-admin-tab-btn]').forEach(btn => {
         const tabName = btn.getAttribute('data-admin-tab-btn');
         if (tabName === 'users' && !canManageUsers) {
@@ -881,6 +976,10 @@ function initAdminTabs() {
             return;
         }
         if (tabName === 'tenants' && !canManageTenants) {
+            btn.classList.add('d-none');
+            return;
+        }
+        if (tabName === 'decoders' && !canManageSystem) {
             btn.classList.add('d-none');
             return;
         }
@@ -893,8 +992,8 @@ function initAdminTabs() {
         console.debug('Cannot read admin tab state', err);
     }
     if (initial === 'users' && !canManageUsers) initial = 'tenants';
-    if (initial === 'tenants' && !canManageTenants) initial = 'users';
-    if (!canManageUsers && !canManageTenants) initial = 'users';
+    if (initial === 'tenants' && !canManageTenants) initial = 'decoders';
+    if (initial === 'decoders' && !canManageSystem) initial = 'users';
     setAdminTab(initial);
 }
 
@@ -1686,5 +1785,261 @@ document.addEventListener('DOMContentLoaded', async function() {
     await fetchTenantAdminData();
     initAdministrationUnsavedGuards();
 });
+
+// ── Payload Decoder Profiles ─────────────────────────────────────────────────
+let decoderProfiles = [];
+let decoderModalInstance = null;
+let editingDecoderId = null;
+
+const FIELD_TYPES = [
+    { value: 'uint',  label: 'uint – neznamienkové' },
+    { value: 'int',   label: 'int – znamienkové' },
+    { value: 'bool',  label: 'bool – pravda/nepravda' },
+];
+
+function escapeHtmlD(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function loadDecoderProfiles() {
+    const listEl = document.getElementById('decoderProfileList');
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="p-3 text-muted small">Načítavam...</div>';
+    try {
+        const resp = await fetch('/api/payload-profiles');
+        const data = await resp.json();
+        decoderProfiles = Array.isArray(data.profiles) ? data.profiles : [];
+        renderDecoderList();
+    } catch (err) {
+        listEl.innerHTML = `<div class="p-3 text-danger small">Chyba: ${escapeHtmlD(err.message)}</div>`;
+    }
+}
+
+function renderDecoderList() {
+    const listEl = document.getElementById('decoderProfileList');
+    const countEl = document.getElementById('decoderProfileCount');
+    if (countEl) countEl.textContent = decoderProfiles.length;
+    if (!listEl) return;
+    if (!decoderProfiles.length) {
+        listEl.innerHTML = '<div class="p-3 text-muted small">Žiadne dekódery. Kliknite na „Pridať dekóder".</div>';
+        return;
+    }
+    listEl.innerHTML = `
+        <table class="table table-sm table-hover mb-0" style="font-size:.84rem">
+            <thead style="background:#f8fbff">
+                <tr>
+                    <th style="padding:.6rem .9rem">ID</th>
+                    <th>Názov</th>
+                    <th>Dĺžka</th>
+                    <th>Polia</th>
+                    <th>Popis</th>
+                    <th style="width:7rem"></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${decoderProfiles.map(p => `
+                    <tr>
+                        <td class="font-monospace" style="padding:.6rem .9rem;color:#2563eb;font-size:.79rem">${escapeHtmlD(p.id)}</td>
+                        <td style="font-weight:700;color:#13263f">${escapeHtmlD(p.label)}</td>
+                        <td>${escapeHtmlD(p.payload_length_bytes)} B</td>
+                        <td>${escapeHtmlD((p.fields || []).length)}</td>
+                        <td style="color:#627690;max-width:22rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtmlD(p.description || '')}">${escapeHtmlD(p.description || '–')}</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-outline-primary btn-sm" onclick="openDecoderModal(${JSON.stringify(p.id)})">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="confirmDeleteDecoder(${JSON.stringify(p.id)})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function openDecoderModal(profileId) {
+    if (!decoderModalInstance) {
+        decoderModalInstance = new bootstrap.Modal(document.getElementById('decoderProfileModal'));
+    }
+    const kicker = document.getElementById('decoderModalKicker');
+    const title = document.getElementById('decoderModalTitle');
+    if (profileId) {
+        editingDecoderId = profileId;
+        const p = decoderProfiles.find(x => x.id === profileId);
+        if (!p) return;
+        if (kicker) kicker.textContent = 'Úprava dekódera';
+        if (title) title.textContent = p.label || profileId;
+        document.getElementById('decoderEditId').value = p.id;
+        document.getElementById('decoderEditId').readOnly = true;
+        document.getElementById('decoderEditLabel').value = p.label || '';
+        document.getElementById('decoderEditDescription').value = p.description || '';
+        document.getElementById('decoderEditModelHint').value = p.model_hint || '';
+        document.getElementById('decoderEditPayloadLength').value = p.payload_length_bytes || 1;
+        renderDecoderFields(p.fields || []);
+    } else {
+        editingDecoderId = null;
+        if (kicker) kicker.textContent = 'Nový dekóder';
+        if (title) title.textContent = 'Profil dekódera';
+        document.getElementById('decoderEditId').value = '';
+        document.getElementById('decoderEditId').readOnly = false;
+        document.getElementById('decoderEditLabel').value = '';
+        document.getElementById('decoderEditDescription').value = '';
+        document.getElementById('decoderEditModelHint').value = '';
+        document.getElementById('decoderEditPayloadLength').value = 1;
+        renderDecoderFields([]);
+    }
+    updateDecoderBitsInfo();
+    decoderModalInstance.show();
+}
+
+function renderDecoderFields(fields) {
+    const container = document.getElementById('decoderFieldList');
+    if (!container) return;
+    container.innerHTML = fields.map((f, i) => buildFieldRow(f, i)).join('');
+    updateDecoderBitsInfo();
+}
+
+function buildFieldRow(f, i) {
+    const typeOpts = FIELD_TYPES.map(t => `<option value="${t.value}" ${f.type === t.value ? 'selected' : ''}>${t.label}</option>`).join('');
+    return `
+        <div class="border rounded p-2 mb-2 bg-light" style="font-size:.8rem" data-field-row="${i}">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <strong style="font-size:.77rem;color:#1e4d8a">Pole #${i + 1}</strong>
+                <button type="button" class="btn btn-outline-danger btn-sm py-0 px-1" style="font-size:.7rem" onclick="removeDecoderField(${i})"><i class="fas fa-trash"></i></button>
+            </div>
+            <div class="row g-1">
+                <div class="col-4">
+                    <label class="form-label" style="font-size:.71rem">Kľúč (key)</label>
+                    <input type="text" class="form-control form-control-sm df-key" placeholder="napr. temperature" value="${escapeHtmlD(f.key || '')}" oninput="updateDecoderBitsInfo()">
+                </div>
+                <div class="col-4">
+                    <label class="form-label" style="font-size:.71rem">Štítok (label)</label>
+                    <input type="text" class="form-control form-control-sm df-label" placeholder="Teplota" value="${escapeHtmlD(f.label || '')}">
+                </div>
+                <div class="col-2">
+                    <label class="form-label" style="font-size:.71rem">Bity</label>
+                    <input type="number" class="form-control form-control-sm df-bits" min="1" max="64" value="${escapeHtmlD(f.bits || 8)}" oninput="updateDecoderBitsInfo()">
+                </div>
+                <div class="col-2">
+                    <label class="form-label" style="font-size:.71rem">Typ</label>
+                    <select class="form-select form-select-sm df-type">${typeOpts}</select>
+                </div>
+                <div class="col-2">
+                    <label class="form-label" style="font-size:.71rem">Scale</label>
+                    <input type="number" class="form-control form-control-sm df-scale" step="any" value="${escapeHtmlD(f.scale ?? 1)}">
+                </div>
+                <div class="col-2">
+                    <label class="form-label" style="font-size:.71rem">Offset</label>
+                    <input type="number" class="form-control form-control-sm df-offset" step="any" value="${escapeHtmlD(f.offset ?? 0)}">
+                </div>
+                <div class="col-2">
+                    <label class="form-label" style="font-size:.71rem">Decimal.</label>
+                    <input type="number" class="form-control form-control-sm df-decimals" min="0" max="6" value="${escapeHtmlD(f.decimals ?? 0)}">
+                </div>
+                <div class="col-3">
+                    <label class="form-label" style="font-size:.71rem">Jednotka</label>
+                    <input type="text" class="form-control form-control-sm df-unit" placeholder="°C" value="${escapeHtmlD(f.unit || '')}">
+                </div>
+                <div class="col-3 d-flex align-items-end pb-1">
+                    <div class="form-check m-0">
+                        <input class="form-check-input df-summary" type="checkbox" id="dfSum_${i}" ${f.summary ? 'checked' : ''}>
+                        <label class="form-check-label" for="dfSum_${i}" style="font-size:.71rem">Súhrn</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function addDecoderField() {
+    const fields = collectDecoderFields();
+    fields.push({ key: '', label: '', bits: 8, type: 'uint', scale: 1, offset: 0, decimals: 0, unit: '', summary: false });
+    renderDecoderFields(fields);
+}
+window.addDecoderField = addDecoderField;
+
+function removeDecoderField(idx) {
+    const fields = collectDecoderFields();
+    fields.splice(idx, 1);
+    renderDecoderFields(fields);
+}
+window.removeDecoderField = removeDecoderField;
+
+function collectDecoderFields() {
+    const rows = document.querySelectorAll('#decoderFieldList [data-field-row]');
+    return Array.from(rows).map(row => ({
+        key:      row.querySelector('.df-key')?.value?.trim() || '',
+        label:    row.querySelector('.df-label')?.value?.trim() || '',
+        bits:     Number(row.querySelector('.df-bits')?.value) || 8,
+        type:     row.querySelector('.df-type')?.value || 'uint',
+        scale:    parseFloat(row.querySelector('.df-scale')?.value ?? 1) || 1,
+        offset:   parseFloat(row.querySelector('.df-offset')?.value ?? 0) || 0,
+        decimals: Number(row.querySelector('.df-decimals')?.value) || 0,
+        unit:     row.querySelector('.df-unit')?.value?.trim() || '',
+        summary:  row.querySelector('.df-summary')?.checked || false,
+    }));
+}
+
+function updateDecoderBitsInfo() {
+    const payloadLen = Number(document.getElementById('decoderEditPayloadLength')?.value) || 1;
+    const totalBits = payloadLen * 8;
+    const fields = collectDecoderFields();
+    const usedBits = fields.reduce((sum, f) => sum + (Number(f.bits) || 0), 0);
+    const noteEl = document.getElementById('decoderPayloadBitsNote');
+    const usedEl = document.getElementById('decoderBitsUsed');
+    if (noteEl) noteEl.textContent = `${totalBits} bitov k dispozícii`;
+    if (usedEl) {
+        usedEl.textContent = `${usedBits} / ${totalBits} bitov použitých`;
+        usedEl.style.color = usedBits > totalBits ? '#dc3545' : (usedBits === totalBits ? '#198754' : '#5f7088');
+    }
+}
+window.updateDecoderBitsInfo = updateDecoderBitsInfo;
+
+async function saveDecoderProfile() {
+    const id = document.getElementById('decoderEditId').value.trim();
+    const label = document.getElementById('decoderEditLabel').value.trim();
+    const description = document.getElementById('decoderEditDescription').value.trim();
+    const modelHint = document.getElementById('decoderEditModelHint').value.trim();
+    const payloadLength = Number(document.getElementById('decoderEditPayloadLength').value) || 0;
+    const fields = collectDecoderFields();
+    if (!id) { alert('ID dekódera je povinné.'); return; }
+    if (!label) { alert('Zobrazovaný názov je povinný.'); return; }
+    if (!fields.length) { alert('Pridajte aspoň jedno pole.'); return; }
+    const payload = { id, label, description, model_hint: modelHint, payload_length_bytes: payloadLength, fields };
+    try {
+        const resp = await fetch('/api/payload-profiles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (!data.success) { alert(data.message || 'Chyba pri ukladaní'); return; }
+        if (decoderModalInstance) decoderModalInstance.hide();
+        window.AppUI?.toast(data.message, 'success');
+        await loadDecoderProfiles();
+    } catch (err) {
+        alert(err.message);
+    }
+}
+window.saveDecoderProfile = saveDecoderProfile;
+
+async function confirmDeleteDecoder(profileId) {
+    if (!confirm(`Naozaj chcete odstrániť dekóder "${profileId}"?`)) return;
+    try {
+        const resp = await fetch(`/api/payload-profiles/${encodeURIComponent(profileId)}`, { method: 'DELETE' });
+        const data = await resp.json();
+        if (!data.success) { alert(data.message || 'Chyba pri mazaní'); return; }
+        window.AppUI?.toast(data.message, 'success');
+        await loadDecoderProfiles();
+    } catch (err) {
+        alert(err.message);
+    }
+}
+window.confirmDeleteDecoder = confirmDeleteDecoder;
+window.openDecoderModal = openDecoderModal;
 </script>
 {% endblock %}

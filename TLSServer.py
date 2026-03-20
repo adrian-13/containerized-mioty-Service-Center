@@ -103,7 +103,7 @@ def validate_custom_payload_profiles(raw_profiles: Any) -> list[Dict[str, Any]]:
 
     normalized_profiles: list[Dict[str, Any]] = []
     seen_profile_ids: set[str] = set()
-    builtin_ids = {"auto", "raw", "lansen_e2_co2_v1", "lansen_m2_v1"}
+    builtin_ids = {"auto", "raw"}
     for index, raw_profile in enumerate(raw_profiles, start=1):
         if not isinstance(raw_profile, dict):
             raise ValueError(f"Custom payload profile #{index} must be an object.")
@@ -201,6 +201,76 @@ def get_custom_payload_profile(profile_id: Any, force_reload: bool = False) -> O
     load_custom_payload_profiles(force_reload=force_reload)
     profile = (_CUSTOM_PAYLOAD_PROFILE_CACHE.get("map") or {}).get(normalized_id)
     return copy.deepcopy(profile) if isinstance(profile, dict) else None
+
+
+_DEFAULT_PAYLOAD_PROFILES = [
+    {
+        "id": "lansen_e2_co2_v1",
+        "label": "LANSEN E2 CO2",
+        "description": "Periodická CO2 telemetria — teplota, vlhkosť, CO2 (duálny senzor), batéria a stav kalibrácie.",
+        "model_hint": "LAN-MIOTY-E2-CO2",
+        "payload_length_bytes": 10,
+        "bit_order": "msb",
+        "fields": [
+            {"key": "temp_1_raw",              "label": "Teplota 1",               "bits": 9,  "type": "uint", "scale": 0.125, "offset": -10.0, "decimals": 3, "unit": "°C",  "summary": True,  "description": "Teplota senzora 1; výsledok = raw × 0.125 − 10"},
+            {"key": "humidity_1_raw",          "label": "Vlhkosť 1",               "bits": 7,  "type": "uint", "scale": 1,     "offset": 0,     "decimals": 0, "unit": "%",   "summary": True,  "description": "Relatívna vlhkosť senzora 1"},
+            {"key": "co2_1_raw",               "label": "CO2 1",                   "bits": 8,  "type": "uint", "scale": 20,    "offset": 0,     "decimals": 0, "unit": "ppm", "summary": True,  "description": "CO2 senzora 1; výsledok = raw × 20 ppm"},
+            {"key": "unused_1_raw",            "label": "Nevyužité 1",             "bits": 6,  "type": "uint", "scale": 1,     "offset": 0,     "decimals": 0, "unit": "",    "summary": False, "description": "Padding"},
+            {"key": "temp_2_raw",              "label": "Teplota 2",               "bits": 9,  "type": "uint", "scale": 0.125, "offset": -10.0, "decimals": 3, "unit": "°C",  "summary": False, "description": "Teplota senzora 2; výsledok = raw × 0.125 − 10"},
+            {"key": "humidity_2_raw",          "label": "Vlhkosť 2",               "bits": 7,  "type": "uint", "scale": 1,     "offset": 0,     "decimals": 0, "unit": "%",   "summary": False, "description": "Relatívna vlhkosť senzora 2"},
+            {"key": "co2_2_raw",               "label": "CO2 2",                   "bits": 8,  "type": "uint", "scale": 20,    "offset": 0,     "decimals": 0, "unit": "ppm", "summary": False, "description": "CO2 senzora 2; výsledok = raw × 20 ppm"},
+            {"key": "unused_2_raw",            "label": "Nevyužité 2",             "bits": 6,  "type": "uint", "scale": 1,     "offset": 0,     "decimals": 0, "unit": "",    "summary": False, "description": "Padding"},
+            {"key": "battery_raw",             "label": "Batéria",                 "bits": 5,  "type": "uint", "scale": 0.1,   "offset": 0,     "decimals": 2, "unit": "V",   "summary": False, "description": "Odhad napätia batérie; výsledok = raw × 0.1 V"},
+            {"key": "co2_last_calibration_raw","label": "Posledná kalibrácia CO2", "bits": 8,  "type": "uint", "scale": 20,    "offset": 0,     "decimals": 0, "unit": "ppm", "summary": False, "description": "Hodnota CO2 pri poslednej kalibrácii"},
+            {"key": "days_to_next_calibration","label": "Dni do ďalšej kalibrácie","bits": 5,  "type": "uint", "scale": 1,     "offset": 0,     "decimals": 0, "unit": "d",   "summary": False, "description": ""},
+            {"key": "calibration_not_done",    "label": "Kalibrácia nevykonaná",   "bits": 1,  "type": "bool", "scale": 1,     "offset": 0,     "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "co2_error",               "label": "Chyba CO2 senzora",       "bits": 1,  "type": "bool", "scale": 1,     "offset": 0,     "decimals": 0, "unit": "",    "summary": False, "description": ""},
+        ],
+    },
+    {
+        "id": "lansen_m2_v1",
+        "label": "LANSEN M2 kontakt",
+        "description": "Udalostný snímač dverí/okna — počítadlo otvorení, alarmové príznaky, batéria, sabotáž.",
+        "model_hint": "LAN-MIOTY-M2",
+        "payload_length_bytes": 10,
+        "bit_order": "msb",
+        "fields": [
+            {"key": "total_openings_raw",               "label": "Celkový počet otvorení",        "bits": 20, "type": "uint", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": True,  "description": "Kumulatívny počet otvorení od výroby"},
+            {"key": "internal_magnet_alarm",            "label": "Interný magnet — alarm",        "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": True,  "description": "Aktuálny stav interného magnetického alarmu"},
+            {"key": "external_alarm",                   "label": "Externý alarm",                 "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": True,  "description": "Aktuálny stav externého alarmu"},
+            {"key": "internal_magnet_alarm_last_5min",  "label": "Int. alarm — posl. 5 min",      "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "internal_magnet_alarm_last_10min", "label": "Int. alarm — posl. 10 min",     "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "internal_magnet_alarm_last_1h",    "label": "Int. alarm — posl. 1 h",        "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "internal_magnet_alarm_last_24h",   "label": "Int. alarm — posl. 24 h",       "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "external_alarm_last_5min",         "label": "Ext. alarm — posl. 5 min",      "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "external_alarm_last_10min",        "label": "Ext. alarm — posl. 10 min",     "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "external_alarm_last_1h",           "label": "Ext. alarm — posl. 1 h",        "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "external_alarm_last_24h",          "label": "Ext. alarm — posl. 24 h",       "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "minutes_since_last_alarm_raw",     "label": "Min. od posl. alarmu",          "bits": 18, "type": "uint", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "min", "summary": False, "description": ""},
+            {"key": "duration_last_alarm_raw",          "label": "Trvanie posl. alarmu",          "bits": 13, "type": "uint", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "min", "summary": False, "description": ""},
+            {"key": "last_alarm_input",                 "label": "Zdroj posl. alarmu",            "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": "0 = interný, 1 = externý"},
+            {"key": "op_years_raw",                     "label": "Roky prevádzky",                "bits": 5,  "type": "uint", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "r",   "summary": False, "description": ""},
+            {"key": "run_time_raw",                     "label": "Run time",                      "bits": 5,  "type": "uint", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "r",   "summary": False, "description": ""},
+            {"key": "battery_voltage_raw",              "label": "Batéria",                       "bits": 4,  "type": "uint", "scale": 100, "offset": 1800, "decimals": 0, "unit": "mV",  "summary": False, "description": "Napätie batérie: 1800 + raw × 100 mV"},
+            {"key": "low_batt",                         "label": "Nízka batéria",                 "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "sab_detected_internal",            "label": "Sabotáž — interná",             "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "sab_detected_external",            "label": "Sabotáž — externá",             "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+            {"key": "async_message",                    "label": "Asynchrónna správa",            "bits": 1,  "type": "bool", "scale": 1,   "offset": 0,    "decimals": 0, "unit": "",    "summary": False, "description": ""},
+        ],
+    },
+]
+
+
+def ensure_default_payload_profiles() -> None:
+    """Seed default profiles into the JSON file if they are not yet present."""
+    path = _custom_payload_profiles_file()
+    existing = load_custom_payload_profiles()
+    existing_ids = {p.get("id") for p in existing}
+    to_add = [p for p in _DEFAULT_PAYLOAD_PROFILES if p["id"] not in existing_ids]
+    if not to_add:
+        return
+    merged = to_add + existing  # defaults first
+    save_custom_payload_profiles(merged)
 
 
 def save_custom_payload_profiles(raw_profiles: Any) -> list[Dict[str, Any]]:
@@ -734,6 +804,13 @@ class TLSServer:
 
     def _decode_sensor_payload(self, eui: str, user_data: list[int]) -> Dict[str, Any]:
         profile = self._infer_sensor_payload_profile(eui)
+        # Custom (user-managed) profiles take priority so edits in the admin UI take effect.
+        custom_profile = get_custom_payload_profile(profile)
+        if custom_profile:
+            parsed = decode_custom_payload_profile(custom_profile, user_data)
+            if parsed:
+                return parsed
+        # Fall back to hardcoded decoders for backwards compatibility.
         decoder_map = {
             "lansen_e2_co2_v1": self._decode_lansen_e2_co2_payload,
             "lansen_m2_v1": self._decode_lansen_m2_payload,
@@ -741,11 +818,6 @@ class TLSServer:
         decoder = decoder_map.get(profile)
         if decoder:
             parsed = decoder(user_data)
-            if parsed:
-                return parsed
-        custom_profile = get_custom_payload_profile(profile)
-        if custom_profile:
-            parsed = decode_custom_payload_profile(custom_profile, user_data)
             if parsed:
                 return parsed
         return {

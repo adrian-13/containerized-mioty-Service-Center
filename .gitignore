@@ -9,4 +9,16 @@ attached_assets/*
 .env
 logs/
 backups/
+.claude/
+
+# Runtime data — generated at runtime, contain live state
 base_stations.json
+endpoints.json
+coverage_positions.json
+custom_payload_profiles.json
+
+# Sensitive — user credentials and secrets
+users.json
+
+# Backup directories
+bssci_backup_*/

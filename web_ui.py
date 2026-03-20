@@ -11890,6 +11890,61 @@ def api_perform_update():
         'error': 'Auto-update is disabled for this customized deployment. Use Git workflow and container rebuild.'
     }), 403
 
+@app.route('/api/payload-profiles', methods=['GET'])
+@login_required
+def api_get_payload_profiles():
+    """Return all payload profiles (seeded defaults + user-defined)."""
+    try:
+        from TLSServer import load_custom_payload_profiles, ensure_default_payload_profiles
+        ensure_default_payload_profiles()
+        profiles = load_custom_payload_profiles()
+        return jsonify({'success': True, 'profiles': profiles})
+    except Exception as exc:
+        return jsonify({'success': False, 'message': str(exc)}), 500
+
+
+@app.route('/api/payload-profiles', methods=['POST'])
+@login_required
+@admin_scope_required('manage_system')
+def api_save_payload_profile():
+    """Create or replace a single custom payload profile."""
+    try:
+        from TLSServer import load_custom_payload_profiles, save_custom_payload_profiles
+        data = request.get_json(force=True) or {}
+        profile_id = str(data.get('id') or data.get('key') or '').strip()
+        if not profile_id:
+            return jsonify({'success': False, 'message': 'Profile id is required.'}), 400
+        existing = load_custom_payload_profiles()
+        # Replace existing entry with same id or append
+        updated = [p for p in existing if str(p.get('id') or '') != profile_id]
+        updated.append(data)
+        saved = save_custom_payload_profiles(updated)
+        saved_profile = next((p for p in saved if str(p.get('id') or '') == profile_id), None)
+        return jsonify({'success': True, 'message': f'Profil "{profile_id}" bol uložený.', 'profile': saved_profile})
+    except ValueError as exc:
+        return jsonify({'success': False, 'message': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'success': False, 'message': str(exc)}), 500
+
+
+@app.route('/api/payload-profiles/<profile_id>', methods=['DELETE'])
+@login_required
+@admin_scope_required('manage_system')
+def api_delete_payload_profile(profile_id):
+    """Delete a custom payload profile by id."""
+    try:
+        from TLSServer import load_custom_payload_profiles, save_custom_payload_profiles
+        normalized_id = str(profile_id or '').strip().lower().replace('-', '_')
+        existing = load_custom_payload_profiles()
+        updated = [p for p in existing if str(p.get('id') or '') != normalized_id]
+        if len(updated) == len(existing):
+            return jsonify({'success': False, 'message': f'Profil "{normalized_id}" nebol nájdený.'}), 404
+        save_custom_payload_profiles(updated)
+        return jsonify({'success': True, 'message': f'Profil "{normalized_id}" bol odstránený.'})
+    except Exception as exc:
+        return jsonify({'success': False, 'message': str(exc)}), 500
+
+
 @app.route('/api/system/restart', methods=['POST'])
 @login_required
 @admin_scope_required('manage_system')
