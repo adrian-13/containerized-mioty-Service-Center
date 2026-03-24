@@ -274,9 +274,9 @@
     flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .3rem;
     background: var(--brand-500); color: #fff; border-radius: .42rem; padding: .34rem .5rem;
     font-size: .72rem; font-weight: 800; text-decoration: none; border: none; cursor: pointer;
-    transition: opacity .12s;
+    transition: background .12s, box-shadow .12s;
 }
-.sc-popup-detail:hover { opacity: .92; }
+.sc-popup-detail:hover { background: var(--brand-600); box-shadow: 0 2px 8px rgba(var(--brand-rgb), .2); }
 .sc-popup-dots {
     display: inline-flex; align-items: center; justify-content: center;
     background: #f1f5f9; border: none; cursor: pointer; border-radius: .42rem;
@@ -287,9 +287,9 @@
 .sc-popup-save {
     flex: 1; background: #16a34a; color: #fff; border: none; border-radius: .42rem;
     padding: .34rem .5rem; font-size: .72rem; font-weight: 800; cursor: pointer;
-    transition: opacity .12s;
+    transition: background .12s, box-shadow .12s;
 }
-.sc-popup-save:hover { opacity: .92; }
+.sc-popup-save:hover { background: #15803d; box-shadow: 0 2px 8px rgba(22, 163, 74, .2); }
 .sc-popup-cancel {
     flex: 1; background: #f1f5f9; color: #374151; border: none; border-radius: .42rem;
     padding: .34rem .5rem; font-size: .72rem; font-weight: 700; cursor: pointer;
