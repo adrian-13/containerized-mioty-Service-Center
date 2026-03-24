@@ -612,16 +612,13 @@
 
         .topbar-user-dropdown {
             display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
+            position: fixed;
             background: #fff;
             border: 1px solid #d6dfec;
             border-radius: 0.62rem;
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
             z-index: 9999 !important;
             min-width: 160px;
-            margin-top: 0.42rem;
             overflow: hidden;
         }
 
@@ -2454,9 +2451,13 @@
 
         function toggleTopbarUserMenu() {
             const dropdown = document.getElementById('topbarUserDropdown');
-            if (!dropdown) return;
+            const btn = document.querySelector('.topbar-avatar-chip');
+            if (!dropdown || !btn) return;
             const isOpen = dropdown.classList.toggle('is-open');
             if (isOpen) {
+                const rect = btn.getBoundingClientRect();
+                dropdown.style.top = (rect.bottom + 6) + 'px';
+                dropdown.style.right = (window.innerWidth - rect.right) + 'px';
                 document.addEventListener('mousedown', closeTopbarUserMenuOnClick);
             } else {
                 document.removeEventListener('mousedown', closeTopbarUserMenuOnClick);
