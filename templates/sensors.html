@@ -2,6 +2,366 @@
 {% block title %}{{ t('page.sensors', 'Senzory') }}{% endblock %}
 
 {% block content %}
+{% if current_user and current_user.role == 'viewer' %}
+<style>
+.sv-shell { display: grid; gap: 0.85rem; }
+.sv-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+.sv-search {
+    flex: 1;
+    min-width: 140px;
+    max-width: 260px;
+    padding: 0.38rem 0.75rem;
+    border: 1px solid #d6dfef;
+    border-radius: 0.5rem;
+    font-size: 0.84rem;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.sv-search:focus { border-color: var(--brand-500, #3b7dd8); }
+.sv-timestamp { margin-left: auto; font-size: 0.72rem; color: #94a3b8; }
+.sv-filters {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+.sv-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid #d6dfef;
+    background: #f8fafc;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #607089;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.sv-filter:hover { border-color: #a0aec0; color: #1e293b; }
+.sv-filter.is-active          { background: #1e293b; border-color: #1e293b; color: #fff; }
+.sv-filter.is-active.f-online { background: #0f9d69; border-color: #0f9d69; }
+.sv-filter.is-active.f-warn   { background: #d97706; border-color: #d97706; }
+.sv-filter.is-active.f-offline{ background: #cb3a42; border-color: #cb3a42; }
+.sv-cnt { opacity: 0.7; }
+.sv-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f5fb;
+    cursor: pointer;
+    transition: background 0.12s;
+    text-decoration: none;
+    color: inherit;
+}
+.sv-row:last-child { border-bottom: none; }
+.sv-row:hover { background: #f7faff; }
+.sv-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.sv-name { font-weight: 600; font-size: 0.9rem; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sv-sub  { font-size: 0.73rem; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sv-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; flex-shrink: 0; }
+.sv-dot.online  { background: #0f9d69; }
+.sv-dot.warn    { background: #e4a313; }
+.sv-dot.offline { background: #cb3a42; }
+.sv-dot.unknown { background: #94a3b8; }
+.sv-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.16rem 0.5rem; border-radius: 999px; flex-shrink: 0; }
+.sv-badge.online  { background: #e6f7f1; color: #0a7a50; }
+.sv-badge.warn    { background: #fef3cd; color: #8a6200; }
+.sv-badge.offline { background: #fde8e9; color: #a12b32; }
+.sv-badge.unknown { background: #f0f4fa; color: #64748b; }
+.sv-link { display: flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; color: #94a3b8; font-size: 0.65rem; flex-shrink: 0; text-decoration: none; transition: all 0.15s; }
+.sv-link:hover { background: #e2e8f0; color: #1e293b; }
+.sv-empty { text-align: center; color: #94a3b8; padding: 3rem 1rem; font-size: 0.88rem; }
+.sv-add-btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.38rem 0.9rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: var(--brand-500, #3b7dd8);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+}
+.sv-add-btn:hover { opacity: 0.88; }
+/* ── Context menu ── */
+.sc-ctx {
+    position: fixed; z-index: 9000;
+    background: #fff; border: 1px solid #d6dfec; border-radius: .72rem;
+    box-shadow: 0 8px 28px rgba(15,23,42,.18); padding: .32rem 0;
+    min-width: 172px; outline: none;
+    animation: scCtxIn .1s ease;
+}
+@keyframes scCtxIn { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
+.sc-ctx-item {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .46rem .9rem; font-size: .78rem; font-weight: 700; color: #1e2d3d;
+    cursor: pointer; transition: background .1s, color .1s; white-space: nowrap;
+}
+.sc-ctx-item:hover { background: #f3f7fe; color: #1c3a5e; }
+.sc-ctx-item i { width: .9rem; text-align: center; font-size: .78rem; opacity: .72; flex-shrink: 0; }
+.sc-ctx-sep { height: 1px; background: #edf2f9; margin: .24rem 0; }
+
+/* ── Add Sensor Modal ── */
+@keyframes svModalSlideIn {
+    from { opacity: 0; transform: translateY(1.2rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes svModalBackdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.sv-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15,23,42,.42); z-index: 2000;
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+    animation: svModalBackdropIn .22s ease-out;
+}
+.sv-modal-backdrop.is-closing { animation: none; }
+.sv-modal {
+    background: #fff; border-radius: 1.1rem; box-shadow: 0 20px 50px rgba(15,23,42,.2);
+    width: 100%; max-width: 480px; overflow: hidden;
+    animation: svModalSlideIn .28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.sv-modal-backdrop.is-closing .sv-modal {
+    animation: none;
+    transform: translateY(1.2rem);
+    opacity: 0;
+    transition: all .2s ease-in;
+}
+.sv-modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.2rem; border-bottom: 1px solid #e8eef8; background: #f8fbff;
+}
+.sv-modal-title { font-size: .95rem; font-weight: 800; color: #13263f; margin: 0; }
+.sv-modal-close {
+    border: none; background: none; color: #7a8fa8; cursor: pointer;
+    font-size: 1.2rem; padding: .1rem .3rem; transition: color .15s;
+}
+.sv-modal-close:hover { color: #13263f; }
+.sv-modal-body { padding: 1.2rem; display: grid; gap: .8rem; }
+.sv-field { display: grid; gap: .3rem; }
+.sv-field-label { font-size: .72rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .06em; color: #7a8fa8; }
+.sv-field input, .sv-field select {
+    border: 1px solid #d6dfef; border-radius: .5rem; padding: .5rem .75rem;
+    font-size: .84rem; color: #13263f; background: #fff; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+.sv-field input:focus, .sv-field select:focus {
+    border-color: var(--brand-500); box-shadow: 0 0 0 2px rgba(var(--brand-rgb),.1);
+}
+.sv-modal-footer {
+    padding: 1rem 1.2rem; border-top: 1px solid #e8eef8;
+    display: flex; gap: .6rem; justify-content: flex-end;
+}
+.sv-btn-primary, .sv-btn-secondary {
+    border: none; border-radius: .5rem; padding: .45rem 1.1rem;
+    font-size: .82rem; font-weight: 800; cursor: pointer;
+    transition: all .15s;
+}
+.sv-btn-primary {
+    background: var(--brand-500); color: #fff;
+}
+.sv-btn-primary:hover { opacity: .92; }
+.sv-btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+.sv-btn-secondary {
+    background: #f1f5f9; color: var(--brand-600); border: 1px solid #d6dfef;
+}
+.sv-btn-secondary:hover { background: #e2e8f0; color: var(--brand-600); }
+
+/* ── Smooth animations ── */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Sensor rows fade in — NO DELAY for immediate response */
+.sv-row {
+    animation: fadeInUp .16s ease-out;
+}
+
+/* Smooth row hover with slight elevation — instant response */
+.sv-row {
+    transition: all .08s ease;
+}
+.sv-row:hover {
+    background: #f0f5fd;
+    transform: translateX(2px);
+}
+
+/* Status dot animation on hover — instant response */
+.sv-dot {
+    transition: transform .1s cubic-bezier(.34, 1.56, .64, 1);
+}
+.sv-row:hover .sv-dot {
+    transform: scale(1.25);
+}
+
+/* Filter buttons smooth effect — instant response */
+.sv-filter {
+    transition: all .08s cubic-bezier(.4, 0, .2, 1);
+}
+.sv-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(15,23,42,.08);
+}
+.sv-filter.is-active {
+    animation: scaleIn .2s ease-out;
+}
+
+/* Toolbar fade in */
+.sv-toolbar {
+    animation: fadeIn .3s ease-out;
+}
+
+/* List container smooth appearance */
+.workspace-panel {
+    animation: fadeIn .35s ease-out;
+}
+
+/* Button interactions — instant response */
+button {
+    transition: all .08s ease;
+}
+button:hover {
+    transform: translateY(-1px);
+}
+button:active {
+    transform: scale(.96);
+}
+
+/* Add button special styling — instant response */
+.sv-add-btn {
+    transition: all .1s cubic-bezier(.34, 1.56, .64, 1);
+}
+.sv-add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37,99,235,.2);
+}
+
+/* Modal backdrop entrance — instant, no delay */
+.sv-modal-backdrop {
+    animation: fadeIn .15s ease-out;
+}
+
+/* Modal smooth transitions — fast, no delay */
+.sv-modal {
+    animation: scaleIn .2s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* Form fields smooth focus — instant response */
+.sv-field input, .sv-field select {
+    transition: all .08s ease;
+}
+.sv-field input:focus, .sv-field select:focus {
+    transform: translateY(-1px);
+}
+
+/* Badge animations */
+.sv-badge {
+    animation: slideInLeft .2s ease-out;
+}
+
+/* Smooth search animation — instant response */
+.sv-search {
+    transition: all .08s ease;
+}
+.sv-search:focus {
+    transform: scale(1.02);
+}
+</style>
+
+<div class="sv-shell">
+    <div class="workspace-panel">
+        <div class="sv-toolbar">
+            <input type="text" id="svSearch" class="sv-search"
+                   placeholder="{{ t('common.search', 'Hľadať...') }}"
+                   oninput="svRender()" autocomplete="off">
+            <span class="sv-timestamp" id="svTimestamp"></span>
+            <button class="sv-add-btn" onclick="svOpenAdd()">
+                <i class="fas fa-plus"></i> {{ t('sensors.add', 'Pridať senzor') }}
+            </button>
+        </div>
+        <div class="sv-filters">
+            <button class="sv-filter is-active" data-f="all"     onclick="svSetFilter('all')">    {{ t('common.all','Všetky') }}  <span class="sv-cnt" id="svCntAll">0</span></button>
+            <button class="sv-filter f-online"  data-f="online"  onclick="svSetFilter('online')"> <span class="sv-dot online"></span> Online  <span class="sv-cnt" id="svCntOnline">0</span></button>
+            <button class="sv-filter f-warn"    data-f="warn"    onclick="svSetFilter('warn')">   <span class="sv-dot warn"></span>   Warn     <span class="sv-cnt" id="svCntWarn">0</span></button>
+            <button class="sv-filter f-offline" data-f="offline" onclick="svSetFilter('offline')"><span class="sv-dot offline"></span> Offline  <span class="sv-cnt" id="svCntOffline">0</span></button>
+        </div>
+        <div id="svList">
+            <div class="sv-empty">{{ t('runtime.loading', 'Načítavam...') }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Add sensor modal (animated) -->
+<div id="svAddModal" class="sv-modal-backdrop" style="display: none;">
+    <div class="sv-modal">
+        <div class="sv-modal-head">
+            <h3 class="sv-modal-title">
+                <i class="fas fa-plus" style="margin-right: .5rem; color: var(--brand-500);"></i>{{ t('sensors.add', 'Pridať senzor') }}
+            </h3>
+            <button class="sv-modal-close" onclick="svCloseAdd()">&times;</button>
+        </div>
+        <div class="sv-modal-body">
+            <div id="svAddError" style="display: none; background: #fde8e9; color: #a12b32; border-radius: .5rem; padding: .6rem .85rem; font-size: .82rem;"></div>
+            <div class="sv-field">
+                <label class="sv-field-label">EUI *</label>
+                <input id="svAddEui" type="text" placeholder="napr. A0412D2A000005C3"
+                       maxlength="16" autocomplete="off" autocorrect="off" spellcheck="false"
+                       style="font-family: monospace; letter-spacing: 0.04em;">
+                <div style="font-size: .7rem; color: #94a3b8; margin-top: .25rem;">16 hex znakov — unikátny identifikátor senzora (EUI-64)</div>
+            </div>
+            <div class="sv-field">
+                <label class="sv-field-label">{{ t('sensors.network_key', 'Sieťový kľúč') }} *</label>
+                <input id="svAddNwKey" type="text" placeholder="napr. E4365D1FEBE65BA074AE9A971084FBE2"
+                       maxlength="32" autocomplete="off" autocorrect="off" spellcheck="false"
+                       style="font-family: monospace; letter-spacing: 0.04em;">
+                <div style="font-size: .7rem; color: #94a3b8; margin-top: .25rem;">32 hex znakov — potrebný pre komunikáciu so základňovou stanicou</div>
+            </div>
+            <div class="sv-field">
+                <label class="sv-field-label">{{ t('sensors.name', 'Názov') }}</label>
+                <input id="svAddName" type="text" placeholder="{{ t('sensors.name_placeholder', 'Voliteľný popis senzora') }}"
+                       maxlength="80" autocomplete="off">
+            </div>
+        </div>
+        <div class="sv-modal-footer">
+            <button class="sv-btn-secondary" onclick="svCloseAdd()">{{ t('common.cancel', 'Zrušiť') }}</button>
+            <button id="svAddSubmit" class="sv-btn-primary" onclick="svSubmitAdd()">
+                <i class="fas fa-plus"></i> {{ t('sensors.add', 'Pridať') }}
+            </button>
+        </div>
+    </div>
+</div>
+
+{% else %}
 <style>
 .sensor-page {
     display: grid;
@@ -1854,7 +2214,7 @@
             </div>
         </div>
         <div class="fleet-actions">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sensorModal" onclick="openSensorModal()">
+            <button class="btn btn-primary ui-editor-only" data-bs-toggle="modal" data-bs-target="#sensorModal" onclick="openSensorModal()">
                 <i class="fas fa-plus"></i> {{ t('sensors.add_new_sensor', 'Pridať senzor') }}
             </button>
             <div class="dropdown">
@@ -1863,11 +2223,11 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><button class="dropdown-item" onclick="reloadSensors()"><i class="fas fa-sync-alt me-2"></i>{{ t('sensors.reload_config', 'Znovu načítať konfiguráciu') }}</button></li>
-                    <li><button class="dropdown-item" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload me-2"></i>{{ t('common.import', 'Importovať') }}</button></li>
-                    <li><button class="dropdown-item" onclick="exportSensors()"><i class="fas fa-download me-2"></i>{{ t('telemetry.export_csv', 'Exportovať CSV') }}</button></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><button class="dropdown-item text-warning" onclick="detachAllSensors()"><i class="fas fa-unlink me-2"></i>{{ t('sensors.detach_all', 'Odpojiť všetky') }}</button></li>
-                    <li><button class="dropdown-item text-danger" onclick="clearAllSensors()"><i class="fas fa-trash me-2"></i>{{ t('sensors.clear_all', 'Vymazať všetky') }}</button></li>
+                    <li><button class="dropdown-item ui-manage-only" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload me-2"></i>{{ t('common.import', 'Importovať') }}</button></li>
+                    <li><button class="dropdown-item ui-editor-only" onclick="exportSensors()"><i class="fas fa-download me-2"></i>{{ t('telemetry.export_csv', 'Exportovať CSV') }}</button></li>
+                    <li><hr class="dropdown-divider ui-editor-only"></li>
+                    <li><button class="dropdown-item text-warning ui-manage-only" onclick="detachAllSensors()"><i class="fas fa-unlink me-2"></i>{{ t('sensors.detach_all', 'Odpojiť všetky') }}</button></li>
+                    <li><button class="dropdown-item text-danger ui-manage-only" onclick="clearAllSensors()"><i class="fas fa-trash me-2"></i>{{ t('sensors.clear_all', 'Vymazať všetky') }}</button></li>
                 </ul>
             </div>
             <div class="dropdown">
@@ -1919,7 +2279,7 @@
                 <small id="sensorTableMeta" class="sensor-meta-note"></small>
             </div>
             <div class="sensor-toolbar-right">
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="sensorBulkModeToggle">
+                <button type="button" class="btn btn-outline-secondary btn-sm ui-editor-only" id="sensorBulkModeToggle">
                     <i class="fas fa-check-square me-1"></i>{{ t('sensors.bulk_mode', 'Hromadný výber') }}
                 </button>
                 <input type="checkbox" id="autoRefreshToggle" class="d-none" checked>
@@ -1944,8 +2304,8 @@
             <div class="sensor-bulkbar-note"><span id="sensorBulkCount">0</span> {{ t('sensors.selected_count_suffix', 'vybraných senzorov') }}</div>
             <div class="sensor-bulkbar-actions">
                 <button type="button" class="btn btn-sm btn-success" id="bulkAttachBtn" onclick="bulkAttachSelected()">{{ t('sensors.attach_selected', 'Priradiť vybrané') }}</button>
-                <button type="button" class="btn btn-sm btn-warning" id="bulkDetachBtn" onclick="bulkDetachSelected()">{{ t('sensors.detach_selected', 'Odpojiť vybrané') }}</button>
-                <button type="button" class="btn btn-sm btn-danger" id="bulkDeleteBtn" onclick="bulkDeleteSelected()">{{ t('sensors.delete_selected', 'Vymazať vybrané') }}</button>
+                <button type="button" class="btn btn-sm btn-warning ui-manage-only" id="bulkDetachBtn" onclick="bulkDetachSelected()">{{ t('sensors.detach_selected', 'Odpojiť vybrané') }}</button>
+                <button type="button" class="btn btn-sm btn-danger ui-manage-only" id="bulkDeleteBtn" onclick="bulkDeleteSelected()">{{ t('sensors.delete_selected', 'Vymazať vybrané') }}</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSensorSelection()">{{ t('sensors.clear_selection', 'Zrušiť výber') }}</button>
             </div>
         </div>
@@ -2200,9 +2560,268 @@
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
+{% if current_user and current_user.role == 'viewer' %}
+<script>
+(function() {
+const TIER_ORDER = { offline: 0, warn: 1, online: 2, unknown: 3 };
+function tier(s) {
+    if (!s) return 'unknown';
+    const l = String(s).toLowerCase();
+    if (l === 'online' || l === 'connected' || l === 'active') return 'online';
+    if (l === 'warn'   || l === 'warning'   || l === 'degraded') return 'warn';
+    if (l === 'offline'|| l === 'disconnected' || l === 'inactive') return 'offline';
+    return 'unknown';
+}
+function esc(v) {
+    return String(v == null ? '' : v)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function timeAgo(ts) {
+    if (!ts) return null;
+    const d = new Date(ts);
+    if (isNaN(d)) return null;
+    const sec = Math.round((Date.now() - d) / 1000);
+    if (sec < 10)  return 'práve teraz';
+    if (sec < 60)  return 'pred ' + sec + ' s';
+    const min = Math.round(sec / 60);
+    if (min < 60)  return 'pred ' + min + ' min';
+    return 'pred ' + Math.round(min / 60) + ' hod';
+}
+function valueLine(s) {
+    const parts = [];
+    if (s.last_values && typeof s.last_values === 'object') {
+        const e = Object.entries(s.last_values)[0];
+        if (e) parts.push(esc(e[0]) + ': ' + esc(e[1]));
+    }
+    const tsRaw = s.last_seen_timestamp || s.last_seen || s.last_message || s.updated_at || 0;
+    const tsMs = tsRaw > 1e10 ? tsRaw : tsRaw * 1000;
+    const ago = timeAgo(tsMs);
+    if (ago) parts.push(ago);
+    return parts.join(' \u00b7 ');
+}
+
+let allSensors = [];
+let currentFilter = 'all';
+
+function svSetFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll('.sv-filter').forEach(function(b) {
+        b.classList.toggle('is-active', b.dataset.f === f);
+    });
+    svRender();
+}
+window.svSetFilter = svSetFilter;
+
+function svRender() {
+    const q = (document.getElementById('svSearch') || {}).value || '';
+    const lq = q.toLowerCase();
+    const filtered = allSensors.filter(function(s) {
+        if (currentFilter !== 'all' && tier(s.activity_status || s.status) !== currentFilter) return false;
+        if (lq) {
+            const name = String(s.name || s.eui || s.device_eui || s.sensor_id || '').toLowerCase();
+            const eui  = String(s.eui || s.device_eui || '').toLowerCase();
+            if (!name.includes(lq) && !eui.includes(lq)) return false;
+        }
+        return true;
+    });
+    const el = document.getElementById('svList');
+    if (!el) return;
+    if (!filtered.length) {
+        el.innerHTML = '<div class="sv-empty">' + (allSensors.length ? 'Žiadne výsledky' : 'Žiadne senzory') + '</div>';
+        return;
+    }
+    el.innerHTML = filtered.map(function(s) {
+        const st  = s.activity_status || s.status || '';
+        const t   = tier(st);
+        const id  = s.eui || s.device_eui || s.sensor_id || '';
+        const name= esc(s.name || id || '\u2014');
+        const sl  = esc(st || 'unknown');
+        const sub = valueLine(s);
+        const href= '/sensors/' + esc(id);
+        return '<a href="' + href + '" class="sv-row" data-eui="' + esc(id) + '">' +
+            '<span class="sv-dot ' + t + '"></span>' +
+            '<span class="sv-info">' +
+                '<span class="sv-name">' + name + '</span>' +
+                (sub ? '<span class="sv-sub">' + sub + '</span>' : '') +
+            '</span>' +
+            '<span class="sv-badge ' + t + '">' + sl + '</span>' +
+            '<span class="sv-link"><i class="fas fa-chevron-right"></i></span>' +
+        '</a>';
+    }).join('');
+}
+
+function svLoad() {
+    fetch('/api/sensors')
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .catch(function() { return null; })
+        .then(function(data) {
+            const raw = Array.isArray(data) ? data
+                : (data && Array.isArray(data.sensors) ? data.sensors
+                : (data && typeof data === 'object' && !data.error ? Object.values(data) : []));
+            raw.sort(function(a, b) {
+                return (TIER_ORDER[tier(a.status)] || 3) - (TIER_ORDER[tier(b.status)] || 3);
+            });
+            allSensors = raw;
+            let online = 0, warn = 0, offline = 0;
+            raw.forEach(function(s) {
+                const t = tier(s.activity_status || s.status);
+                if (t === 'online') online++;
+                else if (t === 'warn') warn++;
+                else offline++;
+            });
+            function g(id) { return document.getElementById(id); }
+            if (g('svCntAll'))        g('svCntAll').textContent        = raw.length;
+            if (g('svCntOnline'))     g('svCntOnline').textContent     = online;
+            if (g('svCntWarn'))       g('svCntWarn').textContent       = warn;
+            if (g('svCntOffline'))    g('svCntOffline').textContent    = offline;
+            if (g('svTimestamp'))     g('svTimestamp').textContent     = new Date().toLocaleTimeString();
+            svRender();
+        });
+}
+
+/* ── Add sensor modal ── */
+function svOpenAdd() {
+    const m = document.getElementById('svAddModal');
+    if (!m) return;
+    document.getElementById('svAddEui').value   = '';
+    document.getElementById('svAddNwKey').value = '';
+    document.getElementById('svAddName').value  = '';
+    const err = document.getElementById('svAddError');
+    if (err) { err.style.display = 'none'; err.textContent = ''; }
+    m.classList.remove('is-closing');
+    m.style.display = 'flex';
+    setTimeout(function() { document.getElementById('svAddEui').focus(); }, 100);
+}
+function svCloseAdd() {
+    const m = document.getElementById('svAddModal');
+    if (!m) return;
+    m.classList.add('is-closing');
+    setTimeout(function() {
+        m.style.display = 'none';
+        m.classList.remove('is-closing');
+    }, 220);
+}
+function svSubmitAdd() {
+    const eui   = (document.getElementById('svAddEui').value   || '').trim().replace(/[^0-9a-fA-F]/g, '').toUpperCase();
+    const nwKey = (document.getElementById('svAddNwKey').value || '').trim().replace(/[^0-9a-fA-F]/g, '').toUpperCase();
+    const name  = (document.getElementById('svAddName').value  || '').trim();
+    const err   = document.getElementById('svAddError');
+    const btn   = document.getElementById('svAddSubmit');
+
+    function showErr(msg, focusId) {
+        if (err) { err.textContent = msg; err.style.display = 'block'; }
+        if (focusId) document.getElementById(focusId).focus();
+    }
+    if (!eui || eui.length !== 16) {
+        return showErr('EUI musí mať presne 16 hex znakov (napr. A0412D2A000005C3).', 'svAddEui');
+    }
+    if (!nwKey || nwKey.length !== 32) {
+        return showErr('Sieťový kľúč musí mať presne 32 hex znakov.', 'svAddNwKey');
+    }
+    if (err) err.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+    fetch('/api/sensors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eui: eui, nwKey: nwKey, name: name || undefined })
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .catch(function() { return { ok: false, data: { message: 'Chyba siete.' } }; })
+    .then(function(res) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus me-1"></i>Pridať'; }
+        if (res.ok && res.data.success !== false) {
+            svCloseAdd();
+            svLoad();
+        } else {
+            const msg = (res.data && (res.data.message || res.data.error)) || 'Nepodarilo sa pridať senzor.';
+            if (err) { err.textContent = msg; err.style.display = 'block'; }
+        }
+    });
+}
+window.svOpenAdd   = svOpenAdd;
+window.svCloseAdd  = svCloseAdd;
+window.svSubmitAdd = svSubmitAdd;
+
+// Close modal on backdrop click
+document.addEventListener('click', function(e) {
+    const m = document.getElementById('svAddModal');
+    if (m && e.target === m) svCloseAdd();
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') svCloseAdd();
+    if (e.key === 'Enter' && document.getElementById('svAddModal') &&
+        document.getElementById('svAddModal').style.display === 'flex') svSubmitAdd();
+});
+
+// ── Context menu ─────────────────────────────────────────────────────────────
+let _svCtxEl = null;
+function _svCloseCtx() { if (_svCtxEl) { _svCtxEl.remove(); _svCtxEl = null; } }
+
+function _svShowCtx(e, items) {
+    e.preventDefault();
+    _svCloseCtx();
+    const menu = document.createElement('div');
+    menu.className = 'sc-ctx';
+    menu.tabIndex = -1;
+    items.forEach(function(item) {
+        if (item === '-') {
+            const sep = document.createElement('div'); sep.className = 'sc-ctx-sep'; menu.appendChild(sep); return;
+        }
+        const el = document.createElement('div');
+        el.className = 'sc-ctx-item';
+        el.innerHTML = '<i class="fas ' + item.icon + '"></i>' + String(item.label || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        el.addEventListener('click', function() { _svCloseCtx(); item.action(); });
+        menu.appendChild(el);
+    });
+    document.body.appendChild(menu);
+    _svCtxEl = menu;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const mw = menu.offsetWidth, mh = menu.offsetHeight;
+    let x = e.clientX, y = e.clientY;
+    if (x + mw > vw - 8) x = vw - mw - 8;
+    if (y + mh > vh - 8) y = vh - mh - 8;
+    menu.style.left = x + 'px'; menu.style.top = y + 'px';
+    menu.focus();
+}
+
+document.addEventListener('click', _svCloseCtx);
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') _svCloseCtx(); });
+
+document.getElementById('svList').addEventListener('contextmenu', function(e) {
+    const row = e.target.closest('.sv-row');
+    if (row) {
+        const eui = row.dataset.eui || '';
+        _svShowCtx(e, [
+            { icon: 'fa-arrow-up-right-from-square', label: 'Detail senzora', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
+            '-',
+            { icon: 'fa-bell-plus', label: 'Pridať alert', action: function() { window.location.href = '/alerts'; } },
+        ]);
+    } else {
+        _svShowCtx(e, [
+            { icon: 'fa-plus', label: 'Pridať senzor', action: function() { svOpenAdd(); } },
+        ]);
+    }
+});
+// ── End context menu ──────────────────────────────────────────────────────────
+
+svLoad();
+setInterval(svLoad, 30000);
+
+// Auto-open modal if coming from dashboard
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('add') === '1' || urlParams.get('modal') === 'add') {
+    setTimeout(function() { svOpenAdd(); }, 400);
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+})();
+</script>
+{% else %}
 <script>
 let editingEui = null;
 let sensorCache = [];
@@ -2220,6 +2839,7 @@ let confirmActionResolver = null;
 const SENSOR_AUTO_REFRESH_MS = 10000;
 const SENSOR_IS_ADMIN = {{ 'true' if current_user and current_user.role == 'admin' else 'false' }};
 const CAN_VIEW_SENSOR_AUDIT = {{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('view_admin_audit') else 'false' }};
+const CAN_EDIT_SENSORS = {{ 'true' if current_user and current_user.role in ['admin', 'user'] else 'false' }};
 const SENSOR_PROFILE_OPTIONS = {{ sensor_profiles|tojson|safe }};
 const SENSOR_PROFILE_LIBRARY = Object.fromEntries((SENSOR_PROFILE_OPTIONS || []).map(profile => [String(profile.id || '').toLowerCase(), profile]));
 const SENSOR_VIEW_PREFS_KEY = 'sensors_view_prefs_v1';
@@ -3050,6 +3670,7 @@ function renderSensors(filteredSensors) {
                         <a href="/sensors/${encodeURIComponent(String(sensor.eui || '').trim().toUpperCase())}" class="sensor-action-icon" title="${appTranslate('sensors.open_detail', 'Otvoriť detail')}" onclick="event.stopPropagation()">
                             <i class="fas fa-up-right-from-square"></i>
                         </a>
+                        ${CAN_EDIT_SENSORS ? `
                         <button type="button" class="sensor-action-icon" onclick="editSensor('${escapeHtml(sensor.eui)}')" title="${appTranslate('common.edit', 'Upraviť')}">
                             <i class="fas fa-pen"></i>
                         </button>
@@ -3062,7 +3683,7 @@ function renderSensors(filteredSensors) {
                                 <li><hr class="dropdown-divider"></li>
                                 <li><button class="dropdown-item text-danger" onclick="deleteSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-trash me-2"></i>${appTranslate('common.delete', 'Vymazať')}</button></li>
                             </ul>
-                        </div>
+                        </div>` : ''}
                     </div>
                 </td>
             </tr>
@@ -4846,4 +5467,5 @@ async function injectCustomDecoderOptions(selectId, currentValue) {
 }
 
 </script>
+{% endif %}
 {% endblock %}
