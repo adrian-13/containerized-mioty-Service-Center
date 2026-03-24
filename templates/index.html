@@ -1905,12 +1905,14 @@ function showColorPop(x, y, currentColor, onPick) {
 
 // Normal popup: name + EUI + [Detail →] [⋯]
 function buildPopupHtml(name, shortEui, href, mid) {
+    const brandBg  = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
+    const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
     return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
         + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + name + '</div>'
         + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.36rem">' + shortEui + '</div>' : '')
         + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
         + '<div style="display:flex;align-items:center;gap:.36rem">'
-            + '<a href="' + href + '" class="btn btn-primary btn-sm" style="flex:1;font-size:.72rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;text-decoration:none;padding:.34rem .5rem;border-radius:.42rem">Detail \u2192</a>'
+            + '<a href="' + href + '" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;background:' + brandBg + ';color:#fff;border-radius:.42rem;padding:.38rem .6rem;font-size:.74rem;font-weight:800;text-decoration:none;border:none;letter-spacing:.01em;transition:background .12s" onmouseover="this.style.background=\'' + brandHov + '\'" onmouseout="this.style.background=\'' + brandBg + '\'">Detail \u2192</a>'
             + '<button id="sc-popup-dots-' + mid + '" class="sc-popup-dots" title="Možnosti">\u22ef</button>'
         + '</div>'
         + '</div>';
