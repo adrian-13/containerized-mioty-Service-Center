@@ -2,6 +2,493 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
+{% if current_user and current_user.role == 'viewer' %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+/* ── Viewer dashboard ── */
+.mview-page {
+    display: flex;
+    flex-direction: column;
+    margin: calc(-1 * var(--ui-content-pad-y)) calc(-1 * var(--ui-content-pad-x));
+    height: calc(100vh - 60px);
+    overflow: hidden;
+}
+/* ── Split ── */
+.mview-split { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+/* ── List panel ── */
+.mview-list-panel {
+    width: 380px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e2e8f0;
+    background: #fff;
+    overflow: hidden;
+}
+.mview-list-head {
+    padding: 0.55rem 1rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #607089;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+/* ── Filter pills ── */
+.mview-filters {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+.mview-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid #d6dfef;
+    background: #f8fafc;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #607089;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.mview-filter:hover { border-color: #a0aec0; color: #1e293b; }
+.mview-filter.is-active { background: #1e293b; border-color: #1e293b; color: #fff; }
+.mview-filter.is-active.f-online  { background: #0f9d69; border-color: #0f9d69; }
+.mview-filter.is-active.f-warn    { background: #d97706; border-color: #d97706; }
+.mview-filter.is-active.f-offline { background: #cb3a42; border-color: #cb3a42; }
+.mview-filter-count { opacity: 0.75; }
+/* ── Sensor rows ── */
+.mview-list-body { overflow-y: auto; flex: 3; min-height: 0; }
+.mview-sensor-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.62rem 0.75rem 0.62rem 1rem;
+    border-bottom: 1px solid #f1f5fb;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+.mview-sensor-row:last-child { border-bottom: none; }
+.mview-sensor-row:hover { background: #f7faff; }
+.mview-sensor-row.is-highlighted { background: #eef4ff; border-left: 3px solid var(--brand-500, #3b7dd8); }
+.mview-sensor-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.mview-sensor-name { font-weight: 600; font-size: 0.87rem; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mview-sensor-sub  { font-size: 0.72rem; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mview-sensor-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    color: #94a3b8;
+    font-size: 0.65rem;
+    flex-shrink: 0;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+.mview-sensor-link:hover { background: #e2e8f0; color: #1e293b; }
+/* ── Dots & badges ── */
+.mview-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; flex-shrink: 0; }
+.mview-dot.online  { background: #0f9d69; }
+.mview-dot.warn    { background: #e4a313; }
+.mview-dot.offline { background: #cb3a42; }
+.mview-dot.unknown { background: #94a3b8; }
+.mview-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.16rem 0.5rem; border-radius: 999px; flex-shrink: 0; }
+.mview-badge.online  { background: #e6f7f1; color: #0a7a50; }
+.mview-badge.warn    { background: #fef3cd; color: #8a6200; }
+.mview-badge.offline { background: #fde8e9; color: #a12b32; }
+.mview-badge.unknown { background: #f0f4fa; color: #64748b; }
+/* ── Resizer ── */
+.mview-resizer {
+    width: 5px;
+    flex-shrink: 0;
+    background: #e2e8f0;
+    cursor: col-resize;
+    position: relative;
+    transition: background 0.15s;
+    z-index: 2;
+}
+.mview-resizer::after {
+    content: '';
+    position: absolute;
+    inset: 0 -4px;          /* extend hit area */
+}
+.mview-resizer:hover,
+.mview-resizer.is-dragging { background: var(--brand-500, #3b7dd8); }
+/* ── Map panel ── */
+.mview-map-panel { flex: 1; min-width: 0; position: relative; }
+#mview-map { height: 100%; width: 100%; }
+#mview-map .leaflet-control-attribution { font-size: 0.6rem; }
+/* ── Vertical resizer (list ↕ alerts) ── */
+.mview-vresizer {
+    height: 5px;
+    flex-shrink: 0;
+    background: #e2e8f0;
+    cursor: row-resize;
+    position: relative;
+    transition: background 0.15s;
+    z-index: 2;
+}
+.mview-vresizer::after {
+    content: '';
+    position: absolute;
+    inset: -4px 0;
+}
+.mview-vresizer:hover,
+.mview-vresizer.is-dragging { background: var(--brand-500, #eb7e17); }
+/* ── Alerts panel ── */
+.mview-alerts-panel {
+    border-top: 2px solid #e8eef6;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+.mview-alerts-head {
+    padding: .42rem .9rem;
+    font-size: .67rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #607089;
+    border-bottom: 1px solid #f1f5fb;
+    display: flex;
+    align-items: center;
+    gap: .38rem;
+    flex-shrink: 0;
+    background: #fafbfe;
+}
+.mview-alerts-head i { color: #94a3b8; font-size: .72rem; }
+.mview-alerts-head.has-warn i { color: #e4a313; }
+.mview-alerts-head.has-error i { color: #cb3a42; }
+.mview-alerts-badge {
+    margin-left: auto;
+    font-size: .64rem;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: .06rem .44rem;
+    background: #fde8e9;
+    color: #a12b32;
+    display: none;
+}
+.mview-alerts-badge.is-visible { display: inline-block; }
+.mview-alerts-body { overflow-y: auto; flex: 1; min-height: 0; }
+.mview-alert-row {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .48rem .9rem .48rem .75rem;
+    border-bottom: 1px solid #faf5f5;
+    cursor: pointer;
+    transition: background .12s;
+    text-decoration: none;
+    color: inherit;
+    border-left: 3px solid transparent;
+}
+.mview-alert-row:last-child { border-bottom: none; }
+.mview-alert-row:hover { background: #fdf8f8; text-decoration: none; color: inherit; }
+.mview-alert-row.is-error { border-left-color: #cb3a42; }
+.mview-alert-row.is-warn  { border-left-color: #e4a313; }
+.mview-alert-icon { font-size: .82rem; flex-shrink: 0; width: 1rem; text-align: center; }
+.mview-alert-row.is-error .mview-alert-icon { color: #cb3a42; }
+.mview-alert-row.is-warn  .mview-alert-icon { color: #e4a313; }
+.mview-alert-info { flex: 1; min-width: 0; }
+.mview-alert-name { font-size: .8rem; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mview-alert-desc { font-size: .68rem; color: #94a3b8; margin-top: .04rem; }
+.mview-alerts-empty { padding: .85rem; text-align: center; font-size: .75rem; color: #b0bec5; }
+/* ── Mobile ── */
+@media (max-width: 767px) {
+    .mview-page { height: auto; overflow: visible; }
+    .mview-split { flex-direction: column; overflow: visible; }
+    .mview-list-panel { width: 100% !important; border-right: none; border-bottom: 1px solid #e2e8f0; max-height: 50vh; }
+    .mview-resizer { display: none; }
+    .mview-map-panel { height: 55vw; min-height: 260px; }
+    .mview-statusbar { gap: 1rem; flex-wrap: wrap; height: auto; padding: 0.6rem 1rem; }
+}
+/* ── Map markers ── */
+.sc-map-marker { background: none !important; border: none !important; }
+.sc-map-pin {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2.5px solid rgba(255,255,255,.92);
+    box-shadow: 0 2px 7px rgba(0,0,0,.28);
+    transition: transform .15s, box-shadow .15s;
+    cursor: grab;
+}
+.sc-map-pin:active { cursor: grabbing; }
+.sc-map-pin.is-highlighted { transform: scale(1.35); box-shadow: 0 3px 12px rgba(0,0,0,.38); z-index: 1000; }
+.sc-map-pin.is-dragging { transform: scale(1.2); cursor: grabbing; opacity: .85; }
+/* Map toast */
+.sc-map-toast {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: rgba(15,23,42,.82); color: #fff; border-radius: .5rem;
+    padding: .36rem .88rem; font-size: .74rem; font-weight: 700;
+    pointer-events: none; z-index: 800; white-space: nowrap;
+    animation: scToastIn .18s ease;
+}
+@keyframes scToastIn { from { opacity: 0; transform: translateX(-50%) translateY(6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+/* Color palette popup */
+.sc-color-pop {
+    position: fixed; z-index: 9100;
+    background: #fff; border: 1px solid #d6dfec; border-radius: .72rem;
+    box-shadow: 0 8px 28px rgba(15,23,42,.18); padding: .56rem .64rem;
+    display: flex; flex-direction: column; gap: .36rem;
+}
+.sc-color-pop-title { font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #7a8fa8; padding: 0 .06rem .18rem; }
+.sc-color-swatches { display: grid; grid-template-columns: repeat(5,1.5rem); gap: .3rem; }
+.sc-color-swatch {
+    width: 1.5rem; height: 1.5rem; border-radius: .36rem; border: 2px solid transparent;
+    cursor: pointer; transition: transform .1s, border-color .1s;
+}
+.sc-color-swatch:hover { transform: scale(1.18); }
+.sc-color-swatch.is-active { border-color: #1e293b; }
+.sc-color-reset { font-size: .68rem; font-weight: 700; color: #7a8fa8; cursor: pointer; padding: .16rem .06rem 0; text-align: center; }
+.sc-color-reset:hover { color: #dc2626; }
+/* ── Leaflet popup override ── */
+.sc-leaflet-popup .leaflet-popup-content-wrapper {
+    border-radius: .88rem !important;
+    box-shadow: 0 8px 28px rgba(15,23,42,.18) !important;
+    border: 1px solid #dae3f0;
+    padding: 0;
+}
+.sc-leaflet-popup .leaflet-popup-content {
+    margin: .82rem .96rem !important;
+    line-height: 1 !important;
+}
+.sc-leaflet-popup .leaflet-popup-tip-container { margin-top: -1px; }
+.sc-leaflet-popup .leaflet-popup-close-button {
+    font-size: .82rem !important; color: #94a3b8 !important;
+    top: .46rem !important; right: .56rem !important;
+}
+.sc-leaflet-popup .leaflet-popup-close-button:hover { color: #13263f !important; }
+/* Popup buttons */
+.sc-popup-detail {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .3rem;
+    background: var(--brand-500); color: #fff; border-radius: .42rem; padding: .34rem .5rem;
+    font-size: .72rem; font-weight: 800; text-decoration: none; border: none; cursor: pointer;
+    transition: opacity .12s;
+}
+.sc-popup-detail:hover { opacity: .92; }
+.sc-popup-dots {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #f1f5f9; border: none; cursor: pointer; border-radius: .42rem;
+    padding: .34rem .55rem; font-size: .88rem; line-height: 1; color: #64748b; flex-shrink: 0;
+    transition: background .12s, color .12s;
+}
+.sc-popup-dots:hover { background: #e2e8f0; color: #1e293b; }
+.sc-popup-save {
+    flex: 1; background: #16a34a; color: #fff; border: none; border-radius: .42rem;
+    padding: .34rem .5rem; font-size: .72rem; font-weight: 800; cursor: pointer;
+    transition: opacity .12s;
+}
+.sc-popup-save:hover { opacity: .92; }
+.sc-popup-cancel {
+    flex: 1; background: #f1f5f9; color: #374151; border: none; border-radius: .42rem;
+    padding: .34rem .5rem; font-size: .72rem; font-weight: 700; cursor: pointer;
+    transition: background .12s, color .12s;
+}
+.sc-popup-cancel:hover { background: #e2e8f0; color: #1e293b; }
+/* ── Context menu ── */
+.sc-ctx {
+    position: fixed; z-index: 9000;
+    background: #fff; border: 1px solid #d6dfec; border-radius: .72rem;
+    box-shadow: 0 8px 28px rgba(15,23,42,.18); padding: .32rem 0;
+    min-width: 172px; outline: none;
+    animation: scCtxIn .1s ease;
+}
+@keyframes scCtxIn { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
+.sc-ctx-item {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .46rem .9rem; font-size: .78rem; font-weight: 700; color: #1e2d3d;
+    cursor: pointer; transition: background .1s, color .1s; white-space: nowrap;
+}
+.sc-ctx-item:hover { background: #f3f7fe; color: #1c3a5e; }
+.sc-ctx-item.is-danger { color: #dc2626; }
+.sc-ctx-item.is-danger:hover { background: rgba(220,53,69,.07); }
+.sc-ctx-item i { width: .9rem; text-align: center; font-size: .78rem; opacity: .72; flex-shrink: 0; }
+.sc-ctx-sep { height: 1px; background: #edf2f9; margin: .24rem 0; }
+.mview-alert-row { cursor: context-menu; }
+
+/* ── Smooth animations system ── */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .6; }
+}
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(.92); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+/* List items animation — NO DELAY for immediate response */
+.mview-sensor-row {
+    animation: fadeInUp .18s ease-out;
+}
+
+/* Alert rows animation — NO DELAY for immediate response */
+.mview-alert-row {
+    animation: fadeInUp .16s ease-out;
+}
+
+/* Sensor dot status pulse — instant response */
+.mview-sensor-dot {
+    transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
+}
+.mview-sensor-row:hover .mview-sensor-dot {
+    transform: scale(1.3);
+}
+
+/* Filter buttons smooth transition — instant response */
+.mview-filter {
+    transition: all .1s cubic-bezier(.4, 0, .2, 1);
+}
+.mview-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(15,23,42,.12);
+}
+.mview-filter.is-active {
+    transform: scale(1.04);
+}
+
+/* Status badges smooth animations — instant response */
+.mview-status-badge {
+    transition: all .08s ease;
+}
+.mview-sensor-row:hover .mview-status-badge {
+    transform: scale(1.08);
+}
+
+/* Card load animation */
+.workspace-panel {
+    animation: fadeIn .08s ease-out;
+}
+
+/* Map panel animation */
+.mview-map-panel {
+    animation: fadeIn .08s ease-out;
+}
+
+/* Smooth hover effects on interactive elements — instant response */
+button, a[href], .mview-sensor-row, .mview-alert-row {
+    transition: all .08s ease;
+}
+
+button:active, .mview-sensor-row:active, .mview-alert-row:active {
+    transform: scale(.98);
+}
+
+/* Popup animations */
+.leaflet-popup-content {
+    animation: scaleIn .22s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* Color swatch hover effect */
+.sc-color-swatch:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+.sc-color-swatch.is-active {
+    transform: scale(1.1);
+}
+
+/* Loading state animations */
+.is-loading {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent) 0% / 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* Smooth badge entrance */
+.mview-filter-count {
+    animation: fadeIn .08s ease-out;
+}
+
+/* Status chip animations — instant response */
+.sensor-status-chip {
+    transition: all .08s ease;
+    animation: slideInLeft .15s ease-out;
+}
+
+/* Tab/panel transitions — instant response */
+.sensor-detail-tabpanel {
+    animation: fadeIn .12s ease-out;
+}
+
+/* Alert badge pulse when active — instant response */
+.mview-alerts-badge {
+    transition: all .08s ease;
+}
+.mview-alerts-badge.has-alerts {
+    animation: pulse 2s ease-in-out infinite;
+}
+</style>
+
+<div class="mview-page">
+    <div class="mview-split">
+        <div class="mview-list-panel">
+            <div class="mview-list-head">{{ t('nav.sensors', 'Senzory') }}</div>
+            <div class="mview-filters" id="mviewFilters">
+                <button class="mview-filter is-active" data-filter="all" onclick="mviewSetFilter('all')">
+                    {{ t('common.all', 'Všetky') }} <span class="mview-filter-count" id="mviewFiltAll">0</span>
+                </button>
+                <button class="mview-filter f-online" data-filter="online" onclick="mviewSetFilter('online')">
+                    <span class="mview-dot online"></span> Online <span class="mview-filter-count" id="mviewFiltOnline">0</span>
+                </button>
+                <button class="mview-filter f-warn" data-filter="warn" onclick="mviewSetFilter('warn')">
+                    <span class="mview-dot warn"></span> Warn <span class="mview-filter-count" id="mviewFiltWarn">0</span>
+                </button>
+                <button class="mview-filter f-offline" data-filter="offline" onclick="mviewSetFilter('offline')">
+                    <span class="mview-dot offline"></span> Offline <span class="mview-filter-count" id="mviewFiltOffline">0</span>
+                </button>
+            </div>
+            <div class="mview-list-body" id="mviewSensorList">
+                <div class="text-center text-muted py-4" style="font-size:0.85rem;">{{ t('runtime.loading', 'Načítavam...') }}</div>
+            </div>
+            <div class="mview-vresizer" id="mviewVResizer"></div>
+            <div class="mview-alerts-panel">
+                <div class="mview-alerts-head" id="mviewAlertsHead">
+                    <i class="fas fa-bell"></i> Upozornenia
+                    <span class="mview-alerts-badge" id="mviewAlertsBadge"></span>
+                </div>
+                <div class="mview-alerts-body" id="mviewAlerts">
+                    <div class="mview-alerts-empty">Žiadne upozornenia</div>
+                </div>
+            </div>
+        </div>
+        <div class="mview-resizer" id="mviewResizer"></div>
+        <div class="mview-map-panel">
+            <div id="mview-map"></div>
+        </div>
+    </div>
+</div>
+
+{% else %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
 /* ═══════════════════════════════════════════════════════
@@ -1227,10 +1714,895 @@
     </section>
 
 </div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% if current_user and current_user.role == 'viewer' %}
+<script>
+(function() {
+const STATUS_COLORS = { online: '#0f9d69', warn: '#e4a313', offline: '#cb3a42', unknown: '#94a3b8' };
+const TIER_ORDER    = { offline: 0, warn: 1, online: 2, unknown: 3 };
+
+function STATUS_TIER(s) {
+    if (!s) return 'unknown';
+    const l = String(s).toLowerCase();
+    if (l === 'online' || l === 'connected' || l === 'active' || l === 'quiet') return 'online';
+    if (l === 'warn'   || l === 'warning'   || l === 'degraded' || l === 'stale' || l === 'auto_detach_pending') return 'warn';
+    if (l === 'offline'|| l === 'disconnected' || l === 'inactive' || l === 'auto_detached') return 'offline';
+    if (l === 'no_data') return 'unknown';
+    return 'unknown';
+}
+const STATUS_LABELS = {
+    active: 'Aktívny', online: 'Online', connected: 'Online', quiet: 'Pokojný',
+    warning: 'Upozornenie', warn: 'Upozornenie', degraded: 'Upozornenie', stale: 'Stagnujúci', auto_detach_pending: 'Odpája sa',
+    offline: 'Offline', disconnected: 'Offline', inactive: 'Offline', auto_detached: 'Odpojený',
+    no_data: 'Bez dát', unknown: 'Neznámy'
+};
+function STATUS_LABEL(s) {
+    if (!s) return 'Neznámy';
+    return STATUS_LABELS[String(s).toLowerCase()] || STATUS_LABELS[s] || String(s);
+}
+function esc(v) {
+    return String(v == null ? '' : v)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function geoOf(s) {
+    const lat = parseFloat(s.gps_lat != null ? s.gps_lat : (s.latitude != null ? s.latitude : s.lat));
+    const lng = parseFloat(s.gps_lng != null ? s.gps_lng : (s.longitude != null ? s.longitude : (s.lon != null ? s.lon : s.lng)));
+    return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
+}
+function sensorId(s) { return s.eui || s.device_eui || s.sensor_id || ''; }
+
+function timeAgo(ts) {
+    if (!ts) return null;
+    const d = new Date(ts);
+    if (isNaN(d)) return null;
+    const sec = Math.round((Date.now() - d) / 1000);
+    if (sec < 10)  return 'práve teraz';
+    if (sec < 60)  return 'pred ' + sec + ' s';
+    const min = Math.round(sec / 60);
+    if (min < 60)  return 'pred ' + min + ' min';
+    return 'pred ' + Math.round(min / 60) + ' hod';
+}
+function valueLine(s) {
+    const parts = [];
+    if (s.last_values && typeof s.last_values === 'object') {
+        const e = Object.entries(s.last_values)[0];
+        if (e) parts.push(esc(e[0]) + ': ' + esc(e[1]));
+    }
+    const tsRaw = s.last_seen_timestamp || s.last_seen || s.last_message || s.updated_at || 0;
+    const tsMs = tsRaw > 1e10 ? tsRaw : tsRaw * 1000;
+    const ago = timeAgo(tsMs);
+    if (ago) parts.push(ago);
+    return parts.join(' \u00b7 ');
+}
+
+let mviewMap = null;
+let mviewLayer = null;
+let sensorMarkers = {};   // id → L.circleMarker
+let allSensors = [];
+let currentFilter = 'all';
+let lastLoadTs = null;
+let tickTimer = null;
+
+/* ── Map ── */
+const _mapViewKey = 'sc.map-view.v1';
+
+function saveMapView() {
+    if (!mviewMap) return;
+    const c = mviewMap.getCenter();
+    const z = mviewMap.getZoom();
+    localStorage.setItem(_mapViewKey, JSON.stringify({ lat: c.lat, lng: c.lng, zoom: z }));
+}
+
+function restoreMapView() {
+    try {
+        const saved = localStorage.getItem(_mapViewKey);
+        if (saved) {
+            const v = JSON.parse(saved);
+            return { lat: v.lat, lng: v.lng, zoom: v.zoom };
+        }
+    } catch (e) {}
+    return { lat: 48.768, lng: 18.635, zoom: 13 };
+}
+
+function initMap() {
+    if (typeof L === 'undefined') return;
+    const el = document.getElementById('mview-map');
+    if (!el) return;
+    mviewMap = L.map(el, { zoomControl: true, attributionControl: true, scrollWheelZoom: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '\u00a9 OpenStreetMap contributors'
+    }).addTo(mviewMap);
+    mviewLayer = L.layerGroup().addTo(mviewMap);
+
+    // Restore saved default view or use default
+    const view = restoreMapView();
+    mviewMap.setView([view.lat, view.lng], view.zoom);
+
+    // Right-click on map to set default view (manual save only, no auto-save)
+    mviewMap.on('contextmenu', function(e) {
+        L.DomEvent.preventDefault(e.originalEvent);
+        L.DomEvent.stopPropagation(e.originalEvent);
+        showCtx(e.originalEvent, [
+            { icon: 'fa-map-pin', label: 'Nastaviť ako východzí pohľad',
+                action: function() { saveMapView(); showMapToast('\u2713 Pohľad uložený', 2000); } },
+        ]);
+    });
+}
+
+// ── Marker helpers ────────────────────────────────────────────────────────────
+const MARKER_PALETTE = ['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891b2','#db2777','#374151','#f59e0b','#059669'];
+const _markerUnlocked = {};  // id → true when drag is enabled
+const _pendingLatLng  = {};  // id → {_origLat,_origLng,lat,lng} pending confirm
+
+function makeMarkerIcon(color, unlocked) {
+    const border = unlocked ? 'border:2.5px solid #eb7e17;' : 'border:2.5px solid rgba(255,255,255,.92);';
+    return L.divIcon({
+        html: '<div class="sc-map-pin" style="background:' + color + ';' + border + '"></div>',
+        className: 'sc-map-marker',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, -14]
+    });
+}
+
+let _mapToast = null;
+function showMapToast(msg, ms) {
+    const panel = document.querySelector('.mview-map-panel');
+    if (!panel) return;
+    if (_mapToast) _mapToast.remove();
+    const el = document.createElement('div');
+    el.className = 'sc-map-toast';
+    el.textContent = msg;
+    panel.style.position = 'relative';
+    panel.appendChild(el);
+    _mapToast = el;
+    setTimeout(function() { if (el.parentNode) el.remove(); if (_mapToast === el) _mapToast = null; }, ms || 2200);
+}
+
+let _colorPopEl = null;
+function closeColorPop() { if (_colorPopEl) { _colorPopEl.remove(); _colorPopEl = null; } }
+
+function showColorPop(x, y, currentColor, onPick) {
+    closeColorPop();
+    const pop = document.createElement('div');
+    pop.className = 'sc-color-pop';
+    pop.innerHTML = '<div class="sc-color-pop-title">Farba markera</div>';
+    const swatches = document.createElement('div');
+    swatches.className = 'sc-color-swatches';
+    MARKER_PALETTE.forEach(function(c) {
+        const sw = document.createElement('div');
+        sw.className = 'sc-color-swatch' + (c === currentColor ? ' is-active' : '');
+        sw.style.background = c;
+        sw.title = c;
+        sw.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+            closeColorPop();
+            onPick(c);
+        });
+        swatches.appendChild(sw);
+    });
+    pop.appendChild(swatches);
+    const reset = document.createElement('div');
+    reset.className = 'sc-color-reset';
+    reset.textContent = 'Obnoviť predvolenú';
+    reset.addEventListener('mousedown', function(e) { e.stopPropagation(); closeColorPop(); onPick(null); });
+    pop.appendChild(reset);
+    document.body.appendChild(pop);
+    _colorPopEl = pop;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const pw = pop.offsetWidth || 180, ph = pop.offsetHeight || 120;
+    pop.style.left = Math.min(x, vw - pw - 8) + 'px';
+    pop.style.top  = Math.min(y, vh - ph - 8) + 'px';
+    function onDocClick(e) {
+        if (!pop.contains(e.target)) { closeColorPop(); document.removeEventListener('mousedown', onDocClick); }
+    }
+    setTimeout(function() { document.addEventListener('mousedown', onDocClick); }, 50);
+}
+
+// Normal popup: name + EUI + [Detail →] [⋯]
+function buildPopupHtml(name, shortEui, href, mid) {
+    return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
+        + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + name + '</div>'
+        + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.36rem">' + shortEui + '</div>' : '')
+        + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
+        + '<div style="display:flex;align-items:center;gap:.36rem">'
+            + '<a href="' + href + '" class="sc-popup-detail">Detail \u2192</a>'
+            + '<button id="sc-popup-dots-' + mid + '" class="sc-popup-dots" title="Možnosti">\u22ef</button>'
+        + '</div>'
+        + '</div>';
+}
+
+// Unlocked popup: name + EUI + hint + [Uložiť polohu] [Zrušiť]
+function buildPopupUnlockedHtml(name, shortEui, mid, hasMoved) {
+    const hintText = hasMoved ? '\u2713 Premiestnený \u2014 uložiť?' : '\u2195 Presuňte marker na novú polohu';
+    const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
+    return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
+        + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + name + '</div>'
+        + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.24rem">' + shortEui + '</div>' : '')
+        + '<div style="font-size:.69rem;font-weight:700;color:' + hintColor + ';margin-bottom:.3rem">' + hintText + '</div>'
+        + '<div style="border-top:1px solid #edf2f9;margin:.28rem 0 .36rem"></div>'
+        + '<div style="display:flex;gap:.38rem">'
+            + (hasMoved ? '<button id="sc-popup-save-' + mid + '" class="sc-popup-save">Uložiť polohu</button>' : '')
+            + '<button id="sc-popup-cancel-' + mid + '" class="sc-popup-cancel">Zrušiť</button>'
+        + '</div>'
+        + '</div>';
+}
+
+function updateMap(sensors) {
+    if (!mviewMap || !mviewLayer) return;
+
+    // Cancel any pending drags (timeout protection)
+    Object.keys(_pendingLatLng).forEach(function(id) {
+        if (sensorMarkers[id]) {
+            const pending = _pendingLatLng[id];
+            sensorMarkers[id].setLatLng([pending._origLat, pending._origLng]);
+            showMapToast('Presunutie zrušené (čas vypršal)', 1800);
+        }
+        delete _pendingLatLng[id];
+        _markerUnlocked[id] = false;
+    });
+
+    mviewLayer.clearLayers();
+    sensorMarkers = {};
+    const geo = (sensors || []).filter(function(s) { return !!geoOf(s); });
+    if (!geo.length) return;
+    const bounds = [];
+
+    geo.forEach(function(s) {
+        const latlng = geoOf(s);
+        const tier   = STATUS_TIER(s.activity_status || s.status);
+        const statusColor = STATUS_COLORS[tier] || STATUS_COLORS.unknown;
+        const id     = sensorId(s);
+        const unlocked = !!_markerUnlocked[id];
+        const pinColor = s.marker_color || statusColor;
+        const name   = esc(s.name || id || 'Unknown');
+        const slabel = esc(STATUS_LABEL(s.activity_status || s.status || 'unknown'));
+        const shortEui = String(id).toUpperCase().replace(/(.{4})(?=.)/g, '$1 ');
+        const href   = '/sensors/' + esc(id);
+
+        const marker = L.marker(latlng, {
+            icon: makeMarkerIcon(pinColor, unlocked),
+            draggable: unlocked,
+            autoPan: true
+        });
+
+        marker.bindPopup(
+            unlocked ? buildPopupUnlockedHtml(name, shortEui, id, !!_pendingLatLng[id])
+                     : buildPopupHtml(name, shortEui, href, id),
+            { maxWidth: 240, className: 'sc-leaflet-popup' }
+        );
+
+        // Helper: lock and restore normal popup
+        function lockMarker() {
+            _markerUnlocked[id] = false;
+            marker.dragging.disable();
+            marker.setIcon(makeMarkerIcon(s.marker_color || statusColor, false));
+            marker.setPopupContent(buildPopupHtml(name, shortEui, href, id));
+        }
+
+        // Helper: unlock and show drag popup
+        function unlockMarker() {
+            _markerUnlocked[id] = true;
+            marker.dragging.enable();
+            marker.setIcon(makeMarkerIcon(s.marker_color || statusColor, true));
+            if (!_pendingLatLng[id]) {
+                const cur = marker.getLatLng();
+                _pendingLatLng[id] = { _origLat: cur.lat, _origLng: cur.lng, lat: cur.lat, lng: cur.lng };
+            }
+            marker.setPopupContent(buildPopupUnlockedHtml(name, shortEui, id, false));
+            showMapToast('Presúvanie odomknuté \u2014 presuňte marker', 2800);
+        }
+
+        // Shared context menu items for right-click and ⋯ button
+        function markerCtxItems(cx, cy) {
+            const isDragOn = !!_markerUnlocked[id];
+            return [
+                { icon: 'fa-arrow-up-right-from-square', label: 'Detail senzora',
+                    action: function() { window.location.href = '/sensors/' + encodeURIComponent(id); } },
+                { icon: isDragOn ? 'fa-lock' : 'fa-lock-open',
+                    label: isDragOn ? 'Zamknúť polohu' : 'Odomknúť presúvanie',
+                    action: function() { if (!!_markerUnlocked[id]) lockMarker(); else unlockMarker(); } },
+                { icon: 'fa-palette', label: 'Zmeniť farbu',
+                    action: function() {
+                        setTimeout(function() {
+                            showColorPop(cx, cy, s.marker_color || null, function(color) {
+                                fetch('/api/sensors/' + encodeURIComponent(id) + '/marker-color', {
+                                    method: 'POST', headers: {'Content-Type':'application/json'},
+                                    body: JSON.stringify({color: color || ''})
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(d) {
+                                    if (d.success) {
+                                        if (color) s.marker_color = color; else delete s.marker_color;
+                                        marker.setIcon(makeMarkerIcon(color || statusColor, !!_markerUnlocked[id]));
+                                        showMapToast(color ? '\u2713 Farba zmenená' : '\u2713 Farba obnovená', 2000);
+                                    } else {
+                                        showMapToast('\u2717 ' + (d.message || 'Chyba'), 2200);
+                                    }
+                                });
+                            });
+                        }, 80);
+                    } },
+                '-',
+                { icon: 'fa-bell-plus', label: 'Pridať alert',
+                    action: function() { window.location.href = '/alerts'; } },
+            ];
+        }
+
+        // Wire popup buttons every time popup opens
+        marker.on('popupopen', function() {
+            // Block right-click on popup
+            const popupEl = document.querySelector('.leaflet-popup');
+            if (popupEl) {
+                popupEl.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            }
+
+            // ⋯ dots button (normal popup)
+            const dotsBtn = document.getElementById('sc-popup-dots-' + id);
+            if (dotsBtn) {
+                dotsBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const rect = dotsBtn.getBoundingClientRect();
+                    const fakeEv = {
+                        clientX: rect.left, clientY: rect.bottom + 4,
+                        preventDefault: function(){}, stopPropagation: function(){}
+                    };
+                    showCtx(fakeEv, markerCtxItems(rect.left, rect.bottom + 8));
+                });
+            }
+
+            // Save / cancel buttons (unlocked popup after drag)
+            const saveBtn   = document.getElementById('sc-popup-save-' + id);
+            const cancelBtn = document.getElementById('sc-popup-cancel-' + id);
+
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function() {
+                    const pending = _pendingLatLng[id];
+                    if (!pending) return;
+                    marker.closePopup();
+                    fetch('/api/sensors/' + encodeURIComponent(id) + '/gps', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({gps_lat: pending.lat, gps_lng: pending.lng})
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (d.success) {
+                            const sr = allSensors.find(function(x) { return sensorId(x) === id; });
+                            if (sr) { sr.gps_lat = pending.lat; sr.gps_lng = pending.lng; }
+                            showMapToast('\u2713 Poloha uložená', 2400);
+                        } else {
+                            marker.setLatLng([pending._origLat, pending._origLng]);
+                            showMapToast('\u2717 ' + (d.message || 'Chyba uloženia'), 2400);
+                        }
+                        delete _pendingLatLng[id];
+                        lockMarker();
+                    })
+                    .catch(function() {
+                        const pending2 = _pendingLatLng[id];
+                        if (pending2) marker.setLatLng([pending2._origLat, pending2._origLng]);
+                        showMapToast('\u2717 Chyba uloženia', 2400);
+                        delete _pendingLatLng[id];
+                        lockMarker();
+                    });
+                });
+            }
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    const pending = _pendingLatLng[id];
+                    if (pending) marker.setLatLng([pending._origLat, pending._origLng]);
+                    delete _pendingLatLng[id];
+                    marker.closePopup();
+                    lockMarker();
+                    showMapToast('Presunutie zrušené', 1800);
+                });
+            }
+        });
+
+        marker.on('click', function() { highlightRow(id); });
+
+        marker.on('dragstart', function() {
+            marker.closePopup();
+            // Save original only on first drag (preserve across multiple drags)
+            if (!_pendingLatLng[id]) {
+                const cur = marker.getLatLng();
+                _pendingLatLng[id] = { _origLat: cur.lat, _origLng: cur.lng, lat: cur.lat, lng: cur.lng };
+            }
+        });
+
+        marker.on('dragend', function(e) {
+            const ll = e.target.getLatLng();
+            // Update pending position but KEEP unlocked — user may drag again
+            if (_pendingLatLng[id]) { _pendingLatLng[id].lat = ll.lat; _pendingLatLng[id].lng = ll.lng; }
+            // Show unlocked popup with save/cancel
+            marker.setPopupContent(buildPopupUnlockedHtml(name, shortEui, id, true));
+            marker.openPopup();
+        });
+
+        // Right-click: same context menu
+        marker.on('contextmenu', function(e) {
+            L.DomEvent.preventDefault(e.originalEvent);
+            L.DomEvent.stopPropagation(e.originalEvent);
+            showCtx(e.originalEvent, markerCtxItems(e.originalEvent.clientX, e.originalEvent.clientY));
+        });
+
+        marker.addTo(mviewLayer);
+        sensorMarkers[id] = marker;
+        bounds.push(latlng);
+    });
+
+    // Don't reset map view — user controls zoom/pan, saved to localStorage
+}
+// ── End marker helpers ────────────────────────────────────────────────────────
+
+/* ── List ↔ Map linking ── */
+function highlightRow(id) {
+    document.querySelectorAll('.mview-sensor-row').forEach(function(r) {
+        r.classList.toggle('is-highlighted', r.dataset.sensorId === id);
+    });
+    const row = document.querySelector('.mview-sensor-row[data-sensor-id="' + id + '"]');
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // Highlight pin on map
+    Object.entries(sensorMarkers).forEach(function(kv) {
+        const el = kv[1].getElement();
+        const pin = el && el.querySelector('.sc-map-pin');
+        if (pin) pin.classList.toggle('is-highlighted', kv[0] === id);
+    });
+}
+
+function focusOnMap(id) {
+    const marker = sensorMarkers[id];
+    if (marker && mviewMap) {
+        mviewMap.setView(marker.getLatLng(), Math.max(mviewMap.getZoom(), 15));
+        marker.openPopup();
+    }
+    highlightRow(id);
+}
+window.focusOnMap = focusOnMap;
+
+/* ── Filter ── */
+function applyFilter(sensors) {
+    return currentFilter === 'all'
+        ? sensors
+        : sensors.filter(function(s) { return STATUS_TIER(s.activity_status || s.status) === currentFilter; });
+}
+
+function setFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll('.mview-filter').forEach(function(btn) {
+        btn.classList.toggle('is-active', btn.dataset.filter === f);
+    });
+    const filtered = applyFilter(allSensors);
+    renderList(filtered);
+    updateMap(filtered);
+}
+window.mviewSetFilter = setFilter;
+
+/* ── Render list ── */
+function renderList(sensors) {
+    const el = document.getElementById('mviewSensorList');
+    if (!el) return;
+    if (!sensors.length) {
+        el.innerHTML = '<div class="text-center text-muted py-4" style="font-size:0.85rem;">' +
+            (currentFilter === 'all' ? 'Žiadne senzory' : 'Žiadne výsledky') + '</div>';
+        return;
+    }
+    el.innerHTML = sensors.map(function(s) {
+        const raw    = s.activity_status || s.status || 'unknown';
+        const tier   = STATUS_TIER(raw);
+        const name   = esc(s.name || s.eui || s.device_eui || s.sensor_id || '\u2014');
+        const slabel = esc(STATUS_LABEL(raw));
+        const id     = sensorId(s);
+        const href   = '/sensors/' + esc(id);
+        const sub    = valueLine(s);
+        return '<div class="mview-sensor-row" data-sensor-id="' + esc(id) + '" onclick="focusOnMap(\'' + esc(id) + '\')">' +
+            '<span class="mview-dot ' + tier + '"></span>' +
+            '<span class="mview-sensor-info">' +
+                '<span class="mview-sensor-name">' + name + '</span>' +
+                (sub ? '<span class="mview-sensor-sub">' + sub + '</span>' : '') +
+            '</span>' +
+            '<span class="mview-badge ' + tier + '">' + slabel + '</span>' +
+            '<a href="' + href + '" class="mview-sensor-link" onclick="event.stopPropagation()" title="Detail">' +
+                '<i class="fas fa-chevron-right"></i>' +
+            '</a>' +
+        '</div>';
+    }).join('');
+}
+
+/* ── Live tick ── */
+function startTick() {
+    if (tickTimer) clearInterval(tickTimer);
+    lastLoadTs = Date.now();
+}
+
+/* ── Alerts ── */
+const COND_LABEL_DASH = {'gt':'>','gte':'≥','lt':'<','lte':'≤','eq':'='};
+const METRIC_UNIT_DASH = {co2_1_ppm:'ppm',co2_2_ppm:'ppm',temperature_1_c:'°C',temperature_2_c:'°C',humidity_1_pct:'%',battery_v_est:'V'};
+const METRIC_NAMES_DASH = {co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm aktívny',alarm_count:'Počet alarmov',open_count:'Počet otvorení'};
+
+function renderAlerts(sensors) {
+    const ALERT_DESC = {
+        offline: 'Senzor offline', auto_detached: 'Senzor odpojený',
+        stale: 'Dlho bez správy', warning: 'Upozornenie',
+        auto_detach_pending: 'Odpájanie', warn: 'Upozornenie'
+    };
+
+    // 1. Activity-based alerts
+    const alerts = [];
+    sensors.forEach(function(s) {
+        const tier = STATUS_TIER(s.activity_status || s.status);
+        if (tier !== 'online' && tier !== 'unknown') {
+            const raw = String(s.activity_status || s.status || '').toLowerCase();
+            alerts.push({
+                tier: tier === 'offline' ? 'error' : 'warn',
+                name: s.name || s.eui,
+                eui: s.eui,
+                desc: ALERT_DESC[raw] || STATUS_LABEL(raw),
+                type: 'activity',
+                ackKey: String(s.eui || '').toUpperCase() + ':activity'
+            });
+        }
+    });
+
+    // 2. Fetch threshold-triggered alerts and merge
+    function finalize(thresholdAlerts) {
+        thresholdAlerts.forEach(function(a) {
+            const sensorName = (allSensors.find(function(s) { return String(s.eui||'').toUpperCase() === String(a.sensor_eui||'').toUpperCase(); }) || {}).name || a.sensor_eui;
+            const mn = METRIC_NAMES_DASH[a.metric] || a.metric.replace(/_/g,' ');
+            const unit = METRIC_UNIT_DASH[a.metric] || '';
+            const cval = typeof a.current_value === 'number' ? a.current_value.toFixed(unit==='°C'?1:0) + unit : '';
+            alerts.push({
+                tier: a.severity === 'critical' ? 'error' : 'warn',
+                name: sensorName,
+                eui: a.sensor_eui,
+                desc: (a.name || mn) + ': ' + cval + ' ' + COND_LABEL_DASH[a.condition] + ' ' + a.threshold + unit,
+                type: 'threshold',
+                ackKey: String(a.id || a.sensor_eui || '') + ':threshold'
+            });
+        });
+
+        alerts.sort(function(a, b) { return a.tier === 'error' && b.tier !== 'error' ? -1 : 1; });
+
+        // Filter acknowledged
+        const visible = alerts.filter(function(a) { return !isAcked(a.ackKey); });
+
+        const body  = document.getElementById('mviewAlerts');
+        const badge = document.getElementById('mviewAlertsBadge');
+        const head  = document.getElementById('mviewAlertsHead');
+        if (!body) return;
+
+        const hasError = visible.some(function(a) { return a.tier === 'error'; });
+        const hasWarn  = visible.some(function(a) { return a.tier === 'warn'; });
+        if (head) {
+            head.classList.toggle('has-error', hasError);
+            head.classList.toggle('has-warn', !hasError && hasWarn);
+        }
+        if (badge) {
+            badge.textContent = visible.length || '';
+            badge.classList.toggle('is-visible', visible.length > 0);
+        }
+        if (!visible.length) {
+            body.innerHTML = '<div class="mview-alerts-empty">Žiadne upozornenia</div>';
+            return;
+        }
+        body.innerHTML = visible.map(function(a) {
+            const icon = a.tier === 'error'
+                ? (a.type === 'threshold' ? 'fa-bell' : 'fa-circle-xmark')
+                : (a.type === 'threshold' ? 'fa-bell' : 'fa-triangle-exclamation');
+            return '<a class="mview-alert-row is-' + a.tier + '" href="/sensors/' + encodeURIComponent(a.eui) + '"'
+                + ' data-eui="' + esc(a.eui) + '" data-ack-key="' + esc(a.ackKey) + '">' +
+                '<i class="fas ' + icon + ' mview-alert-icon"></i>' +
+                '<div class="mview-alert-info">' +
+                    '<div class="mview-alert-name">' + esc(a.name) + '</div>' +
+                    '<div class="mview-alert-desc">' + esc(a.desc) + '</div>' +
+                '</div>' +
+                '<i class="fas fa-chevron-right" style="font-size:.58rem;color:#cbd5e1;flex-shrink:0"></i>' +
+            '</a>';
+        }).join('');
+    }
+
+    fetch('/api/alerts/triggered')
+        .then(function(r) { return r.ok ? r.json() : {triggered:[]}; })
+        .catch(function() { return {triggered:[]}; })
+        .then(function(d) { finalize(d.triggered || []); });
+}
+
+/* ── Load ── */
+function load() {
+    fetch('/api/sensors')
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .catch(function() { return null; })
+        .then(function(data) {
+            const raw = Array.isArray(data) ? data
+                : (data && Array.isArray(data.sensors) ? data.sensors
+                : (data && typeof data === 'object' && !data.error ? Object.values(data) : []));
+
+            // Sort: offline → warn → online
+            raw.sort(function(a, b) {
+                return (TIER_ORDER[STATUS_TIER(a.activity_status || a.status)] || 3) - (TIER_ORDER[STATUS_TIER(b.activity_status || b.status)] || 3);
+            });
+            allSensors = raw;
+
+            let online = 0, warn = 0, offline = 0;
+            raw.forEach(function(s) {
+                const t = STATUS_TIER(s.activity_status || s.status);
+                if (t === 'online') online++;
+                else if (t === 'warn') warn++;
+                else offline++;
+            });
+
+            // KPI counts
+            function g(id) { return document.getElementById(id); }
+            // Filter counts
+            if (g('mviewFiltAll'))     g('mviewFiltAll').textContent     = raw.length;
+            if (g('mviewFiltOnline'))  g('mviewFiltOnline').textContent  = online;
+            if (g('mviewFiltWarn'))    g('mviewFiltWarn').textContent    = warn;
+            if (g('mviewFiltOffline')) g('mviewFiltOffline').textContent = offline;
+
+            // Render
+            const filtered = applyFilter(raw);
+            renderList(filtered);
+            updateMap(filtered);
+            renderAlerts(raw);
+            startTick();
+        });
+}
+
+/* ── Resizable panel ── */
+const MVIEW_WIDTH_KEY = 'service-center.mview-list-width.v1';
+
+function initResizer() {
+    const resizer  = document.getElementById('mviewResizer');
+    const panel    = document.querySelector('.mview-list-panel');
+    const split    = document.querySelector('.mview-split');
+    if (!resizer || !panel || !split) return;
+
+    // Restore saved width
+    try {
+        const saved = parseInt(localStorage.getItem(MVIEW_WIDTH_KEY), 10);
+        if (saved >= 220) panel.style.width = saved + 'px';
+    } catch (e) {}
+
+    function applyWidth(px) {
+        const max = split.offsetWidth * 0.65;
+        const clamped = Math.max(220, Math.min(px, max));
+        panel.style.width = clamped + 'px';
+        return clamped;
+    }
+
+    // Mouse
+    resizer.addEventListener('mousedown', function(e) {
+        const startX     = e.clientX;
+        const startWidth = panel.offsetWidth;
+        resizer.classList.add('is-dragging');
+        document.body.style.cursor     = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        function onMove(e) {
+            applyWidth(startWidth + (e.clientX - startX));
+            if (mviewMap) mviewMap.invalidateSize();
+        }
+        function onUp() {
+            resizer.classList.remove('is-dragging');
+            document.body.style.cursor     = '';
+            document.body.style.userSelect = '';
+            try { localStorage.setItem(MVIEW_WIDTH_KEY, panel.offsetWidth); } catch (e) {}
+            if (mviewMap) mviewMap.invalidateSize();
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup',   onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
+        e.preventDefault();
+    });
+
+    // Touch
+    resizer.addEventListener('touchstart', function(e) {
+        const startX     = e.touches[0].clientX;
+        const startWidth = panel.offsetWidth;
+
+        function onMove(e) {
+            applyWidth(startWidth + (e.touches[0].clientX - startX));
+            if (mviewMap) mviewMap.invalidateSize();
+        }
+        function onEnd() {
+            try { localStorage.setItem(MVIEW_WIDTH_KEY, panel.offsetWidth); } catch (e) {}
+            resizer.removeEventListener('touchmove', onMove);
+            resizer.removeEventListener('touchend',  onEnd);
+        }
+        resizer.addEventListener('touchmove', onMove, { passive: true });
+        resizer.addEventListener('touchend',  onEnd);
+    }, { passive: true });
+}
+
+/* ── Vertical resizer (list ↕ alerts) ── */
+const MVIEW_ALERTS_HEIGHT_KEY = 'service-center.mview-alerts-height.v1';
+
+function initVResizer() {
+    const resizer = document.getElementById('mviewVResizer');
+    const listEl  = document.querySelector('.mview-list-body');
+    const alertEl = document.querySelector('.mview-alerts-panel');
+    const panel   = document.querySelector('.mview-list-panel');
+    if (!resizer || !listEl || !alertEl || !panel) return;
+
+    // Switch both to fixed pixel heights so we can resize them
+    function applyHeight(alertPx) {
+        const total = panel.offsetHeight
+            - (panel.querySelector('.mview-list-head')?.offsetHeight  || 0)
+            - (panel.querySelector('.mview-filters')?.offsetHeight    || 0)
+            - resizer.offsetHeight;
+        const clamped = Math.max(60, Math.min(alertPx, total - 60));
+        alertEl.style.flex = 'none';
+        alertEl.style.height = clamped + 'px';
+        listEl.style.flex = 'none';
+        listEl.style.height = (total - clamped) + 'px';
+        return clamped;
+    }
+
+    // Restore saved height
+    try {
+        const saved = parseInt(localStorage.getItem(MVIEW_ALERTS_HEIGHT_KEY), 10);
+        if (saved >= 60) applyHeight(saved);
+    } catch (e) {}
+
+    // Mouse
+    resizer.addEventListener('mousedown', function(e) {
+        const startY      = e.clientY;
+        const startHeight = alertEl.offsetHeight;
+        resizer.classList.add('is-dragging');
+        document.body.style.cursor     = 'row-resize';
+        document.body.style.userSelect = 'none';
+
+        function onMove(e) { applyHeight(startHeight - (e.clientY - startY)); }
+        function onUp() {
+            resizer.classList.remove('is-dragging');
+            document.body.style.cursor     = '';
+            document.body.style.userSelect = '';
+            try { localStorage.setItem(MVIEW_ALERTS_HEIGHT_KEY, alertEl.offsetHeight); } catch (e) {}
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup',   onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
+        e.preventDefault();
+    });
+
+    // Touch
+    resizer.addEventListener('touchstart', function(e) {
+        const startY      = e.touches[0].clientY;
+        const startHeight = alertEl.offsetHeight;
+        function onMove(e) { applyHeight(startHeight - (e.touches[0].clientY - startY)); }
+        function onEnd() {
+            try { localStorage.setItem(MVIEW_ALERTS_HEIGHT_KEY, alertEl.offsetHeight); } catch (e) {}
+            resizer.removeEventListener('touchmove', onMove);
+            resizer.removeEventListener('touchend',  onEnd);
+        }
+        resizer.addEventListener('touchmove', onMove, { passive: true });
+        resizer.addEventListener('touchend',  onEnd);
+    }, { passive: true });
+}
+
+// ── Context menu ────────────────────────────────────────────────────────────
+const SC_ACKS_KEY = 'sc.alert-acks.v1';
+
+function _loadAcks() {
+    try { return JSON.parse(localStorage.getItem(SC_ACKS_KEY)) || []; } catch(e) { return []; }
+}
+function _saveAcks(acks) {
+    try { localStorage.setItem(SC_ACKS_KEY, JSON.stringify(acks)); } catch(e) {}
+}
+function isAcked(key) {
+    const now = Date.now();
+    return _loadAcks().some(function(a) { return a.key === key && a.until > now; });
+}
+function ackAlert(key, hours) {
+    const acks = _loadAcks().filter(function(a) { return a.key !== key; });
+    acks.push({ key: key, until: Date.now() + hours * 3600000 });
+    _saveAcks(acks);
+}
+
+let _ctxEl = null;
+function closeCtx() { if (_ctxEl) { _ctxEl.remove(); _ctxEl = null; } }
+
+function showCtx(e, items) {
+    e.preventDefault();
+    closeCtx();
+    const menu = document.createElement('div');
+    menu.className = 'sc-ctx';
+    menu.tabIndex = -1;
+    items.forEach(function(item) {
+        if (item === '-') {
+            const sep = document.createElement('div');
+            sep.className = 'sc-ctx-sep';
+            menu.appendChild(sep);
+            return;
+        }
+        const el = document.createElement('div');
+        el.className = 'sc-ctx-item' + (item.danger ? ' is-danger' : '');
+        el.innerHTML = '<i class="fas ' + item.icon + '"></i>' + esc(item.label);
+        el.addEventListener('click', function() { closeCtx(); item.action(); });
+        menu.appendChild(el);
+    });
+
+    // Position: keep inside viewport
+    document.body.appendChild(menu);
+    _ctxEl = menu;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const mw = menu.offsetWidth, mh = menu.offsetHeight;
+    let x = e.clientX, y = e.clientY;
+    if (x + mw > vw - 8) x = vw - mw - 8;
+    if (y + mh > vh - 8) y = vh - mh - 8;
+    menu.style.left = x + 'px';
+    menu.style.top  = y + 'px';
+    menu.focus();
+}
+
+document.addEventListener('click', closeCtx);
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeCtx(); });
+
+function initContextMenus() {
+    // Right-click on sensor list panel (rows + empty space)
+    const sensorList = document.getElementById('mviewSensorList');
+    if (sensorList) {
+        sensorList.addEventListener('contextmenu', function(e) {
+            const row = e.target.closest('.mview-sensor-row');
+            if (row) {
+                const eui = row.dataset.sensorId || '';
+                showCtx(e, [
+                    { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť detail', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
+                    { icon: 'fa-bell-plus', label: 'Pridať alert', action: function() { window.location.href = '/alerts'; } },
+                ]);
+            } else {
+                // Empty area
+                showCtx(e, [
+                    { icon: 'fa-plus', label: 'Pridať senzor', action: function() { window.location.href = '/sensors?add=1'; } },
+                ]);
+            }
+        });
+    }
+
+    // Right-click on alerts panel (rows + empty space)
+    const alertsPanel = document.querySelector('.mview-alerts-panel');
+    if (alertsPanel) {
+        alertsPanel.addEventListener('contextmenu', function(e) {
+            const row = e.target.closest('.mview-alert-row');
+            if (row) {
+                const eui    = row.dataset.eui    || '';
+                const ackKey = row.dataset.ackKey || '';
+                showCtx(e, [
+                    { icon: 'fa-clock-rotate-left', label: 'Potvrdiť na 4 hodiny',  action: function() { if (ackKey) { ackAlert(ackKey, 4);  renderAlerts(allSensors); } } },
+                    { icon: 'fa-check-double',       label: 'Potvrdiť na 24 hodín', action: function() { if (ackKey) { ackAlert(ackKey, 24); renderAlerts(allSensors); } } },
+                    '-',
+                    { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť senzor', action: function() { if (eui) window.location.href = '/sensors/' + encodeURIComponent(eui); } },
+                ]);
+            } else {
+                // Empty area / header
+                showCtx(e, [
+                    { icon: 'fa-bell-plus', label: 'Pridať alert', action: function() { window.location.href = '/alerts'; } },
+                ]);
+            }
+        });
+    }
+}
+// ── End context menu ─────────────────────────────────────────────────────────
+
+initResizer();
+initVResizer();
+initContextMenus();
+initMap();
+load();
+setInterval(load, 30000);
+})();
+</script>
+{% else %}
 <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 <script>
 let cyMini = null;
@@ -2494,4 +3866,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+{% endif %}
 {% endblock %}
