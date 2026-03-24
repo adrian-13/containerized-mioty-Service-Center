@@ -289,12 +289,12 @@
 .svd-mtiles{display:flex;gap:.5rem;flex-wrap:wrap}
 .svd-mtile{flex:1;min-width:7.2rem;padding:.76rem .88rem;border:2px solid #dae3f0;border-radius:.82rem;background:#fff;cursor:pointer;transition:border-color .14s,background .14s,box-shadow .14s;text-align:left;box-shadow:0 1px 4px rgba(15,23,42,.04);font:inherit}
 .svd-mtile:hover:not(.is-active){border-color:#b0c8e4;background:#f7fafd}
-.svd-mtile.is-active{border-color:#2563eb;background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(37,99,235,.02));box-shadow:0 2px 10px rgba(37,99,235,.12)}
+.svd-mtile.is-active{border-color:var(--brand-500);background:linear-gradient(135deg,rgba(var(--brand-rgb),.07),rgba(var(--brand-rgb),.02));box-shadow:0 2px 10px rgba(var(--brand-rgb),.12)}
 .svd-mtile.is-active.tone-green{border-color:#16a34a;background:linear-gradient(135deg,rgba(22,163,74,.09),rgba(22,163,74,.01));box-shadow:0 2px 10px rgba(22,163,74,.14)}
 .svd-mtile.is-active.tone-amber{border-color:#d97706;background:linear-gradient(135deg,rgba(245,158,11,.11),rgba(245,158,11,.01));box-shadow:0 2px 10px rgba(245,158,11,.16)}
 .svd-mtile.is-active.tone-red{border-color:#dc2626;background:linear-gradient(135deg,rgba(239,68,68,.09),rgba(239,68,68,.01));box-shadow:0 2px 10px rgba(239,68,68,.13)}
 .svd-mtile-lbl{font-size:.59rem;text-transform:uppercase;letter-spacing:.09em;color:#7a8fa8;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.svd-mtile.is-active .svd-mtile-lbl{color:#1d4ed8}
+.svd-mtile.is-active .svd-mtile-lbl{color:var(--brand-600)}
 .svd-mtile.is-active.tone-green .svd-mtile-lbl{color:#15803d}
 .svd-mtile.is-active.tone-amber .svd-mtile-lbl{color:#b45309}
 .svd-mtile.is-active.tone-red .svd-mtile-lbl{color:#b91c1c}
@@ -308,7 +308,7 @@
 .svd-ch-controls{display:flex;align-items:center;gap:.28rem}
 .svd-ch-range-btn{border:1px solid #cdd9ea;background:#fff;color:#4e6a88;border-radius:.4rem;padding:.2rem .52rem;font-size:.68rem;font-weight:800;cursor:pointer;transition:background .1s,color .1s,border-color .1s}
 .svd-ch-range-btn:hover{background:#f0f5fd;border-color:#b0c4de}
-.svd-ch-range-btn.is-active{background:linear-gradient(180deg,#264878,#1b3559);border-color:#1b3559;color:#fff}
+.svd-ch-range-btn.is-active{background:var(--brand-500);border-color:var(--brand-600);color:#fff}
 .svd-ch-status{font-size:.66rem;color:#8a9ab0;font-weight:700}
 .svd-chart-wrap{position:relative;height:180px;padding:.2rem 1.2rem .9rem}
 .svd-ch-empty{padding:.9rem 1.2rem;font-size:.76rem;color:#8a9ab0;text-align:center}
@@ -358,12 +358,12 @@
 .svd-modal-footer{padding:.78rem 1.2rem;border-top:1px solid #e8eef8;display:flex;gap:.5rem;justify-content:flex-end}
 .svd-field label{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#7a8fa8;display:block;margin-bottom:.28rem}
 .svd-field input,.svd-field select{width:100%;border:1px solid #cdd9ea;border-radius:.5rem;padding:.46rem .7rem;font-size:.82rem;color:#13263f;background:#fff;outline:none;transition:border-color .12s,box-shadow .12s}
-.svd-field input:focus,.svd-field select:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.1)}
+.svd-field input:focus,.svd-field select:focus{border-color:var(--brand-500);box-shadow:0 0 0 2px rgba(var(--brand-rgb),.1)}
 .svd-field-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
-.svd-btn-primary{background:linear-gradient(180deg,#264878,#1b3559);color:#fff;border:none;border-radius:.5rem;padding:.48rem 1rem;font-size:.8rem;font-weight:800;cursor:pointer;transition:opacity .12s}
+.svd-btn-primary{background:var(--brand-500);color:#fff;border:none;border-radius:.5rem;padding:.48rem 1rem;font-size:.8rem;font-weight:800;cursor:pointer;transition:opacity .12s}
 .svd-btn-primary:hover{opacity:.88}
-.svd-btn-secondary{background:#fff;color:#4e6a88;border:1px solid #cdd9ea;border-radius:.5rem;padding:.48rem 1rem;font-size:.8rem;font-weight:800;cursor:pointer;transition:background .12s,color .12s}
-.svd-btn-secondary:hover{background:#f0f5fd;color:#1c3a5e}
+.svd-btn-secondary{background:#fff;color:var(--brand-600);border:1px solid #cdd9ea;border-radius:.5rem;padding:.48rem 1rem;font-size:.8rem;font-weight:800;cursor:pointer;transition:background .12s,color .12s,border-color .12s}
+.svd-btn-secondary:hover{background:rgba(var(--brand-rgb),.08);color:var(--brand-600);border-color:var(--brand-500)}
 
 /* ── Smooth animations ── */
 @keyframes fadeInUp {
