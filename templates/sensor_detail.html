@@ -630,7 +630,7 @@ function render(d){
     _activeKey=pm?pm.key:(allMetrics[0]?allMetrics[0][0]:null);
   }
 
-  // Build 2x2 grid of metrics with visual cards
+  // Build hero metric design - main metric large + supporting metrics
   const gridMetrics=allMetrics.slice(0,4);
   const getTone=(k,v)=>{
     const n=Number(v);
@@ -642,23 +642,25 @@ function render(d){
     if(k.includes('battery')){if(n>3.5)return'green';if(n>3.0)return'amber';return'red';}
     return'slate';
   };
-  const toneColors={green:{bg:'rgba(22,163,74,.08)',border:'#16a34a',text:'#15803d'},amber:{bg:'rgba(245,158,11,.1)',border:'#f59e0b',text:'#b45309'},red:{bg:'rgba(239,68,68,.09)',border:'#ef4444',text:'#b91c1c'},blue:{bg:'rgba(59,130,246,.08)',border:'#3b82f6',text:'#1e40af'},slate:{bg:'rgba(71,85,105,.06)',border:'#64748b',text:'#334155'}};
-  const metricsGridHtml=gridMetrics.length?`<section class="svd-card">
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;padding:1.2rem">
-      ${gridMetrics.map(([k,v])=>{
+  const toneColors={green:'#16a34a',amber:'#f59e0b',red:'#ef4444',blue:'#3b82f6',slate:'#64748b'};
+  const metricsGridHtml=gridMetrics.length?`<section class="svd-card" style="padding:0;overflow:hidden">
+    ${gridMetrics.length>0?`<div style="padding:1.4rem;background:linear-gradient(135deg,rgba(${gridMetrics[0][0]==='co2_1_ppm'?'22,163,74':'59,130,246'},.04) 0%,rgba(${gridMetrics[0][0]==='co2_1_ppm'?'22,163,74':'59,130,246'},.02) 100%);border-bottom:2px solid ${toneColors[getTone(gridMetrics[0][0],gridMetrics[0][1])]||'#e5e7eb'}">
+      <div style="font-size:.7rem;text-transform:uppercase;color:#7a8fa8;font-weight:900;letter-spacing:.06em;margin-bottom:.6rem">${esc(labelOf(gridMetrics[0][0]))}</div>
+      <div style="font-size:2.8rem;font-weight:900;color:#0f2135;line-height:1.1;margin-bottom:.3rem">${esc(fmtHeroValue(gridMetrics[0][0],gridMetrics[0][1]))}<span style="font-size:1.1rem;color:#8a9ab0;margin-left:.3rem;font-weight:700">${esc(heroUnit(gridMetrics[0][0]))}</span></div>
+      ${heroNote(gridMetrics[0][0],gridMetrics[0][1])?`<div style="font-size:.76rem;color:${toneColors[getTone(gridMetrics[0][0],gridMetrics[0][1])]};font-weight:700">${esc(heroNote(gridMetrics[0][0],gridMetrics[0][1]))}</div>`:''}
+    </div>`:''}
+    ${gridMetrics.length>1?`<div style="padding:.8rem 1.2rem;display:grid;grid-template-columns:${gridMetrics.length-1===1?'1fr':gridMetrics.length-1===2?'1fr 1fr':'1fr 1fr 1fr'};gap:.8rem">
+      ${gridMetrics.slice(1).map(([k,v])=>{
         const dv=fmtHeroValue(k,v);
         const unit=heroUnit(k);
-        const note=heroNote(k,v);
         const tone=getTone(k,v);
-        const colors=toneColors[tone]||toneColors.slate;
-        return`<div style="background:${colors.bg};border:1.5px solid ${colors.border};border-radius:1rem;padding:1rem;text-align:left">
-          <div style="font-size:.65rem;text-transform:uppercase;color:${colors.text};font-weight:900;letter-spacing:.05em;margin-bottom:.5rem">${esc(labelOf(k))}</div>
-          <div style="font-size:1.8rem;font-weight:900;color:#0f2135;line-height:1;margin-bottom:.2rem">${esc(dv)}</div>
-          ${unit?`<div style="font-size:.75rem;color:${colors.text};font-weight:700;margin-bottom:.4rem">${esc(unit)}</div>`:''}
-          ${note?`<div style="font-size:.68rem;color:${colors.text};line-height:1.3">${esc(note)}</div>`:''}
+        const color=toneColors[tone]||'#64748b';
+        return`<div style="text-align:left;padding:.6rem;background:#f8fafb;border-left:3px solid ${color};border-radius:.4rem">
+          <div style="font-size:.62rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.25rem">${esc(labelOf(k))}</div>
+          <div style="font-size:1.3rem;font-weight:900;color:#0f2135">${esc(dv)}<span style="font-size:.7rem;color:#94a3b8;margin-left:.15rem;font-weight:700">${esc(unit)}</span></div>
         </div>`;
       }).join('')}
-    </div>
+    </div>`:''}
   </section>`:'';
 
   // Chart card (shows first metric by default)
