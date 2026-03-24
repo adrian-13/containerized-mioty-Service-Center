@@ -630,6 +630,14 @@ function render(d){
     _activeKey=pm?pm.key:(allMetrics[0]?allMetrics[0][0]:null);
   }
 
+  // Extract info data (used in unified panel)
+  const pktRcv=Number(d.packets_received||0);
+  const gwCount=Number(d.gateway_count||0);
+  const tags=cfg.tags||[];
+  const interval=cfg.expected_interval_seconds;
+  const intervalStr=interval?(interval>=3600?Number(interval/3600).toFixed(1)+' hod':interval>=60?Math.round(interval/60)+' min':interval+' s'):'—';
+  const lastSeenFull=d.last_seen?new Date(Number(d.last_seen)*1000).toLocaleString('sk-SK',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+
   // Build unified overview panel - info + metrics
   const gridMetrics=allMetrics.slice(0,6);
   const getTone=(k,v)=>{
@@ -688,13 +696,6 @@ function render(d){
 
   const mainCardHtml=metricsGridHtml+chartCardHtml;
 
-  // Extract info data (used in unified panel above)
-  const pktRcv=Number(d.packets_received||0);
-  const gwCount=Number(d.gateway_count||0);
-  const tags=cfg.tags||[];
-  const interval=cfg.expected_interval_seconds;
-  const intervalStr=interval?(interval>=3600?Number(interval/3600).toFixed(1)+' hod':interval>=60?Math.round(interval/60)+' min':interval+' s'):'—';
-  const lastSeenFull=d.last_seen?new Date(Number(d.last_seen)*1000).toLocaleString('sk-SK',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
   const infoHtml='';
 
   document.getElementById('svdBody').innerHTML=mainCardHtml+infoHtml+'<section class="svd-card" id="svdAlertsCard"><div class="svd-al-head"><span class="svd-al-title"><i class="fas fa-bell"></i> Alerty</span><button class="svd-al-add-btn" id="svdAlAddBtn"><i class="fas fa-plus"></i> Pridať alert</button></div><div id="svdAlList"><div class="svd-al-empty">Načítavam...</div></div></section>';
