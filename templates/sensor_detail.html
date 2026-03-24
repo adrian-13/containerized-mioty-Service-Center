@@ -630,8 +630,8 @@ function render(d){
     _activeKey=pm?pm.key:(allMetrics[0]?allMetrics[0][0]:null);
   }
 
-  // Build hero metric design - main metric large + supporting metrics
-  const gridMetrics=allMetrics.slice(0,4);
+  // Build unified overview panel - info + metrics
+  const gridMetrics=allMetrics.slice(0,6);
   const getTone=(k,v)=>{
     const n=Number(v);
     if(k==='co2_1_ppm'||k==='co2_2_ppm'){if(n<=800)return'green';if(n<=1200)return'amber';return'red';}
@@ -643,25 +643,33 @@ function render(d){
     return'slate';
   };
   const toneColors={green:'#16a34a',amber:'#f59e0b',red:'#ef4444',blue:'#3b82f6',slate:'#64748b'};
-  const metricsGridHtml=gridMetrics.length?`<section class="svd-card" style="padding:0;overflow:hidden">
-    ${gridMetrics.length>0?`<div style="padding:1.4rem;background:linear-gradient(135deg,rgba(${gridMetrics[0][0]==='co2_1_ppm'?'22,163,74':'59,130,246'},.04) 0%,rgba(${gridMetrics[0][0]==='co2_1_ppm'?'22,163,74':'59,130,246'},.02) 100%);border-bottom:2px solid ${toneColors[getTone(gridMetrics[0][0],gridMetrics[0][1])]||'#e5e7eb'}">
-      <div style="font-size:.7rem;text-transform:uppercase;color:#7a8fa8;font-weight:900;letter-spacing:.06em;margin-bottom:.6rem">${esc(labelOf(gridMetrics[0][0]))}</div>
-      <div style="font-size:2.8rem;font-weight:900;color:#0f2135;line-height:1.1;margin-bottom:.3rem">${esc(fmtHeroValue(gridMetrics[0][0],gridMetrics[0][1]))}<span style="font-size:1.1rem;color:#8a9ab0;margin-left:.3rem;font-weight:700">${esc(heroUnit(gridMetrics[0][0]))}</span></div>
-      ${heroNote(gridMetrics[0][0],gridMetrics[0][1])?`<div style="font-size:.76rem;color:${toneColors[getTone(gridMetrics[0][0],gridMetrics[0][1])]};font-weight:700">${esc(heroNote(gridMetrics[0][0],gridMetrics[0][1]))}</div>`:''}
+
+  const metricsGridHtml=`<section class="svd-card">
+    <div style="padding:1.2rem;border-bottom:1px solid #f0f5fb">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1rem">
+        <div><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">EUI</div><div style="font-size:.8rem;color:#0f2135;font-weight:700;font-family:monospace">${esc(d.eui||'—')}</div></div>
+        <div><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">Posledný uplink</div><div style="font-size:.8rem;color:#0f2135;font-weight:700">${esc(lastSeenFull)}</div></div>
+        <div><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">Interval</div><div style="font-size:.8rem;color:#0f2135;font-weight:700">${esc(intervalStr)}</div></div>
+        <div><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">Profil</div><div style="font-size:.8rem;color:#0f2135;font-weight:700">${esc(cfg.sensor_profile||'—')}</div></div>
+      </div>
+      ${tags.length?`<div style="display:flex;gap:.3rem;flex-wrap:wrap"><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.3rem;width:100%">Tagy</div>${tags.map(t=>`<span style="background:#f0f5fd;border:1px solid #d4e0f0;border-radius:.3rem;padding:.08rem .4rem;font-size:.66rem;font-weight:700;color:#284465">${esc(String(t))}</span>`).join('')}</div>`:''}
+    </div>
+    ${gridMetrics.length?`<div style="padding:1rem 1.2rem">
+      <div style="font-size:.68rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.8rem">Metriky</div>
+      <div style="display:grid;grid-template-columns:repeat(${Math.min(gridMetrics.length,3)},1fr);gap:.7rem">
+        ${gridMetrics.map(([k,v])=>{
+          const dv=fmtHeroValue(k,v);
+          const unit=heroUnit(k);
+          const tone=getTone(k,v);
+          const color=toneColors[tone]||'#64748b';
+          return`<div style="padding:.6rem;background:#f8fafb;border-left:3px solid ${color};border-radius:.4rem">
+            <div style="font-size:.6rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">${esc(labelOf(k))}</div>
+            <div style="font-size:1.2rem;font-weight:900;color:#0f2135;line-height:1">${esc(dv)}<span style="font-size:.65rem;color:#8a9ab0;margin-left:.1rem">${esc(unit)}</span></div>
+          </div>`;
+        }).join('')}
+      </div>
     </div>`:''}
-    ${gridMetrics.length>1?`<div style="padding:.8rem 1.2rem;display:grid;grid-template-columns:${gridMetrics.length-1===1?'1fr':gridMetrics.length-1===2?'1fr 1fr':'1fr 1fr 1fr'};gap:.8rem">
-      ${gridMetrics.slice(1).map(([k,v])=>{
-        const dv=fmtHeroValue(k,v);
-        const unit=heroUnit(k);
-        const tone=getTone(k,v);
-        const color=toneColors[tone]||'#64748b';
-        return`<div style="text-align:left;padding:.6rem;background:#f8fafb;border-left:3px solid ${color};border-radius:.4rem">
-          <div style="font-size:.62rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.25rem">${esc(labelOf(k))}</div>
-          <div style="font-size:1.3rem;font-weight:900;color:#0f2135">${esc(dv)}<span style="font-size:.7rem;color:#94a3b8;margin-left:.15rem;font-weight:700">${esc(unit)}</span></div>
-        </div>`;
-      }).join('')}
-    </div>`:''}
-  </section>`:'';
+  </section>`;
 
   // Chart card (shows first metric by default)
   const chartMetricKey=gridMetrics.length>0?gridMetrics[0][0]:null;
@@ -680,25 +688,14 @@ function render(d){
 
   const mainCardHtml=metricsGridHtml+chartCardHtml;
 
-  // Sensor info card (supplementary details)
+  // Extract info data (used in unified panel above)
   const pktRcv=Number(d.packets_received||0);
   const gwCount=Number(d.gateway_count||0);
   const tags=cfg.tags||[];
   const interval=cfg.expected_interval_seconds;
   const intervalStr=interval?(interval>=3600?Number(interval/3600).toFixed(1)+' hod':interval>=60?Math.round(interval/60)+' min':interval+' s'):'—';
   const lastSeenFull=d.last_seen?new Date(Number(d.last_seen)*1000).toLocaleString('sk-SK',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
-  const infoHtml=`<section class="svd-card">
-    <div class="svd-info-head">Informácie o senzore</div>
-    <div class="svd-info-grid">
-      <div><div class="svd-info-lbl">EUI</div><div class="svd-info-val" style="font-family:monospace;font-size:.73rem">${esc(d.eui||'—')}</div></div>
-      <div><div class="svd-info-lbl">Posledný uplink</div><div class="svd-info-val">${esc(lastSeenFull)}</div></div>
-      <div><div class="svd-info-lbl">Profil senzora</div><div class="svd-info-val">${esc(cfg.sensor_profile||'—')}</div></div>
-      <div><div class="svd-info-lbl">Režim hlásenia</div><div class="svd-info-val">${esc(cfg.reporting_mode||'—')}</div></div>
-      <div><div class="svd-info-lbl">Interval merania</div><div class="svd-info-val">${esc(intervalStr)}</div></div>
-      <div><div class="svd-info-lbl">Pakety / BS</div><div class="svd-info-val">${esc(pktRcv.toLocaleString())} / ${esc(String(gwCount))}</div></div>
-      ${tags.length?`<div style="grid-column:1/-1"><div class="svd-info-lbl">Tagy</div><div class="svd-info-val">${tags.map(t=>`<span class="svd-info-tag">${esc(String(t))}</span>`).join('')}</div></div>`:''}
-    </div>
-  </section>`;
+  const infoHtml='';
 
   document.getElementById('svdBody').innerHTML=mainCardHtml+infoHtml+'<section class="svd-card" id="svdAlertsCard"><div class="svd-al-head"><span class="svd-al-title"><i class="fas fa-bell"></i> Alerty</span><button class="svd-al-add-btn" id="svdAlAddBtn"><i class="fas fa-plus"></i> Pridať alert</button></div><div id="svdAlList"><div class="svd-al-empty">Načítavam...</div></div></section>';
   loadAlerts();
