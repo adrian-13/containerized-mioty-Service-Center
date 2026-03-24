@@ -106,6 +106,42 @@
 .mview-badge.warn    { background: #fef3cd; color: #8a6200; }
 .mview-badge.offline { background: #fde8e9; color: #a12b32; }
 .mview-badge.unknown { background: #f0f4fa; color: #64748b; }
+/* ── Metric chips ── */
+.mview-metrics { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.22rem; }
+.mview-metric-chip {
+    display: inline-flex; align-items: baseline; gap: 0.2rem;
+    background: #f0f5fd; border: 1px solid #dce8f8; border-radius: 999px;
+    padding: 0.1rem 0.46rem; font-size: 0.67rem; font-weight: 700; color: #2c4a70;
+    white-space: nowrap;
+}
+.mview-metric-chip .mval { font-weight: 800; color: #0f2135; }
+.mview-metric-chip .munit { font-size: 0.6rem; color: #7a8fa8; margin-left: 0.06rem; }
+/* Expand button — shown only on narrow panel */
+.mview-expand-btn {
+    display: none; align-items: center; justify-content: center;
+    width: 1.5rem; height: 1.5rem; border-radius: 50%;
+    background: none; border: 1px solid #d6e3f0; color: #7a8fa8;
+    font-size: 0.62rem; cursor: pointer; flex-shrink: 0;
+    transition: background 0.12s, color 0.12s, transform 0.15s;
+}
+.mview-expand-btn:hover { background: #eef4fd; color: #1c3a5e; }
+.mview-expand-btn.is-open { transform: rotate(180deg); }
+/* Dropdown metrics row */
+.mview-metrics-drop {
+    display: none; gap: 0.3rem; flex-wrap: wrap;
+    padding: 0.42rem 1rem 0.5rem 2.2rem;
+    background: #f8fbff; border-bottom: 1px solid #edf2f9;
+}
+.mview-metrics-drop.is-open { display: flex; }
+/* Wide panel: chips inline, expand button hidden */
+.mview-list-panel:not(.is-narrow) .mview-metrics { display: flex; }
+.mview-list-panel:not(.is-narrow) .mview-expand-btn { display: none; }
+.mview-list-panel:not(.is-narrow) .mview-metrics-drop { display: none !important; }
+/* Narrow panel: chips hidden, expand button shown */
+.mview-list-panel.is-narrow .mview-metrics { display: none; }
+.mview-list-panel.is-narrow .mview-expand-btn { display: inline-flex; }
+/* Hide sub text on narrow when there are metrics */
+.mview-list-panel.is-narrow .mview-sensor-row.has-metrics .mview-sensor-sub { display: none; }
 /* ── Resizer ── */
 .mview-resizer {
     width: 5px;
@@ -1744,6 +1780,29 @@ function STATUS_LABEL(s) {
     if (!s) return 'Neznámy';
     return STATUS_LABELS[String(s).toLowerCase()] || STATUS_LABELS[s] || String(s);
 }
+
+const MSKIP = new Set(['co2_last_calibration_ppm','days_to_next_calibration','co2_error','calibration_not_done','temperature_2_c','humidity_2_pct','pressure_pa','altitude_m']);
+const MLABEL = {co2_1_ppm:'CO₂',temperature_1_c:'Teplota',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm',open_count:'Otvorenia'};
+function mLabel(k) { return MLABEL[k] || k.replace(/_/g,' '); }
+function mFmt(k, v) {
+    if (typeof v === 'boolean') return [v ? 'ÁNO' : 'NIE', ''];
+    const n = Number(v);
+    if (!Number.isFinite(n)) return [String(v), ''];
+    if (k.endsWith('_ppm'))   return [Math.round(n).toString(), 'ppm'];
+    if (k.endsWith('_c'))     return [n.toFixed(1), '°C'];
+    if (k.endsWith('_pct'))   return [Math.round(n).toString(), '%'];
+    if (k.endsWith('_v_est') || k.endsWith('_v')) return [n.toFixed(2), 'V'];
+    return [String(n), ''];
+}
+function buildMetricChipsHtml(s) {
+    const vals = s.last_values || {};
+    const entries = Object.entries(vals).filter(([k, v]) => !k.startsWith('_') && !MSKIP.has(k) && v !== null && v !== undefined);
+    if (!entries.length) return '';
+    return entries.slice(0, 4).map(([k, v]) => {
+        const [val, unit] = mFmt(k, v);
+        return '<span class="mview-metric-chip">' + esc(mLabel(k)) + ' <span class="mval">' + esc(val) + '</span>' + (unit ? '<span class="munit">' + esc(unit) + '</span>' : '') + '</span>';
+    }).join('');
+}
 function esc(v) {
     return String(v == null ? '' : v)
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -2205,18 +2264,43 @@ function renderList(sensors) {
         const id     = sensorId(s);
         const href   = '/sensors/' + esc(id);
         const sub    = valueLine(s);
-        return '<div class="mview-sensor-row" data-sensor-id="' + esc(id) + '" onclick="focusOnMap(\'' + esc(id) + '\')">' +
+        const chips  = buildMetricChipsHtml(s);
+        const hasMetrics = chips.length > 0;
+        return '<div class="mview-sensor-row' + (hasMetrics ? ' has-metrics' : '') + '" data-sensor-id="' + esc(id) + '" onclick="focusOnMap(\'' + esc(id) + '\')">' +
             '<span class="mview-dot ' + tier + '"></span>' +
             '<span class="mview-sensor-info">' +
                 '<span class="mview-sensor-name">' + name + '</span>' +
-                (sub ? '<span class="mview-sensor-sub">' + sub + '</span>' : '') +
+                (sub && !hasMetrics ? '<span class="mview-sensor-sub">' + sub + '</span>' : '') +
+                (hasMetrics ? '<div class="mview-metrics">' + chips + '</div>' : '') +
             '</span>' +
             '<span class="mview-badge ' + tier + '">' + slabel + '</span>' +
+            (hasMetrics ? '<button class="mview-expand-btn" onclick="toggleMetricsDrop(\'' + esc(id) + '\',event)" title="Zobraziť metriky"><i class="fas fa-chevron-down"></i></button>' : '') +
             '<a href="' + href + '" class="mview-sensor-link" onclick="event.stopPropagation()" title="Detail">' +
                 '<i class="fas fa-chevron-right"></i>' +
             '</a>' +
-        '</div>';
+        '</div>' +
+        (hasMetrics ? '<div class="mview-metrics-drop" id="mdrop-' + esc(id) + '">' + chips + '</div>' : '');
     }).join('');
+}
+
+/* ── Metric drop toggle ── */
+function toggleMetricsDrop(id, e) {
+    e.stopPropagation();
+    const drop = document.getElementById('mdrop-' + id);
+    const btn  = e.currentTarget;
+    if (!drop) return;
+    const open = drop.classList.toggle('is-open');
+    btn.classList.toggle('is-open', open);
+}
+
+/* ── Panel width → narrow class ── */
+function initNarrowObserver() {
+    const panel = document.querySelector('.mview-list-panel');
+    if (!panel || typeof ResizeObserver === 'undefined') return;
+    new ResizeObserver(function(entries) {
+        const w = entries[0].contentRect.width;
+        panel.classList.toggle('is-narrow', w < 300);
+    }).observe(panel);
 }
 
 /* ── Live tick ── */
@@ -2599,6 +2683,7 @@ function initContextMenus() {
 initResizer();
 initVResizer();
 initContextMenus();
+initNarrowObserver();
 initMap();
 load();
 setInterval(load, 30000);
