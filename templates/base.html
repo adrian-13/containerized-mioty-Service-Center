@@ -595,6 +595,80 @@
             white-space: nowrap;
         }
 
+        .topbar-avatar-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .topbar-avatar-chip {
+            cursor: pointer;
+            transition: background 0.12s, border-color 0.12s;
+        }
+
+        .topbar-avatar-chip:hover {
+            background: #f7faff;
+            border-color: #d0e0f0;
+        }
+
+        .topbar-user-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: #fff;
+            border: 1px solid #d6dfec;
+            border-radius: 0.62rem;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+            z-index: 1000;
+            min-width: 160px;
+            margin-top: 0.42rem;
+            overflow: hidden;
+        }
+
+        .topbar-user-dropdown.is-open {
+            display: block;
+        }
+
+        .topbar-dropdown-header {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #f1f5fb;
+        }
+
+        .topbar-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.42rem;
+            width: 100%;
+            padding: 0.5rem 0.8rem;
+            border: none;
+            background: none;
+            text-align: left;
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.1s, color 0.1s;
+        }
+
+        .topbar-dropdown-item:hover {
+            background: #f7faff;
+            color: var(--brand-600);
+        }
+
+        .topbar-dropdown-item.topbar-dropdown-danger {
+            color: #dc2626;
+        }
+
+        .topbar-dropdown-item.topbar-dropdown-danger:hover {
+            background: rgba(220, 53, 69, 0.08);
+        }
+
         .topbar-user {
             display: inline-flex;
             align-items: center;
@@ -1269,9 +1343,156 @@
                 padding-bottom: 1.2rem;
             }
         }
+
+        /* ── Role-based & advanced-mode visibility ────────────── */
+        [data-role="viewer"] .ui-editor-only { display: none !important; }
+        [data-role="viewer"] .ui-manage-only,
+        [data-role="user"] .ui-manage-only { display: none !important; }
+        body:not(.mode-advanced) .ui-advanced-only { display: none !important; }
+
+        /* ── Viewer: no sidebar ─────────────────────────────────── */
+        [data-role="viewer"] .app-sidebar { display: none !important; }
+        .viewer-brand {
+            display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; flex-shrink: 0;
+        }
+        .viewer-brand:hover { text-decoration: none; }
+        .viewer-brand-icon {
+            width: 2rem; height: 2rem; border-radius: .44rem;
+            background: var(--brand-500); color: #fff;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: .88rem; flex-shrink: 0;
+        }
+        .viewer-brand-name { font-size: .9rem; font-weight: 800; color: var(--text-900); letter-spacing: -.01em; }
+        .viewer-nav-sep { width: 1px; height: 1.4rem; background: #dde6f0; margin: 0 .2rem; flex-shrink: 0; }
+        .viewer-nav-link {
+            display: inline-flex; align-items: center; gap: .42rem;
+            padding: .4rem .95rem; border-radius: .48rem;
+            font-size: .84rem; font-weight: 700; color: #607089;
+            text-decoration: none; border: 1px solid transparent;
+            transition: background .12s, color .12s, border-color .12s;
+        }
+        .viewer-nav-link:hover { background: #f0f5fd; color: #1c3a5e; text-decoration: none; }
+        .viewer-nav-link.active {
+            background: var(--brand-500); color: #fff; border-color: var(--brand-600);
+            box-shadow: 0 2px 8px rgba(var(--brand-rgb),.28);
+        }
+        .viewer-nav-link.active:hover { background: var(--brand-600); color: #fff; }
+        .viewer-nav-link i { font-size: .74rem; }
+
+        .topbar-tool.is-active {
+            color: var(--brand-500);
+            border-color: var(--brand-400);
+            background: rgba(var(--brand-rgb), 0.07);
+        }
+
+        /* ── Global smooth animations ── */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-12px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .6; }
+        }
+
+        /* Navigation smooth animations — instant response */
+        .sidebar-nav-item {
+            transition: all .08s ease;
+        }
+        .sidebar-nav-item:hover {
+            transform: translateX(4px);
+        }
+        .sidebar-nav-item.is-active {
+            animation: slideInLeft .15s ease-out;
+        }
+
+        /* Viewer nav links — instant response */
+        .viewer-nav-link {
+            transition: all .08s ease;
+        }
+        .viewer-nav-link:hover {
+            transform: translateX(2px);
+        }
+        .viewer-nav-link.active {
+            animation: fadeIn .15s ease-out;
+        }
+
+        /* Topbar buttons smooth transitions — instant response */
+        .topbar-tool {
+            transition: all .08s ease;
+        }
+        .topbar-tool:hover {
+            transform: translateY(-1px);
+        }
+        .topbar-tool:active {
+            transform: scale(.96);
+        }
+
+        /* Notification badge pulse */
+        .badge {
+            transition: all .15s ease;
+        }
+        .badge.has-notification {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Smooth dropdown menus */
+        .dropdown-menu {
+            animation: slideInDown .18s ease-out;
+        }
+
+        /* Global button animations — instant response */
+        button, [role="button"] {
+            transition: all .08s ease;
+        }
+        button:hover, [role="button"]:hover {
+            transform: translateY(-1px);
+        }
+        button:active, [role="button"]:active {
+            transform: scale(.97);
+        }
+
+        /* Smooth page transitions — instant response */
+        main {
+            animation: fadeIn .08s ease-out;
+        }
+
+        /* Form input smooth focus — instant response */
+        input, textarea, select {
+            transition: all .08s ease;
+        }
+        input:focus, textarea:focus, select:focus {
+            transform: scale(1.01);
+        }
+
+        /* Modal smooth entrance — instant, no delay */
+        .modal {
+            animation: fadeIn .15s ease-out;
+        }
+        .modal-content {
+            animation: slideInDown .2s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        /* Alert toast animations — fast entrance */
+        .toast {
+            animation: slideInDown .15s ease-out;
+        }
+
+        /* Workspace panels fade in */
+        .workspace-panel {
+            animation: fadeIn .35s ease-out;
+        }
     </style>
 </head>
-<body>
+<body data-role="{{ current_user.role if current_user else 'guest' }}">
     {% set endpoint = request.endpoint if request is defined else '' %}
     {% set raw_page_title = self.title()|striptags|trim %}
     {% set page_title = translate_page_title(raw_page_title) %}
@@ -1358,6 +1579,7 @@
                 {% endif %}
             </div>
 
+            {% if not (current_user and current_user.role == 'viewer') %}
             <div class="nav-group">
                 <p class="nav-group-title">{{ t('nav.monitoring', 'Monitoring') }}</p>
                 {% if 'health' in visible_tabs %}
@@ -1366,7 +1588,7 @@
                     <span>{{ t('nav.system_health', 'System Health') }}</span>
                 </a>
                 {% endif %}
-                {% if 'network' in visible_tabs %}
+                {% if 'network' in visible_tabs and not (current_user and current_user.role == 'viewer') %}
                 <a class="side-nav-link {% if endpoint == 'network' %}active{% endif %}" href="{{ url_for('network') }}">
                     <i class="fas fa-project-diagram"></i>
                     <span>{{ t('nav.network_topology', 'Network Topology') }}</span>
@@ -1384,7 +1606,7 @@
                     <span>{{ t('nav.mqtt', 'MQTT') }}</span>
                 </a>
                 {% endif %}
-                {% if 'sensors' in visible_tabs %}
+                {% if 'sensors' in visible_tabs and not (current_user and current_user.role == 'viewer') %}
                 <a class="side-nav-link {% if endpoint == 'sensor_telemetry' %}active{% endif %}" href="{{ url_for('sensor_telemetry') }}">
                     <i class="fas fa-wave-square"></i>
                     <span>{{ t('nav.sensor_telemetry', 'Sensor Telemetry') }}</span>
@@ -1397,7 +1619,9 @@
                 </a>
                 {% endif %}
             </div>
+            {% endif %}
 
+            {% if not (current_user and current_user.role == 'viewer') %}
             <div class="nav-group">
                 <p class="nav-group-title">{{ t('nav.administration', 'Administration') }}</p>
                 {% if 'administration' in visible_tabs or (current_user and current_user.role == 'admin') %}
@@ -1419,6 +1643,7 @@
                 </a>
                 {% endif %}
             </div>
+            {% endif %}
 
             {% if current_user %}
             <div class="sidebar-bottom">
@@ -1442,6 +1667,26 @@
 
         <main class="app-main">
             <header class="app-topbar">
+                {% if current_user and current_user.role == 'viewer' %}
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('index') }}" class="viewer-brand">
+                        <span class="viewer-brand-icon"><i class="fas fa-wave-square"></i></span>
+                        <span class="viewer-brand-name">Kinet MIOTY</span>
+                    </a>
+                    <div class="viewer-nav-sep"></div>
+                    <a class="viewer-nav-link {% if endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
+                        <i class="fas fa-chart-pie"></i> {{ t('nav.dashboard', 'Dashboard') }}
+                    </a>
+                    {% if 'sensors' in visible_tabs %}
+                    <a class="viewer-nav-link {% if endpoint in ['sensors', 'sensor_detail_page'] %}active{% endif %}" href="{{ url_for('sensors') }}">
+                        <i class="fas fa-microchip"></i> {{ t('nav.sensors', 'Sensors') }}
+                    </a>
+                    {% endif %}
+                    <a class="viewer-nav-link {% if endpoint == 'alerts_page' %}active{% endif %}" href="{{ url_for('alerts_page') }}">
+                        <i class="fas fa-bell"></i> {{ t('viewer.alerts', 'Alerty') }}
+                    </a>
+                </div>
+                {% else %}
                 <div class="d-flex align-items-center gap-2">
                     <button class="sidebar-toggle" type="button" onclick="toggleSidebar()" aria-label="{{ t('topbar.toggle_navigation', 'Toggle navigation') }}">
                         <i class="fas fa-bars"></i>
@@ -1452,6 +1697,7 @@
                         <h1 class="topbar-title">{{ page_title }}</h1>
                     </div>
                 </div>
+                {% endif %}
                 <div class="topbar-actions">
                     <div class="topbar-lang-switch" aria-label="{{ t('common.language', 'Language') }}">
                         {% for lang_code, lang_meta in app_languages.items() %}
@@ -1470,13 +1716,26 @@
                             <span class="topbar-clock-date" id="appTopbarClockDate">--.--.----</span>
                         </span>
                     </div>
+                    {% if not (current_user and current_user.role == 'viewer') %}
+                    <button class="topbar-tool" type="button" id="advancedModeBtn" onclick="toggleAdvancedMode()" title="{{ t('display.advanced_mode', 'Pokročilý režim') }}" aria-label="{{ t('display.advanced_mode', 'Pokročilý režim') }}">
+                        <i class="fas fa-flask"></i>
+                    </button>
+                    {% endif %}
                     <button class="topbar-tool" type="button" data-bs-toggle="modal" data-bs-target="#displaySettingsModal" title="{{ t('display.settings', 'Display Settings') }}" aria-label="{{ t('display.settings', 'Display Settings') }}">
                         <i class="fas fa-sliders-h"></i>
                     </button>
                     {% if current_user %}
-                    <div class="topbar-avatar-chip">
-                        <span class="topbar-avatar">{{ current_user.name[0]|upper if current_user.name else '?' }}</span>
-                        <span class="topbar-avatar-name">{{ current_user.name }}</span>
+                    <div class="topbar-avatar-menu">
+                        <button class="topbar-avatar-chip" onclick="toggleTopbarUserMenu()" title="Užívateľský menu">
+                            <span class="topbar-avatar">{{ current_user.name[0]|upper if current_user.name else '?' }}</span>
+                            <span class="topbar-avatar-name">{{ current_user.name }}</span>
+                        </button>
+                        <div class="topbar-user-dropdown" id="topbarUserDropdown">
+                            <div class="topbar-dropdown-header">{{ current_user.name }}</div>
+                            <a href="{{ url_for('logout') }}" class="topbar-dropdown-item topbar-dropdown-danger">
+                                <i class="fas fa-sign-out-alt"></i>Odhlásiť
+                            </a>
+                        </div>
                     </div>
                     {% endif %}
                 </div>
@@ -2193,6 +2452,27 @@
             document.body.classList.toggle('sidebar-open');
         }
 
+        function toggleTopbarUserMenu() {
+            const dropdown = document.getElementById('topbarUserDropdown');
+            if (!dropdown) return;
+            const isOpen = dropdown.classList.toggle('is-open');
+            if (isOpen) {
+                document.addEventListener('mousedown', closeTopbarUserMenuOnClick);
+            } else {
+                document.removeEventListener('mousedown', closeTopbarUserMenuOnClick);
+            }
+        }
+
+        function closeTopbarUserMenuOnClick(e) {
+            const menu = document.querySelector('.topbar-avatar-menu');
+            if (!menu || menu.contains(e.target)) return;
+            const dropdown = document.getElementById('topbarUserDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('is-open');
+                document.removeEventListener('mousedown', closeTopbarUserMenuOnClick);
+            }
+        }
+
         window.addEventListener('resize', function() {
             applyViewportDensity();
             document.dispatchEvent(new CustomEvent('app:display-prefs-changed', { detail: { ...displayPrefs } }));
@@ -2208,9 +2488,44 @@
             });
         }
 
+        const APP_USER_ROLE = {{ (current_user.role)|tojson if current_user else '"guest"' }};
+        const ADVANCED_MODE_KEY = 'service-center.advanced-mode.v1';
+
+        function _updateAdvancedModeBtn(isAdvanced) {
+            const btn = document.getElementById('advancedModeBtn');
+            if (!btn) return;
+            const labelOn  = appTranslate('display.simple_mode', 'Jednoduchý režim');
+            const labelOff = appTranslate('display.advanced_mode', 'Pokročilý režim');
+            btn.title = isAdvanced ? labelOn : labelOff;
+            btn.setAttribute('aria-label', btn.title);
+            btn.classList.toggle('is-active', isAdvanced);
+        }
+
+        function initAdvancedMode() {
+            const defaultAdvanced = APP_USER_ROLE !== 'viewer';
+            let isAdvanced = defaultAdvanced;
+            try {
+                const stored = localStorage.getItem(ADVANCED_MODE_KEY + '.' + APP_USER_ROLE);
+                if (stored !== null) isAdvanced = stored === 'true';
+            } catch (e) {}
+            document.body.classList.toggle('mode-advanced', isAdvanced);
+            _updateAdvancedModeBtn(isAdvanced);
+        }
+
+        function toggleAdvancedMode() {
+            const isAdvanced = !document.body.classList.contains('mode-advanced');
+            document.body.classList.toggle('mode-advanced', isAdvanced);
+            try {
+                localStorage.setItem(ADVANCED_MODE_KEY + '.' + APP_USER_ROLE, String(isAdvanced));
+            } catch (e) {}
+            _updateAdvancedModeBtn(isAdvanced);
+        }
+
         applyDisplayPrefs();
         initDisplaySettings();
         initTopbarClock();
+        initAdvancedMode();
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}
