@@ -26,6 +26,9 @@
     overflow: hidden;
 }
 .mview-list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 0.55rem 1rem;
     font-size: 0.68rem;
     font-weight: 800;
@@ -34,6 +37,72 @@
     color: #607089;
     border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
+}
+.mview-user-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.mview-user-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: #f0f5fd;
+    border: 1px solid #d6e3f0;
+    color: #7a8fa8;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: background 0.12s, color 0.12s;
+}
+.mview-user-btn:hover {
+    background: #e2e8f0;
+    color: #1c3a5e;
+}
+.mview-user-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #fff;
+    border: 1px solid #d6e3f0;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+    z-index: 100;
+    min-width: 140px;
+    margin-top: 0.3rem;
+}
+.mview-user-dropdown.is-open {
+    display: block;
+}
+.mview-user-dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.8rem;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 0.75rem;
+    color: #1e293b;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid #f1f5fb;
+}
+.mview-user-dropdown-item:last-child {
+    border-bottom: none;
+}
+.mview-user-dropdown-item:hover {
+    background: #f7faff;
+    color: var(--brand-600, #ca6208);
+}
+.mview-user-dropdown-item.is-danger {
+    color: #dc2626;
+}
+.mview-user-dropdown-item.is-danger:hover {
+    background: rgba(220, 53, 69, 0.08);
 }
 /* ── Filter pills ── */
 .mview-filters {
@@ -488,7 +557,20 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 <div class="mview-page">
     <div class="mview-split">
         <div class="mview-list-panel">
-            <div class="mview-list-head">{{ t('nav.sensors', 'Senzory') }}</div>
+            <div class="mview-list-head">
+                <span>{{ t('nav.sensors', 'Senzory') }}</span>
+                <div class="mview-user-menu">
+                    <button class="mview-user-btn" onclick="toggleUserMenu()" title="Uzívateľ">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <div class="mview-user-dropdown" id="mviewUserDropdown">
+                        <div style="padding:0.4rem 0.8rem; font-size:0.7rem; color:#94a3b8; border-bottom:1px solid #f1f5fb; font-weight:700;">{{ current_user.username if current_user else 'Užívateľ' }}</div>
+                        <a href="{{ url_for('logout') }}" class="mview-user-dropdown-item is-danger">
+                            <i class="fas fa-sign-out-alt" style="margin-right:0.3rem;"></i>Odhlásiť
+                        </a>
+                    </div>
+                </div>
+            </div>
             <div class="mview-filters" id="mviewFilters">
                 <button class="mview-filter is-active" data-filter="all" onclick="mviewSetFilter('all')">
                     {{ t('common.all', 'Všetky') }} <span class="mview-filter-count" id="mviewFiltAll">0</span>
@@ -2291,6 +2373,27 @@ function toggleMetricsDrop(id, e) {
     if (!drop) return;
     const open = drop.classList.toggle('is-open');
     btn.classList.toggle('is-open', open);
+}
+
+/* ── User menu toggle ── */
+function toggleUserMenu() {
+    const dropdown = document.getElementById('mviewUserDropdown');
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.toggle('is-open');
+    if (isOpen) {
+        document.addEventListener('mousedown', closeUserMenuOnClick);
+    } else {
+        document.removeEventListener('mousedown', closeUserMenuOnClick);
+    }
+}
+function closeUserMenuOnClick(e) {
+    const menu = document.querySelector('.mview-user-menu');
+    if (!menu || menu.contains(e.target)) return;
+    const dropdown = document.getElementById('mviewUserDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('is-open');
+        document.removeEventListener('mousedown', closeUserMenuOnClick);
+    }
 }
 
 /* ── Panel width → narrow class ── */
