@@ -1880,7 +1880,7 @@ async function saveConfig() {
             throw new Error(result.message || tr('config.save_failed', 'Save failed: {error}', { error: 'unable to save configuration' }));
         }
         notify(tr('config.saved_restart_notice', 'Configuration saved. Restart service if runtime values changed.'), 'success');
-        const languageChanged = textFieldValue('APP_LANGUAGE') !== (window.AppI18n?.lang || 'en');
+        const languageChanged = textFieldValue('APP_LANGUAGE') !== (window.AppI18n?.lang || 'sk');
         configState.initialSignature = getSnapshotSignature();
         updateDirtyState();
         if (languageChanged) {
@@ -2204,7 +2204,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-
 
 
 

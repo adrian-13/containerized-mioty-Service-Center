@@ -1,0 +1,1274 @@
+{% extends "base.html" %}
+{% block title %}Upozornenia{% endblock %}
+
+{% block content %}
+<style>
+/* ══════════════════════════════════════════════════════════
+   ALERTS PAGE
+   Uses the app-wide CSS variables from base.html:
+   --brand-500, --brand-600, --brand-rgb,
+   --surface-0, --surface-1, --surface-2,
+   --text-900, --text-700, --text-500,
+   --line, --shadow-soft, --shadow-strong
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Page wrapper ── */
+.ap {
+    display:flex; flex-direction:column; gap:.75rem;
+    min-height:calc(100dvh - 7.8rem);
+}
+
+/* ── KPI stat group (right side of nav) ── */
+.ap-stats {
+    display:flex; align-items:center; gap:0;
+    margin-left:auto; padding-left:.9rem;
+}
+.ap-kpi {
+    display:flex; align-items:center; gap:.28rem;
+    padding:.14rem .7rem; white-space:nowrap;
+    position:relative;
+}
+.ap-kpi + .ap-kpi {
+    border-left:1px solid var(--line);
+}
+.ap-kpi-n { font-size:.8rem; font-weight:800; line-height:1; color:var(--text-900); }
+.ap-kpi-n.is-crit { color:var(--danger-500); }
+.ap-kpi-n.is-warn { color:var(--warning-500); }
+.ap-kpi-l { font-size:.64rem; font-weight:500; color:var(--text-500); }
+
+/* ── Primary action ── */
+.ap-add {
+    display:inline-flex; align-items:center; gap:.3rem;
+    background:var(--brand-500); color:#fff; border:none;
+    font-size:.74rem; font-weight:700;
+    padding:.36rem .76rem; border-radius:.44rem;
+    cursor:pointer; white-space:nowrap;
+    transition:background .12s, box-shadow .12s;
+    box-shadow:0 2px 8px rgba(var(--brand-rgb),.25);
+    flex-shrink:0;
+}
+.ap-add:hover { background:var(--brand-600); box-shadow:0 4px 14px rgba(var(--brand-rgb),.35); }
+.ap-add i { font-size:.66rem; }
+
+/* ── Main card ── */
+.ap-card {
+    flex:1; display:flex; flex-direction:column;
+    background:var(--surface-1); border:1px solid var(--line);
+    border-radius:.8rem; overflow:hidden;
+    box-shadow:var(--shadow-soft);
+}
+
+/* ── Tab navigation bar ── */
+.ap-nav {
+    display:flex; align-items:center;
+    border-bottom:1px solid var(--line);
+    background:var(--surface-2);
+    padding:0 .9rem 0 .5rem; gap:0;
+    overflow:hidden; flex-shrink:0;
+    min-height:2.9rem;
+}
+
+/* Pill group wrapping the tab buttons */
+.ap-nav-tabs {
+    display:flex; align-items:center;
+    background:rgba(0,0,0,.06); border-radius:.48rem;
+    padding:.2rem; gap:.08rem; margin:.42rem 0;
+}
+.ap-nav-btn {
+    display:flex; align-items:center; gap:.28rem;
+    padding:.3rem .72rem; border:none; background:transparent;
+    font-size:.76rem; font-weight:600; color:var(--text-500);
+    cursor:pointer; white-space:nowrap; border-radius:.3rem;
+    transition:color .1s, background .1s, box-shadow .1s;
+}
+.ap-nav-btn:hover { color:var(--text-700); background:rgba(255,255,255,.5); }
+.ap-nav-btn.is-active {
+    background:var(--surface-1); color:var(--text-900); font-weight:700;
+    box-shadow:0 1px 3px rgba(15,23,42,.1), 0 0 0 .5px rgba(15,23,42,.05);
+}
+.ap-nav-btn i { font-size:.68rem; opacity:.55; }
+.ap-nav-btn.is-active i { opacity:1; color:var(--brand-500); }
+
+.ap-nav-cnt {
+    font-size:.6rem; font-weight:800;
+    background:rgba(0,0,0,.07); color:var(--text-500);
+    border-radius:999px; padding:.04rem .28rem;
+    min-width:.88rem; text-align:center; line-height:1.35;
+    transition:background .1s, color .1s;
+}
+.ap-nav-btn.is-active .ap-nav-cnt {
+    background:rgba(var(--brand-rgb),.13); color:var(--brand-600);
+}
+.ap-nav-cnt:empty { display:none; }
+
+/* Live dot */
+.ap-nav-dot {
+    width:.36rem; height:.36rem; border-radius:50%;
+    background:var(--danger-500); flex-shrink:0; display:none;
+    animation:ap-pulse 2s ease-in-out infinite;
+}
+.ap-nav-dot.is-visible { display:block; }
+@keyframes ap-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+/* ── Tab panels ── */
+.ap-panel { display:none; flex:1; flex-direction:column; min-height:0; }
+.ap-panel.is-active { display:flex; }
+
+/* ── Rules toolbar ── */
+.ap-toolbar {
+    display:flex; align-items:center; gap:.5rem;
+    padding:.5rem .9rem; border-bottom:1px solid rgba(var(--brand-rgb),.06);
+    background:var(--surface-2); flex-wrap:wrap; flex-shrink:0;
+}
+.ap-sel {
+    flex:0 0 auto; width:auto; max-width:220px; min-width:110px;
+    border:1px solid var(--line); border-radius:.4rem;
+    padding:.28rem .55rem; font-size:.76rem; color:var(--text-900);
+    background:var(--surface-1); outline:none; transition:border-color .1s;
+}
+.ap-sel:focus { border-color:var(--brand-500); box-shadow:0 0 0 2px rgba(var(--brand-rgb),.12); }
+
+.ap-chips {
+    display:flex; gap:.18rem; background:rgba(0,0,0,.04);
+    border-radius:.36rem; padding:.14rem;
+}
+.ap-chip {
+    border:none; background:transparent; color:var(--text-500);
+    font-size:.69rem; font-weight:700; padding:.17rem .46rem;
+    border-radius:.26rem; cursor:pointer;
+    display:flex; align-items:center; gap:.16rem; white-space:nowrap;
+    transition:all .08s;
+}
+.ap-chip:hover { background:rgba(255,255,255,.6); color:var(--text-700); }
+.ap-chip.is-active { background:var(--surface-1); color:var(--text-900); box-shadow:0 1px 2px rgba(15,23,42,.08); }
+.ap-chip-n {
+    font-size:.57rem; font-weight:800;
+    background:rgba(0,0,0,.06); color:var(--text-500);
+    border-radius:999px; padding:.01rem .24rem;
+}
+.ap-chip.is-active .ap-chip-n { background:rgba(var(--brand-rgb),.12); color:var(--brand-600); }
+
+/* ── Alert rows (triggered) ── */
+.ap-alerts { display:flex; flex-direction:column; flex:1; }
+
+.ap-alert-item { border-bottom:1px solid #f1f5fb; }
+.ap-alert-item:last-child { border-bottom:none; }
+
+.ap-alert {
+    display:flex; align-items:center; gap:.7rem;
+    padding:.68rem 1rem; cursor:pointer;
+    color:inherit; transition:background .06s; user-select:none;
+}
+.ap-alert:hover { background:#f7faff; }
+.ap-alert-item.is-error > .ap-alert { background:rgba(203,58,66,.035); }
+.ap-alert-item.is-error > .ap-alert:hover { background:rgba(203,58,66,.065); }
+.ap-alert-item.is-warn  > .ap-alert { background:rgba(228,163,19,.035); }
+.ap-alert-item.is-warn  > .ap-alert:hover { background:rgba(228,163,19,.065); }
+
+/* Timestamp column */
+.ap-alert-ts {
+    display:flex; flex-direction:column; align-items:flex-end;
+    flex-shrink:0; width:4.8rem; gap:.06rem;
+}
+.ap-alert-ts-date { font-size:.62rem; color:var(--text-500); font-weight:500; white-space:nowrap; }
+.ap-alert-ts-time { font-size:.68rem; color:var(--text-700); font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums; }
+
+/* Vertical divider between ts and icon */
+.ap-alert-tsep {
+    width:1px; height:2rem; background:var(--line);
+    flex-shrink:0; border-radius:1px;
+}
+
+.ap-alert-ico {
+    width:1.9rem; height:1.9rem; border-radius:.46rem;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.76rem; flex-shrink:0;
+}
+.ap-alert-item.is-error .ap-alert-ico { background:rgba(203,58,66,.1); color:var(--danger-500); }
+.ap-alert-item.is-warn  .ap-alert-ico { background:rgba(228,163,19,.1); color:var(--warning-500); }
+
+.ap-alert-body { flex:1; min-width:0; }
+.ap-alert-name {
+    font-size:.84rem; font-weight:700; color:var(--text-900);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.ap-alert-desc {
+    font-size:.67rem; color:var(--text-500); margin-top:.05rem;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Severity badge */
+.ap-sev-badge {
+    display:inline-flex; align-items:center; gap:.22rem;
+    border-radius:999px; padding:.18rem .52rem;
+    font-size:.63rem; font-weight:700; letter-spacing:.02em;
+    flex-shrink:0; white-space:nowrap;
+}
+.ap-sev-badge.is-error {
+    background:rgba(203,58,66,.09); color:var(--danger-500);
+    border:1px solid rgba(203,58,66,.18);
+}
+.ap-sev-badge.is-warn {
+    background:rgba(228,163,19,.09); color:#9a6e00;
+    border:1px solid rgba(228,163,19,.22);
+}
+.ap-sev-badge i { font-size:.55rem; }
+
+.ap-alert-val { font-weight:800; font-size:.86rem; flex-shrink:0; white-space:nowrap; }
+.ap-alert-item.is-error .ap-alert-val { color:var(--danger-500); }
+.ap-alert-item.is-warn  .ap-alert-val { color:var(--warning-500); }
+
+.ap-alert-chevron {
+    font-size:.55rem; color:var(--text-500); flex-shrink:0;
+    transition:transform .18s ease; margin-left:.1rem;
+}
+.ap-alert-item.is-open .ap-alert-chevron { transform:rotate(90deg); }
+
+/* Expanded detail panel */
+.ap-alert-detail {
+    display:none;
+    padding:.58rem 1rem .78rem calc(1rem + 4.8rem + .7rem + 1px + .7rem + 1.9rem + .7rem);
+    border-top:1px solid rgba(0,0,0,.05);
+    gap:.9rem; align-items:center; flex-wrap:wrap;
+    background:rgba(0,0,0,.016);
+}
+.ap-alert-item.is-open .ap-alert-detail { display:flex; }
+
+.ap-detail-meta { display:flex; flex-direction:column; gap:.26rem; flex:1; min-width:0; }
+.ap-detail-row  { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.ap-detail-label {
+    font-size:.61rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--text-500); min-width:5rem;
+}
+.ap-detail-value { font-size:.76rem; font-weight:600; color:var(--text-900); }
+
+.ap-detail-actions { display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+.ap-detail-link {
+    display:inline-flex; align-items:center; gap:.3rem;
+    border:1px solid var(--line); background:var(--surface-1);
+    color:var(--text-700); font-size:.74rem; font-weight:700;
+    padding:.34rem .76rem; border-radius:.42rem;
+    text-decoration:none; transition:background .1s, border-color .1s;
+    white-space:nowrap;
+}
+.ap-detail-link:hover {
+    background:var(--surface-2); border-color:rgba(var(--brand-rgb),.3);
+    color:var(--brand-600); text-decoration:none;
+}
+.ap-detail-link i { font-size:.66rem; }
+
+/* ── Context menu ── */
+.ap-ctx {
+    position:fixed; z-index:9000;
+    background:var(--surface-1); border:1px solid var(--line);
+    border-radius:.6rem; padding:.3rem;
+    box-shadow:0 8px 28px rgba(15,23,42,.14), 0 2px 8px rgba(15,23,42,.08);
+    min-width:11rem;
+    animation:apCtxIn .1s ease-out;
+}
+@keyframes apCtxIn { from{opacity:0;transform:scale(.96) translateY(-4px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.ap-ctx-item {
+    display:flex; align-items:center; gap:.52rem;
+    padding:.4rem .62rem; border-radius:.38rem;
+    font-size:.77rem; font-weight:600; color:var(--text-700);
+    cursor:pointer; white-space:nowrap;
+    transition:background .07s, color .07s;
+}
+.ap-ctx-item:hover { background:var(--surface-2); color:var(--text-900); }
+.ap-ctx-item.is-primary { color:var(--brand-600); }
+.ap-ctx-item.is-primary:hover { background:rgba(var(--brand-rgb),.07); }
+.ap-ctx-item.is-danger { color:var(--danger-500); }
+.ap-ctx-item.is-danger:hover { background:rgba(203,58,66,.07); color:var(--danger-500); }
+.ap-ctx-item i { width:.9rem; text-align:center; font-size:.72rem; opacity:.7; }
+.ap-ctx-sep { height:1px; background:var(--line); margin:.28rem .3rem; }
+
+/* ── Rule rows ── */
+.ap-rules { display:flex; flex-direction:column; flex:1; }
+.ap-rule {
+    display:flex; align-items:center; gap:.65rem;
+    padding:.65rem 1rem; border-bottom:1px solid #f1f5fb;
+    transition:background .06s;
+}
+.ap-rule:last-child { border-bottom:none; }
+.ap-rule:hover { background:#f7faff; }
+
+.ap-rule-dot {
+    width:.44rem; height:.44rem; border-radius:50%;
+    flex-shrink:0;
+}
+.ap-rule-dot.warning  { background:var(--warning-500); box-shadow:0 0 0 3px rgba(228,163,19,.12); }
+.ap-rule-dot.critical { background:var(--danger-500);  box-shadow:0 0 0 3px rgba(203,58,66,.12); }
+
+.ap-rule-body { flex:1; min-width:0; }
+.ap-rule-name {
+    font-size:.82rem; font-weight:700; color:var(--text-900);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.ap-rule-desc {
+    font-size:.67rem; color:var(--text-500); margin-top:.04rem;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.ap-rule-tag {
+    font-size:.63rem; font-weight:600; color:var(--text-700);
+    background:var(--surface-2); border:1px solid var(--line);
+    border-radius:.3rem; padding:.07rem .4rem;
+    white-space:nowrap; flex-shrink:0;
+}
+.ap-rule-acts { display:flex; align-items:center; gap:.32rem; flex-shrink:0; }
+
+/* Toggle */
+.ap-tog {
+    position:relative; width:1.76rem; height:.98rem;
+    border-radius:999px; border:none; cursor:pointer;
+    transition:background .14s; flex-shrink:0;
+}
+.ap-tog.on  { background:var(--success-500); }
+.ap-tog.off { background:#cbd5e1; }
+.ap-tog::after {
+    content:''; position:absolute; top:.11rem;
+    width:.76rem; height:.76rem; border-radius:50%;
+    background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.14);
+    transition:left .14s;
+}
+.ap-tog.on::after  { left:calc(100% - .87rem); }
+.ap-tog.off::after { left:.11rem; }
+
+.ap-del, .ap-edit {
+    border:none; background:none; color:#cbd5e1; cursor:pointer;
+    font-size:.74rem; padding:.1rem .22rem; border-radius:.26rem;
+    transition:color .1s, background .1s;
+}
+.ap-del:hover  { color:var(--danger-500); background:rgba(203,58,66,.06); }
+.ap-edit:hover { color:var(--brand-500);  background:rgba(var(--brand-rgb),.07); }
+
+/* ── History rows ── */
+.ap-hist { display:flex; flex-direction:column; flex:1; padding:.2rem .5rem; }
+.ap-hrow {
+    display:flex; align-items:flex-start; gap:.7rem;
+    padding:.58rem .5rem; border-bottom:1px solid #f1f5fb;
+}
+.ap-hrow:last-child { border-bottom:none; }
+
+.ap-hdot {
+    width:.5rem; height:.5rem; border-radius:50%; flex-shrink:0;
+    margin-top:.36rem;
+    box-shadow:0 0 0 2.5px var(--surface-1), 0 0 0 3.5px currentColor;
+}
+.ap-hdot.is-error { color:var(--danger-500);  background:var(--danger-500); }
+.ap-hdot.is-warn  { color:var(--warning-500); background:var(--warning-500); }
+.ap-hdot.is-ok    { color:var(--success-500); background:var(--success-500); }
+
+.ap-hbody { flex:1; min-width:0; }
+.ap-htop { display:flex; align-items:center; gap:.36rem; flex-wrap:wrap; }
+.ap-hname { font-size:.8rem; font-weight:700; color:var(--text-900); }
+.ap-hsensor {
+    font-size:.61rem; font-weight:600; color:var(--text-500);
+    background:var(--surface-2); border-radius:.22rem; padding:.03rem .28rem;
+}
+.ap-hdesc { font-size:.66rem; color:var(--text-500); margin-top:.04rem; }
+
+.ap-hright { display:flex; flex-direction:column; align-items:flex-end; gap:.14rem; flex-shrink:0; }
+
+.ap-hbadge {
+    display:inline-flex; border-radius:999px;
+    padding:.06rem .4rem; font-size:.59rem; font-weight:700; letter-spacing:.02em;
+}
+.ap-hbadge.is-error { background:#fde8e9; color:#a12b32; }
+.ap-hbadge.is-warn  { background:#fef3cd; color:#8a6200; }
+.ap-hbadge.is-ok    { background:#e6f7f1; color:#0a7a50; }
+.ap-htime { font-size:.62rem; color:var(--text-500); white-space:nowrap; }
+.ap-hdur {
+    font-size:.61rem; color:var(--brand-600);
+    background:rgba(var(--brand-rgb),.08); border-radius:999px;
+    padding:.03rem .32rem; white-space:nowrap;
+}
+
+/* ── Empty state ── */
+.ap-empty {
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:center; flex:1;
+    padding:3rem 1.5rem; text-align:center; gap:.32rem;
+}
+.ap-empty-ico {
+    width:2.8rem; height:2.8rem; border-radius:999px;
+    background:rgba(var(--brand-rgb),.08);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.92rem; color:var(--brand-500); margin-bottom:.15rem;
+}
+.ap-empty-ico.is-ok { background:#e6f7f1; color:var(--success-500); }
+.ap-empty-h { font-size:.84rem; font-weight:700; color:var(--text-700); }
+.ap-empty-p { font-size:.69rem; color:var(--text-500); max-width:26ch; line-height:1.52; }
+.ap-reset {
+    margin-top:.3rem; border:1px solid var(--line); background:var(--surface-1);
+    color:var(--brand-600); font-size:.72rem; font-weight:700;
+    padding:.3rem .68rem; border-radius:.38rem; cursor:pointer; transition:all .1s;
+}
+.ap-reset:hover { background:rgba(var(--brand-rgb),.06); border-color:rgba(var(--brand-rgb),.3); }
+
+/* ── Modal ── */
+.ap-backdrop {
+    position:fixed; inset:0; background:rgba(15,23,42,.38);
+    backdrop-filter:blur(3px); z-index:1200;
+    display:flex; align-items:center; justify-content:center; padding:1rem;
+    animation:apFade .14s ease-out;
+}
+@keyframes apFade { from{opacity:0} to{opacity:1} }
+.ap-modal {
+    background:var(--surface-1); border-radius:1.1rem;
+    box-shadow:var(--shadow-strong);
+    width:100%; max-width:420px; overflow:hidden;
+    animation:apPop .18s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes apPop { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+.ap-mhead {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.88rem 1.15rem; border-bottom:1px solid var(--line);
+    background:var(--surface-2);
+}
+.ap-mhead h2 { font-size:.9rem; font-weight:800; color:var(--text-900); margin:0; }
+.ap-mclose {
+    border:none; background:rgba(0,0,0,.04); color:var(--text-500); cursor:pointer;
+    width:1.6rem; height:1.6rem; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.76rem; transition:background .1s,color .1s;
+}
+.ap-mclose:hover { background:rgba(0,0,0,.08); color:var(--text-900); }
+.ap-mbody { padding:1rem 1.15rem; display:flex; flex-direction:column; gap:.65rem; }
+.ap-mfoot {
+    padding:.72rem 1.15rem; border-top:1px solid var(--line);
+    display:flex; gap:.4rem; justify-content:flex-end; background:var(--surface-2);
+}
+.ap-fld label {
+    display:block; font-size:.6rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em; color:var(--text-500); margin-bottom:.22rem;
+}
+.ap-fld input, .ap-fld select {
+    width:100%; border:1px solid var(--line); border-radius:.42rem;
+    padding:.4rem .62rem; font-size:.81rem; color:var(--text-900); background:var(--surface-1);
+    outline:none; transition:border-color .1s,box-shadow .1s; box-sizing:border-box;
+}
+.ap-fld input:focus, .ap-fld select:focus { border-color:var(--brand-500); box-shadow:0 0 0 2.5px rgba(var(--brand-rgb),.12); }
+.ap-fld-row { display:grid; grid-template-columns:1fr 1fr; gap:.52rem; }
+.ap-minfo {
+    font-size:.7rem; color:var(--text-500); background:var(--surface-2);
+    border:1px solid var(--line); border-radius:.38rem;
+    padding:.42rem .62rem; line-height:1.52;
+}
+.ap-btn-p {
+    border:none; background:var(--brand-500); color:#fff;
+    font-size:.78rem; font-weight:700; padding:.44rem .95rem;
+    border-radius:.5rem; cursor:pointer; transition:background .1s, box-shadow .1s;
+    box-shadow:0 2px 8px rgba(var(--brand-rgb),.2);
+}
+.ap-btn-p:hover { background:var(--brand-600); box-shadow:0 4px 14px rgba(var(--brand-rgb),.32); }
+.ap-btn-s {
+    border:1px solid var(--line); background:var(--surface-1); color:var(--text-700);
+    font-size:.78rem; font-weight:700; padding:.44rem .95rem;
+    border-radius:.5rem; cursor:pointer; transition:background .1s;
+}
+.ap-btn-s:hover { background:var(--surface-2); }
+
+/* ── Responsive ── */
+@media(max-width:640px){
+    .ap-stats { display:none; }
+    .ap-toolbar { flex-direction:column; align-items:stretch; }
+    .ap-sel { width:100%; }
+    .ap-nav { padding:0 .4rem 0 .15rem; }
+    .ap-nav-btn { padding:.6rem .54rem .56rem; font-size:.73rem; }
+    .ap-add { padding:.32rem .6rem; font-size:.71rem; }
+}
+/* Confirm dialog */
+.ap-confirm-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(3px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem;animation:ap-fadeIn .14s ease-out}
+@keyframes ap-fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes ap-scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes ap-slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.ap-confirm{background:#fff;border-radius:1.1rem;box-shadow:0 24px 64px rgba(15,23,42,.22);width:100%;max-width:21rem;overflow:hidden;animation:ap-scaleIn .2s cubic-bezier(.34,1.56,.64,1)}
+.ap-confirm-body{padding:1.5rem 1.4rem 1rem;text-align:center}
+.ap-confirm-ico{width:2.8rem;height:2.8rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin:0 auto .8rem}
+.ap-confirm-ico.is-danger{background:rgba(220,38,38,.12);color:#dc2626}
+.ap-confirm-ico.is-warn{background:rgba(245,158,11,.12);color:#d97706}
+.ap-confirm-title{font-size:.92rem;font-weight:800;color:#0f2135;margin:0 0 .3rem}
+.ap-confirm-msg{font-size:.8rem;color:#627690;line-height:1.5;margin:0}
+.ap-confirm-actions{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #f0f4fb}
+.ap-confirm-btn{border:none;background:#fff;padding:.78rem;font-size:.8rem;font-weight:800;cursor:pointer;transition:background .12s,color .12s;line-height:1}
+.ap-confirm-btn.is-cancel{color:#4a6582;border-right:1px solid #f0f4fb;border-radius:0 0 0 1.1rem}
+.ap-confirm-btn.is-cancel:hover{background:#f5f8fc}
+.ap-confirm-btn.is-ok{color:#dc2626;border-radius:0 0 1.1rem 0}
+.ap-confirm-btn.is-ok:hover{background:rgba(220,38,38,.06)}
+/* Toast */
+.ap-toasts{position:fixed;bottom:1.3rem;right:1.3rem;z-index:2100;display:flex;flex-direction:column;gap:.45rem;pointer-events:none}
+.ap-toast{display:inline-flex;align-items:center;gap:.52rem;padding:.58rem .9rem;border-radius:.7rem;font-size:.78rem;font-weight:700;box-shadow:0 8px 24px rgba(15,23,42,.16);pointer-events:auto;animation:ap-slideUp .22s ease-out;max-width:22rem;color:#fff}
+.ap-toast.is-error{background:#b91c1c}
+.ap-toast.is-warn{background:#92400e}
+.ap-toast.is-success{background:#14532d}
+.ap-toast i{font-size:.78rem;flex-shrink:0;opacity:.9}
+</style>
+
+<div class="ap">
+
+  <!-- Main card with tabs (no separate header) -->
+  <div class="ap-card">
+
+    <nav class="ap-nav">
+      <!-- Pill-grouped tabs -->
+      <div class="ap-nav-tabs">
+        <button class="ap-nav-btn is-active" data-tab="alerts">
+          <i class="fas fa-circle-exclamation"></i> Upozornenia
+          <span class="ap-nav-dot" id="alpNavDot"></span>
+          <span class="ap-nav-cnt" id="alpTabAlerts"></span>
+        </button>
+        <button class="ap-nav-btn" data-tab="rules">
+          <i class="fas fa-sliders"></i> Pravidlá
+          <span class="ap-nav-cnt" id="alpTabRules"></span>
+        </button>
+        <button class="ap-nav-btn" data-tab="history">
+          <i class="fas fa-clock-rotate-left"></i> História
+          <span class="ap-nav-cnt" id="alpTabHistory"></span>
+        </button>
+      </div>
+
+      <!-- Stats + action right-aligned -->
+      <div class="ap-stats">
+        <div class="ap-kpi">
+          <span class="ap-kpi-n" id="alpStatActive">0</span>
+          <span class="ap-kpi-l">aktívnych</span>
+        </div>
+        <div class="ap-kpi">
+          <span class="ap-kpi-n is-crit" id="alpStatCritical">0</span>
+          <span class="ap-kpi-l">kritických</span>
+        </div>
+        <div class="ap-kpi">
+          <span class="ap-kpi-n is-warn" id="alpStatWarning">0</span>
+          <span class="ap-kpi-l">varovaní</span>
+        </div>
+      </div>
+      {% if user_permissions.get('can_manage_alerts', False) %}
+      <button class="ap-add" id="alpAddBtn" style="margin-left:.75rem"><i class="fas fa-plus"></i> Nové upozornenie</button>
+      {% endif %}
+    </nav>
+
+    <!-- Panel: Active alerts -->
+    <div id="panel-alerts" class="ap-panel is-active">
+      <div id="alpTriggeredBody">
+        <div class="ap-empty">
+          <div class="ap-empty-ico"><i class="fas fa-spinner fa-spin"></i></div>
+          <div class="ap-empty-h">Načítavam…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel: Rules -->
+    <div id="panel-rules" class="ap-panel">
+      <div class="ap-toolbar">
+        <select class="ap-sel" id="alpSensorFilter">
+          <option value="">Všetky senzory</option>
+        </select>
+        <div class="ap-chips">
+          <button type="button" class="ap-chip is-active" data-rule-filter="all">Všetky<span class="ap-chip-n" id="alpRuleCountAll">0</span></button>
+          <button type="button" class="ap-chip" data-rule-filter="active">Aktívne<span class="ap-chip-n" id="alpRuleCountActive">0</span></button>
+          <button type="button" class="ap-chip" data-rule-filter="critical">Kritické<span class="ap-chip-n" id="alpRuleCountCritical">0</span></button>
+        </div>
+      </div>
+      <div id="alpRulesBody">
+        <div class="ap-empty">
+          <div class="ap-empty-ico"><i class="fas fa-spinner fa-spin"></i></div>
+          <div class="ap-empty-h">Načítavam pravidlá…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel: History -->
+    <div id="panel-history" class="ap-panel">
+      <div id="alpHistoryBody">
+        <div class="ap-empty">
+          <div class="ap-empty-ico"><i class="fas fa-spinner fa-spin"></i></div>
+          <div class="ap-empty-h">Načítavam históriu…</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+var CAN_MANAGE_ALERTS={{ user_permissions.get('can_manage_alerts', False)|tojson }};
+
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ── Custom dialogs ─────────────────────────────────────── */
+function apConfirm(msg,opts){
+  opts=opts||{};
+  return new Promise(function(resolve){
+    var wrap=document.createElement('div');
+    wrap.className='ap-confirm-backdrop';
+    var icoClass=opts.danger===false?'is-warn':'is-danger';
+    var icoName=opts.danger===false?'fa-triangle-exclamation':'fa-trash-can';
+    var confirmLabel=opts.confirmLabel||'Zmazať';
+    var cancelLabel=opts.cancelLabel||'Zrušiť';
+    var title=opts.title||'Potvrdiť akciu';
+    wrap.innerHTML='<div class="ap-confirm">'
+      +'<div class="ap-confirm-body">'
+        +'<div class="ap-confirm-ico '+icoClass+'"><i class="fas '+icoName+'"></i></div>'
+        +'<p class="ap-confirm-title">'+title+'</p>'
+        +'<p class="ap-confirm-msg">'+msg+'</p>'
+      +'</div>'
+      +'<div class="ap-confirm-actions">'
+        +'<button class="ap-confirm-btn is-cancel">'+cancelLabel+'</button>'
+        +'<button class="ap-confirm-btn is-ok">'+confirmLabel+'</button>'
+      +'</div>'
+    +'</div>';
+    document.body.appendChild(wrap);
+    function close(val){wrap.remove();resolve(val);}
+    wrap.querySelector('.is-cancel').onclick=function(){close(false);};
+    wrap.querySelector('.is-ok').onclick=function(){close(true);};
+    wrap.addEventListener('click',function(e){if(e.target===wrap)close(false);});
+    document.addEventListener('keydown',function onKey(e){if(e.key==='Escape'){close(false);document.removeEventListener('keydown',onKey);}});
+  });
+}
+var _apToastWrap=null;
+function apToast(msg,type){
+  type=type||'error';
+  if(!_apToastWrap){_apToastWrap=document.createElement('div');_apToastWrap.className='ap-toasts';document.body.appendChild(_apToastWrap);}
+  var icons={error:'fa-circle-xmark',warn:'fa-triangle-exclamation',success:'fa-circle-check'};
+  var t=document.createElement('div');
+  t.className='ap-toast is-'+type;
+  t.innerHTML='<i class="fas '+(icons[type]||icons.error)+'"></i><span>'+msg+'</span>';
+  _apToastWrap.appendChild(t);
+  setTimeout(function(){t.style.cssText='opacity:0;transition:opacity .3s;';setTimeout(function(){t.remove();},300);},3500);
+}
+/* ─────────────────────────────────────────────────────── */
+
+/* ── Tab switching ── */
+function switchTab(name){
+    document.querySelectorAll('.ap-panel').forEach(function(p){p.classList.remove('is-active');});
+    var el=document.getElementById('panel-'+name);
+    if(el)el.classList.add('is-active');
+    document.querySelectorAll('.ap-nav-btn').forEach(function(t){
+        t.classList.toggle('is-active',t.dataset.tab===name);
+    });
+}
+function cleanEntryParams(){
+    try{
+        var nextUrl=new URL(window.location.href);
+        ['tab','new_rule','sensor','return_to'].forEach(function(key){nextUrl.searchParams.delete(key);});
+        var search=nextUrl.searchParams.toString();
+        window.history.replaceState({},document.title,nextUrl.pathname+(search?'?'+search:'')+nextUrl.hash);
+    }catch(e){}
+}
+function handleEntryIntent(){
+    var params;
+    try{params=new URLSearchParams(window.location.search||'');}catch(e){return;}
+    var requestedTab=String(params.get('tab')||'').toLowerCase();
+    var wantsNewRule=['1','true','yes'].indexOf(String(params.get('new_rule')||'').toLowerCase())>=0;
+    var sensorEui=String(params.get('sensor')||'').trim().toUpperCase();
+    var returnTo=String(params.get('return_to')||'').trim();
+    var touched=params.has('tab')||params.has('new_rule')||params.has('sensor')||params.has('return_to');
+    if(requestedTab==='rules'||requestedTab==='history'||requestedTab==='alerts')switchTab(requestedTab);
+    if(wantsNewRule&&CAN_MANAGE_ALERTS){
+        switchTab('rules');
+        openModal(sensorEui||'',null,{returnTo:returnTo});
+    }
+    if(touched)cleanEntryParams();
+}
+document.querySelectorAll('.ap-nav-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){switchTab(this.dataset.tab);});
+});
+
+/* ── Constants ── */
+var COND_LABEL={gt:'>',gte:'>=',lt:'<',lte:'<=',eq:'='};
+var COND_TEXT={gt:'vyššia ako',gte:'vyššia alebo rovná',lt:'nižšia ako',lte:'nižšia alebo rovná',eq:'rovná sa'};
+var METRIC_NAMES={
+    co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ 2',
+    temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',
+    humidity_1_pct:'Vlhkosť',humidity_2_pct:'Vlhkosť 2',
+    battery_v_est:'Batéria',battery_mv:'Batéria',
+    any_alarm_active:'Alarm aktívny',total_openings:'Počet otvorení',
+    internal_magnet_alarm:'Interný alarm',external_alarm:'Externý alarm',
+    minutes_since_last_alarm:'Minúty od alarmu',duration_last_alarm_minutes:'Trvanie alarmu',
+    low_batt:'Nízka batéria',sabotage_internal:'Sabotáž interná',
+    sabotage_external:'Sabotáž externá',async_message:'Asynchrónna správa',
+    co2_error:'CO₂ chyba',calibration_not_done:'Kalibrácia chyba',
+    days_to_next_calibration:'Dni do kalibrácie'
+};
+var METRIC_UNIT={
+    co2_1_ppm:'ppm',co2_2_ppm:'ppm',
+    temperature_1_c:'°C',temperature_2_c:'°C',
+    humidity_1_pct:'%',humidity_2_pct:'%',
+    battery_v_est:'V',battery_mv:'mV',
+    minutes_since_last_alarm:'min',duration_last_alarm_minutes:'min',
+    days_to_next_calibration:'d'
+};
+var ALERT_KIND_LABEL={threshold:'Prahový alert',sensor_offline:'Senzor nedostupný'};
+var OFFLINE_STATUS_LABEL={
+    offline:'Senzor offline',auto_detached:'Senzor odpojený',
+    auto_detach_pending:'Odpájanie',stale:'Dlhý čas bez správy',
+    warning:'Prekročený interval reportu'
+};
+
+var _allRules=[];
+var _allSensors=[];
+var _filterEui='';
+var _rulesQuickFilter='all';
+var _alertOptionsCache=new Map();
+
+var _ctxMenu=null;
+function closeCtx(){if(_ctxMenu){_ctxMenu.remove();_ctxMenu=null;}}
+document.addEventListener('click',closeCtx,true);
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeCtx();});
+
+var SC_ACKS_KEY='sc.alert-acks.v1';
+function _loadAcks(){try{return JSON.parse(localStorage.getItem(SC_ACKS_KEY))||[];}catch(e){return[];}}
+function isAcked(key){var now=Date.now();return _loadAcks().some(function(a){return a.key===key&&a.until>now;});}
+
+function alertKind(rule){return String((rule&&rule.kind)||'threshold');}
+function metricName(m){if(!m)return'';return METRIC_NAMES[m]||String(m).replace(/_/g,' ');}
+function metricUnit(m){return METRIC_UNIT[m]||'';}
+
+function formatMetricValue(metric,value){
+    var num=Number(value);if(!Number.isFinite(num))return'';
+    var unit=metricUnit(metric);
+    if(unit==='°C')return num.toFixed(1)+unit;
+    if(Number.isInteger(num)||Math.abs(num)>=10)return Math.round(num)+unit;
+    return num.toFixed(2)+unit;
+}
+function formatHoursAgo(hours){
+    var num=Number(hours);if(!Number.isFinite(num)||num<=0)return'';
+    return(num>=24?num.toFixed(1):num.toFixed(2))+' h';
+}
+
+/* ── KPI ── */
+function updateSummaryCards(active,critical,warning){
+    var a=document.getElementById('alpStatActive');
+    var c=document.getElementById('alpStatCritical');
+    var w=document.getElementById('alpStatWarning');
+    if(a)a.textContent=String(active||0);
+    if(c)c.textContent=String(critical||0);
+    if(w)w.textContent=String(warning||0);
+    var tb=document.getElementById('alpTabAlerts');
+    if(tb)tb.textContent=active?String(active):'';
+    var dot=document.getElementById('alpNavDot');
+    if(dot)dot.classList.toggle('is-visible',active>0);
+}
+
+/* ── Rule filter meta ── */
+function updateRuleFiltersMeta(scopedRules,renderedRules){
+    var countAll=scopedRules.length;
+    var countActive=scopedRules.filter(function(r){return!!r.enabled;}).length;
+    var countCritical=scopedRules.filter(function(r){return String(r.severity||'')==='critical';}).length;
+    var el1=document.getElementById('alpRuleCountAll');
+    var el2=document.getElementById('alpRuleCountActive');
+    var el3=document.getElementById('alpRuleCountCritical');
+    if(el1)el1.textContent=String(countAll);
+    if(el2)el2.textContent=String(countActive);
+    if(el3)el3.textContent=String(countCritical);
+    var tb=document.getElementById('alpTabRules');
+    if(tb)tb.textContent=countAll?String(countAll):'';
+}
+
+function buildRuleDescription(rule){
+    if(alertKind(rule)==='sensor_offline')return'Spustí sa, keď je senzor nedostupný alebo po termíne reportu.';
+    var metric=String(rule.metric||'');
+    var unit=metricUnit(metric);
+    var threshold=rule.threshold===undefined||rule.threshold===null?'':String(rule.threshold)+(unit||'');
+    return metricName(metric)+' '+(COND_TEXT[rule.condition]||COND_LABEL[rule.condition]||rule.condition)+' '+threshold;
+}
+
+async function fetchAlertOptions(sensorEui,force){
+    var key=String(sensorEui||'').toUpperCase();
+    if(!key)return{metrics:[]};
+    if(!force&&_alertOptionsCache.has(key))return _alertOptionsCache.get(key);
+    var r=await fetch('/api/alerts/options?sensor_eui='+encodeURIComponent(key));
+    var d=await r.json();
+    if(!r.ok||!d.success)throw new Error(d.message||'Nepodarilo sa načítať metriky');
+    _alertOptionsCache.set(key,d);
+    (d.metrics||[]).forEach(function(m){
+        if(!m||!m.value)return;
+        METRIC_NAMES[m.value]=m.label||METRIC_NAMES[m.value]||m.value;
+        if(m.unit)METRIC_UNIT[m.value]=m.unit;
+    });
+    return d;
+}
+
+/* ── Load sensors ── */
+async function loadSensors(){
+    try{
+        var r=await fetch('/api/sensors');var d=await r.json();
+        _allSensors=Array.isArray(d)?d:(Array.isArray(d.sensors)?d.sensors:Object.values(d||{}));
+    }catch(e){_allSensors=[];}
+    var sel=document.getElementById('alpSensorFilter');if(!sel)return;
+    _allSensors.forEach(function(s){
+        var opt=document.createElement('option');
+        opt.value=String(s.eui||'').toUpperCase();
+        opt.textContent=(s.name||s.eui||'')+(s.eui?' ('+String(s.eui).toUpperCase().slice(-4)+')':'');
+        sel.appendChild(opt);
+    });
+    sel.addEventListener('change',function(){_filterEui=this.value;renderRules();});
+}
+function sensorName(eui){
+    var s=_allSensors.find(function(x){return String(x.eui||'').toUpperCase()===String(eui||'').toUpperCase();});
+    return s?(s.name||eui):eui;
+}
+function sensorUiTier(sensor){
+    var tier=String((sensor&&sensor.ui_tier)||'').toLowerCase();
+    if(tier==='online'||tier==='warn'||tier==='offline'||tier==='unknown')return tier;
+    var raw=String((sensor&&((sensor.activity_status||sensor.status)))||sensor||'').toLowerCase();
+    if(!raw||raw==='no_data')return'unknown';
+    if(raw==='online'||raw==='recent'||raw==='active'||raw==='quiet')return'online';
+    if(raw==='offline'||raw==='auto_detached')return'offline';
+    return'warn';
+}
+
+/* ── Load triggered ── */
+async function loadTriggered(){
+    var body=document.getElementById('alpTriggeredBody');
+    try{
+        var incidentsRes=await fetch('/api/incidents').then(function(r){return r.ok?r.json():{incidents:[]};}).catch(function(){return{incidents:[]};});
+        var combined=Array.isArray(incidentsRes.incidents)?incidentsRes.incidents:[];
+
+        combined.sort(function(a,b){return a.tier==='error'&&b.tier!=='error'?-1:1;});
+        var visible=combined.filter(function(a){return!a.ackKey||!isAcked(a.ackKey);});
+        var criticalCount=combined.filter(function(a){return a.tier==='error';}).length;
+        updateSummaryCards(combined.length,criticalCount,Math.max(0,combined.length-criticalCount));
+
+        if(!visible.length){
+            if(combined.length>0){
+                body.innerHTML='<div class="ap-empty">'
+                    +'<div class="ap-empty-ico"><i class="fas fa-eye-slash"></i></div>'
+                    +'<div class="ap-empty-h">Upozornenia sú dočasne skryté</div>'
+                    +'<div class="ap-empty-p">Všetkých '+combined.length+' upozornení je skrytých.</div>'
+                    +'<button class="ap-reset" id="alpResetBtn">Zobraziť všetky</button></div>';
+                document.getElementById('alpResetBtn').addEventListener('click',function(){
+                    try{localStorage.removeItem(SC_ACKS_KEY);}catch(e){}loadTriggered();
+                });
+            }else{
+                body.innerHTML='<div class="ap-empty">'
+                    +'<div class="ap-empty-ico is-ok"><i class="fas fa-check"></i></div>'
+                    +'<div class="ap-empty-h">Žiadne aktívne upozornenia</div>'
+                    +'<div class="ap-empty-p">Systém je stabilný a momentálne bez incidentov.</div></div>';
+            }
+            return;
+        }
+        var _pad=function(n){return String(n).padStart(2,'0');};
+        var alertHtml=visible.map(function(a){
+            var icon=a.source==='threshold'?'fa-bell':(a.source==='offline_rule'?'fa-plug-circle-xmark':(a.tier==='error'?'fa-circle-xmark':'fa-triangle-exclamation'));
+            var kindLabel=a.source==='offline_rule'?'Senzor nedostupný':(a.source==='activity'?'Stav senzoru':'Prahový alert');
+            var sevLabel=a.tier==='error'?'Kritické':'Varovanie';
+            var sevClass=a.tier==='error'?'is-error':'is-warn';
+            var sevIcon=a.tier==='error'?'fa-circle-xmark':'fa-triangle-exclamation';
+            var tsDate='',tsTime='';
+            if(a.triggeredAt){try{var _d=new Date(a.triggeredAt);if(!isNaN(_d)){tsDate=_d.getDate()+'.'+(_d.getMonth()+1)+'.'+String(_d.getFullYear()).slice(2);tsTime=_pad(_d.getHours())+':'+_pad(_d.getMinutes());}}catch(e){}}
+            var linkUrl=a.linkUrl||'/alerts';
+            return '<div class="ap-alert-item is-'+esc(a.tier)+'" data-eui="'+esc(a.eui)+'" data-rule-id="'+esc(a.ruleId||'')+'" data-link-url="'+esc(linkUrl)+'">'
+                +'<div class="ap-alert">'
+                    +'<div class="ap-alert-ts">'
+                        +(tsDate?'<span class="ap-alert-ts-date">'+esc(tsDate)+'</span>':'')
+                        +(tsTime?'<span class="ap-alert-ts-time">'+esc(tsTime)+'</span>':'')
+                    +'</div>'
+                    +'<div class="ap-alert-tsep"></div>'
+                    +'<span class="ap-alert-ico"><i class="fas '+icon+'"></i></span>'
+                    +'<div class="ap-alert-body"><div class="ap-alert-name">'+esc(a.name)+'</div><div class="ap-alert-desc">'+esc(a.desc)+'</div></div>'
+                    +'<span class="ap-sev-badge '+sevClass+'"><i class="fas '+sevIcon+'"></i> '+esc(sevLabel)+'</span>'
+                    +(a.valStr?'<span class="ap-alert-val">'+esc(a.valStr)+'</span>':'')
+                    +'<i class="fas fa-chevron-right ap-alert-chevron"></i>'
+                +'</div>'
+                +'<div class="ap-alert-detail">'
+                    +'<div class="ap-detail-meta">'
+                        +'<div class="ap-detail-row"><span class="ap-detail-label">Typ</span><span class="ap-detail-value">'+esc(kindLabel)+'</span></div>'
+                        +'<div class="ap-detail-row"><span class="ap-detail-label">Závažnosť</span><span class="ap-detail-value">'+esc(sevLabel)+'</span></div>'
+                        +(a.reason?'<div class="ap-detail-row"><span class="ap-detail-label">Dôvod</span><span class="ap-detail-value">'+esc(a.reason)+'</span></div>':'')
+                        +(a.valStr?'<div class="ap-detail-row"><span class="ap-detail-label">Hodnota</span><span class="ap-detail-value">'+esc(a.valStr)+'</span></div>':'')
+                        +(tsDate&&tsTime?'<div class="ap-detail-row"><span class="ap-detail-label">Vznik</span><span class="ap-detail-value">'+esc(tsDate)+' '+esc(tsTime)+'</span></div>':'')
+                    +'</div>'
+                    +'<div class="ap-detail-actions">'
+                        +(a.eui?'<a class="ap-detail-link" href="'+esc(linkUrl)+'"><i class="fas fa-microchip"></i> Prejsť na senzor</a>':'')
+                    +'</div>'
+                +'</div>'
+            +'</div>';
+        }).join('');
+        body.innerHTML='<div class="ap-alerts">'+alertHtml+'</div>';
+        body.querySelectorAll('.ap-alert-item').forEach(function(item){
+            item.querySelector('.ap-alert').addEventListener('click',function(){
+                item.classList.toggle('is-open');
+            });
+            item.addEventListener('contextmenu',function(e){
+                e.preventDefault();
+                closeCtx();
+                var eui=item.dataset.eui;
+                var ruleId=item.dataset.ruleId;
+                var linkUrl=item.dataset.linkUrl||('/sensors/'+encodeURIComponent(eui));
+                var menu=document.createElement('div');
+                menu.className='ap-ctx';
+                menu.innerHTML=
+                    '<div class="ap-ctx-item is-primary" data-action="sensor"><i class="fas fa-microchip"></i> Prejsť na senzor</div>'
+                    +'<div class="ap-ctx-item" data-action="copy"><i class="fas fa-copy"></i> Kopírovať EUI</div>'
+                    +(ruleId?'<div class="ap-ctx-sep"></div><div class="ap-ctx-item" data-action="rule"><i class="fas fa-sliders"></i> Zobraziť pravidlo</div>':'');
+                document.body.appendChild(menu);
+                var vw=window.innerWidth,vh=window.innerHeight;
+                var x=Math.min(e.clientX,vw-menu.offsetWidth-8);
+                var y=Math.min(e.clientY,vh-menu.offsetHeight-8);
+                menu.style.left=x+'px';menu.style.top=y+'px';
+                _ctxMenu=menu;
+                menu.querySelectorAll('.ap-ctx-item').forEach(function(itm){
+                    itm.addEventListener('click',function(ev){
+                        ev.stopPropagation();
+                        var action=this.dataset.action;
+                        closeCtx();
+                        if(action==='sensor'){window.location.href=linkUrl;}
+                        else if(action==='copy'){navigator.clipboard.writeText(String(eui||'').toUpperCase()).catch(function(){});}
+                        else if(action==='rule'){
+                            switchTab('rules');
+                            setTimeout(function(){
+                                var rEl=document.querySelector('.ap-rule[data-id="'+CSS.escape(ruleId)+'"]');
+                                if(rEl){rEl.scrollIntoView({behavior:'smooth',block:'center'});rEl.style.transition='background .4s';rEl.style.background='rgba(var(--brand-rgb),.1)';setTimeout(function(){rEl.style.background='';},1400);}
+                            },120);
+                        }
+                    });
+                });
+            });
+        });
+    }catch(e){
+        updateSummaryCards(0,0,0);
+        if(body)body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-circle-exclamation"></i></div><div class="ap-empty-h">Chyba načítania</div><div class="ap-empty-p">Skontrolujte pripojenie alebo obnovte stránku.</div></div>';
+    }
+}
+
+/* ── Rules ── */
+async function loadRules(){
+    try{var r=await fetch('/api/alerts');var d=await r.json();_allRules=d.alerts||[];}catch(e){_allRules=[];}
+    renderRules();
+}
+function renderRules(){
+    var body=document.getElementById('alpRulesBody');if(!body)return;
+    var scopedRules=_allRules;
+    if(_filterEui)scopedRules=scopedRules.filter(function(a){return String(a.sensor_eui||'').toUpperCase()===_filterEui;});
+    var rules=scopedRules;
+    if(_rulesQuickFilter==='active')rules=rules.filter(function(a){return!!a.enabled;});
+    else if(_rulesQuickFilter==='critical')rules=rules.filter(function(a){return String(a.severity||'')==='critical';});
+    updateRuleFiltersMeta(scopedRules,rules);
+
+    if(!rules.length){
+        body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-sliders"></i></div>'
+            +'<div class="ap-empty-h">Žiadne pravidlá'+(_filterEui?' pre tento senzor':'')+'</div>'
+            +'<div class="ap-empty-p">'+(CAN_MANAGE_ALERTS?'Vytvorte nové pravidlo tlačidlom „Nové upozornenie".':'Pre túto rolu je správa pravidiel len na čítanie.')+'</div></div>';
+        return;
+    }
+    body.innerHTML='<div class="ap-rules">'+rules.map(function(a){
+        var desc=buildRuleDescription(a);
+        var snName=sensorName(a.sensor_eui);
+        var shortEui=String(a.sensor_eui||'').toUpperCase().slice(-4);
+        return '<div class="ap-rule" data-id="'+esc(a.id)+'">'
+            +'<span class="ap-rule-dot '+esc(a.severity)+'"></span>'
+            +'<div class="ap-rule-body"><div class="ap-rule-name">'+esc(a.name||desc)+'</div><div class="ap-rule-desc">'+esc(desc)+'</div></div>'
+            +'<span class="ap-rule-tag">'+esc(snName)+(shortEui?' …'+shortEui:'')+'</span>'
+            +(CAN_MANAGE_ALERTS
+                ?('<div class="ap-rule-acts">'
+                    +'<button class="ap-tog '+(a.enabled?'on':'off')+'" data-id="'+esc(a.id)+'" title="'+(a.enabled?'Vypnúť':'Zapnúť')+'"></button>'
+                    +'<button class="ap-edit" data-id="'+esc(a.id)+'" title="Upraviť"><i class="fas fa-pen"></i></button>'
+                    +'<button class="ap-del" data-id="'+esc(a.id)+'" title="Zmazať"><i class="fas fa-trash-can"></i></button>'
+                +'</div>')
+                :'')+'</div>';
+    }).join('')+'</div>';
+
+    if(CAN_MANAGE_ALERTS){
+        body.querySelectorAll('.ap-tog').forEach(function(btn){
+            btn.addEventListener('click',async function(){
+                var id=this.dataset.id;var rule=_allRules.find(function(a){return a.id===id;});
+                if(!rule)return;rule.enabled=!rule.enabled;
+                await fetch('/api/alerts/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:rule.enabled})});
+                renderRules();
+            });
+        });
+        body.querySelectorAll('.ap-del').forEach(function(btn){
+            btn.addEventListener('click',async function(e){
+                e.stopPropagation();
+                var id=this.dataset.id;
+                if(!await apConfirm('Naozaj chcete zmazať toto pravidlo?',{title:'Zmazať pravidlo'}))return;
+                await fetch('/api/alerts/'+encodeURIComponent(id),{method:'DELETE'});
+                _allRules=_allRules.filter(function(a){return a.id!==id;});renderRules();
+            });
+        });
+        body.querySelectorAll('.ap-edit').forEach(function(btn){
+            btn.addEventListener('click',function(e){
+                e.stopPropagation();
+                var id=this.dataset.id;
+                var rule=_allRules.find(function(a){return a.id===id;});
+                if(rule)openModal(rule.sensor_eui,rule);
+            });
+        });
+        body.querySelectorAll('.ap-rule').forEach(function(ruleEl){
+            ruleEl.addEventListener('contextmenu',function(e){
+                e.preventDefault();
+                closeCtx();
+                var id=ruleEl.dataset.id;
+                var rule=_allRules.find(function(a){return a.id===id;});
+                if(!rule)return;
+                var menu=document.createElement('div');
+                menu.className='ap-ctx';
+                menu.innerHTML=
+                    '<div class="ap-ctx-item is-primary" data-action="edit"><i class="fas fa-pen"></i> Upraviť pravidlo</div>'
+                    +'<div class="ap-ctx-item" data-action="toggle"><i class="fas '+(rule.enabled?'fa-toggle-off':'fa-toggle-on')+'"></i> '+(rule.enabled?'Vypnúť':'Zapnúť')+'</div>'
+                    +'<div class="ap-ctx-sep"></div>'
+                    +'<div class="ap-ctx-item is-danger" data-action="delete"><i class="fas fa-trash-can"></i> Zmazať pravidlo</div>';
+                document.body.appendChild(menu);
+                var vw=window.innerWidth,vh=window.innerHeight;
+                var x=Math.min(e.clientX,vw-menu.offsetWidth-8);
+                var y=Math.min(e.clientY,vh-menu.offsetHeight-8);
+                menu.style.left=x+'px';menu.style.top=y+'px';
+                _ctxMenu=menu;
+                menu.querySelectorAll('.ap-ctx-item').forEach(function(itm){
+                    itm.addEventListener('click',async function(ev){
+                        ev.stopPropagation();
+                        var action=this.dataset.action;
+                        closeCtx();
+                        if(action==='edit'){openModal(rule.sensor_eui,rule);}
+                        else if(action==='toggle'){
+                            rule.enabled=!rule.enabled;
+                            fetch('/api/alerts/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:rule.enabled})});
+                            renderRules();
+                        }else if(action==='delete'){
+                            if(await apConfirm('Naozaj chcete zmazať toto pravidlo?',{title:'Zmazať pravidlo'})){
+                                fetch('/api/alerts/'+encodeURIComponent(id),{method:'DELETE'});
+                                _allRules=_allRules.filter(function(a){return a.id!==id;});
+                                renderRules();
+                            }
+                        }
+                    });
+                });
+            });
+        });
+    }
+}
+
+/* ── Modal ── */
+function openModal(sensorEui,existingRule,options){
+    if(!CAN_MANAGE_ALERTS){apToast('Táto rola môže upozornenia len prezerať.','warn');return;}
+    options=options||{};
+    var isEdit=!!(existingRule&&existingRule.id);
+    var sensorOptions=_allSensors.map(function(s){
+        var shortEui=String(s.eui||'').toUpperCase().slice(-4);
+        var sel=String(s.eui||'').toUpperCase()===String(sensorEui||'').toUpperCase()?'selected':'';
+        return '<option value="'+esc(String(s.eui||'').toUpperCase())+'" '+sel+'>'+esc(s.name||s.eui)+(shortEui?' (…'+shortEui+')':'')+'</option>';
+    }).join('');
+
+    var modal=document.createElement('div');
+    modal.className='ap-backdrop';
+    modal.innerHTML='<div class="ap-modal" role="dialog">'
+        +'<div class="ap-mhead"><h2>'+(isEdit?'Upraviť upozornenie':'Nové upozornenie')+'</h2><button class="ap-mclose" id="alpMClose"><i class="fas fa-xmark"></i></button></div>'
+        +'<div class="ap-mbody">'
+            +'<div class="ap-fld"><label>Senzor</label><select id="alpMSensor">'+sensorOptions+'</select></div>'
+            +'<div class="ap-fld"><label>Typ alertu</label><select id="alpMKind"><option value="threshold">Prahový alert</option><option value="sensor_offline">Senzor nedostupný</option></select></div>'
+            +'<div class="ap-fld"><label>Názov alertu</label><input type="text" id="alpMName" placeholder="napr. Vysoká teplota"></div>'
+            +'<div class="ap-fld" id="alpMMetricWrap"><label>Metrika</label><select id="alpMMetric"></select></div>'
+            +'<div class="ap-fld-row" id="alpMThresholdRow">'
+                +'<div class="ap-fld"><label>Podmienka</label><select id="alpMCond">'
+                    +'<option value="gt">vyššia ako (&gt;)</option><option value="gte">vyššia alebo = (&gt;=)</option>'
+                    +'<option value="lt">nižšia ako (&lt;)</option><option value="lte">nižšia alebo = (&lt;=)</option>'
+                    +'<option value="eq">rovná sa (=)</option></select></div>'
+                +'<div class="ap-fld"><label>Prah</label><input type="number" id="alpMThreshold" step="any" placeholder="napr. 30"></div></div>'
+            +'<div id="alpMInfoWrap"></div>'
+            +'<div class="ap-fld-row">'
+                +'<div class="ap-fld"><label>Závažnosť</label><select id="alpMSev"><option value="warning">Varovanie</option><option value="critical">Kritické</option></select></div>'
+                +'<div class="ap-fld" style="display:flex;align-items:flex-end;padding-bottom:.08rem">'
+                    +'<label style="display:flex;align-items:center;gap:.44rem;cursor:pointer;text-transform:none;font-size:.78rem;letter-spacing:0;color:var(--text-700);font-weight:600">'
+                        +'<input type="checkbox" id="alpMEnabled" checked style="width:auto;accent-color:var(--brand-500)"> Aktívny</label></div></div>'
+        +'</div>'
+        +'<div class="ap-mfoot"><button class="ap-btn-s" id="alpMCancel">Zrušiť</button><button class="ap-btn-p" id="alpMSave">Uložiť</button></div></div>';
+
+    document.body.appendChild(modal);
+    var _dirty=false;
+    var closed=false;
+    var addBtn=document.getElementById('alpAddBtn');
+    function close(){
+        if(closed)return;
+        closed=true;
+        document.removeEventListener('keydown',onModalKeydown,true);
+        modal.remove();
+    }
+    function afterCancel(){
+        if(options&&options.returnTo&&!isEdit){
+            window.location.href=options.returnTo;
+            return;
+        }
+        if(addBtn){
+            setTimeout(function(){
+                try{addBtn.focus();}catch(e){}
+            },0);
+        }
+    }
+    async function tryClose(cancelReason){
+        if(_dirty){
+            if(!await apConfirm('Máte neuložené zmeny. Zahodiť ich?',{title:'Zahodiť zmeny',confirmLabel:'Zahodiť',danger:true}))return;
+        }
+        close();
+        if(cancelReason)afterCancel();
+    }
+    function onModalKeydown(e){
+        if(e.key!=='Escape')return;
+        e.preventDefault();
+        e.stopPropagation();
+        tryClose('escape');
+    }
+    modal.querySelectorAll('input,select').forEach(function(el){
+        el.addEventListener('change',function(){_dirty=true;});
+        el.addEventListener('input',function(){_dirty=true;});
+    });
+    document.addEventListener('keydown',onModalKeydown,true);
+    document.getElementById('alpMClose').onclick=function(){tryClose('cancel');};
+    document.getElementById('alpMCancel').onclick=function(){tryClose('cancel');};
+    modal.addEventListener('click',function(e){if(e.target===modal)tryClose('cancel');});
+
+    /* Pre-fill fields when editing */
+    if(isEdit){
+        document.getElementById('alpMKind').value=existingRule.kind||'threshold';
+        document.getElementById('alpMName').value=existingRule.name||'';
+        document.getElementById('alpMCond').value=existingRule.condition||'gt';
+        if(existingRule.threshold!==null&&existingRule.threshold!==undefined)
+            document.getElementById('alpMThreshold').value=existingRule.threshold;
+        document.getElementById('alpMSev').value=existingRule.severity||'warning';
+        document.getElementById('alpMEnabled').checked=!!existingRule.enabled;
+    }
+
+    async function refreshModalState(){
+        var sEui=document.getElementById('alpMSensor').value;
+        var kind=document.getElementById('alpMKind').value;
+        var metricWrap=document.getElementById('alpMMetricWrap');
+        var thresholdRow=document.getElementById('alpMThresholdRow');
+        var metricSelect=document.getElementById('alpMMetric');
+        var infoWrap=document.getElementById('alpMInfoWrap');
+        var previousMetric=metricSelect.value||(isEdit?existingRule.metric||'':'');
+        metricWrap.style.display=kind==='threshold'?'block':'none';
+        thresholdRow.style.display=kind==='threshold'?'grid':'none';
+        if(kind==='sensor_offline'){
+            infoWrap.innerHTML='<div class="ap-minfo">Alert sa spustí, keď senzor prekročí očakávaný interval reportu alebo sa stane nedostupným.</div>';
+            return;
+        }
+        infoWrap.innerHTML='<div class="ap-minfo">Načítavam metriky pre vybraný senzor…</div>';
+        try{
+            var data=await fetchAlertOptions(sEui);var metrics=data.metrics||[];
+            if(!metrics.length){
+                metricSelect.innerHTML='<option value="">Pre tento senzor nie sú dostupné žiadne metriky</option>';
+                infoWrap.innerHTML='<div class="ap-minfo">Prahový alert sa dá vytvoriť až po rozpoznaní relevantných metrík.</div>';return;
+            }
+            metricSelect.innerHTML=metrics.map(function(m){
+                var unit=m.unit?' ('+m.unit+')':'';var selected=m.value===previousMetric?' selected':'';
+                return '<option value="'+esc(m.value)+'"'+selected+'>'+esc(m.label||m.value)+esc(unit)+'</option>';
+            }).join('');
+            if(!metricSelect.value&&metrics[0])metricSelect.value=metrics[0].value;
+            infoWrap.innerHTML='<div class="ap-minfo">Zobrazené sú len metriky, ktoré patria k vybranému senzoru.</div>';
+        }catch(e){
+            metricSelect.innerHTML='<option value="">Nepodarilo sa načítať metriky</option>';
+            infoWrap.innerHTML='<div class="ap-minfo" style="color:var(--danger-500)">Chyba: '+(e.message||'neznámy problém')+'</div>';
+        }
+    }
+    refreshModalState();
+    document.getElementById('alpMSensor').addEventListener('change',refreshModalState);
+    document.getElementById('alpMKind').addEventListener('change',refreshModalState);
+
+    document.getElementById('alpMSave').onclick=async function(){
+        var sEui=document.getElementById('alpMSensor').value;var kind=document.getElementById('alpMKind').value;
+        var name=document.getElementById('alpMName').value.trim();var metric=document.getElementById('alpMMetric').value;
+        var condition=document.getElementById('alpMCond').value;var threshold=document.getElementById('alpMThreshold').value;
+        var severity=document.getElementById('alpMSev').value;var enabled=document.getElementById('alpMEnabled').checked;
+        if(!sEui){apToast('Vyber senzor.','warn');return;}
+        if(kind==='threshold'&&(!metric||threshold==='')){apToast('Vyplň metriku a prah.','warn');return;}
+        var payload={sensor_eui:sEui,kind:kind,name:name,metric:kind==='threshold'?metric:'',condition:kind==='threshold'?condition:'',threshold:kind==='threshold'?parseFloat(threshold):null,severity:severity,enabled:enabled};
+        try{
+            if(isEdit){
+                var r=await fetch('/api/alerts/'+encodeURIComponent(existingRule.id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+                var d=await r.json();if(!d.success)throw new Error(d.message||'Chyba');
+                var idx=_allRules.findIndex(function(a){return a.id===existingRule.id;});
+                if(idx>=0)_allRules[idx]=Object.assign({},_allRules[idx],payload,{id:existingRule.id});
+            }else{
+                var r=await fetch('/api/alerts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+                var d=await r.json();if(!d.success)throw new Error(d.message||'Chyba');
+                _allRules.push(d.alert);
+            }
+            renderRules();close();switchTab('rules');
+        }catch(e){apToast('Chyba: '+e.message,'error');}
+    };
+}
+
+/* ── Chip filters ── */
+document.querySelectorAll('[data-rule-filter]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+        _rulesQuickFilter=this.dataset.ruleFilter||'all';
+        document.querySelectorAll('[data-rule-filter]').forEach(function(t){t.classList.toggle('is-active',t===btn);});
+        renderRules();
+    });
+});
+
+var addBtn=document.getElementById('alpAddBtn');
+if(addBtn)addBtn.onclick=function(){switchTab('rules');openModal(_filterEui||'');};
+
+/* ── History ── */
+function fmtTs(iso){
+    if(!iso)return'—';
+    try{
+        var d=new Date(iso);if(isNaN(d))return iso;
+        var now=new Date();var diff=now-d;
+        var mins=Math.floor(diff/60000);var hrs=Math.floor(mins/60);var days=Math.floor(hrs/24);
+        var pad=function(n){return String(n).padStart(2,'0');};
+        var dateStr=d.getDate()+'. '+(d.getMonth()+1)+'. '+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+        if(days>0)return dateStr;
+        if(hrs>0)return'pred '+hrs+' h — '+pad(d.getHours())+':'+pad(d.getMinutes());
+        if(mins>0)return'pred '+mins+' min';
+        return'práve teraz';
+    }catch(e){return iso;}
+}
+function fmtDuration(startIso,endIso){
+    if(!startIso||!endIso)return'';
+    try{var ms=new Date(endIso)-new Date(startIso);if(ms<0)return'';
+        var mins=Math.floor(ms/60000);var hrs=Math.floor(mins/60);
+        if(hrs>=24)return Math.floor(hrs/24)+'d '+(hrs%24)+'h';
+        if(hrs>0)return hrs+'h '+(mins%60)+'min';
+        return mins+'min';
+    }catch(e){return'';}
+}
+async function loadHistory(){
+    var body=document.getElementById('alpHistoryBody');if(!body)return;
+    try{
+        var r=await fetch('/api/alerts/history?limit=100');var d=await r.json();var events=d.events||[];
+        var tb=document.getElementById('alpTabHistory');
+        if(tb)tb.textContent=events.length?String(events.length):'';
+        if(!events.length){
+            body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-clock-rotate-left"></i></div>'
+                +'<div class="ap-empty-h">Zatiaľ žiadna história</div>'
+                +'<div class="ap-empty-p">História sa začne zaznamenávať keď sa prvý alert spustí alebo vyrieši.</div></div>';
+            return;
+        }
+        var rows=events.map(function(e){
+            var isTriggered=e.event_type==='triggered';var isCritical=e.severity==='critical';
+            var colorClass=isTriggered?(isCritical?'is-error':'is-warn'):'is-ok';
+            var badge=isTriggered
+                ?'<span class="ap-hbadge '+colorClass+'">'+(isCritical?'Kritické':'Varovanie')+'</span>'
+                :'<span class="ap-hbadge is-ok">Vyriešené</span>';
+            var desc=e.kind==='sensor_offline'
+                ?'Senzor nedostupný'+(e.trigger_status?' ('+esc(e.trigger_status)+')':'')
+                :(e.metric?(metricName(e.metric)+(e.trigger_value!=null?' = '+Number(e.trigger_value).toFixed(2)+(metricUnit(e.metric)||''):'')):'');
+            var dur=!isTriggered&&e.triggered_at?fmtDuration(e.triggered_at,e.ts):'';
+            return '<div class="ap-hrow">'
+                +'<span class="ap-hdot '+colorClass+'"></span>'
+                +'<div class="ap-hbody"><div class="ap-htop"><span class="ap-hname">'+esc(e.name||e.sensor_name)+'</span>'
+                    +(e.name&&e.sensor_name?'<span class="ap-hsensor">'+esc(e.sensor_name)+'</span>':'')+'</div>'
+                    +(desc?'<div class="ap-hdesc">'+desc+'</div>':'')+'</div>'
+                +'<div class="ap-hright">'+badge
+                    +'<span class="ap-htime" title="'+esc(e.ts)+'">'+fmtTs(e.ts)+'</span>'
+                    +(dur?'<span class="ap-hdur">'+esc(dur)+'</span>':'')+'</div></div>';
+        }).join('');
+        body.innerHTML='<div class="ap-hist">'+rows+'</div>';
+    }catch(e){
+        if(body)body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-circle-exclamation"></i></div><div class="ap-empty-h">Chyba načítania histórie</div></div>';
+    }
+}
+
+/* ── Init ── */
+Promise.all([loadSensors(),loadRules(),loadTriggered(),loadHistory()]).then(function(){
+    handleEntryIntent();
+});
+setInterval(loadTriggered,30000);
+setInterval(loadHistory,60000);
+
+})();
+</script>
+{% endblock %}

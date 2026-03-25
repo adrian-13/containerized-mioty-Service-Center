@@ -269,13 +269,16 @@
 /* ── Viewer detail ─────────────────────────────────────── */
 .svd-page{display:grid;gap:.9rem}
 .svd-card{border:1px solid #dae3f0;border-radius:1rem;background:#fff;box-shadow:0 2px 12px rgba(15,23,42,.05)}
-.svd-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.7rem;padding:1rem 1.2rem}
-.svd-head-left{display:flex;align-items:center;gap:.9rem;min-width:0;flex:1}
-.svd-back{font-size:.72rem;font-weight:800;color:#7a8fa8;text-decoration:none;display:inline-flex;align-items:center;gap:.36rem;flex-shrink:0;padding:.26rem .54rem;border:1px solid #dae3f0;border-radius:.5rem;transition:background .12s,color .12s,border-color .12s}
-.svd-back:hover{background:#f0f5fd;color:#1c3a5e;border-color:#b8cde0;text-decoration:none}
-.svd-back i{font-size:.65rem}
-.svd-title{font-size:1.32rem;font-weight:900;color:#0f2135;margin:0;font-family:"Sora","Manrope",sans-serif;overflow-wrap:anywhere;letter-spacing:-.01em}
-.svd-meta{font-size:.72rem;color:#8a9ab0;margin:.2rem 0 0;display:flex;align-items:center;gap:.44rem;flex-wrap:wrap}
+.svd-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;padding:.82rem 1.1rem .82rem .9rem;border-left:4px solid var(--brand-500,#2563eb)}
+.svd-head-left{display:flex;align-items:center;gap:.82rem;min-width:0;flex:1}
+.svd-head-divider{width:1px;height:2.1rem;background:#dde6f2;flex-shrink:0}
+/* Back button */
+.svd-back{display:inline-flex;align-items:center;gap:.46rem;text-decoration:none;font-size:.75rem;font-weight:800;color:#4a6582;flex-shrink:0;padding:.3rem .72rem .3rem .3rem;border:1.5px solid #dde6f2;border-radius:999px;background:#fff;transition:all .15s ease;white-space:nowrap}
+.svd-back:hover{color:var(--brand-600,#1e4d8a);border-color:var(--brand-400,#5a9ee0);background:rgba(var(--brand-rgb),.04);box-shadow:0 2px 8px rgba(var(--brand-rgb),.12)}
+.svd-back-ico{width:1.48rem;height:1.48rem;border-radius:50%;background:#eef3fb;display:flex;align-items:center;justify-content:center;font-size:.62rem;color:#4a6582;transition:background .15s,color .15s,transform .15s;flex-shrink:0}
+.svd-back:hover .svd-back-ico{background:var(--brand-500,#2563eb);color:#fff;transform:translateX(-2px)}
+.svd-title{font-size:1.24rem;font-weight:900;color:#0f2135;margin:0;font-family:"Sora","Manrope",sans-serif;overflow-wrap:anywhere;letter-spacing:-.01em}
+.svd-meta{font-size:.72rem;color:#8a9ab0;margin:.18rem 0 0;display:flex;align-items:center;gap:.44rem;flex-wrap:wrap}
 .svd-meta code{font-size:.68rem;color:#5a7090;background:#f0f5fd;padding:.06rem .34rem;border-radius:.28rem;font-family:monospace;letter-spacing:.01em}
 .svd-refresh-btn{display:inline-flex;align-items:center;justify-content:center;width:2.05rem;height:2.05rem;border-radius:.5rem;border:1px solid #cdd9ea;background:#fff;color:#4e6a88;cursor:pointer;font-size:.86rem;transition:background .12s,color .12s,border-color .12s;flex-shrink:0}
 .svd-refresh-btn:hover{background:#f0f5fd;color:#1c3a5e;border-color:#b8cde0}
@@ -285,23 +288,52 @@
 .svd-chip.offline{background:rgba(220,53,69,.1);color:#b4232f;border-color:rgba(220,53,69,.2)}
 .svd-chip.quiet{background:rgba(37,99,235,.08);color:#2f63be;border-color:rgba(37,99,235,.16)}
 .svd-dot{width:.44rem;height:.44rem;border-radius:50%;background:currentColor;flex-shrink:0}
-/* Selectable metric tiles */
-.svd-mtiles{display:flex;gap:.5rem;flex-wrap:wrap}
-.svd-mtile{flex:1;min-width:7.2rem;padding:.76rem .88rem;border:2px solid #dae3f0;border-radius:.82rem;background:#fff;cursor:pointer;transition:border-color .14s,background .14s,box-shadow .14s;text-align:left;box-shadow:0 1px 4px rgba(15,23,42,.04);font:inherit}
-.svd-mtile:hover:not(.is-active){border-color:#b0c8e4;background:#f7fafd}
-.svd-mtile.is-active{border-color:var(--brand-500);background:linear-gradient(135deg,rgba(var(--brand-rgb),.07),rgba(var(--brand-rgb),.02));box-shadow:0 2px 10px rgba(var(--brand-rgb),.12)}
-.svd-mtile.is-active.tone-green{border-color:#16a34a;background:linear-gradient(135deg,rgba(22,163,74,.09),rgba(22,163,74,.01));box-shadow:0 2px 10px rgba(22,163,74,.14)}
-.svd-mtile.is-active.tone-amber{border-color:#d97706;background:linear-gradient(135deg,rgba(245,158,11,.11),rgba(245,158,11,.01));box-shadow:0 2px 10px rgba(245,158,11,.16)}
-.svd-mtile.is-active.tone-red{border-color:#dc2626;background:linear-gradient(135deg,rgba(239,68,68,.09),rgba(239,68,68,.01));box-shadow:0 2px 10px rgba(239,68,68,.13)}
-.svd-mtile-lbl{font-size:.59rem;text-transform:uppercase;letter-spacing:.09em;color:#7a8fa8;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.svd-mtile.is-active .svd-mtile-lbl{color:var(--brand-600)}
-.svd-mtile.is-active.tone-green .svd-mtile-lbl{color:#15803d}
-.svd-mtile.is-active.tone-amber .svd-mtile-lbl{color:#b45309}
-.svd-mtile.is-active.tone-red .svd-mtile-lbl{color:#b91c1c}
-.svd-mtile-val{font-size:1.38rem;font-weight:900;color:#0f2135;line-height:1.15;margin-top:.18rem}
-.svd-mtile-unit{font-size:.72rem;font-weight:700;color:#8a9ab0;margin-left:.08rem}
-.svd-mtile-note{font-size:.61rem;font-weight:700;margin-top:.14rem;color:#9aaab8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.svd-mtile.is-active .svd-mtile-note{opacity:.72}
+/* Metric grid cards (Viewer) */
+.svd-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:.55rem}
+.svd-mcard{display:flex;flex-direction:column;padding:.88rem 1rem .82rem;border:1.5px solid #dae3f0;border-radius:.75rem;background:#fff;cursor:pointer;transition:background .12s,border-color .12s,box-shadow .12s,transform .08s;text-align:left;font:inherit;min-height:5.6rem;position:relative;overflow:hidden}
+.svd-mcard::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:.75rem .75rem 0 0;opacity:0;transition:opacity .14s}
+.svd-mcard.tone-green::after{background:#16a34a}
+.svd-mcard.tone-amber::after{background:#d97706}
+.svd-mcard.tone-red::after{background:#dc2626}
+.svd-mcard.tone-blue::after{background:#3b82f6}
+.svd-mcard.is-active::after{opacity:1}
+.svd-mcard:hover:not(.is-active){background:#f5f8fd;border-color:#c5d5e8;transform:translateY(-1px);box-shadow:0 4px 14px rgba(15,23,42,.07)}
+.svd-mcard.is-active{box-shadow:0 4px 16px rgba(15,23,42,.08)}
+.svd-mcard.is-active.tone-green{background:rgba(22,163,74,.06);border-color:#86efac}
+.svd-mcard.is-active.tone-amber{background:rgba(245,158,11,.06);border-color:#fcd34d}
+.svd-mcard.is-active.tone-red{background:rgba(239,68,68,.06);border-color:#fca5a5}
+.svd-mcard.is-active.tone-blue{background:rgba(59,130,246,.06);border-color:#93c5fd}
+/* Icon bubble */
+.svd-mcard-ico{width:1.9rem;height:1.9rem;border-radius:.48rem;display:flex;align-items:center;justify-content:center;font-size:.78rem;margin-bottom:.52rem;flex-shrink:0;background:#f0f5fb;color:#6b82a0;transition:background .12s,color .12s}
+.svd-mcard.tone-green .svd-mcard-ico{background:rgba(22,163,74,.12);color:#16a34a}
+.svd-mcard.tone-amber .svd-mcard-ico{background:rgba(217,119,6,.12);color:#d97706}
+.svd-mcard.tone-red .svd-mcard-ico{background:rgba(220,38,38,.12);color:#dc2626}
+.svd-mcard.tone-blue .svd-mcard-ico{background:rgba(59,130,246,.12);color:#3b82f6}
+/* Label */
+.svd-mcard-lbl{font-size:.57rem;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;font-weight:800;margin-bottom:.22rem;line-height:1}
+.svd-mcard.is-active.tone-green .svd-mcard-lbl{color:#15803d}
+.svd-mcard.is-active.tone-amber .svd-mcard-lbl{color:#b45309}
+.svd-mcard.is-active.tone-red .svd-mcard-lbl{color:#b91c1c}
+.svd-mcard.is-active.tone-blue .svd-mcard-lbl{color:#1d4ed8}
+/* Value */
+.svd-mcard-val{font-size:1.52rem;font-weight:900;color:#0f2135;line-height:1;flex:1;display:flex;align-items:flex-end;gap:.05rem}
+.svd-mcard.is-active.tone-green .svd-mcard-val{color:#15803d}
+.svd-mcard.is-active.tone-amber .svd-mcard-val{color:#b45309}
+.svd-mcard.is-active.tone-red .svd-mcard-val{color:#b91c1c}
+.svd-mcard.is-active.tone-blue .svd-mcard-val{color:#1d4ed8}
+.svd-mcard-unit{font-size:.7rem;font-weight:700;color:#8a9ab0;line-height:1.72;margin-left:.06rem}
+.svd-mcard.is-active .svd-mcard-unit{color:inherit;opacity:.72}
+/* Note */
+.svd-mcard-note{font-size:.58rem;color:#94a3b8;font-weight:700;margin-top:.3rem;line-height:1.3}
+.svd-mcard.is-active.tone-green .svd-mcard-note{color:#15803d}
+.svd-mcard.is-active.tone-amber .svd-mcard-note{color:#b45309}
+.svd-mcard.is-active.tone-red .svd-mcard-note{color:#b91c1c}
+.svd-mcard.is-active.tone-blue .svd-mcard-note{color:#1d4ed8}
+@media(max-width:560px){.svd-mgrid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
+/* Info strip */
+.svd-info-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:.72rem 1.1rem;border-bottom:1px solid #f0f5fb;background:linear-gradient(180deg,#f8fbff 0%,#f3f7fe 100%);border-radius:1rem 1rem 0 0}
+.svd-info-label{font-size:.57rem;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;font-weight:800;margin-bottom:.1rem}
+.svd-info-val{font-size:.76rem;color:#0f2135;font-weight:700}
 /* Chart card */
 .svd-ch-head{padding:.78rem 1.2rem .3rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
 .svd-ch-title{font-size:.78rem;font-weight:800;color:#18385f;display:flex;align-items:center;gap:.4rem}
@@ -347,6 +379,29 @@
 .svd-al-del{border:none;background:none;color:#b0bec8;cursor:pointer;font-size:.8rem;padding:.1rem .24rem;border-radius:.3rem;transition:color .1s,background .1s}
 .svd-al-del:hover{color:#dc2626;background:rgba(220,53,69,.08)}
 .svd-al-empty{padding:.9rem 1.2rem;font-size:.76rem;color:#9aaab8;text-align:center}
+/* Confirm dialog */
+.svd-confirm-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(3px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .14s ease-out}
+.svd-confirm{background:#fff;border-radius:1.1rem;box-shadow:0 24px 64px rgba(15,23,42,.22);width:100%;max-width:21rem;overflow:hidden;animation:scaleIn .2s cubic-bezier(.34,1.56,.64,1)}
+.svd-confirm-body{padding:1.5rem 1.4rem 1rem;text-align:center}
+.svd-confirm-ico{width:2.8rem;height:2.8rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin:0 auto .8rem}
+.svd-confirm-ico.is-danger{background:rgba(220,38,38,.12);color:#dc2626}
+.svd-confirm-ico.is-warn{background:rgba(245,158,11,.12);color:#d97706}
+.svd-confirm-title{font-size:.92rem;font-weight:800;color:#0f2135;margin:0 0 .3rem}
+.svd-confirm-msg{font-size:.8rem;color:#627690;line-height:1.5;margin:0}
+.svd-confirm-actions{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #f0f4fb}
+.svd-confirm-btn{border:none;background:#fff;padding:.78rem;font-size:.8rem;font-weight:800;cursor:pointer;transition:background .12s,color .12s;line-height:1}
+.svd-confirm-btn.is-cancel{color:#4a6582;border-right:1px solid #f0f4fb;border-radius:0 0 0 1.1rem}
+.svd-confirm-btn.is-cancel:hover{background:#f5f8fc}
+.svd-confirm-btn.is-ok{color:#dc2626;border-radius:0 0 1.1rem 0}
+.svd-confirm-btn.is-ok:hover{background:rgba(220,38,38,.06)}
+/* Toast */
+.svd-toasts{position:fixed;bottom:1.3rem;right:1.3rem;z-index:2100;display:flex;flex-direction:column;gap:.45rem;pointer-events:none}
+.svd-toast{display:inline-flex;align-items:center;gap:.52rem;padding:.58rem .9rem;border-radius:.7rem;font-size:.78rem;font-weight:700;box-shadow:0 8px 24px rgba(15,23,42,.16);pointer-events:auto;animation:fadeInUp .22s ease-out;max-width:22rem;color:#fff}
+.svd-toast.is-error{background:#b91c1c}
+.svd-toast.is-warn{background:#92400e}
+.svd-toast.is-success{background:#14532d}
+.svd-toast.is-info{background:#1e3a5f}
+.svd-toast i{font-size:.78rem;flex-shrink:0;opacity:.9}
 /* Alert modal */
 .svd-modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.38);z-index:1200;display:flex;align-items:center;justify-content:center;padding:1rem}
 .svd-modal{background:#fff;border-radius:1.1rem;box-shadow:0 20px 60px rgba(15,23,42,.22);width:100%;max-width:420px;overflow:hidden}
@@ -481,7 +536,11 @@ button:active {
 <div class="svd-page">
   <section class="svd-card svd-head">
     <div class="svd-head-left">
-      <a href="{{ url_for('sensors') }}" class="svd-back"><i class="fas fa-arrow-left"></i> Späť</a>
+      <a href="{{ url_for('sensors') }}" class="svd-back">
+        <span class="svd-back-ico"><i class="fas fa-arrow-left"></i></span>
+        Späť
+      </a>
+      <div class="svd-head-divider"></div>
       <div style="min-width:0">
         <h1 class="svd-title" id="svdTitle">{{ sensor_eui }}</h1>
         <div class="svd-meta" id="svdMeta"></div>
@@ -498,6 +557,49 @@ const EUI={{ sensor_eui|tojson }};
 let _activeKey=null,_data=null;
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function fmtNum(v,dec,unit){const n=Number(v);return Number.isFinite(n)?n.toFixed(dec)+(unit||''):'—';}
+
+/* ── Custom dialogs ─────────────────────────────────────── */
+function svdConfirm(msg,opts){
+  opts=opts||{};
+  return new Promise(function(resolve){
+    var wrap=document.createElement('div');
+    wrap.className='svd-confirm-backdrop';
+    var icoClass=opts.danger===false?'is-warn':'is-danger';
+    var icoName=opts.danger===false?'fa-triangle-exclamation':'fa-trash-can';
+    var confirmLabel=opts.confirmLabel||'Zmazať';
+    var cancelLabel=opts.cancelLabel||'Zrušiť';
+    var title=opts.title||'Potvrdiť akciu';
+    wrap.innerHTML='<div class="svd-confirm">'
+      +'<div class="svd-confirm-body">'
+        +'<div class="svd-confirm-ico '+icoClass+'"><i class="fas '+icoName+'"></i></div>'
+        +'<p class="svd-confirm-title">'+title+'</p>'
+        +'<p class="svd-confirm-msg">'+msg+'</p>'
+      +'</div>'
+      +'<div class="svd-confirm-actions">'
+        +'<button class="svd-confirm-btn is-cancel">'+cancelLabel+'</button>'
+        +'<button class="svd-confirm-btn is-ok">'+confirmLabel+'</button>'
+      +'</div>'
+    +'</div>';
+    document.body.appendChild(wrap);
+    function close(val){wrap.remove();resolve(val);}
+    wrap.querySelector('.is-cancel').onclick=function(){close(false);};
+    wrap.querySelector('.is-ok').onclick=function(){close(true);};
+    wrap.addEventListener('click',function(e){if(e.target===wrap)close(false);});
+    document.addEventListener('keydown',function onKey(e){if(e.key==='Escape'){close(false);document.removeEventListener('keydown',onKey);}});
+  });
+}
+var _toastWrap=null;
+function svdToast(msg,type){
+  type=type||'error';
+  if(!_toastWrap){_toastWrap=document.createElement('div');_toastWrap.className='svd-toasts';document.body.appendChild(_toastWrap);}
+  var icons={error:'fa-circle-xmark',warn:'fa-triangle-exclamation',success:'fa-circle-check',info:'fa-circle-info'};
+  var t=document.createElement('div');
+  t.className='svd-toast is-'+type;
+  t.innerHTML='<i class="fas '+(icons[type]||icons.error)+'"></i><span>'+msg+'</span>';
+  _toastWrap.appendChild(t);
+  setTimeout(function(){t.style.cssText='opacity:0;transition:opacity .3s;';setTimeout(function(){t.remove();},300);},3500);
+}
+/* ─────────────────────────────────────────────────────── */
 function timeAgo(ts){if(!ts)return'Bez dát';const s=Math.round(Date.now()/1000-Number(ts));if(s<10)return'práve teraz';if(s<60)return s+'s';const m=Math.round(s/60);if(m<60)return m+'min';const h=Math.round(m/60);if(h<24)return h+'hod';return Math.round(h/24)+'d';}
 function deriveStatus(d){
   const ls=Number(d.last_seen||0);
@@ -514,6 +616,8 @@ function deriveStatus(d){
   return{label:'Offline',cls:'offline'};
 }
 const VALUE_LABELS={co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm aktívny',alarm_count:'Počet alarmov',last_alarm_duration_s:'Trvanie alarmu',last_alarm_input:'Vstup alarmu',open_count:'Počet otvorení',tamper:'Tamper'};
+const METRIC_ICONS={co2_1_ppm:'fa-wind',co2_2_ppm:'fa-wind',temperature_1_c:'fa-thermometer-half',temperature_2_c:'fa-thermometer-half',humidity_1_pct:'fa-droplet',battery_v_est:'fa-battery-half',any_alarm_active:'fa-bell',alarm_count:'fa-bell',last_alarm_duration_s:'fa-clock',last_alarm_input:'fa-bolt',open_count:'fa-door-open',tamper:'fa-shield-halved'};
+const METRIC_SHORT={co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (2)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm',alarm_count:'Alarmy',last_alarm_duration_s:'Trvanie',last_alarm_input:'Vstup',open_count:'Otvorenia',tamper:'Tamper'};
 function labelOf(k){return VALUE_LABELS[k]||k.replace(/_/g,' ');}
 function fmtValue(k,v){if(k.endsWith('_c'))return fmtNum(v,1,' °C');if(k.endsWith('_pct'))return fmtNum(v,0,' %');if(k.endsWith('_ppm'))return fmtNum(v,0,' ppm');if(k.endsWith('_v_est')||k.endsWith('_v'))return fmtNum(v,2,' V');if(k.endsWith('_s'))return fmtNum(v,0,' s');if(typeof v==='boolean')return v?'Áno':'Nie';if(typeof v==='number')return Number.isFinite(v)?String(v):'—';return String(v??'—');}
 
@@ -547,7 +651,6 @@ function heroNote(k,v){
   const n=Number(v);
   if(k==='co2_1_ppm'){if(n<=800)return'Dobrá kvalita vzduchu';if(n<=1200)return'Stredná kvalita vzduchu';return'Zlá kvalita vzduchu';}
   if(k==='any_alarm_active')return v?'Alarm je aktívny':'Alarm nie je aktívny';
-  if(k.includes('battery')){if(n>3.5)return'Dobrý stav';if(n>3.0)return'Stredný stav';return'Nízky stav';}
   return'';
 }
 function fmtTs(iso){try{const d=new Date(iso);return d.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});}catch(e){return'';}}
@@ -563,7 +666,9 @@ function requireChartJs(cb){
   s.onload=()=>{_cjsCbs.forEach(f=>f());_cjsCbs=[];};
   document.head.appendChild(s);
 }
-function renderChart(canvasId,rows,key){
+function renderChart(canvasId,rows,key,color){
+  const lineColor=color||'#2563eb';
+  function hexRgb(h){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return r+','+g+','+b;}
   const el=document.getElementById(canvasId);
   if(!el||!window.Chart)return;
   try{const old=Chart.getChart(el);if(old)old.destroy();}catch(e){}
@@ -580,17 +685,17 @@ function renderChart(canvasId,rows,key){
   if(data.length<2){el.parentElement.innerHTML='<div class="svd-ch-empty">Zatiaľ málo dát pre graf</div>';return;}
   const ctx2d=el.getContext('2d');
   const grad=ctx2d.createLinearGradient(0,0,0,el.parentElement.offsetHeight||160);
-  grad.addColorStop(0,'rgba(37,99,235,.14)');
-  grad.addColorStop(1,'rgba(37,99,235,0)');
+  grad.addColorStop(0,'rgba('+hexRgb(lineColor)+',.15)');
+  grad.addColorStop(1,'rgba('+hexRgb(lineColor)+',0)');
   new Chart(el,{
     type:'line',
     data:{labels,datasets:[{
       data,
-      borderColor:'#2563eb',borderWidth:2,
+      borderColor:lineColor,borderWidth:2,
       backgroundColor:grad,fill:true,tension:.4,
       pointRadius:data.length<=20?3:0,
       pointHoverRadius:5,
-      pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:2
+      pointBackgroundColor:lineColor,pointBorderColor:'#fff',pointBorderWidth:2
     }]},
     options:{
       responsive:true,maintainAspectRatio:false,
@@ -625,9 +730,31 @@ function render(d){
   const SKIP=new Set(['co2_last_calibration_ppm','days_to_next_calibration','co2_error','calibration_not_done','temperature_2_c','humidity_2_pct','pressure_pa','altitude_m']);
   const allMetrics=Object.entries(vals).filter(([k])=>!k.startsWith('_')&&!SKIP.has(k));
 
-  // Default/reset active key
-  if(!_activeKey||!allMetrics.find(([k])=>k===_activeKey)){
-    _activeKey=pm?pm.key:(allMetrics[0]?allMetrics[0][0]:null);
+  // Filter metrics by sensor type for cleaner Viewer display
+  function getMetricsForSensorType(metrics,sensorData){
+    const profile=String(sensorData.config?.sensor_profile||'').toLowerCase();
+    const availableKeys=metrics.map(([k])=>k);
+
+    // Door/contact sensor → show only essential metrics
+    if(profile.includes('door')||profile.includes('contact')||profile.includes('m2')||availableKeys.includes('open_count')){
+      const doorMetrics=['any_alarm_active','open_count','last_alarm_duration_s','battery_v_est','tamper'];
+      return metrics.filter(([k])=>doorMetrics.includes(k));
+    }
+
+    // CO2/air quality sensor → show air quality + environment + battery
+    if(profile.includes('co2')||profile.includes('air')||availableKeys.includes('co2_1_ppm')){
+      const co2Metrics=['co2_1_ppm','co2_2_ppm','temperature_1_c','humidity_1_pct','battery_v_est','any_alarm_active'];
+      return metrics.filter(([k])=>co2Metrics.includes(k));
+    }
+
+    // Default: show all available metrics
+    return metrics;
+  }
+  const displayMetrics=getMetricsForSensorType(allMetrics,d);
+
+  // Default/reset active key to use filtered metrics
+  if(!_activeKey||!displayMetrics.find(([k])=>k===_activeKey)){
+    _activeKey=displayMetrics[0]?displayMetrics[0][0]:null;
   }
 
   // Extract info data (used in unified panel)
@@ -639,51 +766,37 @@ function render(d){
   const lastSeenFull=d.last_seen?new Date(Number(d.last_seen)*1000).toLocaleString('sk-SK',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
 
   // Build unified overview panel - info + metrics
-  const gridMetrics=allMetrics.slice(0,6);
-  const getTone=(k,v)=>{
-    const n=Number(v);
-    if(k==='co2_1_ppm'||k==='co2_2_ppm'){if(n<=800)return'green';if(n<=1200)return'amber';return'red';}
-    if(k==='temperature_1_c'||k==='temperature_2_c')return'blue';
-    if(k==='humidity_1_pct')return'blue';
-    if(k==='any_alarm_active')return v?'red':'green';
-    if(k==='open_count')return n>0?'amber':'green';
-    if(k.includes('battery')){if(n>3.5)return'green';if(n>3.0)return'amber';return'red';}
-    return'slate';
-  };
-  const toneColors={green:'#16a34a',amber:'#f59e0b',red:'#ef4444',blue:'#3b82f6',slate:'#64748b'};
-
-  const metricsGridHtml=`<section class="svd-card">
-    <div style="padding:1.2rem;border-bottom:1px solid #f0f5fb">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1rem">
-        <div><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">EUI</div><div style="font-size:.8rem;color:#0f2135;font-weight:700;font-family:monospace">${esc(d.eui||'—')}</div></div>
-        <div><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">Posledný uplink</div><div style="font-size:.8rem;color:#0f2135;font-weight:700">${esc(lastSeenFull)}</div></div>
-        <div><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">Interval</div><div style="font-size:.8rem;color:#0f2135;font-weight:700">${esc(intervalStr)}</div></div>
-        <div><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">Profil</div><div style="font-size:.8rem;color:#0f2135;font-weight:700">${esc(cfg.sensor_profile||'—')}</div></div>
-      </div>
-      ${tags.length?`<div style="display:flex;gap:.3rem;flex-wrap:wrap"><div style="font-size:.65rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.3rem;width:100%">Tagy</div>${tags.map(t=>`<span style="background:#f0f5fd;border:1px solid #d4e0f0;border-radius:.3rem;padding:.08rem .4rem;font-size:.66rem;font-weight:700;color:#284465">${esc(String(t))}</span>`).join('')}</div>`:''}
+  const metricsGridHtml=`<section class="svd-card" id="svdMetricsCard">
+    <div class="svd-info-strip">
+      <div><div class="svd-info-label">EUI</div><div class="svd-info-val" style="font-family:monospace;font-size:.7rem">${esc(d.eui||'—')}</div></div>
+      <div><div class="svd-info-label">Posledný uplink</div><div class="svd-info-val">${esc(lastSeenFull)}</div></div>
+      <div><div class="svd-info-label">Interval</div><div class="svd-info-val">${esc(intervalStr)}</div></div>
     </div>
-    ${gridMetrics.length?`<div style="padding:1rem 1.2rem">
-      <div style="font-size:.68rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.8rem">Metriky</div>
-      <div style="display:grid;grid-template-columns:repeat(${Math.min(gridMetrics.length,3)},1fr);gap:.7rem">
-        ${gridMetrics.map(([k,v])=>{
+    ${displayMetrics.length?`<div style="padding:.7rem .9rem .9rem">
+      <div class="svd-mgrid">
+        ${displayMetrics.map(([k,v])=>{
+          const tone=heroTone(k,v);
           const dv=fmtHeroValue(k,v);
           const unit=heroUnit(k);
-          const tone=getTone(k,v);
-          const color=toneColors[tone]||'#64748b';
-          return`<div style="padding:.6rem;background:#f8fafb;border-left:3px solid ${color};border-radius:.4rem">
-            <div style="font-size:.6rem;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:.2rem">${esc(labelOf(k))}</div>
-            <div style="font-size:1.2rem;font-weight:900;color:#0f2135;line-height:1">${esc(dv)}<span style="font-size:.65rem;color:#8a9ab0;margin-left:.1rem">${esc(unit)}</span></div>
-          </div>`;
+          const note=heroNote(k,v);
+          const isActive=k===_activeKey;
+          const icon=METRIC_ICONS[k]||'fa-chart-line';
+          const shortLbl=METRIC_SHORT[k]||labelOf(k);
+          return`<button class="svd-mcard${isActive?' is-active':''} tone-${tone}" data-mkey="${esc(k)}">
+            <div class="svd-mcard-ico"><i class="fas ${icon}"></i></div>
+            <div class="svd-mcard-lbl">${esc(shortLbl)}</div>
+            <div class="svd-mcard-val">${esc(dv)}<span class="svd-mcard-unit">${esc(unit)}</span></div>
+            ${note?`<div class="svd-mcard-note">${esc(note)}</div>`:''}
+          </button>`;
         }).join('')}
       </div>
     </div>`:''}
   </section>`;
 
-  // Chart card (shows first metric by default)
-  const chartMetricKey=gridMetrics.length>0?gridMetrics[0][0]:null;
-  const chartCardHtml=chartMetricKey?`<section class="svd-card" id="svdMainCard">
+  // Chart card
+  const chartCardHtml=_activeKey?`<section class="svd-card" id="svdMainCard">
     <div class="svd-ch-head">
-      <div class="svd-ch-title" id="svdChTitle"><i class="fas fa-chart-line" style="opacity:.55"></i> ${esc(labelOf(chartMetricKey))}</div>
+      <div class="svd-ch-title" id="svdChTitle"><i class="fas fa-chart-line" style="opacity:.55"></i> ${esc(labelOf(_activeKey))}</div>
       <div class="svd-ch-controls">
         <span class="svd-ch-status" id="svdChartStatus"></span>
         <button class="svd-ch-range-btn is-active" data-minutes="1440">24h</button>
@@ -694,15 +807,23 @@ function render(d){
     <div class="svd-chart-wrap"><canvas id="svdChart"></canvas></div>
   </section>`:'';
 
-  const mainCardHtml=metricsGridHtml+chartCardHtml;
-
-  const infoHtml='';
-
-  document.getElementById('svdBody').innerHTML=mainCardHtml+infoHtml+'<section class="svd-card" id="svdAlertsCard"><div class="svd-al-head"><span class="svd-al-title"><i class="fas fa-bell"></i> Alerty</span><button class="svd-al-add-btn" id="svdAlAddBtn"><i class="fas fa-plus"></i> Pridať alert</button></div><div id="svdAlList"><div class="svd-al-empty">Načítavam...</div></div></section>';
+  document.getElementById('svdBody').innerHTML=metricsGridHtml+chartCardHtml+'<section class="svd-card" id="svdAlertsCard"><div class="svd-al-head"><span class="svd-al-title"><i class="fas fa-bell"></i> Alerty</span><button class="svd-al-add-btn" id="svdAlAddBtn"><i class="fas fa-plus"></i> Pridať alert</button></div><div id="svdAlList"><div class="svd-al-empty">Načítavam...</div></div></section>';
   loadAlerts();
 
-  // Set active key to first metric for chart
-  _activeKey=chartMetricKey;
+  // Metric card click → switch active card + update chart title + reload chart
+  document.querySelectorAll('#svdMetricsCard .svd-mcard').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      const key=this.dataset.mkey;
+      if(!key)return;
+      document.querySelectorAll('#svdMetricsCard .svd-mcard').forEach(b=>b.classList.remove('is-active'));
+      this.classList.add('is-active');
+      const titleEl=document.getElementById('svdChTitle');
+      if(titleEl)titleEl.innerHTML=`<i class="fas fa-chart-line" style="opacity:.55"></i> ${esc(labelOf(key))}`;
+      const activeRangeBtn=document.querySelector('#svdMainCard .svd-ch-range-btn.is-active');
+      const minutes=activeRangeBtn?Number(activeRangeBtn.dataset.minutes):1440;
+      loadTelemetryChart(key,minutes);
+    });
+  });
 
   // Range button handlers
   if(_activeKey){
@@ -718,17 +839,21 @@ function render(d){
 }
 
 async function loadTelemetryChart(key,minutes){
+  _activeKey=key;
   const statusEl=document.getElementById('svdChartStatus');
   const canvasEl=document.getElementById('svdChart');
   if(!canvasEl)return;
   if(statusEl)statusEl.textContent='Načítavam…';
+  const vals=(_data&&_data.latest_uplink&&_data.latest_uplink.decoded&&_data.latest_uplink.decoded.values)||{};
+  const tone=heroTone(key,vals[key]);
+  const chartColor={green:'#16a34a',amber:'#d97706',red:'#dc2626',blue:'#3b82f6'}[tone]||'#2563eb';
   try{
     const r=await fetch('/api/sensors/telemetry/history?sensor_eui='+encodeURIComponent(EUI)+'&minutes='+minutes+'&limit=300');
     const d=await r.json();
     if(!d.success)throw new Error(d.error||'Chyba');
     const rows=d.rows||[];
     if(statusEl)statusEl.textContent=rows.length?rows.length+' záznamov':'';
-    requireChartJs(()=>{if(document.getElementById('svdChart'))renderChart('svdChart',rows,key);});
+    requireChartJs(()=>{if(document.getElementById('svdChart'))renderChart('svdChart',rows,key,chartColor);});
   }catch(e){
     if(statusEl)statusEl.textContent='Chyba načítania';
   }
@@ -793,7 +918,7 @@ function renderAlertsList(){
   listEl.querySelectorAll('.svd-al-del').forEach(btn=>{
     btn.addEventListener('click',async function(){
       const id=this.dataset.id;
-      if(!confirm('Zmazať tento alert?'))return;
+      if(!await svdConfirm('Naozaj chcete zmazať tento alert?',{title:'Zmazať alert'}))return;
       await fetch('/api/alerts/'+encodeURIComponent(id),{method:'DELETE'});
       _alerts=_alerts.filter(a=>a.id!==id);
       renderAlertsList();
@@ -860,19 +985,30 @@ function openAlertModal(existingAlert){
 
   document.body.appendChild(modal);
 
+  var _dirty=false;
   function closeModal(){modal.remove();}
-  document.getElementById('svdAlModalClose').onclick=closeModal;
-  document.getElementById('svdAlModalCancel').onclick=closeModal;
-  modal.addEventListener('click',function(e){if(e.target===modal)closeModal();});
+  async function tryClose(){
+    if(_dirty){
+      if(!await svdConfirm('Máte neuložené zmeny. Zahodiť ich?',{title:'Zahodiť zmeny',confirmLabel:'Zahodiť',danger:true}))return;
+    }
+    closeModal();
+  }
+  modal.querySelectorAll('input,select').forEach(function(el){
+    el.addEventListener('change',function(){_dirty=true;});
+    el.addEventListener('input',function(){_dirty=true;});
+  });
+  modal.querySelector('#svdAlModalClose').onclick=tryClose;
+  modal.querySelector('#svdAlModalCancel').onclick=tryClose;
+  modal.addEventListener('click',function(e){if(e.target===modal)tryClose();});
 
-  document.getElementById('svdAlModalSave').onclick=async function(){
+  modal.querySelector('#svdAlModalSave').onclick=async function(){
     const name=document.getElementById('svdAlFName').value.trim();
     const metric=document.getElementById('svdAlFMetric').value;
     const condition=document.getElementById('svdAlFCond').value;
     const threshold=document.getElementById('svdAlFThreshold').value;
     const severity=document.getElementById('svdAlFSev').value;
     const enabled=document.getElementById('svdAlFEnabled').checked;
-    if(!metric||threshold===''){alert('Vyplňte metriku a prah.');return;}
+    if(!metric||threshold===''){svdToast('Vyplňte metriku a prah.','warn');return;}
     const body={sensor_eui:EUI,name,metric,condition,threshold:parseFloat(threshold),severity,enabled};
     try{
       const r=await fetch('/api/alerts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -881,7 +1017,7 @@ function openAlertModal(existingAlert){
       _alerts.push(d.alert);
       renderAlertsList();
       closeModal();
-    }catch(e){alert('Chyba: '+e.message);}
+    }catch(e){svdToast('Chyba: '+e.message,'error');}
   };
 }
 // ── End alerts ───────────────────────────────────────────────────────────────

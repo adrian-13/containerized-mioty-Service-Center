@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}Base Stations{% endblock %}
 
 {% block content %}
@@ -1389,9 +1389,9 @@ function renderBaseStationTable() {
             ? `Last event: ${escapeHtml(bs.last_status_event)}`
             : tr('runtime.no_status_events_yet', 'No status events yet');
         const compactNetworkState = statusKey === 'connected'
-            ? tr('common.connected', 'PripojenĂ©')
+            ? tr('common.connected', 'Pripojené')
             : statusKey === 'connecting'
-                ? tr('common.connecting', 'PripĂˇja sa')
+                ? tr('common.connecting', 'Pripája sa')
                 : tr('common.offline', 'Offline');
         const compactHealthSummary = `${appTranslate('common.cpu', 'CPU')}: ${cpuDisplay} · ${appTranslate('common.memory_short', 'MEM')}: ${memDisplay}`;
 
@@ -1843,7 +1843,7 @@ function refreshAll() {
 function confirmLeaveBsForm() {
     if (window.AppUI && typeof window.AppUI.confirm === 'function') {
         return window.AppUI.confirm({
-            title: 'ZahodiĹĄ zmeny zĂˇkladĹovej stanice',
+            title: 'Zahodiť zmeny základňovej stanice',
             message: tr('base_station.unsaved_changes_message', 'You have unsaved base station changes. Close this form without saving?'),
             confirmText: tr('runtime.discard', 'Discard'),
             cancelText: tr('guard.stay', 'Stay'),
@@ -1875,8 +1875,8 @@ function initBaseStationUnsavedGuards() {
 
     if (window.AppUI && typeof window.AppUI.unsavedGuard === 'function') {
         window.AppUI.unsavedGuard({
-            title: 'NeuloĹľenĂ© zmeny zĂˇkladĹovej stanice',
-            message: 'MĂˇte neuloĹľenĂ© zmeny formulĂˇra zĂˇkladĹovej stanice. OpustiĹĄ strĂˇnku bez uloĹľenia?',
+            title: 'Neuložené zmeny základňovej stanice',
+            message: 'Máte neuložené zmeny formulára základňovej stanice. Opustiť stránku bez uloženia?',
             confirmText: tr('guard.leave_page', 'Leave page'),
             cancelText: tr('guard.stay', 'Stay'),
             variant: 'warning',

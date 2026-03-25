@@ -2,6 +2,59 @@
 {% block title %}Network{% endblock %}
 
 {% block content %}
+{% if current_user and current_user.role == 'viewer' %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+.nv-page {
+    display: flex;
+    flex-direction: column;
+    margin: calc(-1 * var(--ui-content-pad-y)) calc(-1 * var(--ui-content-pad-x));
+    height: calc(100vh - 60px);
+    overflow: hidden;
+}
+.nv-bar {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0 1.25rem;
+    height: 52px;
+    flex-shrink: 0;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.86rem;
+}
+.nv-bar-item { display: flex; align-items: center; gap: 0.45rem; font-weight: 700; color: #1e293b; }
+.nv-bar-lbl  { font-weight: 500; color: #607089; }
+.nv-bar-sep  { margin-left: auto; }
+.nv-bar-time { font-size: 0.72rem; color: #94a3b8; }
+@keyframes nv-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+.nv-live-dot { width: .45rem; height: .45rem; border-radius: 50%; background: #0f9d69; flex-shrink: 0; animation: nv-pulse 2s ease-in-out infinite; }
+#nv-map { flex: 1; min-height: 0; width: 100%; }
+#nv-map .leaflet-control-attribution { font-size: 0.6rem; }
+</style>
+
+<div class="nv-page">
+    <div class="nv-bar">
+        <span class="nv-bar-item">
+            <i class="fas fa-broadcast-tower" style="color:#3b7dd8;font-size:0.8rem;"></i>
+            <span id="nvBsCount">—</span>
+            <span class="nv-bar-lbl">{{ t('nav.base_stations', 'Základňové stanice') }}</span>
+        </span>
+        <span class="nv-bar-item">
+            <i class="fas fa-microchip" style="color:#607089;font-size:0.8rem;"></i>
+            <span id="nvSensorCount">—</span>
+            <span class="nv-bar-lbl">{{ t('nav.sensors', 'Senzory') }}</span>
+        </span>
+        <span class="nv-bar-sep"></span>
+        <span class="nv-bar-item" style="gap:0.4rem;">
+            <span class="nv-live-dot"></span>
+            <span class="nv-bar-time" id="nvTimestamp">—</span>
+        </span>
+    </div>
+    <div id="nv-map"></div>
+</div>
+
+{% else %}
 <style>
 :root {
     --coverage-map-height: clamp(460px, 62vh, 760px);
@@ -1711,9 +1764,146 @@ body.map-fullscreen-active {
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
+{% if current_user and current_user.role == 'viewer' %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function() {
+const BS_COLORS    = { connected: '#0f9d69', connecting: '#e4a313', disconnected: '#cb3a42', unknown: '#94a3b8' };
+const SENSOR_COLORS= { online: '#0f9d69', warn: '#e4a313', offline: '#cb3a42', unknown: '#94a3b8' };
+
+function bsTier(s) {
+    if (!s) return 'unknown';
+    const l = String(s).toLowerCase();
+    if (l === 'connected' || l === 'online' || l === 'active') return 'connected';
+    if (l === 'connecting' || l === 'warn' || l === 'degraded') return 'connecting';
+    if (l === 'disconnected' || l === 'offline' || l === 'inactive') return 'disconnected';
+    return 'unknown';
+}
+function sensorTier(s) {
+    if (!s) return 'unknown';
+    const l = String(s).toLowerCase();
+    if (l === 'online' || l === 'connected' || l === 'active') return 'online';
+    if (l === 'warn' || l === 'warning' || l === 'degraded') return 'warn';
+    if (l === 'offline' || l === 'disconnected' || l === 'inactive') return 'offline';
+    return 'unknown';
+}
+function esc(v) {
+    return String(v == null ? '' : v)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function geo(obj) {
+    const lat = parseFloat(obj.gps_lat != null ? obj.gps_lat : (obj.latitude != null ? obj.latitude : obj.lat));
+    const lng = parseFloat(obj.gps_lng != null ? obj.gps_lng : (obj.longitude != null ? obj.longitude : (obj.lon != null ? obj.lon : obj.lng)));
+    return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
+}
+
+let nvMap = null;
+let bsLayer = null;
+let sensorLayer = null;
+
+function initMap() {
+    if (typeof L === 'undefined') return;
+    const el = document.getElementById('nv-map');
+    if (!el) return;
+    nvMap = L.map(el, { zoomControl: true, attributionControl: true, scrollWheelZoom: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '\u00a9 OpenStreetMap contributors'
+    }).addTo(nvMap);
+    bsLayer     = L.layerGroup().addTo(nvMap);
+    sensorLayer = L.layerGroup().addTo(nvMap);
+    nvMap.setView([48.768, 18.635], 12);
+}
+
+function bsIcon(tier) {
+    const color = BS_COLORS[tier] || BS_COLORS.unknown;
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="26" height="32" viewBox="0 0 26 32">' +
+        '<rect x="1" y="1" width="24" height="24" rx="5" fill="' + color + '" stroke="#fff" stroke-width="2"/>' +
+        '<line x1="13" y1="25" x2="13" y2="31" stroke="' + color + '" stroke-width="2"/>' +
+        '<text x="13" y="17" text-anchor="middle" font-size="14" fill="#fff" font-family="sans-serif">\uD83D\uDCE1</text>' +
+        '</svg>';
+    return L.divIcon({
+        html: svg, className: '', iconSize: [26, 32], iconAnchor: [13, 31], popupAnchor: [0, -30]
+    });
+}
+
+function load() {
+    Promise.all([
+        fetch('/api/base-stations').then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+        fetch('/api/sensors').then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; })
+    ]).then(function(results) {
+        const bsData  = results[0];
+        const sData   = results[1];
+
+        const bsList = (bsData && (bsData.base_stations || bsData.gateways || (Array.isArray(bsData) ? bsData : []))) || [];
+        const sensors = Array.isArray(sData) ? sData : (sData && Array.isArray(sData.sensors) ? sData.sensors : []);
+
+        function g(id) { return document.getElementById(id); }
+        if (g('nvBsCount'))     g('nvBsCount').textContent     = bsList.length;
+        if (g('nvSensorCount')) g('nvSensorCount').textContent = sensors.length;
+        if (g('nvTimestamp'))   g('nvTimestamp').textContent   = new Date().toLocaleTimeString();
+
+        if (!nvMap) return;
+        bsLayer.clearLayers();
+        sensorLayer.clearLayers();
+        const bounds = [];
+
+        // Base stations
+        bsList.forEach(function(bs) {
+            const pos = geo(bs);
+            if (!pos) return;
+            const t     = bsTier(bs.status || bs.connection_status);
+            const color = BS_COLORS[t] || BS_COLORS.unknown;
+            const name  = esc(bs.name || bs.hostname || bs.id || 'Base station');
+            const status= esc(bs.status || bs.connection_status || 'unknown');
+            const marker = L.marker(pos, { icon: bsIcon(t) });
+            marker.bindPopup(
+                '<div style="min-width:160px;line-height:1.6"><strong>' + name + '</strong><br>' +
+                '<span style="color:' + color + ';font-weight:600">\u25cf ' + status + '</span></div>'
+            );
+            marker.addTo(bsLayer);
+            bounds.push(pos);
+        });
+
+        // Sensors
+        sensors.forEach(function(s) {
+            const pos = geo(s);
+            if (!pos) return;
+            const t     = sensorTier(s.status);
+            const color = SENSOR_COLORS[t] || SENSOR_COLORS.unknown;
+            const name  = esc(s.name || s.device_eui || s.sensor_id || 'Sensor');
+            const status= esc(s.status || 'unknown');
+            const href  = '/sensors/' + esc(s.device_eui || s.sensor_id || '');
+            const marker = L.circleMarker(pos, {
+                radius: 7, fillColor: color, color: '#fff',
+                weight: 2, opacity: 1, fillOpacity: 0.9
+            });
+            marker.bindPopup(
+                '<div style="min-width:150px;line-height:1.6"><strong>' + name + '</strong><br>' +
+                '<span style="color:' + color + ';font-weight:600">\u25cf ' + status + '</span><br>' +
+                '<a href="' + href + '" style="font-size:0.82rem">Detail \u2192</a></div>'
+            );
+            marker.addTo(sensorLayer);
+            bounds.push(pos);
+        });
+
+        if (bounds.length === 1) {
+            nvMap.setView(bounds[0], 15);
+        } else if (bounds.length > 1) {
+            nvMap.fitBounds(bounds, { padding: [32, 32] });
+        }
+    });
+}
+
+initMap();
+load();
+setInterval(load, 30000);
+})();
+</script>
+{% else %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
@@ -5081,6 +5271,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateSelectedCoverageDevice();
 });
 </script>
+{% endif %}
 {% endblock %}
 
 

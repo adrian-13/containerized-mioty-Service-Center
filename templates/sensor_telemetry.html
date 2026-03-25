@@ -701,7 +701,7 @@
         if (!value) return 'n/a';
         const date = value instanceof Date ? value : new Date(value);
         if (Number.isNaN(date.getTime())) return String(value);
-        return new Intl.DateTimeFormat((window.AppI18n && window.AppI18n.locale) || 'en-US', {
+        return new Intl.DateTimeFormat((window.AppI18n && window.AppI18n.locale) || 'sk-SK', {
             timeZone: TELEMETRY_TIMEZONE,
             year: 'numeric',
             month: '2-digit',

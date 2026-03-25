@@ -327,6 +327,7 @@
     border: 2.5px solid rgba(255,255,255,.92);
     box-shadow: 0 2px 7px rgba(0,0,0,.28);
     transition: transform .15s, box-shadow .15s;
+}
     cursor: grab;
 }
 .sc-map-pin:active { cursor: grabbing; }
@@ -417,6 +418,9 @@
     cursor: pointer; transition: background .1s, color .1s; white-space: nowrap;
 }
 .sc-ctx-item:hover { background: #f3f7fe; color: #1c3a5e; }
+.sc-ctx-item.is-primary { color: var(--brand-600); }
+.sc-ctx-item.is-primary:hover { background: rgba(var(--brand-rgb), .09); color: var(--brand-700); }
+.sc-ctx-item.is-primary i { opacity: 1; color: var(--brand-500); }
 .sc-ctx-item.is-danger { color: #dc2626; }
 .sc-ctx-item.is-danger:hover { background: rgba(220,53,69,.07); }
 .sc-ctx-item i { width: .9rem; text-align: center; font-size: .78rem; opacity: .72; flex-shrink: 0; }
@@ -560,17 +564,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
         <div class="mview-list-panel">
             <div class="mview-list-head">
                 <span>{{ t('nav.sensors', 'Senzory') }}</span>
-                <div class="mview-user-menu">
-                    <button class="mview-user-btn" onclick="toggleUserMenu()" title="Uzívateľ">
-                        <i class="fas fa-user"></i>
-                    </button>
-                    <div class="mview-user-dropdown" id="mviewUserDropdown">
-                        <div style="padding:0.4rem 0.8rem; font-size:0.7rem; color:#94a3b8; border-bottom:1px solid #f1f5fb; font-weight:700;">{{ current_user.username if current_user else 'Užívateľ' }}</div>
-                        <a href="{{ url_for('logout') }}" class="mview-user-dropdown-item is-danger">
-                            <i class="fas fa-sign-out-alt" style="margin-right:0.3rem;"></i>Odhlásiť
-                        </a>
-                    </div>
-                </div>
             </div>
             <div class="mview-filters" id="mviewFilters">
                 <button class="mview-filter is-active" data-filter="all" onclick="mviewSetFilter('all')">
@@ -580,7 +573,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                     <span class="mview-dot online"></span> Online <span class="mview-filter-count" id="mviewFiltOnline">0</span>
                 </button>
                 <button class="mview-filter f-warn" data-filter="warn" onclick="mviewSetFilter('warn')">
-                    <span class="mview-dot warn"></span> Warn <span class="mview-filter-count" id="mviewFiltWarn">0</span>
+                    <span class="mview-dot warn"></span> Upozornenie <span class="mview-filter-count" id="mviewFiltWarn">0</span>
                 </button>
                 <button class="mview-filter f-offline" data-filter="offline" onclick="mviewSetFilter('offline')">
                     <span class="mview-dot offline"></span> Offline <span class="mview-filter-count" id="mviewFiltOffline">0</span>
@@ -1844,14 +1837,19 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 const STATUS_COLORS = { online: '#0f9d69', warn: '#e4a313', offline: '#cb3a42', unknown: '#94a3b8' };
 const TIER_ORDER    = { offline: 0, warn: 1, online: 2, unknown: 3 };
 
-function STATUS_TIER(s) {
+function STATUS_TIER_RAW(s) {
     if (!s) return 'unknown';
     const l = String(s).toLowerCase();
     if (l === 'online' || l === 'connected' || l === 'active' || l === 'quiet') return 'online';
     if (l === 'warn'   || l === 'warning'   || l === 'degraded' || l === 'stale' || l === 'auto_detach_pending') return 'warn';
     if (l === 'offline'|| l === 'disconnected' || l === 'inactive' || l === 'auto_detached') return 'offline';
-    if (l === 'no_data') return 'unknown';
+    if (l === 'no_data' || l === 'unknown') return 'unknown';
     return 'unknown';
+}
+function SENSOR_TIER(sensor) {
+    const tier = String((sensor && sensor.ui_tier) || '').toLowerCase();
+    if (tier === 'online' || tier === 'warn' || tier === 'offline' || tier === 'unknown') return tier;
+    return STATUS_TIER_RAW(sensor && (sensor.activity_status || sensor.status));
 }
 const STATUS_LABELS = {
     active: 'Aktívny', online: 'Online', connected: 'Online', quiet: 'Pokojný',
@@ -1859,9 +1857,10 @@ const STATUS_LABELS = {
     offline: 'Offline', disconnected: 'Offline', inactive: 'Offline', auto_detached: 'Odpojený',
     no_data: 'Bez dát', unknown: 'Neznámy'
 };
-function STATUS_LABEL(s) {
-    if (!s) return 'Neznámy';
-    return STATUS_LABELS[String(s).toLowerCase()] || STATUS_LABELS[s] || String(s);
+function SENSOR_STATUS_LABEL(sensor) {
+    const raw = sensor && (sensor.activity_status || sensor.status);
+    if (!raw) return 'Neznámy';
+    return STATUS_LABELS[String(raw).toLowerCase()] || STATUS_LABELS[raw] || String(raw);
 }
 
 const MSKIP = new Set(['co2_last_calibration_ppm','days_to_next_calibration','co2_error','calibration_not_done','temperature_2_c','humidity_2_pct','pressure_pa','altitude_m']);
@@ -2045,11 +2044,14 @@ function showColorPop(x, y, currentColor, onPick) {
     setTimeout(function() { document.addEventListener('mousedown', onDocClick); }, 50);
 }
 
-// Normal popup: name + EUI + [Detail →] [⋯]
-function buildPopupHtml(name, shortEui, href, mid) {
+// Normal popup: status + name + EUI + [Detail →] [⋯]
+function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
     const brandBg  = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
     const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
+    const statusColor = tier && STATUS_COLORS[tier] ? STATUS_COLORS[tier] : null;
+    const statusBadge = statusColor ? '<div style="display:inline-flex;align-items:center;gap:.26rem;background:' + statusColor + ';color:#fff;border-radius:.3rem;padding:.2rem .4rem;font-size:.62rem;font-weight:700;margin-bottom:.22rem"><span style="width:.32rem;height:.32rem;border-radius:50%;background:currentColor;opacity:.7"></span>' + esc(slabel || tier) + '</div>' : '';
     return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
+        + (statusBadge ? statusBadge + '<div style="margin-bottom:.18rem"></div>' : '')
         + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + name + '</div>'
         + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.36rem">' + shortEui + '</div>' : '')
         + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
@@ -2098,13 +2100,13 @@ function updateMap(sensors) {
 
     geo.forEach(function(s) {
         const latlng = geoOf(s);
-        const tier   = STATUS_TIER(s.activity_status || s.status);
+        const tier   = SENSOR_TIER(s);
         const statusColor = STATUS_COLORS[tier] || STATUS_COLORS.unknown;
         const id     = sensorId(s);
         const unlocked = !!_markerUnlocked[id];
         const pinColor = s.marker_color || statusColor;
         const name   = esc(s.name || id || 'Unknown');
-        const slabel = esc(STATUS_LABEL(s.activity_status || s.status || 'unknown'));
+        const slabel = esc(SENSOR_STATUS_LABEL(s));
         const shortEui = String(id).toUpperCase().replace(/(.{4})(?=.)/g, '$1 ');
         const href   = '/sensors/' + esc(id);
 
@@ -2116,7 +2118,7 @@ function updateMap(sensors) {
 
         marker.bindPopup(
             unlocked ? buildPopupUnlockedHtml(name, shortEui, id, !!_pendingLatLng[id])
-                     : buildPopupHtml(name, shortEui, href, id),
+                     : buildPopupHtml(name, shortEui, href, id, tier, slabel),
             { maxWidth: 240, className: 'sc-leaflet-popup' }
         );
 
@@ -2125,7 +2127,7 @@ function updateMap(sensors) {
             _markerUnlocked[id] = false;
             marker.dragging.disable();
             marker.setIcon(makeMarkerIcon(s.marker_color || statusColor, false));
-            marker.setPopupContent(buildPopupHtml(name, shortEui, href, id));
+            marker.setPopupContent(buildPopupHtml(name, shortEui, href, id, tier, slabel));
         }
 
         // Helper: unlock and show drag popup
@@ -2172,8 +2174,8 @@ function updateMap(sensors) {
                         }, 80);
                     } },
                 '-',
-                { icon: 'fa-bell-plus', label: 'Pridať alert',
-                    action: function() { window.location.href = '/alerts'; } },
+                { icon: 'fa-circle-plus', primary: true, label: 'Pridať upozornenie',
+                    action: function() { window.location.href = buildNewAlertRuleUrl(id); } },
             ];
         }
 
@@ -2316,7 +2318,7 @@ window.focusOnMap = focusOnMap;
 function applyFilter(sensors) {
     return currentFilter === 'all'
         ? sensors
-        : sensors.filter(function(s) { return STATUS_TIER(s.activity_status || s.status) === currentFilter; });
+        : sensors.filter(function(s) { return SENSOR_TIER(s) === currentFilter; });
 }
 
 function setFilter(f) {
@@ -2341,9 +2343,9 @@ function renderList(sensors) {
     }
     el.innerHTML = sensors.map(function(s) {
         const raw    = s.activity_status || s.status || 'unknown';
-        const tier   = STATUS_TIER(raw);
+        const tier   = SENSOR_TIER(s);
         const name   = esc(s.name || s.eui || s.device_eui || s.sensor_id || '\u2014');
-        const slabel = esc(STATUS_LABEL(raw));
+        const slabel = esc(SENSOR_STATUS_LABEL(s));
         const id     = sensorId(s);
         const href   = '/sensors/' + esc(id);
         const sub    = valueLine(s);
@@ -2418,91 +2420,48 @@ const COND_LABEL_DASH = {'gt':'>','gte':'≥','lt':'<','lte':'≤','eq':'='};
 const METRIC_UNIT_DASH = {co2_1_ppm:'ppm',co2_2_ppm:'ppm',temperature_1_c:'°C',temperature_2_c:'°C',humidity_1_pct:'%',battery_v_est:'V'};
 const METRIC_NAMES_DASH = {co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm aktívny',alarm_count:'Počet alarmov',open_count:'Počet otvorení'};
 
-function renderAlerts(sensors) {
-    const ALERT_DESC = {
-        offline: 'Senzor offline', auto_detached: 'Senzor odpojený',
-        stale: 'Dlho bez správy', warning: 'Upozornenie',
-        auto_detach_pending: 'Odpájanie', warn: 'Upozornenie'
-    };
+function renderAlerts() {
+    const body  = document.getElementById('mviewAlerts');
+    const badge = document.getElementById('mviewAlertsBadge');
+    const head  = document.getElementById('mviewAlertsHead');
+    if (!body) return;
 
-    // 1. Activity-based alerts
-    const alerts = [];
-    sensors.forEach(function(s) {
-        const tier = STATUS_TIER(s.activity_status || s.status);
-        if (tier !== 'online' && tier !== 'unknown') {
-            const raw = String(s.activity_status || s.status || '').toLowerCase();
-            alerts.push({
-                tier: tier === 'offline' ? 'error' : 'warn',
-                name: s.name || s.eui,
-                eui: s.eui,
-                desc: ALERT_DESC[raw] || STATUS_LABEL(raw),
-                type: 'activity',
-                ackKey: String(s.eui || '').toUpperCase() + ':activity'
-            });
-        }
-    });
-
-    // 2. Fetch threshold-triggered alerts and merge
-    function finalize(thresholdAlerts) {
-        thresholdAlerts.forEach(function(a) {
-            const sensorName = (allSensors.find(function(s) { return String(s.eui||'').toUpperCase() === String(a.sensor_eui||'').toUpperCase(); }) || {}).name || a.sensor_eui;
-            const mn = METRIC_NAMES_DASH[a.metric] || a.metric.replace(/_/g,' ');
-            const unit = METRIC_UNIT_DASH[a.metric] || '';
-            const cval = typeof a.current_value === 'number' ? a.current_value.toFixed(unit==='°C'?1:0) + unit : '';
-            alerts.push({
-                tier: a.severity === 'critical' ? 'error' : 'warn',
-                name: sensorName,
-                eui: a.sensor_eui,
-                desc: (a.name || mn) + ': ' + cval + ' ' + COND_LABEL_DASH[a.condition] + ' ' + a.threshold + unit,
-                type: 'threshold',
-                ackKey: String(a.id || a.sensor_eui || '') + ':threshold'
-            });
+    fetch('/api/incidents')
+        .then(function(r) { return r.ok ? r.json() : {incidents:[]}; })
+        .catch(function() { return {incidents:[]}; })
+        .then(function(d) {
+            const incidents = Array.isArray(d.incidents) ? d.incidents : [];
+            const visible = incidents.filter(function(item) { return !item.ackKey || !isAcked(item.ackKey); });
+            const hasError = visible.some(function(item) { return item.tier === 'error'; });
+            const hasWarn  = visible.some(function(item) { return item.tier === 'warn'; });
+            if (head) {
+                head.classList.toggle('has-error', hasError);
+                head.classList.toggle('has-warn', !hasError && hasWarn);
+            }
+            if (badge) {
+                badge.textContent = visible.length || '';
+                badge.classList.toggle('is-visible', visible.length > 0);
+            }
+            if (!visible.length) {
+                body.innerHTML = '<div class="mview-alerts-empty">Žiadne upozornenia</div>';
+                return;
+            }
+            body.innerHTML = visible.map(function(item) {
+                const href = item.linkUrl || (item.eui ? '/sensors/' + encodeURIComponent(item.eui) : '/alerts');
+                const icon = item.tier === 'error'
+                    ? (item.source === 'threshold' ? 'fa-bell' : 'fa-circle-xmark')
+                    : (item.source === 'threshold' ? 'fa-bell' : 'fa-triangle-exclamation');
+                return '<a class="mview-alert-row is-' + item.tier + '" href="' + href + '"'
+                    + ' data-eui="' + esc(item.eui || '') + '" data-ack-key="' + esc(item.ackKey || '') + '">' +
+                    '<i class="fas ' + icon + ' mview-alert-icon"></i>' +
+                    '<div class="mview-alert-info">' +
+                        '<div class="mview-alert-name">' + esc(item.name || 'Incident') + '</div>' +
+                        '<div class="mview-alert-desc">' + esc(item.desc || item.text || '') + '</div>' +
+                    '</div>' +
+                    '<i class="fas fa-chevron-right" style="font-size:.58rem;color:#cbd5e1;flex-shrink:0"></i>' +
+                '</a>';
+            }).join('');
         });
-
-        alerts.sort(function(a, b) { return a.tier === 'error' && b.tier !== 'error' ? -1 : 1; });
-
-        // Filter acknowledged
-        const visible = alerts.filter(function(a) { return !isAcked(a.ackKey); });
-
-        const body  = document.getElementById('mviewAlerts');
-        const badge = document.getElementById('mviewAlertsBadge');
-        const head  = document.getElementById('mviewAlertsHead');
-        if (!body) return;
-
-        const hasError = visible.some(function(a) { return a.tier === 'error'; });
-        const hasWarn  = visible.some(function(a) { return a.tier === 'warn'; });
-        if (head) {
-            head.classList.toggle('has-error', hasError);
-            head.classList.toggle('has-warn', !hasError && hasWarn);
-        }
-        if (badge) {
-            badge.textContent = visible.length || '';
-            badge.classList.toggle('is-visible', visible.length > 0);
-        }
-        if (!visible.length) {
-            body.innerHTML = '<div class="mview-alerts-empty">Žiadne upozornenia</div>';
-            return;
-        }
-        body.innerHTML = visible.map(function(a) {
-            const icon = a.tier === 'error'
-                ? (a.type === 'threshold' ? 'fa-bell' : 'fa-circle-xmark')
-                : (a.type === 'threshold' ? 'fa-bell' : 'fa-triangle-exclamation');
-            return '<a class="mview-alert-row is-' + a.tier + '" href="/sensors/' + encodeURIComponent(a.eui) + '"'
-                + ' data-eui="' + esc(a.eui) + '" data-ack-key="' + esc(a.ackKey) + '">' +
-                '<i class="fas ' + icon + ' mview-alert-icon"></i>' +
-                '<div class="mview-alert-info">' +
-                    '<div class="mview-alert-name">' + esc(a.name) + '</div>' +
-                    '<div class="mview-alert-desc">' + esc(a.desc) + '</div>' +
-                '</div>' +
-                '<i class="fas fa-chevron-right" style="font-size:.58rem;color:#cbd5e1;flex-shrink:0"></i>' +
-            '</a>';
-        }).join('');
-    }
-
-    fetch('/api/alerts/triggered')
-        .then(function(r) { return r.ok ? r.json() : {triggered:[]}; })
-        .catch(function() { return {triggered:[]}; })
-        .then(function(d) { finalize(d.triggered || []); });
 }
 
 /* ── Load ── */
@@ -2517,16 +2476,16 @@ function load() {
 
             // Sort: offline → warn → online
             raw.sort(function(a, b) {
-                return (TIER_ORDER[STATUS_TIER(a.activity_status || a.status)] || 3) - (TIER_ORDER[STATUS_TIER(b.activity_status || b.status)] || 3);
+                return (TIER_ORDER[SENSOR_TIER(a)] || 3) - (TIER_ORDER[SENSOR_TIER(b)] || 3);
             });
             allSensors = raw;
 
             let online = 0, warn = 0, offline = 0;
             raw.forEach(function(s) {
-                const t = STATUS_TIER(s.activity_status || s.status);
+                const t = SENSOR_TIER(s);
                 if (t === 'online') online++;
                 else if (t === 'warn') warn++;
-                else offline++;
+                else if (t === 'offline') offline++;
             });
 
             // KPI counts
@@ -2716,7 +2675,9 @@ function showCtx(e, items) {
             return;
         }
         const el = document.createElement('div');
-        el.className = 'sc-ctx-item' + (item.danger ? ' is-danger' : '');
+        el.className = 'sc-ctx-item'
+            + (item.primary ? ' is-primary' : '')
+            + (item.danger ? ' is-danger' : '');
         el.innerHTML = '<i class="fas ' + item.icon + '"></i>' + esc(item.label);
         el.addEventListener('click', function() { closeCtx(); item.action(); });
         menu.appendChild(el);
@@ -2739,6 +2700,15 @@ document.addEventListener('click', closeCtx);
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeCtx(); });
 
 function initContextMenus() {
+    function buildNewAlertRuleUrl(sensorEui) {
+        const params = new URLSearchParams();
+        params.set('tab', 'rules');
+        params.set('new_rule', '1');
+        if (sensorEui) params.set('sensor', String(sensorEui).toUpperCase());
+        params.set('return_to', window.location.pathname + window.location.search + window.location.hash);
+        return '/alerts?' + params.toString();
+    }
+
     // Right-click on sensor list panel (rows + empty space)
     const sensorList = document.getElementById('mviewSensorList');
     if (sensorList) {
@@ -2748,7 +2718,7 @@ function initContextMenus() {
                 const eui = row.dataset.sensorId || '';
                 showCtx(e, [
                     { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť detail', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
-                    { icon: 'fa-bell-plus', label: 'Pridať alert', action: function() { window.location.href = '/alerts'; } },
+                    { icon: 'fa-circle-plus', primary: true, label: 'Pridať upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(eui); } },
                 ]);
             } else {
                 // Empty area
@@ -2776,7 +2746,7 @@ function initContextMenus() {
             } else {
                 // Empty area / header
                 showCtx(e, [
-                    { icon: 'fa-bell-plus', label: 'Pridať alert', action: function() { window.location.href = '/alerts'; } },
+                    { icon: 'fa-circle-plus', primary: true, label: 'Pridať upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(''); } },
                 ]);
             }
         });
@@ -2932,6 +2902,7 @@ function applyDashboardPayload(payload, meta = {}) {
     const gatewaysData = data.gatewaysData || null;
     const coverageState = data.coverageState || null;
     const sensorsData = data.sensorsData || null;
+    const incidentsData = data.incidentsData || null;
 
     latestTopologyData = topologyData;
     latestCoverageState = coverageState;
@@ -2948,7 +2919,7 @@ function applyDashboardPayload(payload, meta = {}) {
     const healthInfo = updateHealthMetrics(healthData || {});
     updateOperationsPanel(trafficInfo, healthInfo, vmCapable);
     updateGatewayActions(gatewaysData || {});
-    renderIncidents(buildIncidents(statusData || {}, healthInfo.packetLoss || 0, vmCapable, trafficInfo));
+    renderIncidents(incidentsData && Array.isArray(incidentsData.incidents) ? incidentsData.incidents : []);
     previousSnapshot.packetLoss = healthInfo.packetLoss || 0;
     updateLastUpdatedLabel(meta && Number.isFinite(meta.ts) ? meta.ts : undefined);
     updateDashboardCacheIndicator(meta);
@@ -2966,8 +2937,9 @@ function fetchDashboardPayload() {
         fetchJson('/api/network'),
         fetchJson('/api/base-stations'),
         fetchJson('/api/coverage/positions'),
-        fetchJson('/api/sensors')
-    ]).then(([statusData, vmData, trafficData, healthData, topologyData, gatewaysData, coverageState, sensorsData]) => ({
+        fetchJson('/api/sensors'),
+        fetchJson('/api/incidents')
+    ]).then(([statusData, vmData, trafficData, healthData, topologyData, gatewaysData, coverageState, sensorsData, incidentsData]) => ({
         statusData,
         vmData,
         trafficData,
@@ -2975,7 +2947,8 @@ function fetchDashboardPayload() {
         topologyData,
         gatewaysData,
         coverageState,
-        sensorsData
+        sensorsData,
+        incidentsData
     }));
 }
 

@@ -514,10 +514,12 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 0.9rem;
             padding: var(--ui-topbar-pad-y) var(--ui-topbar-pad-x);
             border-bottom: 1px solid #e9eff5;
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
         }
 
         .topbar-title {
@@ -566,10 +568,11 @@
             align-items: center;
             gap: 0.42rem;
             border: 1px solid #e2e8f0;
-            border-radius: 0.62rem;
-            background: #ffffff;
-            padding: 0.28rem 0.62rem 0.28rem 0.28rem;
+            border-radius: 0.78rem;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            padding: 0.26rem 0.54rem 0.26rem 0.26rem;
             min-height: 2.35rem;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
         }
 
         .topbar-avatar {
@@ -591,8 +594,14 @@
         .topbar-avatar-name {
             font-size: 0.73rem;
             font-weight: 700;
-            color: var(--text-700);
+            color: var(--text-900);
             white-space: nowrap;
+        }
+
+        .topbar-avatar-caret {
+            font-size: 0.63rem;
+            color: #8ba0b7;
+            transition: transform 0.16s ease, color 0.16s ease;
         }
 
         .topbar-avatar-menu {
@@ -602,12 +611,19 @@
 
         .topbar-avatar-chip {
             cursor: pointer;
-            transition: background 0.12s, border-color 0.12s;
+            transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.12s;
         }
 
         .topbar-avatar-chip:hover {
             background: #f7faff;
             border-color: #d0e0f0;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .topbar-avatar-chip[aria-expanded="true"] .topbar-avatar-caret {
+            transform: rotate(180deg);
+            color: var(--brand-600);
         }
 
         .topbar-user-dropdown {
@@ -683,7 +699,15 @@
         .topbar-actions {
             display: inline-flex;
             align-items: center;
-            gap: 0.48rem;
+            gap: 0.42rem;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions-sep {
+            width: 1px;
+            height: 1.8rem;
+            background: linear-gradient(180deg, rgba(217, 226, 236, 0) 0%, rgba(217, 226, 236, 1) 18%, rgba(217, 226, 236, 1) 82%, rgba(217, 226, 236, 0) 100%);
+            margin: 0 0.1rem 0 0.22rem;
         }
 
         .topbar-lang-switch {
@@ -727,25 +751,26 @@
         .topbar-clock {
             display: inline-flex;
             align-items: center;
-            gap: 0.68rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.62rem;
-            background: #ffffff;
-            padding: 0.34rem 0.78rem;
+            gap: 0.54rem;
+            border: 1px solid #e5ebf3;
+            border-radius: 0.82rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
+            padding: 0.28rem 0.62rem;
             color: var(--text-700);
             min-width: 0;
             min-height: 2.35rem;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.035);
         }
 
         .topbar-clock-icon {
-            width: 1.84rem;
-            height: 1.84rem;
-            border-radius: 0.58rem;
+            width: 1.58rem;
+            height: 1.58rem;
+            border-radius: 999px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(var(--brand-rgb), 0.12);
-            color: var(--brand-600);
+            background: rgba(var(--brand-rgb), 0.11);
+            color: var(--brand-700);
             flex-shrink: 0;
         }
 
@@ -757,31 +782,32 @@
         }
 
         .topbar-clock-time {
-            font-size: 0.92rem;
+            font-size: 0.88rem;
             font-weight: 800;
             color: var(--text-900);
             white-space: nowrap;
         }
 
         .topbar-clock-date {
-            font-size: 0.64rem;
-            font-weight: 700;
+            font-size: 0.62rem;
+            font-weight: 800;
             color: var(--text-500);
             white-space: nowrap;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.04em;
         }
 
         .topbar-tool {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 2.35rem;
-            height: 2.35rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.62rem;
-            background: #ffffff;
-            color: #274261;
+            width: 2.2rem;
+            height: 2.2rem;
+            border: 1px solid #e5ebf3;
+            border-radius: 0.78rem;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            color: #314964;
             transition: all 0.18s ease;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.03);
         }
 
         .topbar-tool:hover,
@@ -1303,6 +1329,26 @@
                 padding-right: 0.95rem;
             }
 
+            .topbar-viewer-shell {
+                gap: 0.56rem;
+            }
+
+            .viewer-topnav {
+                order: 3;
+                width: 100%;
+                justify-content: flex-start;
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+
+            .viewer-topnav::-webkit-scrollbar {
+                display: none;
+            }
+
+            .topbar-actions-sep {
+                display: none;
+            }
+
             .topbar-user span,
             .topbar-avatar-name {
                 display: none;
@@ -1336,6 +1382,18 @@
                 font-size: 0.68rem;
             }
 
+            .topbar-clock {
+                padding-inline: 0.5rem;
+            }
+
+            .topbar-clock-date {
+                display: none;
+            }
+
+            .viewer-brand-name {
+                font-size: 0.84rem;
+            }
+
             .app-content {
                 padding-bottom: 1.2rem;
             }
@@ -1349,29 +1407,47 @@
 
         /* ── Viewer: no sidebar ─────────────────────────────────── */
         [data-role="viewer"] .app-sidebar { display: none !important; }
+        .topbar-viewer-shell {
+            display: flex;
+            align-items: center;
+            gap: 0.72rem;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
         .viewer-brand {
-            display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; flex-shrink: 0;
+            display: inline-flex; align-items: center; gap: .58rem; text-decoration: none; flex-shrink: 0;
         }
         .viewer-brand:hover { text-decoration: none; }
         .viewer-brand-icon {
-            width: 2rem; height: 2rem; border-radius: .44rem;
-            background: var(--brand-500); color: #fff;
+            width: 2rem; height: 2rem; border-radius: .58rem;
+            background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%); color: #fff;
             display: inline-flex; align-items: center; justify-content: center;
             font-size: .88rem; flex-shrink: 0;
+            box-shadow: 0 10px 22px rgba(var(--brand-rgb), 0.24);
         }
-        .viewer-brand-name { font-size: .9rem; font-weight: 800; color: var(--text-900); letter-spacing: -.01em; }
-        .viewer-nav-sep { width: 1px; height: 1.4rem; background: #dde6f0; margin: 0 .2rem; flex-shrink: 0; }
+        .viewer-brand-name { font-size: .92rem; font-weight: 800; color: var(--text-900); letter-spacing: -.01em; }
+        .viewer-nav-sep { width: 1px; height: 1.7rem; background: linear-gradient(180deg, rgba(221, 230, 240, 0) 0%, rgba(221, 230, 240, 1) 20%, rgba(221, 230, 240, 1) 80%, rgba(221, 230, 240, 0) 100%); margin: 0 .08rem; flex-shrink: 0; }
+        .viewer-topnav {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.22rem;
+            padding: 0.18rem;
+            border: 1px solid #e5ebf3;
+            border-radius: 0.92rem;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 252, 255, 0.98) 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+        }
         .viewer-nav-link {
             display: inline-flex; align-items: center; gap: .42rem;
-            padding: .4rem .95rem; border-radius: .48rem;
-            font-size: .84rem; font-weight: 700; color: #607089;
+            padding: .44rem .82rem; border-radius: .72rem;
+            font-size: .82rem; font-weight: 800; color: #5f7088;
             text-decoration: none; border: 1px solid transparent;
-            transition: background .12s, color .12s, border-color .12s;
+            transition: background .12s, color .12s, border-color .12s, box-shadow .12s, transform .12s;
         }
-        .viewer-nav-link:hover { background: #f0f5fd; color: #1c3a5e; text-decoration: none; }
+        .viewer-nav-link:hover { background: #f0f5fd; color: #1c3a5e; text-decoration: none; transform: translateY(-1px); }
         .viewer-nav-link.active {
-            background: var(--brand-500); color: #fff; border-color: var(--brand-600);
-            box-shadow: 0 2px 8px rgba(var(--brand-rgb),.28);
+            background: linear-gradient(145deg, var(--brand-500) 0%, var(--brand-400) 100%); color: #fff; border-color: rgba(var(--brand-rgb), 0.28);
+            box-shadow: 0 10px 18px rgba(var(--brand-rgb),.24);
         }
         .viewer-nav-link.active:hover { background: var(--brand-600); color: #fff; }
         .viewer-nav-link i { font-size: .74rem; }
@@ -1416,7 +1492,7 @@
             transition: all .08s ease;
         }
         .viewer-nav-link:hover {
-            transform: translateX(2px);
+            transform: translateY(-1px);
         }
         .viewer-nav-link.active {
             animation: fadeIn .15s ease-out;
@@ -1665,23 +1741,25 @@
         <main class="app-main">
             <header class="app-topbar">
                 {% if current_user and current_user.role == 'viewer' %}
-                <div class="d-flex align-items-center gap-2">
+                <div class="topbar-viewer-shell">
                     <a href="{{ url_for('index') }}" class="viewer-brand">
                         <span class="viewer-brand-icon"><i class="fas fa-wave-square"></i></span>
                         <span class="viewer-brand-name">Kinet MIOTY</span>
                     </a>
                     <div class="viewer-nav-sep"></div>
-                    <a class="viewer-nav-link {% if endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
-                        <i class="fas fa-chart-pie"></i> {{ t('nav.dashboard', 'Dashboard') }}
-                    </a>
-                    {% if 'sensors' in visible_tabs %}
-                    <a class="viewer-nav-link {% if endpoint in ['sensors', 'sensor_detail_page'] %}active{% endif %}" href="{{ url_for('sensors') }}">
-                        <i class="fas fa-microchip"></i> {{ t('nav.sensors', 'Sensors') }}
-                    </a>
-                    {% endif %}
-                    <a class="viewer-nav-link {% if endpoint == 'alerts_page' %}active{% endif %}" href="{{ url_for('alerts_page') }}">
-                        <i class="fas fa-bell"></i> {{ t('viewer.alerts', 'Alerty') }}
-                    </a>
+                    <nav class="viewer-topnav" aria-label="{{ t('common.navigation', 'Navigation') }}">
+                        <a class="viewer-nav-link {% if endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
+                            <i class="fas fa-chart-pie"></i> {{ t('nav.dashboard', 'Dashboard') }}
+                        </a>
+                        {% if 'sensors' in visible_tabs %}
+                        <a class="viewer-nav-link {% if endpoint in ['sensors', 'sensor_detail_page'] %}active{% endif %}" href="{{ url_for('sensors') }}">
+                            <i class="fas fa-microchip"></i> {{ t('nav.sensors', 'Sensors') }}
+                        </a>
+                        {% endif %}
+                        <a class="viewer-nav-link {% if endpoint == 'alerts_page' %}active{% endif %}" href="{{ url_for('alerts_page') }}">
+                            <i class="fas fa-bell"></i> {{ t('viewer.alerts', 'Upozornenia') }}
+                        </a>
+                    </nav>
                 </div>
                 {% else %}
                 <div class="d-flex align-items-center gap-2">
@@ -1696,16 +1774,6 @@
                 </div>
                 {% endif %}
                 <div class="topbar-actions">
-                    <div class="topbar-lang-switch" aria-label="{{ t('common.language', 'Language') }}">
-                        {% for lang_code, lang_meta in app_languages.items() %}
-                        <a
-                            class="topbar-lang-link {% if app_language == lang_code %}is-active{% endif %}"
-                            href="{{ url_for('set_ui_language', lang=lang_code, next=request.full_path if request.full_path and request.full_path != '/' else request.path) }}"
-                            title="{{ lang_meta.native_label }}"
-                            aria-label="{{ lang_meta.native_label }}"
-                        >{{ lang_code|upper }}</a>
-                        {% endfor %}
-                    </div>
                     <div class="topbar-clock" id="appTopbarClock" title="{{ t('common.current_application_time', 'Current application time') }}" aria-live="polite" aria-label="{{ t('common.current_application_time', 'Current application time') }}">
                         <span class="topbar-clock-icon"><i class="fas fa-clock"></i></span>
                         <span class="topbar-clock-copy">
@@ -1721,11 +1789,13 @@
                     <button class="topbar-tool" type="button" data-bs-toggle="modal" data-bs-target="#displaySettingsModal" title="{{ t('display.settings', 'Display Settings') }}" aria-label="{{ t('display.settings', 'Display Settings') }}">
                         <i class="fas fa-sliders-h"></i>
                     </button>
+                    <span class="topbar-actions-sep" aria-hidden="true"></span>
                     {% if current_user %}
                     <div class="topbar-avatar-menu">
-                        <button class="topbar-avatar-chip" onclick="toggleTopbarUserMenu()" title="Užívateľský menu">
+                        <button class="topbar-avatar-chip" onclick="toggleTopbarUserMenu()" title="Užívateľský menu" aria-expanded="false" aria-haspopup="menu">
                             <span class="topbar-avatar">{{ current_user.name[0]|upper if current_user.name else '?' }}</span>
                             <span class="topbar-avatar-name">{{ current_user.name }}</span>
+                            <i class="fas fa-chevron-down topbar-avatar-caret" aria-hidden="true"></i>
                         </button>
                         <div class="topbar-user-dropdown" id="topbarUserDropdown">
                             <div class="topbar-dropdown-header">{{ current_user.name }}</div>
@@ -1778,6 +1848,20 @@
                             <option value="sage">{{ t('display.sage_light', 'Sage light') }}</option>
                         </select>
                         <p class="display-setting-note">{{ t('display.theme_note', 'Applies a light color palette variant across the interface.') }}</p>
+                    </section>
+                    <section class="display-setting-card">
+                        <p class="display-setting-title">{{ t('common.language', 'Language') }}</p>
+                        <div class="topbar-lang-switch" aria-label="{{ t('common.language', 'Language') }}">
+                            {% for lang_code, lang_meta in app_languages.items() %}
+                            <a
+                                class="topbar-lang-link {% if app_language == lang_code %}is-active{% endif %}"
+                                href="{{ url_for('set_ui_language', lang=lang_code, next=request.full_path if request.full_path and request.full_path != '/' else request.path) }}"
+                                title="{{ lang_meta.native_label }}"
+                                aria-label="{{ lang_meta.native_label }}"
+                            >{{ lang_code|upper }}</a>
+                            {% endfor %}
+                        </div>
+                        <p class="display-setting-note">{{ t('display.language_note', 'Switches UI text and time formatting. The page reloads after the change.') }}</p>
                     </section>
                 </div>
                 <div class="modal-footer">
@@ -2454,6 +2538,7 @@
             const btn = document.querySelector('.topbar-avatar-chip');
             if (!dropdown || !btn) return;
             const isOpen = dropdown.classList.toggle('is-open');
+            btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             if (isOpen) {
                 const rect = btn.getBoundingClientRect();
                 dropdown.style.top = (rect.bottom + 6) + 'px';
@@ -2468,8 +2553,10 @@
             const menu = document.querySelector('.topbar-avatar-menu');
             if (!menu || menu.contains(e.target)) return;
             const dropdown = document.getElementById('topbarUserDropdown');
+            const btn = document.querySelector('.topbar-avatar-chip');
             if (dropdown) {
                 dropdown.classList.remove('is-open');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
                 document.removeEventListener('mousedown', closeTopbarUserMenuOnClick);
             }
         }

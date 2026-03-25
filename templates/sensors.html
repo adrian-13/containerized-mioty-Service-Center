@@ -81,6 +81,15 @@
 .sv-badge.unknown { background: #f0f4fa; color: #64748b; }
 .sv-link { display: flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; color: #94a3b8; font-size: 0.65rem; flex-shrink: 0; text-decoration: none; transition: all 0.15s; }
 .sv-link:hover { background: #e2e8f0; color: #1e293b; }
+.sv-edit-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 1.5rem; height: 1.5rem; border-radius: 50%;
+    color: #94a3b8; font-size: 0.65rem; flex-shrink: 0;
+    border: none; background: none; cursor: pointer; padding: 0;
+    opacity: 0; transition: opacity .12s, background .12s, color .12s;
+}
+.sv-row:hover .sv-edit-btn { opacity: 1; }
+.sv-edit-btn:hover { background: #dbeafe; color: var(--brand-600); }
 .sv-empty { text-align: center; color: #94a3b8; padding: 3rem 1rem; font-size: 0.88rem; }
 .sv-add-btn {
     margin-left: auto;
@@ -296,6 +305,31 @@ button:active {
 .sv-search:focus {
     transform: scale(1.02);
 }
+/* Confirm dialog */
+.sv-confirm-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(3px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem;animation:sv-fadeIn .14s ease-out}
+@keyframes sv-fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sv-scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes sv-slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sv-confirm{background:#fff;border-radius:1.1rem;box-shadow:0 24px 64px rgba(15,23,42,.22);width:100%;max-width:21rem;overflow:hidden;animation:sv-scaleIn .2s cubic-bezier(.34,1.56,.64,1)}
+.sv-confirm-body{padding:1.5rem 1.4rem 1rem;text-align:center}
+.sv-confirm-ico{width:2.8rem;height:2.8rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin:0 auto .8rem}
+.sv-confirm-ico.is-danger{background:rgba(220,38,38,.12);color:#dc2626}
+.sv-confirm-ico.is-warn{background:rgba(245,158,11,.12);color:#d97706}
+.sv-confirm-title{font-size:.92rem;font-weight:800;color:#0f2135;margin:0 0 .3rem}
+.sv-confirm-msg{font-size:.8rem;color:#627690;line-height:1.5;margin:0}
+.sv-confirm-actions{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #f0f4fb}
+.sv-confirm-btn{border:none;background:#fff;padding:.78rem;font-size:.8rem;font-weight:800;cursor:pointer;transition:background .12s,color .12s;line-height:1}
+.sv-confirm-btn.is-cancel{color:#4a6582;border-right:1px solid #f0f4fb;border-radius:0 0 0 1.1rem}
+.sv-confirm-btn.is-cancel:hover{background:#f5f8fc}
+.sv-confirm-btn.is-ok{color:#dc2626;border-radius:0 0 1.1rem 0}
+.sv-confirm-btn.is-ok:hover{background:rgba(220,38,38,.06)}
+/* Toast */
+.sv-toasts{position:fixed;bottom:1.3rem;right:1.3rem;z-index:2100;display:flex;flex-direction:column;gap:.45rem;pointer-events:none}
+.sv-toast{display:inline-flex;align-items:center;gap:.52rem;padding:.58rem .9rem;border-radius:.7rem;font-size:.78rem;font-weight:700;box-shadow:0 8px 24px rgba(15,23,42,.16);pointer-events:auto;animation:sv-slideUp .22s ease-out;max-width:22rem;color:#fff}
+.sv-toast.is-error{background:#b91c1c}
+.sv-toast.is-warn{background:#92400e}
+.sv-toast.is-success{background:#14532d}
+.sv-toast i{font-size:.78rem;flex-shrink:0;opacity:.9}
 </style>
 
 <div class="sv-shell">
@@ -312,11 +346,49 @@ button:active {
         <div class="sv-filters">
             <button class="sv-filter is-active" data-f="all"     onclick="svSetFilter('all')">    {{ t('common.all','Všetky') }}  <span class="sv-cnt" id="svCntAll">0</span></button>
             <button class="sv-filter f-online"  data-f="online"  onclick="svSetFilter('online')"> <span class="sv-dot online"></span> Online  <span class="sv-cnt" id="svCntOnline">0</span></button>
-            <button class="sv-filter f-warn"    data-f="warn"    onclick="svSetFilter('warn')">   <span class="sv-dot warn"></span>   Warn     <span class="sv-cnt" id="svCntWarn">0</span></button>
+            <button class="sv-filter f-warn"    data-f="warn"    onclick="svSetFilter('warn')">   <span class="sv-dot warn"></span>   Upozornenie     <span class="sv-cnt" id="svCntWarn">0</span></button>
             <button class="sv-filter f-offline" data-f="offline" onclick="svSetFilter('offline')"><span class="sv-dot offline"></span> Offline  <span class="sv-cnt" id="svCntOffline">0</span></button>
         </div>
         <div id="svList">
             <div class="sv-empty">{{ t('runtime.loading', 'Načítavam...') }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit sensor modal -->
+<div id="svEditModal" class="sv-modal-backdrop" style="display: none;">
+    <div class="sv-modal">
+        <div class="sv-modal-head">
+            <h3 class="sv-modal-title">
+                <i class="fas fa-pen" style="margin-right: .5rem; color: var(--brand-500);"></i>Upraviť senzor
+            </h3>
+            <button class="sv-modal-close" onclick="svTryCloseEdit()">&times;</button>
+        </div>
+        <div class="sv-modal-body">
+            <div id="svEditError" style="display: none; background: #fde8e9; color: #a12b32; border-radius: .5rem; padding: .6rem .85rem; font-size: .82rem;"></div>
+            <div class="sv-field">
+                <label class="sv-field-label">EUI</label>
+                <input id="svEditEui" type="text" readonly
+                       style="font-family: monospace; letter-spacing: .04em; background: #f8fafc; cursor: default; color: #64748b;">
+            </div>
+            <div class="sv-field">
+                <label class="sv-field-label">{{ t('sensors.name', 'Názov') }}</label>
+                <input id="svEditName" type="text" placeholder="{{ t('sensors.name_placeholder', 'Voliteľný popis senzora') }}"
+                       maxlength="80" autocomplete="off">
+            </div>
+            <div class="sv-field">
+                <label class="sv-field-label">{{ t('sensors.network_key', 'Sieťový kľúč') }}</label>
+                <input id="svEditNwKey" type="text" placeholder="32 hex znakov — ponechajte prázdne pre zachovanie"
+                       maxlength="32" autocomplete="off" autocorrect="off" spellcheck="false"
+                       style="font-family: monospace; letter-spacing: .04em;">
+                <div style="font-size: .7rem; color: #94a3b8; margin-top: .25rem;">Vyplňte len ak chcete zmeniť sieťový kľúč</div>
+            </div>
+        </div>
+        <div class="sv-modal-footer">
+            <button class="sv-btn-secondary" onclick="svTryCloseEdit()">{{ t('common.cancel', 'Zrušiť') }}</button>
+            <button id="svEditSubmit" class="sv-btn-primary" onclick="svSubmitEdit()">
+                <i class="fas fa-check"></i> {{ t('common.save', 'Uložiť') }}
+            </button>
         </div>
     </div>
 </div>
@@ -2567,14 +2639,85 @@ button:active {
 {% if current_user and current_user.role == 'viewer' %}
 <script>
 (function() {
+
+/* ── Custom dialogs ─────────────────────────────────────── */
+function apConfirm(msg,opts){
+  opts=opts||{};
+  return new Promise(function(resolve){
+    var wrap=document.createElement('div');
+    wrap.className='sv-confirm-backdrop';
+    var icoClass=opts.danger===false?'is-warn':'is-danger';
+    var icoName=opts.danger===false?'fa-triangle-exclamation':'fa-trash-can';
+    var confirmLabel=opts.confirmLabel||'Zmazať';
+    var cancelLabel=opts.cancelLabel||'Zrušiť';
+    var title=opts.title||'Potvrdiť akciu';
+    wrap.innerHTML='<div class="sv-confirm">'
+      +'<div class="sv-confirm-body">'
+        +'<div class="sv-confirm-ico '+icoClass+'"><i class="fas '+icoName+'"></i></div>'
+        +'<p class="sv-confirm-title">'+title+'</p>'
+        +'<p class="sv-confirm-msg">'+msg+'</p>'
+      +'</div>'
+      +'<div class="sv-confirm-actions">'
+        +'<button class="sv-confirm-btn is-cancel">'+cancelLabel+'</button>'
+        +'<button class="sv-confirm-btn is-ok">'+confirmLabel+'</button>'
+      +'</div>'
+    +'</div>';
+    document.body.appendChild(wrap);
+    function close(val){wrap.remove();resolve(val);}
+    wrap.querySelector('.is-cancel').onclick=function(){close(false);};
+    wrap.querySelector('.is-ok').onclick=function(){close(true);};
+    wrap.addEventListener('click',function(e){if(e.target===wrap)close(false);});
+    document.addEventListener('keydown',function onKey(e){if(e.key==='Escape'){close(false);document.removeEventListener('keydown',onKey);}});
+  });
+}
+var _svToastWrap=null;
+function apToast(msg,type){
+  type=type||'error';
+  if(!_svToastWrap){_svToastWrap=document.createElement('div');_svToastWrap.className='sv-toasts';document.body.appendChild(_svToastWrap);}
+  var icons={error:'fa-circle-xmark',warn:'fa-triangle-exclamation',success:'fa-circle-check'};
+  var t=document.createElement('div');
+  t.className='sv-toast is-'+type;
+  t.innerHTML='<i class="fas '+(icons[type]||icons.error)+'"></i><span>'+msg+'</span>';
+  _svToastWrap.appendChild(t);
+  setTimeout(function(){t.style.cssText='opacity:0;transition:opacity .3s;';setTimeout(function(){t.remove();},300);},3500);
+}
+/* ─────────────────────────────────────────────────────── */
+
 const TIER_ORDER = { offline: 0, warn: 1, online: 2, unknown: 3 };
-function tier(s) {
-    if (!s) return 'unknown';
-    const l = String(s).toLowerCase();
-    if (l === 'online' || l === 'connected' || l === 'active') return 'online';
-    if (l === 'warn'   || l === 'warning'   || l === 'degraded') return 'warn';
-    if (l === 'offline'|| l === 'disconnected' || l === 'inactive') return 'offline';
-    return 'unknown';
+function tier(sensorOrStatus) {
+    const backendTier = String((sensorOrStatus && sensorOrStatus.ui_tier) || '').toLowerCase();
+    if (backendTier === 'online' || backendTier === 'warn' || backendTier === 'offline' || backendTier === 'unknown') return backendTier;
+    const raw = sensorOrStatus && typeof sensorOrStatus === 'object'
+        ? (sensorOrStatus.activity_status || sensorOrStatus.status)
+        : sensorOrStatus;
+    if (!raw) return 'unknown';
+    const l = String(raw).toLowerCase();
+    if (l === 'online' || l === 'connected' || l === 'active' || l === 'quiet') return 'online';
+    if (l === 'warn' || l === 'warning' || l === 'degraded' || l === 'stale' || l === 'auto_detach_pending') return 'warn';
+    if (l === 'no_data' || l === 'unknown') return 'unknown';
+    return 'offline';
+}
+const VIEWER_STATUS_LABELS = {
+    active: 'Aktívny',
+    online: 'Online',
+    connected: 'Online',
+    quiet: 'Pokojový',
+    warning: 'Upozornenie',
+    warn: 'Upozornenie',
+    degraded: 'Upozornenie',
+    stale: 'Po lehote',
+    auto_detach_pending: 'Odpája sa',
+    offline: 'Offline',
+    disconnected: 'Offline',
+    inactive: 'Offline',
+    auto_detached: 'Odpojený',
+    no_data: 'Bez dát',
+    unknown: 'Neznámy'
+};
+function viewerStatusLabel(sensor) {
+    const raw = sensor && (sensor.activity_status || sensor.status);
+    if (!raw) return 'Neznámy';
+    return VIEWER_STATUS_LABELS[String(raw).toLowerCase()] || String(raw);
 }
 function esc(v) {
     return String(v == null ? '' : v)
@@ -2620,7 +2763,7 @@ function svRender() {
     const q = (document.getElementById('svSearch') || {}).value || '';
     const lq = q.toLowerCase();
     const filtered = allSensors.filter(function(s) {
-        if (currentFilter !== 'all' && tier(s.activity_status || s.status) !== currentFilter) return false;
+        if (currentFilter !== 'all' && tier(s) !== currentFilter) return false;
         if (lq) {
             const name = String(s.name || s.eui || s.device_eui || s.sensor_id || '').toLowerCase();
             const eui  = String(s.eui || s.device_eui || '').toLowerCase();
@@ -2636,10 +2779,10 @@ function svRender() {
     }
     el.innerHTML = filtered.map(function(s) {
         const st  = s.activity_status || s.status || '';
-        const t   = tier(st);
+        const t   = tier(s);
         const id  = s.eui || s.device_eui || s.sensor_id || '';
         const name= esc(s.name || id || '\u2014');
-        const sl  = esc(st || 'unknown');
+        const sl  = esc(viewerStatusLabel(s) || st || 'unknown');
         const sub = valueLine(s);
         const href= '/sensors/' + esc(id);
         return '<a href="' + href + '" class="sv-row" data-eui="' + esc(id) + '">' +
@@ -2649,6 +2792,7 @@ function svRender() {
                 (sub ? '<span class="sv-sub">' + sub + '</span>' : '') +
             '</span>' +
             '<span class="sv-badge ' + t + '">' + sl + '</span>' +
+            '<button class="sv-edit-btn" title="Upraviť senzor" onclick="event.preventDefault();event.stopPropagation();svOpenEdit(\'' + esc(id) + '\')"><i class="fas fa-pen"></i></button>' +
             '<span class="sv-link"><i class="fas fa-chevron-right"></i></span>' +
         '</a>';
     }).join('');
@@ -2663,15 +2807,15 @@ function svLoad() {
                 : (data && Array.isArray(data.sensors) ? data.sensors
                 : (data && typeof data === 'object' && !data.error ? Object.values(data) : []));
             raw.sort(function(a, b) {
-                return (TIER_ORDER[tier(a.status)] || 3) - (TIER_ORDER[tier(b.status)] || 3);
+                return (TIER_ORDER[tier(a)] ?? 3) - (TIER_ORDER[tier(b)] ?? 3);
             });
             allSensors = raw;
             let online = 0, warn = 0, offline = 0;
             raw.forEach(function(s) {
-                const t = tier(s.activity_status || s.status);
+                const t = tier(s);
                 if (t === 'online') online++;
                 else if (t === 'warn') warn++;
-                else offline++;
+                else if (t === 'offline') offline++;
             });
             function g(id) { return document.getElementById(id); }
             if (g('svCntAll'))        g('svCntAll').textContent        = raw.length;
@@ -2747,16 +2891,89 @@ window.svOpenAdd   = svOpenAdd;
 window.svCloseAdd  = svCloseAdd;
 window.svSubmitAdd = svSubmitAdd;
 
-// Close modal on backdrop click
+// Close modals on backdrop click / keyboard
 document.addEventListener('click', function(e) {
-    const m = document.getElementById('svAddModal');
-    if (m && e.target === m) svCloseAdd();
+    const ma = document.getElementById('svAddModal');
+    if (ma && e.target === ma) svCloseAdd();
+    const me = document.getElementById('svEditModal');
+    if (me && e.target === me) svTryCloseEdit();
 });
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') svCloseAdd();
+    if (e.key === 'Escape') { svCloseAdd(); svTryCloseEdit(); }
     if (e.key === 'Enter' && document.getElementById('svAddModal') &&
         document.getElementById('svAddModal').style.display === 'flex') svSubmitAdd();
+    if (e.key === 'Enter' && document.getElementById('svEditModal') &&
+        document.getElementById('svEditModal').style.display === 'flex') svSubmitEdit();
 });
+
+/* ── Edit sensor modal ── */
+var _svEditDirty = false;
+function svOpenEdit(eui) {
+    const sensor = allSensors.find(function(s) { return (s.eui || s.device_eui || '') === eui; });
+    const m = document.getElementById('svEditModal');
+    if (!m) return;
+    _svEditDirty = false;
+    document.getElementById('svEditEui').value   = eui;
+    document.getElementById('svEditName').value  = sensor ? (sensor.name || '') : '';
+    document.getElementById('svEditNwKey').value = '';
+    const err = document.getElementById('svEditError');
+    if (err) { err.style.display = 'none'; err.textContent = ''; }
+    m.classList.remove('is-closing');
+    m.style.display = 'flex';
+    m.querySelectorAll('input:not([readonly])').forEach(function(el) {
+        el.addEventListener('input', function() { _svEditDirty = true; }, { once: false });
+    });
+    setTimeout(function() { document.getElementById('svEditName').focus(); }, 100);
+}
+function svCloseEdit() {
+    const m = document.getElementById('svEditModal');
+    if (!m) return;
+    _svEditDirty = false;
+    m.classList.add('is-closing');
+    setTimeout(function() { m.style.display = 'none'; m.classList.remove('is-closing'); }, 220);
+}
+async function svTryCloseEdit() {
+    if (_svEditDirty) {
+        if (!await apConfirm('Máte neuložené zmeny. Zahodiť ich?', {title:'Zahodiť zmeny', confirmLabel:'Zahodiť', danger:true})) return;
+    }
+    svCloseEdit();
+}
+function svSubmitEdit() {
+    const eui   = document.getElementById('svEditEui').value;
+    const nwKey = (document.getElementById('svEditNwKey').value || '').trim().replace(/[^0-9a-fA-F]/g, '').toUpperCase();
+    const name  = (document.getElementById('svEditName').value  || '').trim();
+    const err   = document.getElementById('svEditError');
+    const btn   = document.getElementById('svEditSubmit');
+    if (nwKey && nwKey.length !== 32) {
+        if (err) { err.textContent = 'Sieťový kľúč musí mať presne 32 hex znakov.'; err.style.display = 'block'; }
+        document.getElementById('svEditNwKey').focus();
+        return;
+    }
+    if (err) err.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+    const body = { name: name };
+    if (nwKey) body.nwKey = nwKey;
+    fetch('/api/sensors/' + encodeURIComponent(eui), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .catch(function() { return { ok: false, data: { message: 'Chyba siete.' } }; })
+    .then(function(res) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Uložiť'; }
+        if (res.ok && res.data.success !== false) {
+            svCloseEdit(); svLoad();
+        } else {
+            const msg = (res.data && (res.data.message || res.data.error)) || 'Nepodarilo sa uložiť senzor.';
+            if (err) { err.textContent = msg; err.style.display = 'block'; }
+        }
+    });
+}
+window.svOpenEdit      = svOpenEdit;
+window.svCloseEdit     = svCloseEdit;
+window.svTryCloseEdit  = svTryCloseEdit;
+window.svSubmitEdit    = svSubmitEdit;
 
 // ── Context menu ─────────────────────────────────────────────────────────────
 let _svCtxEl = null;
@@ -2797,6 +3014,7 @@ document.getElementById('svList').addEventListener('contextmenu', function(e) {
     if (row) {
         const eui = row.dataset.eui || '';
         _svShowCtx(e, [
+            { icon: 'fa-pen', label: 'Upraviť senzor', action: function() { svOpenEdit(eui); } },
             { icon: 'fa-arrow-up-right-from-square', label: 'Detail senzora', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
             '-',
             { icon: 'fa-bell-plus', label: 'Pridať alert', action: function() { window.location.href = '/alerts'; } },
@@ -4953,7 +5171,7 @@ function renderSensorAuditEntries(entries) {
     return `
         <div class="sensor-audit-list">
             ${entries.map((entry) => {
-                const summary = `${entry.action || 'action'} â€˘ ${entry.entity || 'entity'}${entry.target_id ? ` â€˘ ${entry.target_id}` : ''}`;
+                const summary = `${entry.action || 'action'} | ${entry.entity || 'entity'}${entry.target_id ? ` | ${entry.target_id}` : ''}`;
                 const metaParts = [
                     entry.timestamp || '',
                     entry.actor || 'unknown actor',

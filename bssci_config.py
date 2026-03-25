@@ -53,7 +53,7 @@ AUTO_DETACH_CHECK_INTERVAL = int(os.getenv("AUTO_DETACH_CHECK_INTERVAL", "3600")
 
 # Timezone Configuration
 TIMEZONE = os.getenv("TIMEZONE", "Europe/Berlin")  # Default to Europe/Berlin (CET/CEST)
-APP_LANGUAGE = os.getenv("APP_LANGUAGE", "en").strip().lower() or "en"
+APP_LANGUAGE = os.getenv("APP_LANGUAGE", "sk").strip().lower() or "sk"
 
 # UI module toggles
 OMS_ENABLED = os.getenv("OMS_ENABLED", "true").strip().lower() == "true"

@@ -177,6 +177,7 @@ _UI_TRANSLATIONS = {
         "common.runtime": "Runtime",
         "common.configuration": "Konfigurácia",
         "common.language": "Jazyk",
+        "common.navigation": "Navigácia",
         "common.super_admin": "Super admin",
         "display.settings": "Nastavenia zobrazenia",
         "display.ui_zoom": "Priblíženie rozhrania",
@@ -185,6 +186,7 @@ _UI_TRANSLATIONS = {
         "display.density_note": "Určuje, ako kompaktne budú panely a navigácia rozložené.",
         "display.color_scheme": "Farebná schéma",
         "display.theme_note": "Použije svetlý farebný variant v celom rozhraní.",
+        "display.language_note": "Prepína texty rozhrania a formátovanie času. Po zmene sa stránka obnoví.",
         "display.auto_recommended": "Auto (odporúčané)",
         "display.comfortable": "Pohodlné",
         "display.compact": "Kompaktné",
@@ -734,6 +736,59 @@ _UI_TRANSLATIONS = {
         "base_station_detail.no": "Nie",
         "language.english": "English",
         "language.slovak": "Slovenčina",
+        "viewer.alerts": "Upozornenia",
+        "viewer.active_alerts": "Aktívne upozornenia",
+        "viewer.alert_rules": "Pravidlá upozornení",
+        "viewer.add_alert": "Pridať upozornenie",
+        "viewer.edit_alert": "Upraviť upozornenie",
+        "viewer.delete_alert": "Vymazať alert",
+        "viewer.enable_alert": "Aktivovať",
+        "viewer.disable_alert": "Deaktivovať",
+        "viewer.sensor": "Senzor",
+        "viewer.metric": "Metrika",
+        "viewer.condition": "Podmienka",
+        "viewer.threshold": "Prah",
+        "viewer.severity": "Závažnosť",
+        "viewer.enabled": "Aktivovaná",
+        "viewer.alert_title": "Upozornenie",
+        "viewer.triggered_alerts": "Spustené upozornenia",
+        "viewer.acknowledged": "Potvrdené",
+        "viewer.snooze_4h": "Odložiť 4h",
+        "viewer.snooze_24h": "Odložiť 24h",
+        "viewer.open_sensor": "Otvoriť senzor",
+        "viewer.sensor_detail_alerts": "Upozornenia senzora",
+        "viewer.no_alerts": "Žiadne upozornenia",
+        "viewer.map_locked": "Zamknuté",
+        "viewer.map_unlocked": "Odomknuté",
+        "viewer.unlock_dragging": "Odomknúť presúvanie",
+        "viewer.lock_position": "Zamknúť polohu",
+        "viewer.move_marker": "Presuňte marker na novú polohu",
+        "viewer.marker_moved": "✓ Premiestnený — uložiť?",
+        "viewer.save_position": "Uložiť polohu",
+        "viewer.cancel_move": "Zrušiť",
+        "viewer.position_saved": "✓ Poloha uložená",
+        "viewer.position_save_failed": "✗ Chyba uloženia",
+        "viewer.move_cancelled": "Presunutie zrušené",
+        "viewer.move_timeout": "Presunutie zrušené (čas vypršal)",
+        "viewer.change_color": "Zmeniť farbu",
+        "viewer.marker_color": "Farba markera",
+        "viewer.reset_color": "Obnoviť predvolenú",
+        "viewer.color_changed": "✓ Farba zmenená",
+        "viewer.color_reset": "✓ Farba obnovená",
+        "viewer.set_default_view": "Nastaviť ako východzí pohľad",
+        "viewer.view_saved": "✓ Pohľad uložený",
+        "viewer.unlock_dragging_hint": "Presúvanie odomknuté — presuňte marker",
+        "viewer.dragging_locked": "Zamknutie",
+        "viewer.sensor_details": "Detail senzora",
+        "viewer.add_sensor": "Pridať senzor",
+        "viewer.sensor_list_empty": "Žiadne senzory",
+        "viewer.last_data": "Posledné dáta",
+        "viewer.last_activity": "Posledná aktivita",
+        "viewer.ago": "pred",
+        "viewer.no_data": "Bez dát",
+        "viewer.sensor_options": "Možnosti",
+        "sensor_detail.delayed": "Oneskorené",
+        "sensor_detail.quiet": "Pokojný",
     },
 }
 
@@ -1861,7 +1916,7 @@ _UI_TRANSLATIONS["sk"].update({
 
 def _normalize_app_language(value):
     raw = str(value or "").strip().lower()
-    return raw if raw in _APP_LANGUAGE_OPTIONS else "en"
+    return raw if raw in _APP_LANGUAGE_OPTIONS else "sk"
 
 
 def _get_app_language():
@@ -1869,11 +1924,11 @@ def _get_app_language():
         override = session.get("ui_language_override")
         if override:
             return _normalize_app_language(override)
-    return _normalize_app_language(getattr(bssci_config, "APP_LANGUAGE", "en"))
+    return _normalize_app_language(getattr(bssci_config, "APP_LANGUAGE", "sk"))
 
 
 def _get_app_locale():
-    return str(_APP_LANGUAGE_OPTIONS.get(_get_app_language(), _APP_LANGUAGE_OPTIONS["en"]).get("locale") or "en-US")
+    return str(_APP_LANGUAGE_OPTIONS.get(_get_app_language(), _APP_LANGUAGE_OPTIONS["sk"]).get("locale") or "sk-SK")
 
 
 def _ui_text(key, default=None, language=None, **kwargs):
@@ -2809,6 +2864,53 @@ def _ensure_timescale_schema(conn):
             cur.execute("CREATE INDEX IF NOT EXISTS idx_telemetry_uplink_tenant_ts ON telemetry_uplink (tenant_id, ts DESC)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_telemetry_uplink_tenant_sensor_ts ON telemetry_uplink (tenant_id, sensor_eui, ts DESC)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_telemetry_uplink_tenant_bs_ts ON telemetry_uplink (tenant_id, base_station_eui, ts DESC)")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS alert_rules (
+                    id TEXT PRIMARY KEY,
+                    tenant_id TEXT NOT NULL DEFAULT 'default',
+                    sensor_eui TEXT NOT NULL,
+                    kind TEXT NOT NULL DEFAULT 'threshold',
+                    name TEXT NOT NULL,
+                    metric TEXT NOT NULL DEFAULT '',
+                    condition TEXT NOT NULL DEFAULT '',
+                    threshold DOUBLE PRECISION,
+                    severity TEXT NOT NULL DEFAULT 'warning',
+                    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    payload JSONB NOT NULL DEFAULT '{}'::jsonb
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_alert_rules_tenant_sensor ON alert_rules (tenant_id, sensor_eui)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_alert_rules_tenant_updated ON alert_rules (tenant_id, updated_at DESC)")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS alert_state_current (
+                    tenant_id TEXT NOT NULL DEFAULT 'default',
+                    alert_id TEXT NOT NULL,
+                    sensor_eui TEXT NOT NULL,
+                    is_active BOOLEAN NOT NULL DEFAULT FALSE,
+                    severity TEXT NOT NULL DEFAULT 'warning',
+                    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    last_triggered_at TIMESTAMPTZ,
+                    last_resolved_at TIMESTAMPTZ,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    PRIMARY KEY (tenant_id, alert_id)
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_alert_state_current_tenant_updated ON alert_state_current (tenant_id, updated_at DESC)")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS alert_events (
+                    ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    tenant_id TEXT NOT NULL DEFAULT 'default',
+                    alert_id TEXT NOT NULL,
+                    sensor_eui TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    severity TEXT NOT NULL DEFAULT 'warning',
+                    payload JSONB NOT NULL DEFAULT '{}'::jsonb
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_alert_events_tenant_ts ON alert_events (tenant_id, ts DESC)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_alert_events_alert_ts ON alert_events (alert_id, ts DESC)")
             try:
                 cur.execute("SELECT create_hypertable('inventory_events', 'ts', if_not_exists => TRUE, migrate_data => TRUE)")
             except Exception:
@@ -2821,6 +2923,10 @@ def _ensure_timescale_schema(conn):
                 cur.execute("SELECT create_hypertable('telemetry_uplink', 'ts', if_not_exists => TRUE, migrate_data => TRUE)")
             except Exception:
                 # Keep plain table if Timescale extension privileges are unavailable.
+                pass
+            try:
+                cur.execute("SELECT create_hypertable('alert_events', 'ts', if_not_exists => TRUE, migrate_data => TRUE)")
+            except Exception:
                 pass
             _timescale_apply_policies(cur)
         _timescale_schema_ready = True
@@ -4519,6 +4625,1107 @@ def _save_all_sensors(sensors):
     with open(bssci_config.SENSOR_CONFIG_FILE, "w") as f:
         json.dump(list(sensors or []), f, indent=4)
 
+# ── Alert helpers ────────────────────────────────────────────────────────────
+
+_ALERTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alerts.json")
+_alerts_lock = threading.Lock()
+
+def _load_alerts_from_file() -> list:
+    try:
+        with open(_ALERTS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+def _save_alerts_to_file(alerts: list) -> None:
+    with open(_ALERTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(list(alerts or []), f, indent=4, ensure_ascii=False)
+
+def _resolve_alert_tenant_id(alert: Optional[Dict[str, Any]]) -> str:
+    if isinstance(alert, dict) and str(alert.get("tenant_id") or "").strip():
+        return _normalize_tenant_id(alert.get("tenant_id"), fallback=_default_tenant_id())
+    eui_upper = str((alert or {}).get("sensor_eui") or "").strip().upper()
+    if eui_upper:
+        try:
+            for sensor in _load_all_sensors() or []:
+                if str((sensor or {}).get("eui") or "").strip().upper() == eui_upper:
+                    return _tenant_id_from_sensor(sensor)
+        except Exception:
+            pass
+    return _default_tenant_id()
+
+def _normalize_stored_alert(alert: Any) -> Optional[Dict[str, Any]]:
+    if not isinstance(alert, dict):
+        return None
+    sensor_eui = str(alert.get("sensor_eui") or "").strip().upper()
+    if not sensor_eui:
+        return None
+    kind = _normalize_alert_kind(alert.get("kind"))
+    severity = str(alert.get("severity") or "warning").strip().lower()
+    if severity not in {"warning", "critical"}:
+        severity = "warning"
+    metric = str(alert.get("metric") or "").strip()
+    condition = str(alert.get("condition") or "").strip()
+    threshold = alert.get("threshold")
+    if kind != "threshold":
+        metric = ""
+        condition = ""
+        threshold = None
+    else:
+        try:
+            threshold = float(threshold)
+        except (TypeError, ValueError):
+            return None
+    tenant_id = _resolve_alert_tenant_id(alert)
+    created_at = str(alert.get("created_at") or datetime.now(timezone.utc).isoformat())
+    name = str(alert.get("name") or "").strip()
+    if not name:
+        name = f"{metric} {condition} {threshold}" if kind == "threshold" else f"{sensor_eui} offline"
+    return {
+        "id": str(alert.get("id") or _uuid_mod.uuid4()),
+        "tenant_id": tenant_id,
+        "sensor_eui": sensor_eui,
+        "kind": kind,
+        "name": name,
+        "metric": metric,
+        "condition": condition,
+        "threshold": threshold,
+        "severity": severity,
+        "enabled": bool(alert.get("enabled", True)),
+        "created_at": created_at,
+    }
+
+def _load_alerts_from_db(conn) -> list:
+    _ensure_timescale_schema(conn)
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT tenant_id, payload
+            FROM alert_rules
+            ORDER BY created_at ASC, id ASC
+        """)
+        rows = cur.fetchall() or []
+    alerts = []
+    for tenant_id, payload in rows:
+        if isinstance(payload, str):
+            try:
+                payload = json.loads(payload)
+            except Exception:
+                payload = {}
+        if not isinstance(payload, dict):
+            payload = {}
+        payload.setdefault("tenant_id", tenant_id)
+        normalized = _normalize_stored_alert(payload)
+        if normalized:
+            alerts.append(normalized)
+    return alerts
+
+def _save_alerts_to_db(conn, alerts: list) -> None:
+    normalized_alerts = []
+    for alert in alerts or []:
+        normalized = _normalize_stored_alert(alert)
+        if normalized:
+            normalized_alerts.append(normalized)
+
+    _ensure_timescale_schema(conn)
+    conn.autocommit = False
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM alert_rules")
+            tenant_ids = sorted({_normalize_tenant_id(a.get("tenant_id"), fallback=_default_tenant_id()) for a in normalized_alerts})
+            if tenant_ids:
+                cur.executemany("""
+                    INSERT INTO tenants (id, name)
+                    VALUES (%s, %s)
+                    ON CONFLICT (id) DO NOTHING
+                """, [(tenant_id, tenant_id) for tenant_id in tenant_ids])
+            if normalized_alerts:
+                rows = [
+                    (
+                        alert["id"],
+                        _normalize_tenant_id(alert.get("tenant_id"), fallback=_default_tenant_id()),
+                        alert["sensor_eui"],
+                        alert["kind"],
+                        alert["name"],
+                        alert.get("metric") or "",
+                        alert.get("condition") or "",
+                        alert.get("threshold"),
+                        alert["severity"],
+                        bool(alert.get("enabled", True)),
+                        alert["created_at"],
+                        json.dumps(alert, separators=(",", ":"), ensure_ascii=True),
+                    )
+                    for alert in normalized_alerts
+                ]
+                cur.executemany("""
+                    INSERT INTO alert_rules
+                        (id, tenant_id, sensor_eui, kind, name, metric, condition, threshold, severity, enabled, created_at, updated_at, payload)
+                    VALUES
+                        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::timestamptz, NOW(), %s::jsonb)
+                """, rows)
+        conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise
+    finally:
+        try:
+            conn.autocommit = True
+        except Exception:
+            pass
+
+def _migrate_alerts_file_to_db(conn) -> None:
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM alert_rules")
+            row = cur.fetchone()
+            existing_count = int((row or [0])[0] or 0)
+        if existing_count > 0:
+            return
+        legacy_alerts = _load_alerts_from_file()
+        if not legacy_alerts:
+            return
+        _save_alerts_to_db(conn, legacy_alerts)
+    except Exception:
+        return
+
+def _load_alerts() -> list:
+    conn = None
+    try:
+        conn, err = _timescale_connect()
+        if conn is not None:
+            _migrate_alerts_file_to_db(conn)
+            return _load_alerts_from_db(conn)
+    except Exception:
+        pass
+    finally:
+        try:
+            if conn is not None:
+                conn.close()
+        except Exception:
+            pass
+
+    alerts = []
+    for alert in _load_alerts_from_file():
+        normalized = _normalize_stored_alert(alert)
+        if normalized:
+            alerts.append(normalized)
+    return alerts
+
+def _save_alerts(alerts: list) -> None:
+    normalized_alerts = []
+    for alert in alerts or []:
+        normalized = _normalize_stored_alert(alert)
+        if normalized:
+            normalized_alerts.append(normalized)
+
+    conn = None
+    with _alerts_lock:
+        try:
+            conn, err = _timescale_connect()
+            if conn is not None:
+                _save_alerts_to_db(conn, normalized_alerts)
+        except Exception:
+            pass
+        finally:
+            try:
+                if conn is not None:
+                    conn.close()
+            except Exception:
+                pass
+        _save_alerts_to_file(normalized_alerts)
+
+_ALERT_EVENTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alert_events.json")
+_ALERT_STATE_FILE  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alert_state.json")
+_alert_events_lock = threading.Lock()
+_alert_state_lock_fs = threading.Lock()
+
+def _load_alert_events_file() -> list:
+    try:
+        with open(_ALERT_EVENTS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+def _append_alert_event_file(event: dict) -> None:
+    with _alert_events_lock:
+        events = _load_alert_events_file()
+        events.append(event)
+        # Keep last 2000 events
+        if len(events) > 2000:
+            events = events[-2000:]
+        try:
+            with open(_ALERT_EVENTS_FILE, "w", encoding="utf-8") as f:
+                json.dump(events, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
+
+def _load_alert_state_file() -> dict:
+    try:
+        with open(_ALERT_STATE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+def _save_alert_state_file(state: dict) -> None:
+    with _alert_state_lock_fs:
+        try:
+            with open(_ALERT_STATE_FILE, "w", encoding="utf-8") as f:
+                json.dump(state, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
+
+def _persist_alert_runtime_state(alerts: list, triggered: list) -> None:
+    conn = None
+    try:
+        conn, err = _timescale_connect()
+        if conn is None:
+            return
+        _ensure_timescale_schema(conn)
+        normalized_alerts = [a for a in (_normalize_stored_alert(alert) for alert in alerts or []) if a]
+        if not normalized_alerts:
+            return
+        triggered_by_id = {
+            str(item.get("id") or ""): dict(item)
+            for item in (triggered or [])
+            if str(item.get("id") or "").strip()
+        }
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT tenant_id, alert_id, is_active, last_triggered_at, last_resolved_at, payload
+                FROM alert_state_current
+            """)
+            state_rows = cur.fetchall() or []
+            existing = {}
+            for tenant_id, alert_id, is_active, last_triggered_at, last_resolved_at, payload in state_rows:
+                existing[(str(tenant_id), str(alert_id))] = {
+                    "is_active": bool(is_active),
+                    "last_triggered_at": last_triggered_at,
+                    "last_resolved_at": last_resolved_at,
+                    "payload": payload if isinstance(payload, dict) else {},
+                }
+
+            now_iso = datetime.now(timezone.utc).isoformat()
+            for alert in normalized_alerts:
+                alert_id = str(alert.get("id") or "")
+                if not alert_id:
+                    continue
+                tenant_id = _normalize_tenant_id(alert.get("tenant_id"), fallback=_default_tenant_id())
+                previous = existing.get((tenant_id, alert_id)) or {}
+                was_active = bool(previous.get("is_active", False))
+                is_active_now = alert_id in triggered_by_id
+                event_payload = dict(triggered_by_id.get(alert_id) or alert)
+                payload_json = json.dumps(event_payload, separators=(",", ":"), ensure_ascii=True)
+
+                if is_active_now and not was_active:
+                    cur.execute("""
+                        INSERT INTO alert_events
+                            (tenant_id, alert_id, sensor_eui, event_type, severity, payload)
+                        VALUES
+                            (%s, %s, %s, %s, %s, %s::jsonb)
+                    """, (
+                        tenant_id,
+                        alert_id,
+                        alert.get("sensor_eui"),
+                        "triggered",
+                        alert.get("severity", "warning"),
+                        payload_json,
+                    ))
+                elif was_active and not is_active_now:
+                    resolved_payload = dict(previous.get("payload") or {})
+                    if not resolved_payload:
+                        resolved_payload = dict(alert)
+                    resolved_payload["resolved_at"] = now_iso
+                    cur.execute("""
+                        INSERT INTO alert_events
+                            (tenant_id, alert_id, sensor_eui, event_type, severity, payload)
+                        VALUES
+                            (%s, %s, %s, %s, %s, %s::jsonb)
+                    """, (
+                        tenant_id,
+                        alert_id,
+                        alert.get("sensor_eui"),
+                        "resolved",
+                        alert.get("severity", "warning"),
+                        json.dumps(resolved_payload, separators=(",", ":"), ensure_ascii=True),
+                    ))
+
+                last_triggered_at = previous.get("last_triggered_at")
+                last_resolved_at = previous.get("last_resolved_at")
+                if is_active_now and not was_active:
+                    last_triggered_at = now_iso
+                if was_active and not is_active_now:
+                    last_resolved_at = now_iso
+
+                cur.execute("""
+                    INSERT INTO alert_state_current
+                        (tenant_id, alert_id, sensor_eui, is_active, severity, payload, last_triggered_at, last_resolved_at, updated_at)
+                    VALUES
+                        (%s, %s, %s, %s, %s, %s::jsonb, %s::timestamptz, %s::timestamptz, NOW())
+                    ON CONFLICT (tenant_id, alert_id)
+                    DO UPDATE SET
+                        sensor_eui = EXCLUDED.sensor_eui,
+                        is_active = EXCLUDED.is_active,
+                        severity = EXCLUDED.severity,
+                        payload = EXCLUDED.payload,
+                        last_triggered_at = EXCLUDED.last_triggered_at,
+                        last_resolved_at = EXCLUDED.last_resolved_at,
+                        updated_at = NOW()
+                """, (
+                    tenant_id,
+                    alert_id,
+                    alert.get("sensor_eui"),
+                    is_active_now,
+                    alert.get("severity", "warning"),
+                    payload_json,
+                    last_triggered_at,
+                    last_resolved_at,
+                ))
+    except Exception:
+        _persist_alert_state_file_fallback(alerts, triggered)
+        return
+    finally:
+        try:
+            if conn is not None:
+                conn.close()
+        except Exception:
+            pass
+
+def _persist_alert_state_file_fallback(alerts: list, triggered: list) -> None:
+    """File-based fallback for alert state/history when DB is unavailable."""
+    try:
+        triggered_ids = {str(t.get("id") or "") for t in (triggered or []) if t.get("id")}
+        state = _load_alert_state_file()
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        for alert in (alerts or []):
+            alert_id = str(alert.get("id") or "")
+            if not alert_id:
+                continue
+            was_active = bool((state.get(alert_id) or {}).get("is_active", False))
+            is_active_now = alert_id in triggered_ids
+            triggered_item = next((t for t in (triggered or []) if str(t.get("id") or "") == alert_id), None)
+
+            if is_active_now and not was_active:
+                state[alert_id] = {
+                    "is_active": True,
+                    "triggered_at": now_iso,
+                    "sensor_eui": alert.get("sensor_eui"),
+                    "severity": alert.get("severity", "warning"),
+                }
+                _append_alert_event_file({
+                    "ts": now_iso,
+                    "alert_id": alert_id,
+                    "sensor_eui": alert.get("sensor_eui"),
+                    "event_type": "triggered",
+                    "severity": alert.get("severity", "warning"),
+                    "name": alert.get("name", ""),
+                    "metric": alert.get("metric", ""),
+                    "kind": alert.get("kind", "threshold"),
+                    "trigger_value": triggered_item.get("current_value") if triggered_item else None,
+                    "trigger_status": triggered_item.get("current_status") if triggered_item else None,
+                    "resolved_at": None,
+                })
+            elif was_active and not is_active_now:
+                prev = state.get(alert_id) or {}
+                state[alert_id] = {"is_active": False, "resolved_at": now_iso}
+                _append_alert_event_file({
+                    "ts": now_iso,
+                    "alert_id": alert_id,
+                    "sensor_eui": alert.get("sensor_eui"),
+                    "event_type": "resolved",
+                    "severity": alert.get("severity", "warning"),
+                    "name": alert.get("name", ""),
+                    "metric": alert.get("metric", ""),
+                    "kind": alert.get("kind", "threshold"),
+                    "triggered_at": prev.get("triggered_at"),
+                    "trigger_value": prev.get("trigger_value"),
+                    "resolved_at": now_iso,
+                })
+        _save_alert_state_file(state)
+    except Exception:
+        pass
+
+def _eval_alert(condition: str, value: float, threshold: float) -> bool:
+    try:
+        v, t = float(value), float(threshold)
+        return {"gt": v > t, "gte": v >= t, "lt": v < t, "lte": v <= t, "eq": abs(v - t) < 1e-9}.get(condition, False)
+    except Exception:
+        return False
+
+def _sensor_latest_values(eui: str, active_tenant: str) -> dict:
+    """Return latest decoded metric values for a sensor. Fast: tries runtime first, then Timescale."""
+    global tls_server_instance
+    tls = tls_server_instance
+    if tls:
+        try:
+            uplink = tls.get_sensor_latest_uplink(eui.upper())
+            if uplink:
+                vals = (uplink.get("decoded") or {}).get("values") or {}
+                if vals:
+                    return vals
+        except Exception:
+            pass
+    try:
+        query_tenant = _resolve_query_tenant_for_sensor(eui.upper(), active_tenant)
+        rows = _timescale_fetch_sensor_payload_history(eui.upper(), tenant_id=query_tenant, limit=1)
+        if rows:
+            return (rows[0].get("decoded") or {}).get("values") or {}
+    except Exception:
+        pass
+    return {}
+
+
+def _sensor_latest_decoded_payload(eui: str, active_tenant: str) -> dict:
+    """Return the latest decoded payload envelope for a sensor."""
+    global tls_server_instance
+    eui_upper = str(eui or "").strip().upper()
+    if not eui_upper:
+        return {"profile": "raw", "values": {}}
+
+    tls = tls_server_instance
+    if tls:
+        try:
+            uplink = tls.get_sensor_latest_uplink(eui_upper)
+            if uplink and isinstance(uplink.get("decoded"), dict):
+                return uplink.get("decoded") or {"profile": "raw", "values": {}}
+        except Exception:
+            pass
+
+    try:
+        query_tenant = _resolve_query_tenant_for_sensor(eui_upper, active_tenant)
+        rows = _timescale_fetch_sensor_payload_history(eui_upper, tenant_id=query_tenant, limit=1)
+        if rows and isinstance(rows[0].get("decoded"), dict):
+            return rows[0].get("decoded") or {"profile": "raw", "values": {}}
+    except Exception:
+        pass
+    return {"profile": "raw", "values": {}}
+
+
+def _normalize_alert_kind(value: Any) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in {"sensor_offline", "offline", "sensor_unavailable", "availability"}:
+        return "sensor_offline"
+    return "threshold"
+
+
+def _build_visible_sensor_lookup(active_tenant: str) -> Dict[str, Dict[str, Any]]:
+    lookup: Dict[str, Dict[str, Any]] = {}
+    try:
+        sensors = _load_all_sensors()
+    except Exception:
+        sensors = []
+    for sensor in sensors or []:
+        if not isinstance(sensor, dict):
+            continue
+        eui_upper = str(sensor.get("eui") or "").strip().upper()
+        if not eui_upper:
+            continue
+        if not (
+            _tenant_matches(_tenant_id_from_sensor(sensor), active_tenant)
+            or _sensor_shared_with_tenant(sensor, active_tenant)
+        ):
+            continue
+        payload = dict(sensor)
+        payload["eui"] = eui_upper
+        payload["name"] = str(sensor.get("name") or "").strip()
+        payload["tags"] = _normalize_sensor_tags(sensor.get("tags", []))
+        lookup[eui_upper] = payload
+    return lookup
+
+
+def _alert_metric_metadata() -> Dict[str, Dict[str, str]]:
+    return {
+        "co2_1_ppm": {"label": "CO2", "unit": "ppm", "value_type": "number"},
+        "co2_2_ppm": {"label": "CO2 (secondary)", "unit": "ppm", "value_type": "number"},
+        "temperature_1_c": {"label": "Temperature", "unit": "C", "value_type": "number"},
+        "temperature_2_c": {"label": "Temperature 2", "unit": "C", "value_type": "number"},
+        "humidity_1_pct": {"label": "Humidity", "unit": "%", "value_type": "number"},
+        "humidity_2_pct": {"label": "Humidity 2", "unit": "%", "value_type": "number"},
+        "battery_v_est": {"label": "Battery", "unit": "V", "value_type": "number"},
+        "battery_mv": {"label": "Battery", "unit": "mV", "value_type": "number"},
+        "co2_last_calibration_ppm": {"label": "CO2 last calibration", "unit": "ppm", "value_type": "number"},
+        "days_to_next_calibration": {"label": "Days to calibration", "unit": "d", "value_type": "number"},
+        "calibration_not_done": {"label": "Calibration missing", "unit": "", "value_type": "boolean"},
+        "co2_error": {"label": "CO2 sensor error", "unit": "", "value_type": "boolean"},
+        "total_openings": {"label": "Total openings", "unit": "", "value_type": "number"},
+        "internal_magnet_alarm": {"label": "Internal alarm", "unit": "", "value_type": "boolean"},
+        "external_alarm": {"label": "External alarm", "unit": "", "value_type": "boolean"},
+        "internal_magnet_alarm_last_5min": {"label": "Internal alarm 5 min", "unit": "", "value_type": "boolean"},
+        "internal_magnet_alarm_last_10min": {"label": "Internal alarm 10 min", "unit": "", "value_type": "boolean"},
+        "internal_magnet_alarm_last_1h": {"label": "Internal alarm 1 h", "unit": "", "value_type": "boolean"},
+        "internal_magnet_alarm_last_24h": {"label": "Internal alarm 24 h", "unit": "", "value_type": "boolean"},
+        "external_alarm_last_5min": {"label": "External alarm 5 min", "unit": "", "value_type": "boolean"},
+        "external_alarm_last_10min": {"label": "External alarm 10 min", "unit": "", "value_type": "boolean"},
+        "external_alarm_last_1h": {"label": "External alarm 1 h", "unit": "", "value_type": "boolean"},
+        "external_alarm_last_24h": {"label": "External alarm 24 h", "unit": "", "value_type": "boolean"},
+        "minutes_since_last_alarm": {"label": "Minutes since last alarm", "unit": "min", "value_type": "number"},
+        "duration_last_alarm_minutes": {"label": "Last alarm duration", "unit": "min", "value_type": "number"},
+        "operating_years": {"label": "Operating years", "unit": "y", "value_type": "number"},
+        "runtime_years": {"label": "Runtime years", "unit": "y", "value_type": "number"},
+        "low_batt": {"label": "Low battery", "unit": "", "value_type": "boolean"},
+        "sabotage_internal": {"label": "Internal sabotage", "unit": "", "value_type": "boolean"},
+        "sabotage_external": {"label": "External sabotage", "unit": "", "value_type": "boolean"},
+        "async_message": {"label": "Async message", "unit": "", "value_type": "boolean"},
+        "any_alarm_active": {"label": "Any alarm active", "unit": "", "value_type": "boolean"},
+    }
+
+
+def _alert_profile_default_metric_keys() -> Dict[str, list[str]]:
+    return {
+        "lansen_e2_co2_v1": [
+            "co2_1_ppm",
+            "co2_2_ppm",
+            "temperature_1_c",
+            "temperature_2_c",
+            "humidity_1_pct",
+            "humidity_2_pct",
+            "battery_v_est",
+            "co2_last_calibration_ppm",
+            "days_to_next_calibration",
+            "calibration_not_done",
+            "co2_error",
+        ],
+        "lansen_m2_v1": [
+            "total_openings",
+            "any_alarm_active",
+            "internal_magnet_alarm",
+            "external_alarm",
+            "internal_magnet_alarm_last_5min",
+            "internal_magnet_alarm_last_10min",
+            "internal_magnet_alarm_last_1h",
+            "internal_magnet_alarm_last_24h",
+            "external_alarm_last_5min",
+            "external_alarm_last_10min",
+            "external_alarm_last_1h",
+            "external_alarm_last_24h",
+            "minutes_since_last_alarm",
+            "duration_last_alarm_minutes",
+            "battery_v_est",
+            "battery_mv",
+            "low_batt",
+            "sabotage_internal",
+            "sabotage_external",
+            "async_message",
+        ],
+    }
+
+
+def _humanize_alert_metric_key(metric_key: Any) -> str:
+    text = str(metric_key or "").strip().replace("_", " ")
+    text = re.sub(r"\s+", " ", text).strip()
+    return text.title() if text else "Metric"
+
+
+def _resolve_sensor_alert_profile(sensor_config: Optional[Dict[str, Any]], latest_profile: Any = None) -> str:
+    sensor_config = dict(sensor_config or {})
+    latest = str(latest_profile or "").strip().lower()
+    if latest and latest not in {"raw", "auto"}:
+        return latest
+
+    raw_decoder = str(sensor_config.get("payload_decoder") or "auto").strip().lower()
+    if raw_decoder not in {"", "auto", "default", "heuristic"}:
+        if raw_decoder in {"lansen_e2_co2_v1", "lansen_m2_v1", "raw"}:
+            return raw_decoder
+        try:
+            from TLSServer import get_custom_payload_profile
+            if get_custom_payload_profile(raw_decoder):
+                return raw_decoder
+        except Exception:
+            pass
+
+    inferred = _infer_sensor_decoder_profile(sensor_config)
+    return inferred if inferred not in {"", "auto"} else "raw"
+
+
+def _build_sensor_alert_metric_options(sensor_config: Optional[Dict[str, Any]], active_tenant: str) -> list[Dict[str, Any]]:
+    sensor_config = dict(sensor_config or {})
+    sensor_eui = str(sensor_config.get("eui") or "").strip().upper()
+    if not sensor_eui:
+        return []
+
+    metadata = _alert_metric_metadata()
+    decoded = _sensor_latest_decoded_payload(sensor_eui, active_tenant)
+    values = decoded.get("values") if isinstance(decoded.get("values"), dict) else {}
+    latest_profile = str(decoded.get("profile") or "").strip().lower()
+    profile_id = _resolve_sensor_alert_profile(sensor_config, latest_profile=latest_profile)
+    known_order = _alert_profile_default_metric_keys().get(profile_id, [])
+    custom_profile = None
+    try:
+        from TLSServer import get_custom_payload_profile
+        custom_profile = get_custom_payload_profile(profile_id)
+    except Exception:
+        custom_profile = None
+
+    metric_keys: list[str] = []
+    if values:
+        candidate_keys = [
+            key
+            for key, value in values.items()
+            if isinstance(value, (int, float, bool)) and not isinstance(value, str)
+        ]
+        if known_order:
+            metric_keys.extend([key for key in known_order if key in candidate_keys])
+        for key in candidate_keys:
+            if key not in metric_keys:
+                metric_keys.append(key)
+    elif known_order:
+        metric_keys.extend(known_order)
+    elif isinstance(custom_profile, dict):
+        for field in custom_profile.get("fields") or []:
+            field_type = str(field.get("type") or "uint").strip().lower()
+            field_key = str(field.get("key") or "").strip()
+            if field_key and field_type in {"uint", "int", "bool"}:
+                metric_keys.append(field_key)
+
+    custom_field_map = {}
+    if isinstance(custom_profile, dict):
+        custom_field_map = {
+            str(field.get("key") or "").strip(): field
+            for field in (custom_profile.get("fields") or [])
+            if str(field.get("key") or "").strip()
+        }
+
+    options: list[Dict[str, Any]] = []
+    for metric_key in metric_keys:
+        meta = dict(metadata.get(metric_key) or {})
+        if metric_key in custom_field_map:
+            field = custom_field_map[metric_key]
+            meta.setdefault("label", str(field.get("label") or metric_key))
+            meta.setdefault("unit", str(field.get("unit") or ""))
+            field_type = str(field.get("type") or "uint").strip().lower()
+            meta.setdefault("value_type", "boolean" if field_type == "bool" else "number")
+        if not meta:
+            value = values.get(metric_key)
+            inferred_type = "boolean" if isinstance(value, bool) else "number"
+            meta = {
+                "label": _humanize_alert_metric_key(metric_key),
+                "unit": "",
+                "value_type": inferred_type,
+            }
+        options.append({
+            "value": metric_key,
+            "label": str(meta.get("label") or _humanize_alert_metric_key(metric_key)),
+            "unit": str(meta.get("unit") or ""),
+            "value_type": str(meta.get("value_type") or "number"),
+        })
+
+    return options
+
+
+def _parse_iso_timestamp_to_unix(value: Any) -> float:
+    raw = str(value or "").strip()
+    if not raw:
+        return 0.0
+    try:
+        normalized = raw.replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(normalized)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return float(parsed.timestamp())
+    except Exception:
+        return 0.0
+
+
+def _normalize_sensor_activity_status(activity_status: Any) -> str:
+    raw = str(activity_status or "").strip().lower()
+    if not raw:
+        return "no_data"
+    aliases = {
+        "online": "active",
+        "connected": "active",
+        "recent": "active",
+        "warn": "warning",
+        "degraded": "warning",
+        "inactive": "offline",
+        "disconnected": "offline",
+    }
+    return aliases.get(raw, raw)
+
+
+def _sensor_activity_ui_meta(activity_status: Any) -> Dict[str, Any]:
+    normalized = _normalize_sensor_activity_status(activity_status)
+    ui_tier = "unknown"
+    incident = False
+    incident_severity = None
+
+    if normalized in {"active", "quiet"}:
+        ui_tier = "online"
+    elif normalized in {"warning", "stale", "auto_detach_pending"}:
+        ui_tier = "warn"
+        incident = True
+        incident_severity = "warn"
+    elif normalized in {"offline", "auto_detached"}:
+        ui_tier = "offline"
+        incident = True
+        incident_severity = "error"
+
+    return {
+        "activity_status": normalized,
+        "ui_tier": ui_tier,
+        "status_incident": incident,
+        "status_incident_severity": incident_severity,
+    }
+
+
+def _sensor_availability_snapshot(sensor_config: Optional[Dict[str, Any]], active_tenant: str) -> Dict[str, Any]:
+    sensor_config = dict(sensor_config or {})
+    sensor_eui = str(sensor_config.get("eui") or "").strip().upper()
+    interval_meta = _resolve_sensor_expected_interval(sensor_config, None)
+    snapshot = {
+        "sensor_eui": sensor_eui,
+        "activity_status": "no_data",
+        "last_seen_timestamp": 0.0,
+        "hours_since_last_seen": 0.0,
+        **interval_meta,
+    }
+    if not sensor_eui:
+        return snapshot
+
+    runtime_status = {}
+    packet_stats = {}
+    global tls_server_instance
+    tls_server = tls_server_instance
+    if tls_server and hasattr(tls_server, "get_sensor_registration_status"):
+        try:
+            runtime_status = tls_server.get_sensor_registration_status() or {}
+        except Exception:
+            runtime_status = {}
+    if tls_server and hasattr(tls_server, "sensor_packet_stats"):
+        try:
+            packet_stats = getattr(tls_server, "sensor_packet_stats", {}) or {}
+        except Exception:
+            packet_stats = {}
+
+    runtime_entry = (
+        runtime_status.get(sensor_eui)
+        or runtime_status.get(sensor_eui.upper())
+        or runtime_status.get(sensor_eui.lower())
+        or {}
+    )
+    stats = (
+        packet_stats.get(sensor_eui)
+        or packet_stats.get(sensor_eui.upper())
+        or packet_stats.get(sensor_eui.lower())
+        or {}
+    )
+
+    observed_interval = stats.get("avg_interval_seconds") if isinstance(stats, dict) else None
+    snapshot.update(_resolve_sensor_expected_interval(sensor_config, observed_interval))
+
+    runtime_activity = str(runtime_entry.get("activity_status") or "").strip().lower()
+    if runtime_activity:
+        snapshot["activity_status"] = runtime_activity
+
+    last_seen_ts = 0.0
+    try:
+        last_seen_ts = float(runtime_entry.get("last_seen_timestamp") or 0.0)
+    except (TypeError, ValueError):
+        last_seen_ts = 0.0
+    if last_seen_ts <= 0:
+        try:
+            last_seen_ts = float(stats.get("last_seen") or 0.0)
+        except (TypeError, ValueError):
+            last_seen_ts = 0.0
+    if last_seen_ts <= 0:
+        try:
+            query_tenant = _resolve_query_tenant_for_sensor(sensor_eui, active_tenant)
+            history = _timescale_fetch_sensor_payload_history(sensor_eui, tenant_id=query_tenant, limit=1)
+            if history:
+                last_seen_ts = _parse_iso_timestamp_to_unix(history[0].get("received_at"))
+        except Exception:
+            last_seen_ts = 0.0
+
+    snapshot["last_seen_timestamp"] = float(last_seen_ts or 0.0)
+    if last_seen_ts > 0:
+        now_ts = datetime.now(timezone.utc).timestamp()
+        inactive_seconds = max(0.0, now_ts - last_seen_ts)
+        snapshot["hours_since_last_seen"] = round(inactive_seconds / 3600.0, 2)
+        if runtime_activity in {"auto_detached", "auto_detach_pending", "offline"}:
+            snapshot["activity_status"] = runtime_activity
+        elif snapshot.get("reporting_mode") == "event":
+            if inactive_seconds > float(snapshot.get("stale_threshold_seconds") or 0):
+                snapshot["activity_status"] = "stale"
+            elif inactive_seconds <= 3600:
+                snapshot["activity_status"] = "active"
+            else:
+                snapshot["activity_status"] = "quiet"
+        else:
+            if inactive_seconds > float(snapshot.get("offline_threshold_seconds") or 0):
+                snapshot["activity_status"] = "warning"
+            else:
+                snapshot["activity_status"] = "active"
+    elif runtime_activity:
+        snapshot["activity_status"] = runtime_activity
+
+    snapshot.update(_sensor_activity_ui_meta(snapshot.get("activity_status")))
+    return snapshot
+
+
+def _sensor_is_unavailable(activity_status: Any) -> bool:
+    meta = _sensor_activity_ui_meta(activity_status)
+    return bool(meta.get("status_incident"))
+
+
+def _evaluate_triggered_alerts(
+    active_tenant: str,
+    visible_sensors: Optional[Dict[str, Dict[str, Any]]] = None,
+    *,
+    persist_state: bool = True,
+) -> list[Dict[str, Any]]:
+    visible_sensors = visible_sensors or _build_visible_sensor_lookup(active_tenant)
+    alerts = [
+        {
+            **a,
+            "kind": _normalize_alert_kind(a.get("kind")),
+            "enabled": bool(a.get("enabled", True)),
+        }
+        for a in _load_alerts()
+        if a.get('enabled', True) and str(a.get('sensor_eui', '')).strip().upper() in visible_sensors
+    ]
+    if not alerts:
+        return []
+
+    from collections import defaultdict
+
+    by_sensor = defaultdict(list)
+    for alert in alerts:
+        by_sensor[str(alert.get('sensor_eui', '')).upper()].append(alert)
+
+    triggered = []
+    for eui, sensor_alerts in by_sensor.items():
+        if not eui:
+            continue
+        sensor_config = visible_sensors.get(eui)
+        values = _sensor_latest_values(eui, active_tenant)
+        availability = None
+        for alert in sensor_alerts:
+            if alert.get('kind') == 'sensor_offline':
+                if availability is None:
+                    availability = _sensor_availability_snapshot(sensor_config, active_tenant)
+                if _sensor_is_unavailable(availability.get('activity_status')):
+                    triggered.append({
+                        **alert,
+                        "current_status": availability.get("activity_status"),
+                        "hours_since_last_seen": availability.get("hours_since_last_seen"),
+                    })
+                continue
+
+            metric = alert.get('metric', '')
+            if metric not in values:
+                continue
+            raw_val = values[metric]
+            try:
+                num_val = float(raw_val)
+            except (TypeError, ValueError):
+                continue
+            if _eval_alert(alert.get('condition', 'gt'), num_val, alert.get('threshold', 0)):
+                triggered.append({
+                    **alert,
+                    "current_value": num_val,
+                })
+
+    if persist_state:
+        _persist_alert_runtime_state(alerts, triggered)
+    now_iso = datetime.now(timezone.utc).isoformat()
+    for item in triggered:
+        if not item.get("triggered_at"):
+            item["triggered_at"] = now_iso
+    triggered.sort(key=lambda a: 0 if a.get('severity') == 'critical' else 1)
+    return triggered
+
+
+def _format_alert_metric_value(metric: Any, value: Any) -> str:
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        return ""
+    unit = str((_alert_metric_metadata().get(str(metric or "").strip()) or {}).get("unit") or "")
+    if unit == "°C":
+        return f"{num:.1f}{unit}"
+    if num.is_integer() or abs(num) >= 10:
+        return f"{int(round(num))}{unit}"
+    return f"{num:.2f}{unit}"
+
+
+def _alert_metric_label(metric: Any) -> str:
+    metric_key = str(metric or "").strip()
+    if not metric_key:
+        return "Metrika"
+    meta = _alert_metric_metadata().get(metric_key) or {}
+    return str(meta.get("label") or _humanize_alert_metric_key(metric_key))
+
+
+def _format_threshold_value(metric: Any, value: Any) -> str:
+    return _format_alert_metric_value(metric, value)
+
+
+def _estimate_sensor_incident_started_at(availability: Dict[str, Any]) -> Optional[str]:
+    try:
+        last_seen_ts = float(availability.get("last_seen_timestamp") or 0.0)
+    except (TypeError, ValueError):
+        last_seen_ts = 0.0
+    if last_seen_ts <= 0:
+        return None
+
+    status = _normalize_sensor_activity_status(availability.get("activity_status"))
+    if status == "warning":
+        offset_seconds = float(availability.get("offline_threshold_seconds") or 0.0)
+    elif status == "stale":
+        offset_seconds = float(availability.get("stale_threshold_seconds") or 0.0)
+    elif status in {"offline", "auto_detached"}:
+        offset_seconds = float(availability.get("offline_threshold_seconds") or 0.0)
+    elif status == "auto_detach_pending":
+        offset_seconds = float(getattr(bssci_config, "AUTO_DETACH_TIMEOUT", 259200) or 259200)
+    else:
+        return None
+
+    if offset_seconds <= 0:
+        return None
+    started_at = datetime.fromtimestamp(last_seen_ts + offset_seconds, tz=timezone.utc)
+    now_dt = datetime.now(timezone.utc)
+    if started_at > now_dt:
+        started_at = now_dt
+    return started_at.isoformat()
+
+
+def _generic_sensor_availability_reason(activity_status: Any) -> str:
+    return "Senzor neposlal dáta v očakávanom čase."
+
+
+def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
+    visible_sensors = _build_visible_sensor_lookup(active_tenant)
+    enabled_offline_rule_sensors = {
+        str(alert.get("sensor_eui") or "").strip().upper()
+        for alert in _load_alerts()
+        if bool(alert.get("enabled", True)) and _normalize_alert_kind(alert.get("kind")) == "sensor_offline"
+    }
+
+    incidents: list[Dict[str, Any]] = []
+
+    for sensor_eui, sensor_config in visible_sensors.items():
+        availability = _sensor_availability_snapshot(sensor_config, active_tenant)
+        if sensor_eui in enabled_offline_rule_sensors:
+            continue
+        if not bool(availability.get("status_incident")):
+            continue
+        severity = "error" if availability.get("status_incident_severity") == "error" else "warn"
+        raw_status = str(availability.get("activity_status") or "").strip().lower()
+        reason = _generic_sensor_availability_reason(raw_status)
+        hours_since_last_seen = availability.get("hours_since_last_seen")
+        hours_str = ""
+        try:
+            if hours_since_last_seen not in (None, ""):
+                hours_str = f"{float(hours_since_last_seen):.1f} h"
+        except (TypeError, ValueError):
+            hours_str = ""
+        incidents.append({
+            "id": f"{sensor_eui}:activity",
+            "tier": severity,
+            "level": "danger" if severity == "error" else "warn",
+            "severity": "critical" if severity == "error" else "warning",
+            "name": str(sensor_config.get("name") or sensor_eui),
+            "text": reason,
+            "desc": reason,
+            "reason": reason,
+            "eui": sensor_eui,
+            "source": "activity",
+            "kind": "activity",
+            "ackKey": f"{sensor_eui}:activity",
+            "triggeredAt": _estimate_sensor_incident_started_at(availability),
+            "ruleId": None,
+            "valStr": hours_str,
+            "linkUrl": f"/sensors/{urllib.parse.quote(sensor_eui)}",
+        })
+
+    for alert in _evaluate_triggered_alerts(active_tenant, visible_sensors=visible_sensors, persist_state=True):
+        kind = _normalize_alert_kind(alert.get("kind"))
+        sensor_eui = str(alert.get("sensor_eui") or "").strip().upper()
+        sensor_name = str((visible_sensors.get(sensor_eui) or {}).get("name") or sensor_eui or "—")
+        if kind == "sensor_offline":
+            reason = _generic_sensor_availability_reason(alert.get("current_status"))
+            desc = reason
+            val_str = (
+                f"{float(alert.get('hours_since_last_seen')):.1f} h"
+                if alert.get("hours_since_last_seen") not in (None, "")
+                else ""
+            )
+            source = "offline_rule"
+        else:
+            metric_label = _alert_metric_label(alert.get("metric"))
+            current_value_str = _format_threshold_value(alert.get("metric"), alert.get("current_value"))
+            threshold_str = _format_threshold_value(alert.get("metric"), alert.get("threshold"))
+            condition_label = {
+                "gt": ">",
+                "gte": ">=",
+                "lt": "<",
+                "lte": "<=",
+                "eq": "=",
+            }.get(str(alert.get("condition") or "").strip().lower(), str(alert.get("condition") or "").strip())
+            reason = f"{metric_label}: {current_value_str} {condition_label} {threshold_str}".strip()
+            desc = reason
+            val_str = current_value_str
+            source = "threshold"
+        severity = "error" if alert.get("severity") == "critical" else "warn"
+        incidents.append({
+            "id": str(alert.get("id") or f"{sensor_eui}:{kind}"),
+            "tier": severity,
+            "level": "danger" if severity == "error" else "warn",
+            "severity": str(alert.get("severity") or "warning"),
+            "name": sensor_name,
+            "text": desc,
+            "desc": desc,
+            "reason": reason,
+            "eui": sensor_eui,
+            "source": source,
+            "kind": kind,
+            "ackKey": f"{str(alert.get('id') or sensor_eui)}:{kind}",
+            "triggeredAt": alert.get("triggered_at"),
+            "ruleId": alert.get("id"),
+            "valStr": val_str,
+            "linkUrl": f"/sensors/{urllib.parse.quote(sensor_eui)}" if sensor_eui else "/alerts",
+        })
+
+    incidents.sort(key=lambda item: (0 if item.get("tier") == "error" else 1, str(item.get("name") or ""), str(item.get("id") or "")))
+    return incidents
+
+# ── End alert helpers ────────────────────────────────────────────────────────
+
+def _sensor_shared_with_tenant(sensor, active_tenant):
+    """Return True if active_tenant is in the sensor's shared_tenants list."""
+    if _is_global_tenant_scope(active_tenant):
+        return False  # global scope already matched by _tenant_matches
+    shared = sensor.get("shared_tenants") or []
+    if not isinstance(shared, list):
+        return False
+    active_norm = _normalize_tenant_id(active_tenant, fallback=_default_tenant_id())
+    return any(
+        _normalize_tenant_id(t, fallback=_default_tenant_id()) == active_norm
+        for t in shared
+    )
+
+def _resolve_query_tenant_for_sensor(sensor_eui, requesting_tenant):
+    """For shared sensors return the owner's tenant_id so DB queries hit the right partition."""
+    if _is_global_tenant_scope(requesting_tenant):
+        return requesting_tenant
+    eui_up = str(sensor_eui or "").strip().upper()
+    if not eui_up:
+        return requesting_tenant
+    for s in _load_all_sensors():
+        if str(s.get("eui", "")).upper() == eui_up:
+            owner = _tenant_id_from_sensor(s)
+            if _tenant_matches(owner, requesting_tenant):
+                return requesting_tenant
+            if _sensor_shared_with_tenant(s, requesting_tenant):
+                return owner
+            break
+    return requesting_tenant
+
 def _filter_sensors_for_tenant(sensors, tenant_id=None):
     active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     filtered = []
@@ -4528,6 +5735,11 @@ def _filter_sensors_for_tenant(sensors, tenant_id=None):
         if _tenant_matches(_tenant_id_from_sensor(sensor), active_tenant):
             payload = dict(sensor)
             payload["tenant_id"] = _tenant_id_from_sensor(sensor)
+            filtered.append(payload)
+        elif _sensor_shared_with_tenant(sensor, active_tenant):
+            payload = dict(sensor)
+            payload["tenant_id"] = _tenant_id_from_sensor(sensor)
+            payload["is_shared"] = True
             filtered.append(payload)
     return filtered
 
@@ -5050,6 +6262,15 @@ def _normalize_sensor_payload(data):
     payload["gps_lat"] = gps_lat
     payload["gps_lng"] = gps_lng
     payload["tenant_id"] = _normalize_tenant_id(payload.get("tenant_id"), fallback=_active_tenant_id())
+    # Preserve shared_tenants as-is (managed via /api/sensors/<eui>/share)
+    raw_shared = payload.get("shared_tenants")
+    if isinstance(raw_shared, list):
+        payload["shared_tenants"] = [
+            _normalize_tenant_id(t, fallback=_default_tenant_id())
+            for t in raw_shared if str(t or "").strip()
+        ]
+    else:
+        payload.pop("shared_tenants", None)
     return payload
 
 def _ensure_ca_exists():
@@ -7562,11 +8783,29 @@ def sensors():
 @app.route('/sensors/<eui>')
 @login_required
 def sensor_detail_page(eui):
+    tenant_ids_set = set(_tenant_registry_map().keys())
+    tenant_ids_set.add(_default_tenant_id())
+    users_data = load_users()
+    for user in (users_data.get("users", {}) or {}).values():
+        if isinstance(user, dict):
+            role = _normalize_user_role(user.get("role", "viewer"))
+            if role != "admin":
+                t = str(user.get("tenant_id") or "").strip().lower()
+                if t:
+                    tenant_ids_set.add(t)
+    all_tenant_ids = sorted(t for t in tenant_ids_set if t and not _is_global_tenant_scope(t))
     return render_template(
         'sensor_detail.html',
         sensor_eui=str(eui or '').strip().upper(),
         sensor_profiles=_sensor_profile_options(),
+        all_tenant_ids=all_tenant_ids,
     )
+
+
+@app.route('/alerts')
+@login_required
+def alerts_page():
+    return render_template('alerts.html')
 
 
 @app.route('/sensor-telemetry')
@@ -7614,6 +8853,7 @@ def get_sensors():
                     'configured_stale_after_hours': _normalize_stale_after_hours(sensor.get('stale_after_hours')),
                     'gps_lat': sensor.get('gps_lat'),
                     'gps_lng': sensor.get('gps_lng'),
+                    'marker_color': sensor.get('marker_color'),
                     'tenant_id': sensor.get('tenant_id', active_tenant),
                     'registered': False,
                     'registration_info': {},
@@ -7793,9 +9033,43 @@ def get_sensors():
                     if last_seen > 0:
                         sensor_data['last_seen_timestamp'] = last_seen
                         sensor_data['hours_since_last_seen'] = round(max(0.0, now_ts - last_seen) / 3600.0, 2)
-                    sensor_data.update(_resolve_sensor_expected_interval(sensor_data, None))
+                        interval_meta = _resolve_sensor_expected_interval(sensor_data, None)
+                        sensor_data.update(interval_meta)
+                        if sensor_data.get('activity_status') not in {'auto_detached', 'auto_detach_pending'}:
+                            inactive_seconds = max(0.0, now_ts - last_seen)
+                            if interval_meta.get('reporting_mode') == 'event':
+                                if inactive_seconds > interval_meta['stale_threshold_seconds']:
+                                    sensor_data['activity_status'] = 'stale'
+                                elif inactive_seconds <= 3600:
+                                    sensor_data['activity_status'] = 'active'
+                                else:
+                                    sensor_data['activity_status'] = 'quiet'
+                            elif inactive_seconds > interval_meta['offline_threshold_seconds']:
+                                sensor_data['activity_status'] = 'warning'
+                            else:
+                                sensor_data['activity_status'] = 'active'
+                    else:
+                        sensor_data.update(_resolve_sensor_expected_interval(sensor_data, None))
                 else:
                     sensor_data.update(_resolve_sensor_expected_interval(sensor_data, None))
+                availability = _sensor_availability_snapshot(sensor_data, active_tenant)
+                sensor_data.update({
+                    'activity_status': availability.get('activity_status', sensor_data.get('activity_status', 'no_data')),
+                    'last_seen_timestamp': availability.get('last_seen_timestamp', sensor_data.get('last_seen_timestamp', 0)),
+                    'hours_since_last_seen': availability.get('hours_since_last_seen', sensor_data.get('hours_since_last_seen', 0)),
+                    'reporting_mode': availability.get('reporting_mode', sensor_data.get('reporting_mode')),
+                    'reporting_mode_source': availability.get('reporting_mode_source', sensor_data.get('reporting_mode_source')),
+                    'stale_after_hours': availability.get('stale_after_hours', sensor_data.get('stale_after_hours')),
+                    'stale_after_source': availability.get('stale_after_source', sensor_data.get('stale_after_source')),
+                    'expected_interval_seconds': availability.get('expected_interval_seconds', sensor_data.get('expected_interval_seconds')),
+                    'expected_interval_source': availability.get('expected_interval_source', sensor_data.get('expected_interval_source')),
+                    'delay_threshold_seconds': availability.get('delay_threshold_seconds', sensor_data.get('delay_threshold_seconds')),
+                    'offline_threshold_seconds': availability.get('offline_threshold_seconds', sensor_data.get('offline_threshold_seconds')),
+                    'stale_threshold_seconds': availability.get('stale_threshold_seconds', sensor_data.get('stale_threshold_seconds')),
+                    'ui_tier': availability.get('ui_tier', sensor_data.get('ui_tier')),
+                    'status_incident': availability.get('status_incident', sensor_data.get('status_incident')),
+                    'status_incident_severity': availability.get('status_incident_severity', sensor_data.get('status_incident_severity')),
+                })
                     
             print(f"Processed sensor status for {len(sensor_status)} sensors with registration data")
             return jsonify(sensor_status)
@@ -7816,7 +9090,7 @@ def get_sensors():
 
 @app.route('/api/sensors', methods=['POST'])
 @login_required
-@permission_required('can_edit_sensors')
+@permission_required('can_add_sensors')
 def add_sensor():
     try:
         data = _normalize_sensor_payload(request.json or {})
@@ -8017,6 +9291,53 @@ def delete_sensor(eui):
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/api/sensors/<eui>/share', methods=['GET', 'POST'])
+@login_required
+@permission_required('can_edit_sensors')
+def manage_sensor_share(eui):
+    """Get or update the shared_tenants list for a sensor (owner only)."""
+    eui_upper = str(eui or "").strip().upper()
+    sensors = _load_all_sensors()
+    active_tenant = _active_tenant_id()
+
+    sensor = next((s for s in sensors if str(s.get("eui", "")).upper() == eui_upper), None)
+    if not sensor:
+        return jsonify({"success": False, "message": "Sensor not found"}), 404
+
+    owner_tenant = _tenant_id_from_sensor(sensor)
+    if not _tenant_matches(owner_tenant, active_tenant):
+        return jsonify({"success": False, "message": "Only the owner tenant can manage sharing"}), 403
+
+    if request.method == "GET":
+        shared = [_normalize_tenant_id(t, fallback=_default_tenant_id())
+                  for t in (sensor.get("shared_tenants") or [])]
+        return jsonify({"success": True, "owner_tenant": owner_tenant, "shared_tenants": shared})
+
+    data = request.json or {}
+    action = str(data.get("action") or "").strip().lower()
+    tenant = _normalize_tenant_id(data.get("tenant"), fallback=None)
+
+    if action not in ("add", "remove"):
+        return jsonify({"success": False, "message": "action must be 'add' or 'remove'"}), 400
+    if not tenant:
+        return jsonify({"success": False, "message": "tenant is required"}), 400
+    if tenant == owner_tenant:
+        return jsonify({"success": False, "message": "Cannot share with the owner tenant"}), 400
+
+    shared = [_normalize_tenant_id(t, fallback=_default_tenant_id())
+              for t in (sensor.get("shared_tenants") or [])]
+    if action == "add":
+        if tenant not in shared:
+            shared.append(tenant)
+    else:
+        shared = [t for t in shared if t != tenant]
+
+    sensor["shared_tenants"] = shared
+    _save_all_sensors(sensors)
+    logger.info(f"Sensor {eui_upper} shared_tenants updated by {session.get('username')}: {shared}")
+    return jsonify({"success": True, "shared_tenants": shared})
+
+
 @app.route('/api/sensors/<eui>/attach', methods=['POST'])
 @login_required
 @permission_required('can_edit_sensors')
@@ -8202,9 +9523,12 @@ def attach_sensor(eui):
 @login_required
 def get_sensor_telemetry_history():
     try:
+        active_tenant = _active_tenant_id()
+        sensor_eui_arg = request.args.get('sensor_eui')
+        query_tenant = _resolve_query_tenant_for_sensor(sensor_eui_arg, active_tenant) if sensor_eui_arg else active_tenant
         result = _timescale_fetch_sensor_telemetry_history(
-            tenant_id=_active_tenant_id(),
-            sensor_eui=request.args.get('sensor_eui'),
+            tenant_id=query_tenant,
+            sensor_eui=sensor_eui_arg,
             base_station_eui=request.args.get('base_station_eui'),
             profile=request.args.get('profile'),
             minutes=request.args.get('minutes', 1440),
@@ -8220,9 +9544,12 @@ def get_sensor_telemetry_history():
 @login_required
 def export_sensor_telemetry_history():
     try:
+        active_tenant = _active_tenant_id()
+        sensor_eui_arg = request.args.get('sensor_eui')
+        query_tenant = _resolve_query_tenant_for_sensor(sensor_eui_arg, active_tenant) if sensor_eui_arg else active_tenant
         result = _timescale_fetch_sensor_telemetry_history(
-            tenant_id=_active_tenant_id(),
-            sensor_eui=request.args.get('sensor_eui'),
+            tenant_id=query_tenant,
+            sensor_eui=sensor_eui_arg,
             base_station_eui=request.args.get('base_station_eui'),
             profile=request.args.get('profile'),
             minutes=request.args.get('minutes', 1440),
@@ -8237,6 +9564,378 @@ def export_sensor_telemetry_history():
         return _telemetry_csv_response(result.get("rows") or [], filename=filename)
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
+
+
+# ── Alert CRUD routes ────────────────────────────────────────────────────────
+
+import uuid as _uuid_mod
+
+@app.route('/api/alerts', methods=['GET'])
+@login_required
+def api_alerts_list():
+    """List alerts, optionally filtered by ?sensor_eui=<eui>."""
+    active_tenant = _active_tenant_id()
+    sensor_eui = request.args.get('sensor_eui', '').strip().upper()
+    visible_sensors = _build_visible_sensor_lookup(active_tenant)
+    alerts = [
+        {
+            **a,
+            "kind": _normalize_alert_kind(a.get("kind")),
+            "enabled": bool(a.get("enabled", True)),
+        }
+        for a in _load_alerts()
+        if str(a.get('sensor_eui', '')).strip().upper() in visible_sensors
+    ]
+    if sensor_eui:
+        alerts = [a for a in alerts if str(a.get('sensor_eui', '')).upper() == sensor_eui]
+    return jsonify({"success": True, "alerts": alerts})
+
+
+@app.route('/api/alerts/options', methods=['GET'])
+@login_required
+def api_alert_options():
+    """Return alert-capable metrics for a tenant-visible sensor."""
+    active_tenant = _active_tenant_id()
+    sensor_eui = request.args.get('sensor_eui', '').strip().upper()
+    if not sensor_eui:
+        return jsonify({"success": False, "message": "Sensor EUI is required.", "metrics": []}), 400
+
+    visible_sensors = _build_visible_sensor_lookup(active_tenant)
+    sensor_config = visible_sensors.get(sensor_eui)
+    if not sensor_config:
+        return jsonify({"success": False, "message": "Sensor not found.", "metrics": []}), 404
+
+    metrics = _build_sensor_alert_metric_options(sensor_config, active_tenant)
+    availability = _sensor_availability_snapshot(sensor_config, active_tenant)
+    return jsonify({
+        "success": True,
+        "sensor_eui": sensor_eui,
+        "metrics": metrics,
+        "sensor": {
+            "eui": sensor_eui,
+            "name": str(sensor_config.get("name") or "").strip(),
+            "payload_decoder": str(sensor_config.get("payload_decoder") or "auto"),
+            "activity_status": availability.get("activity_status", "no_data"),
+        },
+    })
+
+
+@app.route('/api/alerts', methods=['POST'])
+@login_required
+@permission_required('can_manage_alerts')
+def api_alerts_create():
+    """Create a new alert."""
+    try:
+        active_tenant = _active_tenant_id()
+        body = request.get_json(force=True) or {}
+        sensor_eui = str(body.get('sensor_eui') or '').strip().upper()
+        kind = _normalize_alert_kind(body.get('kind'))
+        metric = str(body.get('metric') or '').strip()
+        condition = str(body.get('condition') or '').strip()
+        threshold = body.get('threshold')
+        name = str(body.get('name') or '').strip()
+        severity = str(body.get('severity') or 'warning').strip()
+        enabled = bool(body.get('enabled', True))
+        visible_sensors = _build_visible_sensor_lookup(active_tenant)
+        sensor_config = visible_sensors.get(sensor_eui)
+
+        if not sensor_config:
+            return jsonify({"success": False, "message": "Sensor not found or not visible in current tenant scope."}), 404
+        if severity not in ('warning', 'critical'):
+            severity = 'warning'
+        if kind != 'threshold':
+            metric = ''
+            condition = ''
+            threshold = None
+
+        if kind == 'threshold':
+            if not metric or condition not in ('gt', 'gte', 'lt', 'lte', 'eq'):
+                return jsonify({"success": False, "message": "Missing threshold fields or invalid condition."}), 400
+            allowed_metrics = {
+                str(item.get("value") or "").strip()
+                for item in _build_sensor_alert_metric_options(sensor_config, active_tenant)
+            }
+            if metric not in allowed_metrics:
+                return jsonify({"success": False, "message": "Selected metric is not available for this sensor."}), 400
+            try:
+                threshold = float(threshold)
+            except (TypeError, ValueError):
+                return jsonify({"success": False, "message": "Invalid threshold value."}), 400
+        else:
+            metric = '__sensor_offline__'
+            condition = 'gt'
+            threshold = 0.0
+
+        if kind != 'threshold':
+            metric = ''
+            condition = ''
+            threshold = None
+
+        alert = {
+            "id": str(_uuid_mod.uuid4()),
+            "sensor_eui": sensor_eui,
+            "kind": kind,
+            "name": name or (f"{metric} {condition} {threshold}" if kind == "threshold" else f"{sensor_eui} offline"),
+            "metric": metric,
+            "condition": condition,
+            "threshold": threshold,
+            "severity": severity,
+            "enabled": enabled,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        alerts = _load_alerts()
+        alerts.append(alert)
+        _save_alerts(alerts)
+        return jsonify({"success": True, "alert": alert}), 201
+    except Exception as exc:
+        return jsonify({"success": False, "message": str(exc)}), 500
+
+
+@app.route('/api/alerts/<alert_id>', methods=['PUT'])
+@login_required
+@permission_required('can_manage_alerts')
+def api_alerts_update(alert_id):
+    """Update an existing alert."""
+    try:
+        active_tenant = _active_tenant_id()
+        visible_sensors = _build_visible_sensor_lookup(active_tenant)
+        alerts = _load_alerts()
+        target = next((a for a in alerts if a.get('id') == alert_id), None)
+        if target and str(target.get('sensor_eui', '')).strip().upper() not in visible_sensors:
+            return jsonify({"success": False, "message": "Alert is outside the active tenant scope."}), 404
+        if not target:
+            return jsonify({"success": False, "message": "Alert nenájdený"}), 404
+        body = request.get_json(force=True) or {}
+        target['kind'] = _normalize_alert_kind(target.get('kind'))
+        for field in ('name', 'severity'):
+            if field in body and str(body[field]).strip():
+                target[field] = str(body[field]).strip()
+        if target['kind'] == 'threshold' and 'metric' in body and str(body['metric']).strip():
+            sensor_config = visible_sensors.get(str(target.get('sensor_eui', '')).strip().upper())
+            proposed_metric = str(body['metric']).strip()
+            allowed_metrics = {
+                str(item.get("value") or "").strip()
+                for item in _build_sensor_alert_metric_options(sensor_config, active_tenant)
+            }
+            if proposed_metric in allowed_metrics:
+                target['metric'] = proposed_metric
+        if target['kind'] == 'threshold' and 'condition' in body and body['condition'] in ('gt', 'gte', 'lt', 'lte', 'eq'):
+            target['condition'] = body['condition']
+        if target['kind'] == 'threshold' and 'threshold' in body:
+            try:
+                target['threshold'] = float(body['threshold'])
+            except (TypeError, ValueError):
+                pass
+        if target['kind'] != 'threshold':
+            target['metric'] = ''
+            target['condition'] = ''
+            target['threshold'] = None
+        if 'enabled' in body:
+            target['enabled'] = bool(body['enabled'])
+        _save_alerts(alerts)
+        return jsonify({"success": True, "alert": target})
+    except Exception as exc:
+        return jsonify({"success": False, "message": str(exc)}), 500
+
+
+@app.route('/api/alerts/<alert_id>', methods=['DELETE'])
+@login_required
+@permission_required('can_manage_alerts')
+def api_alerts_delete(alert_id):
+    """Delete an alert."""
+    active_tenant = _active_tenant_id()
+    visible_sensors = _build_visible_sensor_lookup(active_tenant)
+    alerts = _load_alerts()
+    target = next((a for a in alerts if a.get('id') == alert_id), None)
+    if not target:
+        return jsonify({"success": False, "message": "Alert not found"}), 404
+    if str(target.get('sensor_eui', '')).strip().upper() not in visible_sensors:
+        return jsonify({"success": False, "message": "Alert is outside the active tenant scope."}), 404
+    new_list = [a for a in alerts if a.get('id') != alert_id]
+    if len(new_list) == len(alerts):
+        return jsonify({"success": False, "message": "Alert nenájdený"}), 404
+    _save_alerts(new_list)
+    return jsonify({"success": True})
+
+
+@app.route('/api/alerts/triggered', methods=['GET'])
+@login_required
+def api_alerts_triggered():
+    """Evaluate all enabled alerts against latest sensor values and return triggered ones."""
+    try:
+        active_tenant = _active_tenant_id()
+        triggered = _evaluate_triggered_alerts(active_tenant, persist_state=True)
+        return jsonify({"success": True, "triggered": triggered})
+    except Exception as exc:
+        return jsonify({"success": False, "message": str(exc), "triggered": []}), 500
+
+
+@app.route('/api/incidents', methods=['GET'])
+@login_required
+def api_incidents():
+    """Return current operational incidents from sensor state and alert rules."""
+    try:
+        active_tenant = _active_tenant_id()
+        incidents = _build_current_incidents(active_tenant)
+        return jsonify({
+            "success": True,
+            "incidents": incidents,
+            "summary": {
+                "total": len(incidents),
+                "critical": sum(1 for item in incidents if item.get("tier") == "error"),
+                "warning": sum(1 for item in incidents if item.get("tier") != "error"),
+            },
+        })
+    except Exception as exc:
+        return jsonify({"success": False, "message": str(exc), "incidents": [], "summary": {"total": 0, "critical": 0, "warning": 0}}), 500
+
+@app.route('/api/alerts/history', methods=['GET'])
+@login_required
+def api_alerts_history():
+    """Return alert event history (triggered/resolved), newest first."""
+    try:
+        active_tenant = _active_tenant_id()
+        limit = min(int(request.args.get('limit', 200)), 500)
+
+        # Build sensor name lookup
+        sensors = _filter_sensors_for_tenant(_load_all_sensors(), active_tenant)
+        sensor_names = {str(s.get('eui', '')).upper(): s.get('name') or str(s.get('eui', '')) for s in sensors}
+
+        # Build alert rule name lookup
+        alert_rules = {str(a.get('id', '')): a for a in _load_alerts()}
+
+        events = []
+
+        # Try TimescaleDB first
+        conn = None
+        try:
+            conn, err = _timescale_connect()
+            if conn is not None:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        SELECT ts, alert_id, sensor_eui, event_type, severity, payload
+                        FROM alert_events
+                        WHERE tenant_id = %s
+                        ORDER BY ts DESC
+                        LIMIT %s
+                    """, (_normalize_tenant_id(active_tenant, fallback=_default_tenant_id()), limit))
+                    for ts, alert_id, sensor_eui, event_type, severity, payload in (cur.fetchall() or []):
+                        rule = alert_rules.get(str(alert_id) or '') or {}
+                        p = payload if isinstance(payload, dict) else {}
+                        events.append({
+                            "ts": ts.isoformat() if hasattr(ts, 'isoformat') else str(ts),
+                            "alert_id": alert_id,
+                            "sensor_eui": sensor_eui,
+                            "sensor_name": sensor_names.get(str(sensor_eui or '').upper(), sensor_eui),
+                            "event_type": event_type,
+                            "severity": severity,
+                            "name": rule.get('name') or p.get('name') or '',
+                            "metric": rule.get('metric') or p.get('metric') or '',
+                            "kind": rule.get('kind') or p.get('kind') or 'threshold',
+                            "trigger_value": p.get('current_value'),
+                            "trigger_status": p.get('current_status'),
+                            "resolved_at": p.get('resolved_at'),
+                        })
+        except Exception:
+            pass
+        finally:
+            try:
+                if conn is not None:
+                    conn.close()
+            except Exception:
+                pass
+
+        # File-based fallback if DB had no results
+        if not events:
+            for e in sorted(_load_alert_events_file(), key=lambda x: x.get('ts', ''), reverse=True)[:limit]:
+                rule = alert_rules.get(str(e.get('alert_id') or '')) or {}
+                eui = str(e.get('sensor_eui') or '').upper()
+                events.append({
+                    "ts": e.get('ts', ''),
+                    "alert_id": e.get('alert_id', ''),
+                    "sensor_eui": e.get('sensor_eui', ''),
+                    "sensor_name": sensor_names.get(eui, eui),
+                    "event_type": e.get('event_type', ''),
+                    "severity": e.get('severity', 'warning'),
+                    "name": rule.get('name') or e.get('name') or '',
+                    "metric": rule.get('metric') or e.get('metric') or '',
+                    "kind": rule.get('kind') or e.get('kind') or 'threshold',
+                    "trigger_value": e.get('trigger_value'),
+                    "trigger_status": e.get('trigger_status'),
+                    "resolved_at": e.get('resolved_at'),
+                })
+
+        return jsonify({"success": True, "events": events})
+    except Exception as exc:
+        return jsonify({"success": False, "message": str(exc), "events": []}), 500
+
+
+# ── End alert routes ─────────────────────────────────────────────────────────
+
+
+@app.route('/api/sensors/<eui>/gps', methods=['POST'])
+@login_required
+def api_sensor_gps_update(eui):
+    """Update GPS coordinates for a sensor (viewer-accessible)."""
+    try:
+        body = request.get_json(force=True) or {}
+        try:
+            gps_lat = float(body['gps_lat'])
+            gps_lng = float(body['gps_lng'])
+        except (KeyError, TypeError, ValueError):
+            return jsonify({"success": False, "message": "Neplatné súradnice"}), 400
+        if not (-90 <= gps_lat <= 90) or not (-180 <= gps_lng <= 180):
+            return jsonify({"success": False, "message": "Súradnice mimo rozsahu"}), 400
+        eui_upper = _normalize_eui_upper(eui)
+        active_tenant = _active_tenant_id()
+        sensors = _load_all_sensors()
+        found = False
+        for s in sensors:
+            if (_normalize_eui_upper(s.get('eui', '')) == eui_upper
+                    and (_tenant_matches(_tenant_id_from_sensor(s), active_tenant)
+                         or _sensor_shared_with_tenant(s, active_tenant))):
+                s['gps_lat'] = round(gps_lat, 8)
+                s['gps_lng'] = round(gps_lng, 8)
+                found = True
+                break
+        if not found:
+            return jsonify({"success": False, "message": "Senzor nenájdený"}), 404
+        _save_all_sensors(sensors)
+        return jsonify({"success": True, "eui": eui_upper, "gps_lat": gps_lat, "gps_lng": gps_lng})
+    except Exception as exc:
+        return jsonify({"success": False, "message": str(exc)}), 500
+
+
+@app.route('/api/sensors/<eui>/marker-color', methods=['POST'])
+@login_required
+def api_sensor_marker_color(eui):
+    """Set or clear custom marker color for a sensor."""
+    try:
+        body = request.get_json(force=True) or {}
+        color = str(body.get('color') or '').strip()
+        if color and not re.match(r'^#[0-9a-fA-F]{6}$', color):
+            return jsonify({"success": False, "message": "Neplatná farba (očakáva sa #RRGGBB)"}), 400
+        active_tenant = _active_tenant_id()
+        eui_upper = _normalize_eui_upper(eui)
+        sensors = _load_all_sensors()
+        found = False
+        for s in sensors:
+            if (_normalize_eui_upper(s.get('eui', '')) == eui_upper
+                    and (_tenant_matches(_tenant_id_from_sensor(s), active_tenant)
+                         or _sensor_shared_with_tenant(s, active_tenant))):
+                if color:
+                    s['marker_color'] = color
+                else:
+                    s.pop('marker_color', None)
+                found = True
+                break
+        if not found:
+            return jsonify({"success": False, "message": "Senzor nenájdený"}), 404
+        _save_all_sensors(sensors)
+        return jsonify({"success": True, "marker_color": color or None})
+    except Exception as exc:
+        return jsonify({"success": False, "message": str(exc)}), 500
+
 
 @app.route('/api/sensors/<eui>/detach', methods=['POST'])
 @login_required
@@ -8331,13 +10030,14 @@ def get_sensor_details(eui):
         try:
             sensors = _load_all_sensors()
             for s in sensors:
-                if (
-                    str(s.get('eui', '')).upper() == eui_upper
-                    and _tenant_matches(_tenant_id_from_sensor(s), active_tenant)
-                ):
-                    sensor_config = dict(s)
-                    sensor_config["tenant_id"] = _tenant_id_from_sensor(s)
-                    break
+                if str(s.get('eui', '')).upper() == eui_upper:
+                    if (
+                        _tenant_matches(_tenant_id_from_sensor(s), active_tenant)
+                        or _sensor_shared_with_tenant(s, active_tenant)
+                    ):
+                        sensor_config = dict(s)
+                        sensor_config["tenant_id"] = _tenant_id_from_sensor(s)
+                        break
         except:
             pass
         
@@ -8354,7 +10054,8 @@ def get_sensor_details(eui):
 
         snapshot_payload = {}
         try:
-            snapshot_map = _timescale_fetch_latest_sensor_snapshots(active_tenant)
+            query_tenant = _resolve_query_tenant_for_sensor(eui_upper, active_tenant)
+            snapshot_map = _timescale_fetch_latest_sensor_snapshots(query_tenant)
             snapshot_entry = snapshot_map.get(eui_upper) or {}
             snapshot_payload = snapshot_entry.get("payload") if isinstance(snapshot_entry, dict) else {}
         except Exception:
@@ -9074,7 +10775,7 @@ def config():
             'AUTO_DETACH_WARNING_TIMEOUT': getattr(bssci_config, 'AUTO_DETACH_WARNING_TIMEOUT', 129600),
             'AUTO_DETACH_CHECK_INTERVAL': getattr(bssci_config, 'AUTO_DETACH_CHECK_INTERVAL', 3600),
             'TIMEZONE': getattr(bssci_config, 'TIMEZONE', 'Europe/Berlin'),
-            'APP_LANGUAGE': _normalize_app_language(getattr(bssci_config, 'APP_LANGUAGE', 'en')),
+            'APP_LANGUAGE': _normalize_app_language(getattr(bssci_config, 'APP_LANGUAGE', 'sk')),
             'MQTT_UI_ENABLED': getattr(bssci_config, 'MQTT_UI_ENABLED', True),
             'TELEMETRY_SOURCE': getattr(bssci_config, 'TELEMETRY_SOURCE', 'auto'),
             'INFLUX_ENABLED': getattr(bssci_config, 'INFLUX_ENABLED', False),
@@ -9156,7 +10857,7 @@ def config():
             'AUTO_DETACH_WARNING_TIMEOUT': 129600,
             'AUTO_DETACH_CHECK_INTERVAL': 3600,
             'TIMEZONE': 'Europe/Berlin',
-            'APP_LANGUAGE': 'en',
+            'APP_LANGUAGE': 'sk',
             'MQTT_UI_ENABLED': True,
             'TELEMETRY_SOURCE': 'auto',
             'INFLUX_ENABLED': False,
@@ -9256,7 +10957,7 @@ def update_config():
         influx_enabled = _to_bool(data.get('INFLUX_ENABLED', False), False)
         if not influx_enabled and telemetry_source in {'auto', 'influx'}:
             telemetry_source = 'runtime'
-        app_language = _normalize_app_language(data.get('APP_LANGUAGE', 'en'))
+        app_language = _normalize_app_language(data.get('APP_LANGUAGE', 'sk'))
         grafana_org_id = max(1, int(data.get('GRAFANA_ORG_ID', 1)))
         timescale_port = int(data.get('TIMESCALE_PORT', 5432))
         timescale_sslmode = str(data.get('TIMESCALE_SSLMODE', 'disable')).strip().lower()
@@ -11670,7 +13371,7 @@ def check_for_updates():
             remote_ver = parse_version(remote)
             if remote_ver > current_ver:
                 updates_available = True
-                status_message = f'Update available: {current} â†’ {remote}'
+                status_message = f'Update available: {current} -> {remote}'
         elif "commit-" in current and "commit-" in remote:
             # Both are commit hashes
             current_hash = current.split("commit-")[1].split()[0][:7]
@@ -13112,3 +14813,4 @@ def restart_service():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
