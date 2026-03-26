@@ -16,15 +16,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY . .
 
-# Create necessary directories and ensure config files exist
-RUN mkdir -p certs logs && \
-    touch endpoints.json .env && \
-    cp -n users.default.json users.json 2>/dev/null || true && \
-    chmod 644 bssci_config.py endpoints.json && \
-    chmod 666 .env
+# Create necessary directories
+RUN mkdir -p certs logs data && \
+    chmod +x docker-entrypoint.sh
 
 # Expose ports
 EXPOSE 16018 5000
 
-# Copy defaults for mounted volumes that may be empty, then start
-CMD ["sh", "-c", "[ -s users.json ] || cp users.default.json users.json; [ -s endpoints.json ] || echo '{}' > endpoints.json; exec python web_main.py"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["python", "web_main.py"]
