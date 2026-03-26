@@ -43,6 +43,8 @@ services:
     depends_on:
       init-config:
         condition: service_completed_successfully
+      timescaledb:
+        condition: service_healthy
     ports:
       - "8000:8000"  # TLS Server port
       - "5056:5000"    # Web UI port
@@ -93,9 +95,6 @@ services:
       - GRAFANA_HEALTH_PANEL_MAP=${GRAFANA_HEALTH_PANEL_MAP:-throughput:1,signal:2,active_sensors:3,active_base_stations:4,top_sensors:5,recent_messages:6}
     networks:
       - bssci-network
-    depends_on:
-      timescaledb:
-        condition: service_healthy
     logging:
       driver: "json-file"
       options:
