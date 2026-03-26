@@ -381,6 +381,15 @@ button:active {
                        maxlength="80" autocomplete="off">
             </div>
             <div class="sv-field">
+                <label class="sv-field-label">{{ t('sensors.sensor_profile', 'Profil senzora') }}</label>
+                <select id="svEditProfile">
+                    {% for profile in sensor_profiles %}
+                    <option value="{{ profile.id }}">{{ t('sensor_profiles.' ~ profile.id ~ '.label', profile.label) }}</option>
+                    {% endfor %}
+                </select>
+                <div style="font-size: .7rem; color: #94a3b8; margin-top: .25rem;">{{ t('sensors.sensor_profile_help', 'Vyberte profil, ktorý nastaví dekóder, režim hlásenia a predvolené časovanie.') }}</div>
+            </div>
+            <div class="sv-field">
                 <label class="sv-field-label">{{ t('sensors.network_key', 'Sieťový kľúč') }}</label>
                 <input id="svEditNwKey" type="text" placeholder="32 hex znakov — ponechajte prázdne pre zachovanie"
                        maxlength="32" autocomplete="off" autocorrect="off" spellcheck="false"
@@ -429,6 +438,15 @@ button:active {
                 <label class="sv-field-label">{{ t('sensors.name', 'Názov') }}</label>
                 <input id="svAddName" type="text" placeholder="{{ t('sensors.name_placeholder', 'Voliteľný popis senzora') }}"
                        maxlength="80" autocomplete="off">
+            </div>
+            <div class="sv-field">
+                <label class="sv-field-label">{{ t('sensors.sensor_profile', 'Profil senzora') }}</label>
+                <select id="svAddProfile">
+                    {% for profile in sensor_profiles %}
+                    <option value="{{ profile.id }}" {% if profile.id == 'auto' %}selected{% endif %}>{{ t('sensor_profiles.' ~ profile.id ~ '.label', profile.label) }}</option>
+                    {% endfor %}
+                </select>
+                <div style="font-size: .7rem; color: #94a3b8; margin-top: .25rem;">{{ t('sensors.viewer_profile_hint', 'Profil určuje, ako budú po prvom uplinku dekódované hodnoty a vyhodnocovaný interval senzora.') }}</div>
             </div>
             <div class="sv-field">
                 <label class="sv-field-label">{{ t('sensors.map_placement', 'Umiestnenie na mape') }}</label>
@@ -2862,6 +2880,7 @@ function svOpenAdd() {
     document.getElementById('svAddEui').value   = '';
     document.getElementById('svAddNwKey').value = '';
     document.getElementById('svAddName').value  = '';
+    document.getElementById('svAddProfile').value = 'auto';
     const placeOnMapInput = document.getElementById('svAddPlaceOnMap');
     if (placeOnMapInput) placeOnMapInput.checked = true;
     const err = document.getElementById('svAddError');
@@ -2894,6 +2913,7 @@ function svSubmitAdd() {
     const eui   = (document.getElementById('svAddEui').value   || '').trim().replace(/[^0-9a-fA-F]/g, '').toUpperCase();
     const nwKey = (document.getElementById('svAddNwKey').value || '').trim().replace(/[^0-9a-fA-F]/g, '').toUpperCase();
     const name  = (document.getElementById('svAddName').value  || '').trim();
+    const sensorProfile = String(document.getElementById('svAddProfile')?.value || 'auto').trim() || 'auto';
     const placeOnMap = !!document.getElementById('svAddPlaceOnMap')?.checked;
     const err   = document.getElementById('svAddError');
     const btn   = document.getElementById('svAddSubmit');
@@ -2914,7 +2934,7 @@ function svSubmitAdd() {
     fetch('/api/sensors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eui: eui, nwKey: nwKey, name: name || undefined })
+        body: JSON.stringify({ eui: eui, nwKey: nwKey, name: name || undefined, sensor_profile: sensorProfile })
     })
     .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
     .catch(function() { return { ok: false, data: { message: 'Chyba siete.' } }; })
@@ -2965,13 +2985,15 @@ function svOpenEdit(eui) {
     _svEditDirty = false;
     document.getElementById('svEditEui').value   = eui;
     document.getElementById('svEditName').value  = sensor ? (sensor.name || '') : '';
+    document.getElementById('svEditProfile').value = sensor ? String(sensor.sensor_profile || 'auto') : 'auto';
     document.getElementById('svEditNwKey').value = '';
     const err = document.getElementById('svEditError');
     if (err) { err.style.display = 'none'; err.textContent = ''; }
     m.classList.remove('is-closing');
     m.style.display = 'flex';
-    m.querySelectorAll('input:not([readonly])').forEach(function(el) {
-        el.addEventListener('input', function() { _svEditDirty = true; }, { once: false });
+    m.querySelectorAll('input:not([readonly]),select,textarea').forEach(function(el) {
+        el.oninput = function() { _svEditDirty = true; };
+        el.onchange = function() { _svEditDirty = true; };
     });
     setTimeout(function() { document.getElementById('svEditName').focus(); }, 100);
 }
@@ -2992,6 +3014,7 @@ function svSubmitEdit() {
     const eui   = document.getElementById('svEditEui').value;
     const nwKey = (document.getElementById('svEditNwKey').value || '').trim().replace(/[^0-9a-fA-F]/g, '').toUpperCase();
     const name  = (document.getElementById('svEditName').value  || '').trim();
+    const sensorProfile = String(document.getElementById('svEditProfile')?.value || 'auto').trim() || 'auto';
     const err   = document.getElementById('svEditError');
     const btn   = document.getElementById('svEditSubmit');
     if (nwKey && nwKey.length !== 32) {
@@ -3001,7 +3024,7 @@ function svSubmitEdit() {
     }
     if (err) err.style.display = 'none';
     if (btn) { btn.disabled = true; btn.textContent = '...'; }
-    const body = { name: name };
+    const body = { name: name, sensor_profile: sensorProfile };
     if (nwKey) body.nwKey = nwKey;
     fetch('/api/sensors/' + encodeURIComponent(eui), {
         method: 'PUT',
@@ -5514,11 +5537,13 @@ function formatHistoryMetric(value, digits = 1, suffix = '') {
 function renderLatestUplinkSection(latestUplink, uplinkHistory, sensorConfig = {}) {
     const latest = latestUplink && typeof latestUplink === 'object' ? latestUplink : null;
     if (!latest) {
+        const profileLabel = escapeHtml(String(getSensorProfileMeta(sensorConfig.sensor_profile || 'auto').label || appTranslate('sensor_profiles.auto.label', 'Auto / inferred')));
         return `
             <div class="card sensor-detail-card mt-3">
                 <div class="card-body">
                     <h6 class="card-title mb-2"><i class="fas fa-microchip me-2"></i>${appTranslate('sensors.latest_uplink_payload', 'Latest Uplink Payload')}</h6>
-                    <div class="text-muted">${appTranslate('sensors.no_decoded_payload_received_yet', 'No decoded payload received yet.')}</div>
+                    <div class="text-muted mb-2">${appTranslate('sensors.no_decoded_payload_received_yet', 'No decoded payload received yet.')}</div>
+                    <div class="small text-muted">Zvolený profil: <strong>${profileLabel}</strong>. Hodnoty a detail dekódovania sa zobrazia po prijatí prvého uplinku.</div>
                 </div>
             </div>
         `;

@@ -5628,6 +5628,26 @@ def _sensor_availability_snapshot(sensor_config: Optional[Dict[str, Any]], activ
                 snapshot["activity_status"] = "active"
     elif runtime_activity:
         snapshot["activity_status"] = runtime_activity
+    else:
+        created_at_ts = _parse_iso_timestamp_to_unix(sensor_config.get("created_at"))
+        if created_at_ts > 0:
+            now_ts = datetime.now(timezone.utc).timestamp()
+            age_seconds = max(0.0, now_ts - created_at_ts)
+            reporting_mode = str(snapshot.get("reporting_mode") or "").strip().lower()
+            if reporting_mode == "event":
+                grace_seconds = min(
+                    max(3600.0, float(snapshot.get("stale_threshold_seconds") or 0.0)),
+                    86400.0,
+                )
+                if age_seconds >= grace_seconds:
+                    snapshot["activity_status"] = "stale"
+            else:
+                grace_seconds = min(
+                    max(900.0, float(snapshot.get("offline_threshold_seconds") or 0.0)),
+                    3600.0,
+                )
+                if age_seconds >= grace_seconds:
+                    snapshot["activity_status"] = "warning"
 
     snapshot.update(_sensor_activity_ui_meta(snapshot.get("activity_status")))
     return snapshot
@@ -6453,6 +6473,11 @@ def _normalize_sensor_payload(data):
     gps_lat, gps_lng = _normalize_gps_coordinates(payload.get("gps_lat"), payload.get("gps_lng"))
     payload["gps_lat"] = gps_lat
     payload["gps_lng"] = gps_lng
+    created_at = str(payload.get("created_at") or "").strip()
+    if created_at:
+        payload["created_at"] = created_at
+    else:
+        payload.pop("created_at", None)
     payload["tenant_id"] = _normalize_tenant_id(payload.get("tenant_id"), fallback=_active_tenant_id())
     # Preserve shared_tenants as-is (managed via /api/sensors/<eui>/share)
     raw_shared = payload.get("shared_tenants")
@@ -9339,10 +9364,17 @@ def add_sensor():
 
         if not sensor_updated:
             # Add new sensor
+            data["created_at"] = str(data.get("created_at") or datetime.now(timezone.utc).isoformat())
             sensors.append(data)
             attach_targets_after_save = _normalize_base_station_route_list(
                 data.get("attached_base_stations", [])
             )
+        else:
+            for sensor in sensors:
+                if str(sensor.get('eui', '')).upper() == data['eui'].upper():
+                    if sensor.get("created_at"):
+                        data["created_at"] = sensor.get("created_at")
+                    break
 
         # Save to file
         _save_all_sensors(sensors)
