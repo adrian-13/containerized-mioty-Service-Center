@@ -6,7 +6,7 @@ __pycache__/
 *.py[cod]
 web_ui.syntaxcheck.pyc.*
 attached_assets/*
-.env
+# .env is tracked with defaults; override values on the server as needed
 logs/
 backups/
 .claude/
