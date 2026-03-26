@@ -1,0 +1,68 @@
+[
+    {
+        "eui": "A0412D2A000005C3",
+        "nwKey": "E4365D1FEBE65BA074AE9A971084FBE2",
+        "shortAddr": "05C3",
+        "name": "CO2",
+        "tags": [
+            "Lansen"
+        ],
+        "bidi": false,
+        "gps_lat": 48.76712265,
+        "gps_lng": 18.63572529,
+        "tenant_id": "default",
+        "preferredDownlinkPath": {
+            "baseStation": "129AF3FFFE01F124",
+            "snr": 24.36,
+            "lastUpdated": "2026-03-20 11:46:02.142",
+            "messageCount": 1190
+        },
+        "payload_decoder": "auto",
+        "attached_base_stations": [
+            "129A13FFFE01F124",
+            "129AF3FFFE01F124"
+        ],
+        "environment_context": "indoor",
+        "sensor_profile": "custom",
+        "reporting_mode": "auto",
+        "expected_interval_seconds": 360,
+        "stale_after_hours": null,
+        "shared_tenants": [
+            "kinet",
+            "acme-test"
+        ],
+        "marker_color": "#f59e0b"
+    },
+    {
+        "eui": "A0412D1D00000465",
+        "nwKey": "19B812C5F737EFB880A08AE167CBE34E",
+        "shortAddr": "0465",
+        "name": "Dverov\u00fd senzor",
+        "tags": [
+            "Lansen"
+        ],
+        "bidi": false,
+        "gps_lat": 48.76729237,
+        "gps_lng": 18.63651924,
+        "tenant_id": "default",
+        "preferredDownlinkPath": {
+            "baseStation": "129AF3FFFE01F124",
+            "snr": 27.3,
+            "lastUpdated": "2026-03-16 15:45:48.841",
+            "messageCount": 60
+        },
+        "payload_decoder": "lansen_m2_v1",
+        "attached_base_stations": [
+            "129AF3FFFE01F124"
+        ],
+        "environment_context": "auto",
+        "expected_interval_seconds": null,
+        "sensor_profile": "lansen_m2_contact",
+        "reporting_mode": "event",
+        "stale_after_hours": 168,
+        "shared_tenants": [
+            "kinet"
+        ],
+        "marker_color": "#dc2626"
+    }
+]

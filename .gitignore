@@ -11,14 +11,8 @@ logs/
 backups/
 .claude/
 
-# Runtime data — generated at runtime, contain live state
-base_stations.json
-endpoints.json
-coverage_positions.json
+# Runtime data not tracked
 custom_payload_profiles.json
-
-# Sensitive — user credentials and secrets
-users.json
 
 # Backup directories
 bssci_backup_*/
