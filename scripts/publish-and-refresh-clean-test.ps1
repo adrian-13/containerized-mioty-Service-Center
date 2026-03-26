@@ -142,14 +142,14 @@ $stagedFiles = if ($DryRun) {
 } else {
     Invoke-External -Exe "git" -Arguments @("diff", "--cached", "--name-only") -WorkingDirectory $root -ReadOnly
 }
-if (@($stagedFiles).Count -eq 0) {
-    throw "No staged changes found after applying include/exclude filters."
+$hasStagedChanges = @($stagedFiles).Count -gt 0
+if ($hasStagedChanges) {
+    Write-Step ("Staged files: " + ((@($stagedFiles) | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ", "))
+    Invoke-External -Exe "git" -Arguments @("commit", "-m", $CommitMessage) -WorkingDirectory $root | Out-Null
+    Invoke-External -Exe "git" -Arguments @("push", $Remote, $Branch) -WorkingDirectory $root | Out-Null
+} else {
+    Write-Step "No staged changes found after applying include/exclude filters. Skipping commit/push and refreshing clean clone only."
 }
-
-Write-Step ("Staged files: " + ((@($stagedFiles) | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ", "))
-
-Invoke-External -Exe "git" -Arguments @("commit", "-m", $CommitMessage) -WorkingDirectory $root | Out-Null
-Invoke-External -Exe "git" -Arguments @("push", $Remote, $Branch) -WorkingDirectory $root | Out-Null
 
 Invoke-External -Exe "git" -Arguments @("pull", "--rebase", "--autostash", $Remote, $Branch) -WorkingDirectory $cleanRoot | Out-Null
 
