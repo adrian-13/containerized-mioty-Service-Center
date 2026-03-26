@@ -1,1 +1,40 @@
-[]
+{
+  "base_stations": {
+    "129af3fffe01f124": {
+      "name": "Test HQ Strecha",
+      "tags": [
+        "demo",
+        "base-station"
+      ],
+      "ip": "192.168.10.254",
+      "gps_lat": 48.767193,
+      "gps_lng": 18.636599,
+      "tenant_id": "test",
+      "demo_seed": "viewer_demo_test"
+    },
+    "129a13fffe01f124": {
+      "name": "Test Park Juh",
+      "tags": [
+        "demo",
+        "base-station"
+      ],
+      "ip": "192.168.10.253",
+      "gps_lat": 48.765942,
+      "gps_lng": 18.638122,
+      "tenant_id": "test",
+      "demo_seed": "viewer_demo_test"
+    },
+    "129ab3fffe01f124": {
+      "name": "Test Sklad",
+      "tags": [
+        "demo",
+        "base-station"
+      ],
+      "ip": "192.168.10.252",
+      "gps_lat": 48.768141,
+      "gps_lng": 18.633522,
+      "tenant_id": "test",
+      "demo_seed": "viewer_demo_test"
+    }
+  }
+}

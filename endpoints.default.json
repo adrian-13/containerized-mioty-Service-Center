@@ -1,1 +1,206 @@
-[]
+[
+  {
+    "eui": "A0412D2A10000101",
+    "nwKey": "ADBB4B28603357D3A1C6ABDD536D3008",
+    "shortAddr": "0101",
+    "bidi": false,
+    "name": "CO2 Recepcia",
+    "tags": [
+      "Lansen",
+      "demo",
+      "recepcia"
+    ],
+    "gps_lat": 48.767061,
+    "gps_lng": 18.636184,
+    "tenant_id": "test",
+    "shared_tenants": [],
+    "marker_color": "#16a34a",
+    "preferredDownlinkPath": {
+      "baseStation": "129AF3FFFE01F124",
+      "snr": 18.2,
+      "lastUpdated": "2026-03-26 13:16:00.000",
+      "messageCount": 24
+    },
+    "attached_base_stations": [
+      "129AF3FFFE01F124"
+    ],
+    "sensor_profile": "lansen_e2_co2_indoor",
+    "created_at": "2026-03-23T14:16:00+00:00",
+    "demo_seed": "viewer_demo_test",
+    "payload_decoder": "lansen_e2_co2_v1",
+    "environment_context": "indoor",
+    "reporting_mode": "periodic",
+    "expected_interval_seconds": 360,
+    "stale_after_hours": null
+  },
+  {
+    "eui": "A0412D2A10000102",
+    "nwKey": "8C16A876A69A5095A9489973F4C00F31",
+    "shortAddr": "0102",
+    "bidi": false,
+    "name": "CO2 Zasadacka",
+    "tags": [
+      "Lansen",
+      "demo",
+      "meeting-room"
+    ],
+    "gps_lat": 48.767406,
+    "gps_lng": 18.636019,
+    "tenant_id": "test",
+    "shared_tenants": [],
+    "marker_color": "#dc2626",
+    "preferredDownlinkPath": {
+      "baseStation": "129AF3FFFE01F124",
+      "snr": 18.2,
+      "lastUpdated": "2026-03-26 13:16:00.000",
+      "messageCount": 24
+    },
+    "attached_base_stations": [
+      "129AF3FFFE01F124"
+    ],
+    "sensor_profile": "lansen_e2_co2_indoor",
+    "created_at": "2026-03-23T14:16:00+00:00",
+    "demo_seed": "viewer_demo_test",
+    "payload_decoder": "lansen_e2_co2_v1",
+    "environment_context": "indoor",
+    "reporting_mode": "periodic",
+    "expected_interval_seconds": 360,
+    "stale_after_hours": null
+  },
+  {
+    "eui": "A0412D2A10000103",
+    "nwKey": "3918EA3C8CA35640BDF94745538DDAAF",
+    "shortAddr": "0103",
+    "bidi": false,
+    "name": "CO2 Sklad",
+    "tags": [
+      "Lansen",
+      "demo",
+      "sklad"
+    ],
+    "gps_lat": 48.767745,
+    "gps_lng": 18.634816,
+    "tenant_id": "test",
+    "shared_tenants": [],
+    "marker_color": "#f59e0b",
+    "preferredDownlinkPath": {
+      "baseStation": "129AB3FFFE01F124",
+      "snr": 18.2,
+      "lastUpdated": "2026-03-26 13:16:00.000",
+      "messageCount": 24
+    },
+    "attached_base_stations": [
+      "129AB3FFFE01F124"
+    ],
+    "sensor_profile": "lansen_e2_co2_auto",
+    "created_at": "2026-03-21T14:16:00+00:00",
+    "demo_seed": "viewer_demo_test",
+    "payload_decoder": "lansen_e2_co2_v1",
+    "environment_context": "auto",
+    "reporting_mode": "periodic",
+    "expected_interval_seconds": 360,
+    "stale_after_hours": null
+  },
+  {
+    "eui": "A0412D1D10000104",
+    "nwKey": "6E08271E5A2458F78D8A6EBE5DE40C5C",
+    "shortAddr": "0104",
+    "bidi": false,
+    "name": "Dvere Hlavny vstup",
+    "tags": [
+      "Lansen",
+      "demo",
+      "door"
+    ],
+    "gps_lat": 48.766873,
+    "gps_lng": 18.636764,
+    "tenant_id": "test",
+    "shared_tenants": [],
+    "marker_color": "#0ea5e9",
+    "preferredDownlinkPath": {
+      "baseStation": "129A13FFFE01F124",
+      "snr": 18.2,
+      "lastUpdated": "2026-03-26 13:16:00.000",
+      "messageCount": 24
+    },
+    "attached_base_stations": [
+      "129A13FFFE01F124"
+    ],
+    "sensor_profile": "lansen_m2_contact",
+    "created_at": "2026-03-19T14:16:00+00:00",
+    "demo_seed": "viewer_demo_test",
+    "payload_decoder": "lansen_m2_v1",
+    "environment_context": "auto",
+    "reporting_mode": "event",
+    "expected_interval_seconds": null,
+    "stale_after_hours": 168
+  },
+  {
+    "eui": "A0412D1D10000105",
+    "nwKey": "D97C27B243175D7DB3B00233BFADF7C2",
+    "shortAddr": "0105",
+    "bidi": false,
+    "name": "Nudzovy vychod",
+    "tags": [
+      "Lansen",
+      "demo",
+      "exit"
+    ],
+    "gps_lat": 48.767948,
+    "gps_lng": 18.635562,
+    "tenant_id": "test",
+    "shared_tenants": [],
+    "marker_color": "#b45309",
+    "preferredDownlinkPath": {
+      "baseStation": "129AB3FFFE01F124",
+      "snr": 18.2,
+      "lastUpdated": "2026-03-26 13:16:00.000",
+      "messageCount": 24
+    },
+    "attached_base_stations": [
+      "129AB3FFFE01F124"
+    ],
+    "sensor_profile": "lansen_m2_contact",
+    "created_at": "2026-03-16T14:16:00+00:00",
+    "demo_seed": "viewer_demo_test",
+    "payload_decoder": "lansen_m2_v1",
+    "environment_context": "auto",
+    "reporting_mode": "event",
+    "expected_interval_seconds": null,
+    "stale_after_hours": 168
+  },
+  {
+    "eui": "A0412D2A10000106",
+    "nwKey": "AF050CE61BC6567490FE735E349D9C7E",
+    "shortAddr": "0106",
+    "bidi": false,
+    "name": "CO2 Nova kancelaria",
+    "tags": [
+      "Lansen",
+      "demo",
+      "new"
+    ],
+    "gps_lat": 48.766551,
+    "gps_lng": 18.635949,
+    "tenant_id": "test",
+    "shared_tenants": [],
+    "marker_color": "#64748b",
+    "preferredDownlinkPath": {
+      "baseStation": "129AF3FFFE01F124",
+      "snr": 18.2,
+      "lastUpdated": "2026-03-26 13:16:00.000",
+      "messageCount": 24
+    },
+    "attached_base_stations": [
+      "129AF3FFFE01F124"
+    ],
+    "sensor_profile": "lansen_e2_co2_indoor",
+    "created_at": "2026-03-26T14:04:00+00:00",
+    "demo_seed": "viewer_demo_test",
+    "payload_decoder": "lansen_e2_co2_v1",
+    "environment_context": "indoor",
+    "reporting_mode": "periodic",
+    "expected_interval_seconds": 360,
+    "stale_after_hours": null
+  }
+]

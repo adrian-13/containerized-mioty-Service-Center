@@ -1,1 +1,54 @@
-[]
+[
+  {
+    "id": "test:rule:co2-critical-zasadacka",
+    "tenant_id": "test",
+    "sensor_eui": "A0412D2A10000102",
+    "kind": "threshold",
+    "name": "CO2 Zasadacka > 1500 ppm",
+    "metric": "co2_1_ppm",
+    "condition": "gt",
+    "threshold": 1500.0,
+    "severity": "critical",
+    "enabled": true,
+    "created_at": "2026-03-26T02:16:00+00:00"
+  },
+  {
+    "id": "test:rule:door-alarm-hlavny-vstup",
+    "tenant_id": "test",
+    "sensor_eui": "A0412D1D10000104",
+    "kind": "threshold",
+    "name": "Hlavny vstup alarm aktivny",
+    "metric": "any_alarm_active",
+    "condition": "eq",
+    "threshold": 1.0,
+    "severity": "critical",
+    "enabled": true,
+    "created_at": "2026-03-26T02:16:00+00:00"
+  },
+  {
+    "id": "test:rule:offline-nudzovy-vychod",
+    "tenant_id": "test",
+    "sensor_eui": "A0412D1D10000105",
+    "kind": "sensor_offline",
+    "name": "Nudzovy vychod bez eventu",
+    "metric": "",
+    "condition": "",
+    "threshold": null,
+    "severity": "critical",
+    "enabled": true,
+    "created_at": "2026-03-26T02:16:00+00:00"
+  },
+  {
+    "id": "test:rule:offline-sklad",
+    "tenant_id": "test",
+    "sensor_eui": "A0412D2A10000103",
+    "kind": "sensor_offline",
+    "name": "CO2 Sklad bez dat",
+    "metric": "",
+    "condition": "",
+    "threshold": null,
+    "severity": "warning",
+    "enabled": true,
+    "created_at": "2026-03-26T02:16:00+00:00"
+  }
+]

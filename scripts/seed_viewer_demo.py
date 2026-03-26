@@ -25,8 +25,9 @@ os.environ.setdefault("TIMESCALE_HOST", "localhost")
 import web_ui  # noqa: E402
 
 
-TENANT_ID = "kinet"
-DEMO_MARKER = "viewer_demo_kinet"
+TENANT_ID = "test"
+LEGACY_TENANT_IDS = {"kinet"}
+DEMO_MARKER = "viewer_demo_test"
 DEMO_TAG = "demo"
 BASE_TIME = datetime.now(timezone.utc).replace(second=0, microsecond=0)
 
@@ -47,21 +48,21 @@ class DemoSensor:
 BASE_STATIONS = [
     {
         "eui": "129AF3FFFE01F124",
-        "name": "Kinet HQ Strecha",
+        "name": "Test HQ Strecha",
         "ip": "192.168.10.254",
         "gps_lat": 48.767193,
         "gps_lng": 18.636599,
     },
     {
         "eui": "129A13FFFE01F124",
-        "name": "Kinet Park Juh",
+        "name": "Test Park Juh",
         "ip": "192.168.10.253",
         "gps_lat": 48.765942,
         "gps_lng": 18.638122,
     },
     {
         "eui": "129AB3FFFE01F124",
-        "name": "Kinet Sklad",
+        "name": "Test Sklad",
         "ip": "192.168.10.252",
         "gps_lat": 48.768141,
         "gps_lng": 18.633522,
@@ -508,10 +509,17 @@ def ensure_viewer_user() -> None:
 
 
 def ensure_tenant_registry(conn: Any | None) -> None:
+    registry = web_ui.load_tenant_registry()
+    registry["tenants"] = [
+        item
+        for item in registry.get("tenants", [])
+        if web_ui._normalize_tenant_id((item or {}).get("id"), fallback=web_ui._default_tenant_id()) not in LEGACY_TENANT_IDS
+    ]
+    web_ui.save_tenant_registry(registry)
     ok, err, _entry = web_ui._upsert_tenant_registry_entry(
         TENANT_ID,
-        name="Kinet Demo",
-        description="Presentation tenant with seeded demo sensors, alerts and telemetry.",
+        name="Testovaci tenant",
+        description="Testovaci viewer tenant so seeded demo senzormi, alertmi a telemetriou.",
     )
     if not ok:
         raise RuntimeError(err or "Failed to upsert tenant registry entry")
@@ -524,7 +532,7 @@ def ensure_tenant_registry(conn: Any | None) -> None:
                 ON CONFLICT (id)
                 DO UPDATE SET name = EXCLUDED.name
                 """,
-                (TENANT_ID, "Kinet Demo"),
+                (TENANT_ID, "Testovaci tenant"),
             )
 
 
@@ -534,7 +542,7 @@ def seed_base_stations() -> int:
     next_map = {
         eui: data
         for eui, data in existing.items()
-        if web_ui._tenant_id_from_base_station(data) != TENANT_ID
+        if web_ui._tenant_id_from_base_station(data) not in (set(LEGACY_TENANT_IDS) | {TENANT_ID})
     }
     for station in BASE_STATIONS:
         next_map[station["eui"].lower()] = {
@@ -558,14 +566,14 @@ def seed_sensors() -> int:
         if not isinstance(sensor, dict):
             continue
         sensor_tenant = web_ui._tenant_id_from_sensor(sensor)
-        if sensor_tenant == TENANT_ID:
+        if sensor_tenant in (set(LEGACY_TENANT_IDS) | {TENANT_ID}):
             continue
         shared = sensor.get("shared_tenants") or []
         if isinstance(shared, list):
             filtered_shared = [
                 tenant
                 for tenant in shared
-                if web_ui._normalize_tenant_id(tenant, fallback=web_ui._default_tenant_id()) != TENANT_ID
+                if web_ui._normalize_tenant_id(tenant, fallback=web_ui._default_tenant_id()) not in (set(LEGACY_TENANT_IDS) | {TENANT_ID})
             ]
             if filtered_shared != shared:
                 sensor = dict(sensor)
@@ -583,7 +591,7 @@ def seed_alerts() -> int:
     other_alerts = [
         alert
         for alert in web_ui._load_alerts()
-        if web_ui._normalize_tenant_id(alert.get("tenant_id"), fallback=web_ui._default_tenant_id()) != TENANT_ID
+        if web_ui._normalize_tenant_id(alert.get("tenant_id"), fallback=web_ui._default_tenant_id()) not in (set(LEGACY_TENANT_IDS) | {TENANT_ID})
     ]
     merged = other_alerts + build_alerts()
     web_ui._save_alerts(merged)
@@ -602,7 +610,7 @@ def cleanup_alert_files() -> None:
             kept = [
                 item
                 for item in events
-                if web_ui._normalize_tenant_id((item or {}).get("tenant_id"), fallback=web_ui._default_tenant_id()) != TENANT_ID
+                if web_ui._normalize_tenant_id((item or {}).get("tenant_id"), fallback=web_ui._default_tenant_id()) not in (set(LEGACY_TENANT_IDS) | {TENANT_ID})
             ]
             events_path.write_text(json.dumps(kept, indent=2, ensure_ascii=False), encoding="utf-8")
     if state_path.exists():
@@ -614,13 +622,14 @@ def cleanup_alert_files() -> None:
             kept_state = {}
             for key, value in state.items():
                 tenant_prefix = str(key).split("::", 1)[0]
-                if web_ui._normalize_tenant_id(tenant_prefix, fallback=web_ui._default_tenant_id()) != TENANT_ID:
+                if web_ui._normalize_tenant_id(tenant_prefix, fallback=web_ui._default_tenant_id()) not in (set(LEGACY_TENANT_IDS) | {TENANT_ID}):
                     kept_state[key] = value
             state_path.write_text(json.dumps(kept_state, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def clear_timescale_tenant(conn: Any) -> None:
     with conn.cursor() as cur:
+        tenant_ids = sorted(set(LEGACY_TENANT_IDS) | {TENANT_ID})
         for table_name in (
             "alert_events",
             "alert_state_current",
@@ -628,8 +637,10 @@ def clear_timescale_tenant(conn: Any) -> None:
             "inventory_events",
             "inventory_snapshot_points",
             "inventory_snapshot_latest",
+            "alert_rules",
         ):
-            cur.execute(f"DELETE FROM {table_name} WHERE tenant_id = %s", (TENANT_ID,))
+            cur.execute(f"DELETE FROM {table_name} WHERE tenant_id = ANY(%s)", (tenant_ids,))
+        cur.execute("DELETE FROM tenants WHERE id = ANY(%s)", (sorted(set(LEGACY_TENANT_IDS)),))
 
 
 def insert_telemetry(conn: Any, rows_by_sensor: Dict[str, List[Dict[str, Any]]]) -> int:
