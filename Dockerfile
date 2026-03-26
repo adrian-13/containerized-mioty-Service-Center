@@ -16,9 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY . .
 
-# Create necessary directories
+# Create necessary directories and ensure entrypoint is executable
 RUN mkdir -p certs logs data && \
-    chmod +x docker-entrypoint.sh
+    chmod +x /app/docker-entrypoint.sh
 
 # Expose ports
 EXPOSE 16018 5000
