@@ -558,7 +558,7 @@ const VIEWER_SENSOR_PROFILE_OPTIONS={{ sensor_profiles|tojson|safe }};
 const VIEWER_SENSOR_PROFILE_LIBRARY=Object.fromEntries((VIEWER_SENSOR_PROFILE_OPTIONS||[]).map((p)=>[String(p.id||'').toLowerCase(),p]));
 let _activeKey=null,_data=null;
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function fmtNum(v,dec,unit){const n=Number(v);return Number.isFinite(n)?n.toFixed(dec)+(unit||''):'—';}
+function fmtNum(v,dec,unit){const n=Number(v);return Number.isFinite(n)?n.toFixed(dec)+(unit||''):'-';}
 function getSensorProfileMeta(profileId){
   const normalized=String(profileId||'auto').toLowerCase();
   const base=VIEWER_SENSOR_PROFILE_LIBRARY[normalized]||{};
@@ -634,7 +634,7 @@ const VALUE_LABELS={co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',temperature_1_
 const METRIC_ICONS={co2_1_ppm:'fa-wind',co2_2_ppm:'fa-wind',temperature_1_c:'fa-thermometer-half',temperature_2_c:'fa-thermometer-half',humidity_1_pct:'fa-droplet',battery_v_est:'fa-battery-half',any_alarm_active:'fa-bell',alarm_count:'fa-bell',last_alarm_duration_s:'fa-clock',last_alarm_input:'fa-bolt',open_count:'fa-door-open',tamper:'fa-shield-halved'};
 const METRIC_SHORT={co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (2)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm',alarm_count:'Alarmy',last_alarm_duration_s:'Trvanie',last_alarm_input:'Vstup',open_count:'Otvorenia',tamper:'Tamper'};
 function labelOf(k){return VALUE_LABELS[k]||k.replace(/_/g,' ');}
-function fmtValue(k,v){if(k.endsWith('_c'))return fmtNum(v,1,' °C');if(k.endsWith('_pct'))return fmtNum(v,0,' %');if(k.endsWith('_ppm'))return fmtNum(v,0,' ppm');if(k.endsWith('_v_est')||k.endsWith('_v'))return fmtNum(v,2,' V');if(k.endsWith('_s'))return fmtNum(v,0,' s');if(typeof v==='boolean')return v?'Áno':'Nie';if(typeof v==='number')return Number.isFinite(v)?String(v):'—';return String(v??'—');}
+function fmtValue(k,v){if(k.endsWith('_c'))return fmtNum(v,1,' °C');if(k.endsWith('_pct'))return fmtNum(v,0,' %');if(k.endsWith('_ppm'))return fmtNum(v,0,' ppm');if(k.endsWith('_v_est')||k.endsWith('_v'))return fmtNum(v,2,' V');if(k.endsWith('_s'))return fmtNum(v,0,' s');if(typeof v==='boolean')return v?'Áno':'Nie';if(typeof v==='number')return Number.isFinite(v)?String(v):'-';return String(v??'-');}
 
 const METRIC_PRIORITY=['co2_1_ppm','co2_2_ppm','temperature_1_c','humidity_1_pct','any_alarm_active','open_count','battery_v_est'];
 function primaryMetric(vals){
@@ -644,13 +644,13 @@ function primaryMetric(vals){
 }
 function heroUnit(k){if(k.endsWith('_ppm'))return'ppm';if(k.endsWith('_c'))return'°C';if(k.endsWith('_pct'))return'%';if(k.endsWith('_v_est')||k.endsWith('_v'))return'V';return'';}
 function fmtHeroValue(k,v){
-  if(k.endsWith('_ppm'))return Number.isFinite(Number(v))?Math.round(Number(v)).toString():'—';
-  if(k.endsWith('_c'))return Number.isFinite(Number(v))?Number(v).toFixed(1):'—';
-  if(k.endsWith('_pct'))return Number.isFinite(Number(v))?Math.round(Number(v)).toString():'—';
-  if(k.endsWith('_v_est')||k.endsWith('_v'))return Number.isFinite(Number(v))?Number(v).toFixed(2):'—';
+  if(k.endsWith('_ppm'))return Number.isFinite(Number(v))?Math.round(Number(v)).toString():'-';
+  if(k.endsWith('_c'))return Number.isFinite(Number(v))?Number(v).toFixed(1):'-';
+  if(k.endsWith('_pct'))return Number.isFinite(Number(v))?Math.round(Number(v)).toString():'-';
+  if(k.endsWith('_v_est')||k.endsWith('_v'))return Number.isFinite(Number(v))?Number(v).toFixed(2):'-';
   if(typeof v==='boolean')return v?'ÁNO':'NIE';
-  if(typeof v==='number')return Number.isFinite(v)?v.toFixed(2):'—';
-  return String(v??'—');
+  if(typeof v==='number')return Number.isFinite(v)?v.toFixed(2):'-';
+  return String(v??'-');
 }
 function heroTone(k,v){
   const n=Number(v);
@@ -815,7 +815,7 @@ function render(d){
       <div class="svd-mgrid">
         ${metricCards.map(([k,v])=>{
           const tone=heroTone(k,v);
-          const dv=usingBlueprintMetrics?'â€”':fmtHeroValue(k,v);
+          const dv=usingBlueprintMetrics?'-':fmtHeroValue(k,v);
           const unit=heroUnit(k);
           const note=usingBlueprintMetrics?'Čaká sa na prvý uplink':heroNote(k,v);
           const isActive=k===_activeKey;
