@@ -5423,7 +5423,7 @@ def _build_sensor_alert_metric_options(sensor_config: Optional[Dict[str, Any]], 
         _display = {'any_alarm_active', 'open_count', 'last_alarm_duration_s', 'battery_v_est', 'tamper'}
         metric_keys = [k for k in metric_keys if k in _display]
     elif 'co2' in profile_check or 'air' in profile_check or 'co2_1_ppm' in values:
-        _display = {'co2_1_ppm', 'co2_2_ppm', 'temperature_1_c', 'humidity_1_pct', 'battery_v_est', 'any_alarm_active'}
+        _display = {'co2_1_ppm', 'temperature_1_c', 'humidity_1_pct', 'battery_v_est'}
         metric_keys = [k for k in metric_keys if k in _display]
     else:
         metric_keys = [k for k in metric_keys if k not in _DETAIL_SKIP]

@@ -270,16 +270,15 @@
 .svd-page{display:grid;gap:.9rem}
 .svd-card{border:1px solid #dae3f0;border-radius:1rem;background:#fff;box-shadow:0 2px 12px rgba(15,23,42,.05)}
 .svd-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;padding:.82rem 1.1rem .82rem .9rem;border-left:4px solid var(--brand-500,#2563eb)}
-.svd-head-left{display:flex;align-items:center;gap:.82rem;min-width:0;flex:1}
-.svd-head-divider{width:1px;height:2.1rem;background:#dde6f2;flex-shrink:0}
+.svd-head-left{display:flex;align-items:center;gap:.9rem;min-width:0;flex:1}
+.svd-title-wrap{min-width:0;display:grid;gap:.16rem}
 /* Back button */
 .svd-back{display:inline-flex;align-items:center;gap:.46rem;text-decoration:none;font-size:.75rem;font-weight:800;color:#4a6582;flex-shrink:0;padding:.3rem .72rem .3rem .3rem;border:1.5px solid #dde6f2;border-radius:999px;background:#fff;transition:all .15s ease;white-space:nowrap}
 .svd-back:hover{color:var(--brand-600,#1e4d8a);border-color:var(--brand-400,#5a9ee0);background:rgba(var(--brand-rgb),.04);box-shadow:0 2px 8px rgba(var(--brand-rgb),.12)}
 .svd-back-ico{width:1.48rem;height:1.48rem;border-radius:50%;background:#eef3fb;display:flex;align-items:center;justify-content:center;font-size:.62rem;color:#4a6582;transition:background .15s,color .15s,transform .15s;flex-shrink:0}
 .svd-back:hover .svd-back-ico{background:var(--brand-500,#2563eb);color:#fff;transform:translateX(-2px)}
 .svd-title{font-size:1.24rem;font-weight:900;color:#0f2135;margin:0;font-family:"Sora","Manrope",sans-serif;overflow-wrap:anywhere;letter-spacing:-.01em}
-.svd-meta{font-size:.72rem;color:#8a9ab0;margin:.18rem 0 0;display:flex;align-items:center;gap:.44rem;flex-wrap:wrap}
-.svd-meta code{font-size:.68rem;color:#5a7090;background:#f0f5fd;padding:.06rem .34rem;border-radius:.28rem;font-family:monospace;letter-spacing:.01em}
+.svd-subtitle{font-size:.73rem;color:#8a9ab0;font-weight:700;line-height:1.4}
 .svd-refresh-btn{display:inline-flex;align-items:center;justify-content:center;width:2.05rem;height:2.05rem;border-radius:.5rem;border:1px solid #cdd9ea;background:#fff;color:#4e6a88;cursor:pointer;font-size:.86rem;transition:background .12s,color .12s,border-color .12s;flex-shrink:0}
 .svd-refresh-btn:hover{background:#f0f5fd;color:#1c3a5e;border-color:#b8cde0}
 .svd-chip{display:inline-flex;align-items:center;gap:.34rem;border-radius:999px;padding:.24rem .58rem;font-size:.71rem;font-weight:800;border:1px solid #d1dced;background:#f8fbff;color:#284465}
@@ -331,7 +330,7 @@
 .svd-mcard.is-active.tone-blue .svd-mcard-note{color:#1d4ed8}
 @media(max-width:560px){.svd-mgrid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
 /* Info strip */
-.svd-info-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:.72rem 1.1rem;border-bottom:1px solid #f0f5fb;background:linear-gradient(180deg,#f8fbff 0%,#f3f7fe 100%);border-radius:1rem 1rem 0 0}
+.svd-info-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem;padding:.72rem 1.1rem;border-bottom:1px solid #f0f5fb;background:linear-gradient(180deg,#f8fbff 0%,#f3f7fe 100%);border-radius:1rem 1rem 0 0}
 .svd-info-label{font-size:.57rem;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;font-weight:800;margin-bottom:.1rem}
 .svd-info-val{font-size:.76rem;color:#0f2135;font-weight:700}
 /* Chart card */
@@ -540,10 +539,9 @@ button:active {
         <span class="svd-back-ico"><i class="fas fa-arrow-left"></i></span>
         Späť
       </a>
-      <div class="svd-head-divider"></div>
-      <div style="min-width:0">
+      <div class="svd-title-wrap">
         <h1 class="svd-title" id="svdTitle">{{ sensor_eui }}</h1>
-        <div class="svd-meta" id="svdMeta"></div>
+        <div class="svd-subtitle">{{ t('sensor_detail.overview', 'Prehľad senzora a poslednej telemetrie') }}</div>
       </div>
     </div>
     <button id="svdRefreshBtn" class="svd-refresh-btn" title="Obnoviť"><i class="fas fa-rotate-right"></i></button>
@@ -637,7 +635,7 @@ const METRIC_SHORT={co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (2)',temperature_1_c:'Tep
 function labelOf(k){return VALUE_LABELS[k]||k.replace(/_/g,' ');}
 function fmtValue(k,v){if(k.endsWith('_c'))return fmtNum(v,1,' °C');if(k.endsWith('_pct'))return fmtNum(v,0,' %');if(k.endsWith('_ppm'))return fmtNum(v,0,' ppm');if(k.endsWith('_v_est')||k.endsWith('_v'))return fmtNum(v,2,' V');if(k.endsWith('_s'))return fmtNum(v,0,' s');if(typeof v==='boolean')return v?'Áno':'Nie';if(typeof v==='number')return Number.isFinite(v)?String(v):'-';return String(v??'-');}
 
-const METRIC_PRIORITY=['co2_1_ppm','co2_2_ppm','temperature_1_c','humidity_1_pct','any_alarm_active','open_count','battery_v_est'];
+const METRIC_PRIORITY=['co2_1_ppm','temperature_1_c','humidity_1_pct','battery_v_est','any_alarm_active','open_count'];
 function primaryMetric(vals){
   for(const k of METRIC_PRIORITY){if(k in vals&&vals[k]!==null&&vals[k]!==undefined)return{key:k,val:vals[k]};}
   for(const[k,v]of Object.entries(vals)){if(!k.startsWith('_')&&typeof v==='number'&&Number.isFinite(v))return{key:k,val:v};}
@@ -735,12 +733,6 @@ function render(d){
   _data=d;
   const cfg=d.config||{};
   document.getElementById('svdTitle').textContent=cfg.name||d.eui||EUI;
-  const status=deriveStatus(d);
-  const metaEl=document.getElementById('svdMeta');
-  const agoStr=d.last_seen?`<span>pred ${esc(timeAgo(d.last_seen))}</span>`:'';
-  if(metaEl)metaEl.innerHTML=`<span class="svd-chip ${esc(status.cls)}"><span class="svd-dot"></span>${esc(status.label)}</span>${agoStr}${d.eui?`<code>${esc(d.eui)}</code>`:''}`;
-
-
   const vals=(d.latest_uplink&&d.latest_uplink.decoded&&d.latest_uplink.decoded.values)||{};
   const pm=primaryMetric(vals);
   const SKIP=new Set(['co2_last_calibration_ppm','days_to_next_calibration','co2_error','calibration_not_done','temperature_2_c','humidity_2_pct','pressure_pa','altitude_m']);
@@ -759,7 +751,7 @@ function render(d){
 
     // CO2/air quality sensor → show air quality + environment + battery
     if(profile.includes('co2')||profile.includes('air')||availableKeys.includes('co2_1_ppm')){
-      const co2Metrics=['co2_1_ppm','co2_2_ppm','temperature_1_c','humidity_1_pct','battery_v_est','any_alarm_active'];
+      const co2Metrics=['co2_1_ppm','temperature_1_c','humidity_1_pct','battery_v_est'];
       return metrics.filter(([k])=>co2Metrics.includes(k));
     }
 
@@ -810,6 +802,7 @@ function render(d){
       <div><div class="svd-info-label">EUI</div><div class="svd-info-val" style="font-family:monospace;font-size:.7rem">${esc(d.eui||'—')}</div></div>
       <div><div class="svd-info-label">Posledný uplink</div><div class="svd-info-val">${esc(lastSeenFull)}</div></div>
       <div><div class="svd-info-label">Interval</div><div class="svd-info-val">${esc(intervalStr)}</div></div>
+      <div><div class="svd-info-label">Profil senzora</div><div class="svd-info-val">${esc(profileLabel || '—')}</div></div>
     </div>
     ${metricCards.length?`<div style="padding:.7rem .9rem .9rem">
       ${preloadNote}
@@ -850,13 +843,6 @@ function render(d){
 
   document.getElementById('svdBody').innerHTML=metricsGridHtml+chartCardHtml+'<section class="svd-card" id="svdAlertsCard"><div class="svd-al-head"><span class="svd-al-title"><i class="fas fa-bell"></i> Alerty</span><button class="svd-al-add-btn" id="svdAlAddBtn"><i class="fas fa-plus"></i> Pridať alert</button></div><div id="svdAlList"><div class="svd-al-empty">Načítavam...</div></div></section>';
   loadAlerts();
-  const alertsCard=document.getElementById('svdAlertsCard');
-  if(alertsCard){
-    const profileInfo=document.createElement('div');
-    profileInfo.innerHTML='<div class="svd-info-head" style="padding-top:.2rem;">Profil senzora</div><div class="svd-info-grid" style="padding-top:.2rem;padding-bottom:.4rem;"><div><div class="svd-info-lbl">Profil</div><div class="svd-info-val">'+esc(profileLabel)+'</div></div></div>';
-    alertsCard.insertBefore(profileInfo, document.getElementById('svdAlList'));
-  }
-
   // Metric card click → switch active card + update chart title + reload chart
   document.querySelectorAll('#svdMetricsCard .svd-mcard').forEach(btn=>{
     btn.addEventListener('click',function(){
@@ -983,7 +969,7 @@ function openAlertModal(existingAlert){
     const keep=new Set(['any_alarm_active','open_count','last_alarm_duration_s','battery_v_est','tamper']);
     metricKeys=allKeys.filter(k=>keep.has(k));
   }else if(profile.includes('co2')||profile.includes('air')||'co2_1_ppm' in vals){
-    const keep=new Set(['co2_1_ppm','co2_2_ppm','temperature_1_c','humidity_1_pct','battery_v_est','any_alarm_active']);
+    const keep=new Set(['co2_1_ppm','temperature_1_c','humidity_1_pct','battery_v_est']);
     metricKeys=allKeys.filter(k=>keep.has(k));
   }else{
     const skip=new Set(['co2_last_calibration_ppm','days_to_next_calibration','co2_error','calibration_not_done','temperature_2_c','humidity_2_pct','pressure_pa','altitude_m']);
@@ -1345,7 +1331,7 @@ load();
     const tone = co2Visual.tone === 'danger' ? 'danger' : (co2Visual.tone === 'warning' ? 'warning' : 'success');
     const battTone = batteryVisual.tone === 'danger' ? 'danger' : (batteryVisual.tone === 'warning' ? 'warning' : 'success');
     const rows = history.map((row) => { const rowValues = row?.decoded?.values || {}; const rxMs = Number(row?.rx_time_ns || 0) > 0 ? Number(row.rx_time_ns) / 1000000 : null; return `<tr><td>${escapeHtml(rxMs ? formatTimeOnly(rxMs) : 'Nedostupné')}</td><td>${formatHistoryMetric(rowValues.co2_1_ppm, 0)}</td><td>${formatHistoryMetric(rowValues.temperature_1_c, 2)}</td><td>${formatHistoryMetric(rowValues.humidity_1_pct, 0)}</td><td>${formatHistoryMetric(row?.snr, 1)}</td><td>${formatHistoryMetric(row?.rssi, 1)}</td></tr>`; }).join('');
-    return `<div class="sensor-inline-meta mb-3"><span class="sensor-context-chip"><i class="fas ${environment.icon}"></i>${escapeHtml(environment.shortLabel)}</span><span class="sensor-context-chip is-${tone}"><i class="fas fa-wind"></i>${escapeHtml(co2Visual.label)}</span><span class="sensor-context-chip is-info"><i class="fas fa-chart-line"></i>${escapeHtml(trendLabel)}</span></div><div class="sensor-payload-grid mb-3"><div class="sensor-payload-card is-${tone}"><div class="sensor-payload-label">{{ t('sensor_detail.co2_current', 'CO2 (aktuálne)') }}</div><div class="sensor-payload-value">${Number.isFinite(co2) ? `${Math.round(co2)} ppm` : 'Nedostupné'}</div><div class="sensor-payload-note">${escapeHtml(co2Visual.note)}</div></div><div class="sensor-payload-card"><div class="sensor-payload-label">{{ t('sensor_detail.temperature', 'Teplota') }}</div><div class="sensor-payload-value">${Number.isFinite(temp) ? `${temp.toFixed(2)} C` : 'Nedostupné'}</div><div class="sensor-payload-note">{{ t('sensor_detail.current_sample', 'Aktuálna vzorka') }}</div></div><div class="sensor-payload-card"><div class="sensor-payload-label">{{ t('sensor_detail.humidity', 'Vlhkosť') }}</div><div class="sensor-payload-value">${Number.isFinite(humidity) ? `${Math.round(humidity)} %` : 'Nedostupné'}</div><div class="sensor-payload-note">{{ t('sensor_detail.relative_humidity', 'Relatívna vlhkosť') }}</div></div><div class="sensor-payload-card is-${battTone}"><div class="sensor-payload-label">{{ t('sensor_detail.battery_est', 'Batéria (odhad)') }}</div><div class="sensor-payload-value">${Number.isFinite(battery) ? `${battery.toFixed(1)} V` : 'Nedostupné'}</div><div class="sensor-payload-note">${escapeHtml(batteryVisual.label)}</div></div></div><div class="sensor-metric-rows mb-3"><div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.previous_sample', 'Predchádzajúca vzorka') }}</span><span class="sensor-metric-value">${Number.isFinite(previousCo2) ? `${Math.round(previousCo2)} ppm` : 'Nedostupné'}</span></div><div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.last_calibration_reference', 'Posledná kalibračná referencia') }}</span><span class="sensor-metric-value">${Number.isFinite(Number(values.co2_last_calibration_ppm)) ? `${Math.round(Number(values.co2_last_calibration_ppm))} ppm` : 'Nedostupné'}</span></div><div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.days_to_next_calibration', 'Dni do ďalšej kalibrácie') }}</span><span class="sensor-metric-value">${Number.isFinite(Number(values.days_to_next_calibration)) ? Math.round(Number(values.days_to_next_calibration)).toString() : 'Nedostupné'}</span></div></div><div class="sensor-table-wrap"><table class="sensor-table"><thead><tr><th>{{ t('common.time', 'Čas') }}</th><th>CO2</th><th>{{ t('sensor_detail.temperature_short', 'Tepl.') }}</th><th>{{ t('sensor_detail.humidity_short', 'Vlh.') }}</th><th>SNR</th><th>RSSI</th></tr></thead><tbody>${rows || '<tr><td colspan="6"><div class="sensor-empty-state">Krátka história zatiaľ nie je dostupná.</div></td></tr>'}</tbody></table></div>`;
+    return `<div class="sensor-inline-meta mb-3"><span class="sensor-context-chip"><i class="fas ${environment.icon}"></i>${escapeHtml(environment.shortLabel)}</span><span class="sensor-context-chip is-${tone}"><i class="fas fa-wind"></i>${escapeHtml(co2Visual.label)}</span><span class="sensor-context-chip is-info"><i class="fas fa-chart-line"></i>${escapeHtml(trendLabel)}</span></div><div class="sensor-payload-grid mb-3"><div class="sensor-payload-card is-${tone}"><div class="sensor-payload-label">{{ t('sensor_detail.co2_current', 'CO2 (aktuálne)') }}</div><div class="sensor-payload-value">${Number.isFinite(co2) ? `${Math.round(co2)} ppm` : 'Nedostupné'}</div><div class="sensor-payload-note">${escapeHtml(co2Visual.note)}</div></div><div class="sensor-payload-card"><div class="sensor-payload-label">{{ t('sensor_detail.temperature', 'Teplota') }}</div><div class="sensor-payload-value">${Number.isFinite(temp) ? `${temp.toFixed(2)} C` : 'Nedostupné'}</div><div class="sensor-payload-note">{{ t('sensor_detail.current_sample', 'Aktuálna vzorka') }}</div></div><div class="sensor-payload-card"><div class="sensor-payload-label">{{ t('sensor_detail.humidity', 'Vlhkosť') }}</div><div class="sensor-payload-value">${Number.isFinite(humidity) ? `${Math.round(humidity)} %` : 'Nedostupné'}</div><div class="sensor-payload-note">{{ t('sensor_detail.relative_humidity', 'Relatívna vlhkosť') }}</div></div><div class="sensor-payload-card is-${battTone}"><div class="sensor-payload-label">{{ t('sensor_detail.battery_est', 'Batéria (odhad)') }}</div><div class="sensor-payload-value">${Number.isFinite(battery) ? `${battery.toFixed(1)} V` : 'Nedostupné'}</div><div class="sensor-payload-note">${escapeHtml(batteryVisual.label)}</div></div></div><div class="sensor-metric-rows mb-3"><div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.last_calibration_reference', 'Posledná kalibračná referencia') }}</span><span class="sensor-metric-value">${Number.isFinite(Number(values.co2_last_calibration_ppm)) ? `${Math.round(Number(values.co2_last_calibration_ppm))} ppm` : 'Nedostupné'}</span></div><div class="sensor-metric-row"><span class="sensor-metric-name">{{ t('sensor_detail.days_to_next_calibration', 'Dni do ďalšej kalibrácie') }}</span><span class="sensor-metric-value">${Number.isFinite(Number(values.days_to_next_calibration)) ? Math.round(Number(values.days_to_next_calibration)).toString() : 'Nedostupné'}</span></div></div><div class="sensor-table-wrap"><table class="sensor-table"><thead><tr><th>{{ t('common.time', 'Čas') }}</th><th>CO2</th><th>{{ t('sensor_detail.temperature_short', 'Tepl.') }}</th><th>{{ t('sensor_detail.humidity_short', 'Vlh.') }}</th><th>SNR</th><th>RSSI</th></tr></thead><tbody>${rows || '<tr><td colspan="6"><div class="sensor-empty-state">Krátka história zatiaľ nie je dostupná.</div></td></tr>'}</tbody></table></div>`;
   }
   function renderM2Telemetry(latest, history) {
     const values = latest?.decoded?.values || {};
