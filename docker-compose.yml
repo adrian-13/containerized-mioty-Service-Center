@@ -1,11 +1,48 @@
 
 services:
+  # One-shot service: ensures all config files exist before the main
+  # container starts.  Fixes the Docker bind-mount "directory" problem
+  # on fresh clones where the host files do not yet exist.
+  init-config:
+    image: busybox
+    volumes:
+      - .:/workspace
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cd /workspace
+        seed() {
+          target="$$1"; default="$$2"
+          [ -d "$$target" ] && rm -rf "$$target"
+          if [ ! -f "$$target" ]; then
+            if [ -f "$$default" ]; then
+              cp "$$default" "$$target"
+              echo "  Seeded $$target from $$default"
+            else
+              touch "$$target"
+              echo "  Created empty $$target"
+            fi
+          fi
+        }
+        echo "Checking config files..."
+        seed endpoints.json          endpoints.default.json
+        seed users.json              users.default.json
+        seed base_stations.json      base_stations.default.json
+        seed coverage_positions.json coverage_positions.default.json
+        seed coverage_floorplan.txt  ""
+        seed alerts.json             alerts.default.json
+        seed .env                    .env.example
+        echo "Config files ready."
+
   bssci-service-center:
     build: .
     container_name: bssci-service-center
     #user: "${UID:-1000}:${GID:-1000}"
     user: "0:0"  # Als root ausführen
     init: true
+    depends_on:
+      init-config:
+        condition: service_completed_successfully
     ports:
       - "8000:8000"  # TLS Server port
       - "5056:5000"    # Web UI port
@@ -19,6 +56,7 @@ services:
       - ./coverage_positions.json:/app/coverage_positions.json:rw
       - ./coverage_floorplan.txt:/app/coverage_floorplan.txt:rw
       - ./users.json:/app/users.json:rw
+      - ./alerts.json:/app/alerts.json:rw
     restart: unless-stopped
     environment:
       - PYTHONUNBUFFERED=1

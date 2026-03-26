@@ -6,10 +6,19 @@ __pycache__/
 *.py[cod]
 web_ui.syntaxcheck.pyc.*
 attached_assets/*
-# .env is tracked with defaults; override values on the server as needed
 logs/
 backups/
 .claude/
+
+# Runtime config — seeded from *.default.json by init-config service
+endpoints.json
+users.json
+base_stations.json
+coverage_positions.json
+coverage_floorplan.txt
+alerts.json
+alert_state.json
+.env
 
 # Runtime data not tracked
 custom_payload_profiles.json
