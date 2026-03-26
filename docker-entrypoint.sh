@@ -1,4 +1,3 @@
-
 #!/bin/bash
 set -e
 
@@ -105,30 +104,8 @@ if [ ! -f "$CERT_DIR/ca_cert.pem" ] || [ ! -f "$CERT_DIR/service_center_cert.pem
     echo "SSL certificates generated successfully"
 fi
 
-# Ensure mounted config files are actual files, not directories.
-# Docker creates a directory when the host path doesn't exist.
-ensure_file() {
-    target="$1"
-    default="$2"
-    [ -d "$target" ] && rm -rf "$target"
-    if [ ! -s "$target" ]; then
-        if [ -f "$default" ]; then
-            cp "$default" "$target"
-            echo "  Seeded $target from $default"
-        else
-            touch "$target"
-            echo "  Created empty $target"
-        fi
-    fi
-}
-
-echo "Checking config files..."
-ensure_file "$APP_DIR/users.json"              "$APP_DIR/users.default.json"
-ensure_file "$APP_DIR/endpoints.json"          "$APP_DIR/endpoints.default.json"
-ensure_file "$APP_DIR/coverage_positions.json" "$APP_DIR/coverage_positions.default.json"
-ensure_file "$APP_DIR/.env"                    ""
+# Ensure data directory exists
 mkdir -p "$APP_DIR/data"
-ensure_file "$APP_DIR/data/base_stations.json" "$APP_DIR/base_stations.default.json"
 
 echo "Starting BSSCI Service Center..."
 exec "$@"
