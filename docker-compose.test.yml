@@ -1,0 +1,24 @@
+services:
+  bssci-service-center:
+    container_name: bssci-service-center-clean
+    ports: !override
+      - "18000:8000"
+      - "15056:5000"
+    environment:
+      TIMESCALE_ENABLED: "true"
+
+  timescaledb:
+    container_name: bssci-timescaledb-clean
+    ports: !override
+      - "15432:5432"
+
+  grafana:
+    container_name: bssci-grafana-clean
+    ports: !override
+      - "13000:3000"
+
+volumes:
+  timescaledb_data:
+    name: bssci_clean_timescaledb_data
+  grafana_data:
+    name: bssci_clean_grafana_data
