@@ -554,9 +554,24 @@ button:active {
 <script>
 (function(){
 const EUI={{ sensor_eui|tojson }};
+const VIEWER_SENSOR_PROFILE_OPTIONS={{ sensor_profiles|tojson|safe }};
+const VIEWER_SENSOR_PROFILE_LIBRARY=Object.fromEntries((VIEWER_SENSOR_PROFILE_OPTIONS||[]).map((p)=>[String(p.id||'').toLowerCase(),p]));
 let _activeKey=null,_data=null;
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function fmtNum(v,dec,unit){const n=Number(v);return Number.isFinite(n)?n.toFixed(dec)+(unit||''):'—';}
+function getSensorProfileMeta(profileId){
+  const normalized=String(profileId||'auto').toLowerCase();
+  const base=VIEWER_SENSOR_PROFILE_LIBRARY[normalized]||{};
+  const localizedLabels={
+    auto: {{ t('sensor_profiles.auto.label', 'Automaticky / odvodené')|tojson }},
+    lansen_e2_co2_auto: {{ t('sensor_profiles.lansen_e2_co2_auto.label', 'LANSEN E2 CO2')|tojson }},
+    lansen_e2_co2_indoor: {{ t('sensor_profiles.lansen_e2_co2_indoor.label', 'LANSEN E2 CO2 interiér')|tojson }},
+    lansen_e2_co2_outdoor: {{ t('sensor_profiles.lansen_e2_co2_outdoor.label', 'LANSEN E2 CO2 exteriér')|tojson }},
+    lansen_m2_contact: {{ t('sensor_profiles.lansen_m2_contact.label', 'LANSEN M2 kontakt')|tojson }},
+    custom: {{ t('sensor_profiles.custom.label', 'Vlastný profil')|tojson }},
+  };
+  return Object.assign({}, base, { label: localizedLabels[normalized] || base.label || {{ t('sensor_profiles.auto.label', 'Automaticky / odvodené')|tojson }} });
+}
 
 /* ── Custom dialogs ─────────────────────────────────────── */
 function svdConfirm(msg,opts){
