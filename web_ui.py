@@ -9436,7 +9436,7 @@ def add_sensor():
 
 @app.route('/api/sensors/<eui>', methods=['DELETE'])
 @login_required
-@permission_required('can_edit_sensors')
+@permission_required('can_add_sensors')
 def delete_sensor(eui):
     sensors = _load_all_sensors()
     active_tenant = _active_tenant_id()
@@ -10141,6 +10141,7 @@ def api_sensor_gps_update(eui):
         if not found:
             return jsonify({"success": False, "message": "Senzor nenájdený"}), 404
         _save_all_sensors(sensors)
+        _upsert_device_gps_position("sensor", eui_upper, round(gps_lat, 8), round(gps_lng, 8))
         return jsonify({"success": True, "eui": eui_upper, "gps_lat": gps_lat, "gps_lng": gps_lng})
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc)}), 500

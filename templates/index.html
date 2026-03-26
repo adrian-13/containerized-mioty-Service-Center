@@ -165,6 +165,26 @@
     transition: all 0.15s;
 }
 .mview-sensor-link:hover { background: #e2e8f0; color: #1e293b; }
+.mview-row-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    border: 1px solid #dbe6f4;
+    background: #f8fbff;
+    color: #31537a;
+    border-radius: 999px;
+    padding: 0.2rem 0.52rem;
+    font-size: 0.66rem;
+    font-weight: 800;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.mview-row-action:hover {
+    background: #edf5ff;
+    border-color: #bfd4f0;
+    color: #163047;
+}
 /* ── Dots & badges ── */
 .mview-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; flex-shrink: 0; }
 .mview-dot.online  { background: #0f9d69; }
@@ -342,6 +362,38 @@
     animation: scToastIn .18s ease;
 }
 @keyframes scToastIn { from { opacity: 0; transform: translateX(-50%) translateY(6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+.mview-map-panel.is-placement-mode #mview-map { cursor: crosshair; }
+.mview-placement-bar {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    z-index: 810;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.95rem;
+    border: 1px solid #f4c58d;
+    background: rgba(255, 248, 238, 0.97);
+    box-shadow: 0 10px 30px rgba(15,23,42,.14);
+}
+.mview-placement-bar.is-visible { display: flex; }
+.mview-placement-copy { display: flex; flex-direction: column; gap: 0.14rem; min-width: 0; }
+.mview-placement-title { font-size: 0.84rem; font-weight: 800; color: #8f4b06; }
+.mview-placement-note { font-size: 0.74rem; color: #6f6b63; }
+.mview-placement-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.mview-placement-cancel {
+    border: 1px solid #e6d7c2;
+    background: #fff;
+    color: #516170;
+    border-radius: 999px;
+    padding: 0.42rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+.mview-placement-cancel:hover { background: #f8fafc; color: #0f2135; }
 /* Color palette popup */
 .sc-color-pop {
     position: fixed; z-index: 9100;
@@ -594,6 +646,15 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
         </div>
         <div class="mview-resizer" id="mviewResizer"></div>
         <div class="mview-map-panel">
+            <div class="mview-placement-bar" id="mviewPlacementBar">
+                <div class="mview-placement-copy">
+                    <div class="mview-placement-title">{{ t('dashboard.place_sensor_on_map_title', 'Umiestnenie senzora na mapu') }}</div>
+                    <div class="mview-placement-note"><span id="mviewPlacementSensorName"></span> · {{ t('dashboard.place_sensor_on_map_note', 'Kliknite do mapy na miesto, kde sa senzor nachádza.') }}</div>
+                </div>
+                <div class="mview-placement-actions">
+                    <button type="button" class="mview-placement-cancel" onclick="cancelPlacement(true)">{{ t('common.cancel', 'Zrušiť') }}</button>
+                </div>
+            </div>
             <div id="mview-map"></div>
         </div>
     </div>
@@ -1926,6 +1987,99 @@ let allSensors = [];
 let currentFilter = 'all';
 let lastLoadTs = null;
 let tickTimer = null;
+let placementMode = null;
+let pendingPlacementSensorEui = '';
+
+try {
+    pendingPlacementSensorEui = String(new URLSearchParams(window.location.search).get('place_sensor') || '').trim().toUpperCase();
+} catch (e) {
+    pendingPlacementSensorEui = '';
+}
+
+function dashboardTr(key, fallback, params) {
+    if (typeof appTranslate === 'function') return appTranslate(key, fallback, params);
+    return fallback || key;
+}
+function getSensorById(id) {
+    return allSensors.find(function(s) { return sensorId(s) === id; }) || null;
+}
+function hasSensorGeo(sensor) {
+    return !!geoOf(sensor);
+}
+function clearPlacementQuery() {
+    try {
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has('place_sensor')) return;
+        url.searchParams.delete('place_sensor');
+        window.history.replaceState({}, document.title, url.toString());
+    } catch (e) {}
+}
+function updatePlacementUi() {
+    const panel = document.querySelector('.mview-map-panel');
+    const bar = document.getElementById('mviewPlacementBar');
+    const sensorNameEl = document.getElementById('mviewPlacementSensorName');
+    if (panel) panel.classList.toggle('is-placement-mode', !!placementMode);
+    if (bar) bar.classList.toggle('is-visible', !!placementMode);
+    if (sensorNameEl) sensorNameEl.textContent = placementMode ? (placementMode.name || placementMode.id || '') : '';
+}
+function cancelPlacement(showToast) {
+    if (!placementMode) return;
+    placementMode = null;
+    updatePlacementUi();
+    if (showToast) showMapToast(dashboardTr('dashboard.place_sensor_cancelled', 'Umiestnenie senzora zrušené'), 2200);
+}
+window.cancelPlacement = cancelPlacement;
+function startPlacement(id, options) {
+    const sensor = getSensorById(id);
+    if (!sensor) return;
+    placementMode = { id: id, name: sensor.name || id };
+    if (options && options.clearQuery) clearPlacementQuery();
+    updatePlacementUi();
+    highlightRow(id);
+    if (mviewMap) {
+        const current = geoOf(sensor);
+        if (current) mviewMap.setView(current, Math.max(mviewMap.getZoom(), 15));
+    }
+    showMapToast(dashboardTr('dashboard.place_sensor_prompt', 'Kliknite do mapy a poloha senzora sa uloží.'), 3200);
+}
+window.startPlacement = startPlacement;
+function savePlacementFromMap(id, lat, lng) {
+    fetch('/api/sensors/' + encodeURIComponent(id) + '/gps', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ gps_lat: lat, gps_lng: lng })
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .catch(function() { return { ok: false, data: { message: dashboardTr('runtime.network_error', 'Chyba siete.') } }; })
+    .then(function(res) {
+        if (res.ok && res.data && res.data.success) {
+            const sensor = getSensorById(id);
+            if (sensor) {
+                sensor.gps_lat = lat;
+                sensor.gps_lng = lng;
+            }
+            placementMode = null;
+            updatePlacementUi();
+            const filtered = applyFilter(allSensors);
+            renderList(filtered);
+            updateMap(filtered);
+            showMapToast(dashboardTr('dashboard.place_sensor_saved', 'Poloha senzora uložená'), 2400);
+            setTimeout(function() { focusOnMap(id); }, 80);
+        } else {
+            showMapToast('\u2717 ' + ((res.data && (res.data.message || res.data.error)) || dashboardTr('dashboard.place_sensor_save_failed', 'Nepodarilo sa uložiť polohu')), 2600);
+        }
+    });
+}
+function handleSensorRowClick(id) {
+    const sensor = getSensorById(id);
+    if (!sensor) return;
+    if (!hasSensorGeo(sensor)) {
+        startPlacement(id);
+        return;
+    }
+    focusOnMap(id);
+}
+window.handleSensorRowClick = handleSensorRowClick;
 
 /* ── Map ── */
 const _mapViewKey = 'sc.map-view.v1';
@@ -1962,10 +2116,22 @@ function initMap() {
     const view = restoreMapView();
     mviewMap.setView([view.lat, view.lng], view.zoom);
 
+    mviewMap.on('click', function(e) {
+        if (!placementMode) return;
+        savePlacementFromMap(placementMode.id, e.latlng.lat, e.latlng.lng);
+    });
+
     // Right-click on map to set default view (manual save only, no auto-save)
     mviewMap.on('contextmenu', function(e) {
         L.DomEvent.preventDefault(e.originalEvent);
         L.DomEvent.stopPropagation(e.originalEvent);
+        if (placementMode) {
+            showCtx(e.originalEvent, [
+                { icon: 'fa-location-dot', primary: true, label: dashboardTr('dashboard.place_sensor_here', 'Umiestniť senzor sem'), action: function() { savePlacementFromMap(placementMode.id, e.latlng.lat, e.latlng.lng); } },
+                { icon: 'fa-xmark', label: dashboardTr('common.cancel', 'Zrušiť'), action: function() { cancelPlacement(true); } },
+            ]);
+            return;
+        }
         showCtx(e.originalEvent, [
             { icon: 'fa-map-pin', label: 'Nastaviť ako východzí pohľad',
                 action: function() { saveMapView(); showMapToast('\u2713 Pohľad uložený', 2000); } },
@@ -2352,7 +2518,11 @@ function renderList(sensors) {
         const sub    = valueLine(s);
         const chips  = buildMetricChipsHtml(s);
         const hasMetrics = chips.length > 0;
-        return '<div class="mview-sensor-row' + (hasMetrics ? ' has-metrics' : '') + '" data-sensor-id="' + esc(id) + '" onclick="focusOnMap(\'' + esc(id) + '\')">' +
+        const needsPlacement = !hasSensorGeo(s);
+        const placeBtn = needsPlacement
+            ? '<button type="button" class="mview-row-action" onclick="event.stopPropagation();startPlacement(\'' + esc(id) + '\')"><i class="fas fa-location-dot"></i><span>' + esc(dashboardTr('dashboard.place_on_map', 'Umiestniť')) + '</span></button>'
+            : '';
+        return '<div class="mview-sensor-row' + (hasMetrics ? ' has-metrics' : '') + '" data-sensor-id="' + esc(id) + '" onclick="handleSensorRowClick(\'' + esc(id) + '\')">' +
             '<span class="mview-dot ' + tier + '"></span>' +
             '<span class="mview-sensor-info">' +
                 '<span class="mview-sensor-name">' + name + '</span>' +
@@ -2360,6 +2530,7 @@ function renderList(sensors) {
                 (hasMetrics ? '<div class="mview-metrics">' + chips + '</div>' : '') +
             '</span>' +
             '<span class="mview-badge ' + tier + '">' + slabel + '</span>' +
+            placeBtn +
             (hasMetrics ? '<button class="mview-expand-btn" onclick="toggleMetricsDrop(\'' + esc(id) + '\',event)" title="Zobraziť metriky"><i class="fas fa-chevron-down"></i></button>' : '') +
             '<a href="' + href + '" class="mview-sensor-link" onclick="event.stopPropagation()" title="Detail">' +
                 '<i class="fas fa-chevron-right"></i>' +
@@ -2514,6 +2685,18 @@ function load() {
             renderList(filtered);
             updateMap(filtered);
             renderAlerts(raw);
+            if (placementMode && getSensorById(placementMode.id)) {
+                updatePlacementUi();
+                highlightRow(placementMode.id);
+            }
+            if (pendingPlacementSensorEui) {
+                const target = raw.find(function(item) { return String(sensorId(item) || '').toUpperCase() === pendingPlacementSensorEui; });
+                if (target) {
+                    const targetId = sensorId(target);
+                    pendingPlacementSensorEui = '';
+                    setTimeout(function() { startPlacement(targetId, { clearQuery: true }); }, 120);
+                }
+            }
             startTick();
         });
 }
@@ -2710,7 +2893,12 @@ function showCtx(e, items) {
 }
 
 document.addEventListener('click', closeCtx);
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeCtx(); });
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeCtx();
+        cancelPlacement(true);
+    }
+});
 
 function initContextMenus() {
     function buildNewAlertRuleUrl(sensorEui) {
@@ -2729,7 +2917,12 @@ function initContextMenus() {
             const row = e.target.closest('.mview-sensor-row');
             if (row) {
                 const eui = row.dataset.sensorId || '';
+                const sensor = getSensorById(eui);
+                const placementLabel = sensor && hasSensorGeo(sensor)
+                    ? dashboardTr('dashboard.reposition_on_map', 'Upraviť polohu na mape')
+                    : dashboardTr('dashboard.place_on_map', 'Umiestniť na mapu');
                 showCtx(e, [
+                    { icon: 'fa-location-dot', label: placementLabel, action: function() { startPlacement(eui); } },
                     { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť detail', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
                     { icon: 'fa-circle-plus', primary: true, label: 'Pridať upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(eui); } },
                 ]);

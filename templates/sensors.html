@@ -426,6 +426,16 @@ button:active {
                 <input id="svAddName" type="text" placeholder="{{ t('sensors.name_placeholder', 'Voliteľný popis senzora') }}"
                        maxlength="80" autocomplete="off">
             </div>
+            <div class="sv-field">
+                <label class="sv-field-label">{{ t('sensors.map_placement', 'Umiestnenie na mape') }}</label>
+                <label style="display:flex;align-items:flex-start;gap:.55rem;padding:.75rem .85rem;border:1px solid #e4ebf5;border-radius:.8rem;background:#f8fbff;cursor:pointer;">
+                    <input id="svAddPlaceOnMap" type="checkbox" checked style="margin-top:.18rem;flex-shrink:0;">
+                    <span style="display:flex;flex-direction:column;gap:.12rem;">
+                        <span style="font-weight:700;color:#163047;">{{ t('sensors.place_on_map_after_save', 'Po uložení umiestniť senzor na mapu') }}</span>
+                        <span style="font-size:.74rem;color:#66768b;">{{ t('sensors.place_on_map_after_save_note', 'Po vytvorení sa otvorí dashboard a kliknutím do mapy uložíte polohu senzora.') }}</span>
+                    </span>
+                </label>
+            </div>
         </div>
         <div class="sv-modal-footer">
             <button class="sv-btn-secondary" onclick="svTryCloseAdd()">{{ t('common.cancel', 'Zrušiť') }}</button>
@@ -2846,6 +2856,8 @@ function svOpenAdd() {
     document.getElementById('svAddEui').value   = '';
     document.getElementById('svAddNwKey').value = '';
     document.getElementById('svAddName').value  = '';
+    const placeOnMapInput = document.getElementById('svAddPlaceOnMap');
+    if (placeOnMapInput) placeOnMapInput.checked = true;
     const err = document.getElementById('svAddError');
     if (err) { err.style.display = 'none'; err.textContent = ''; }
     m.classList.remove('is-closing');
@@ -2876,6 +2888,7 @@ function svSubmitAdd() {
     const eui   = (document.getElementById('svAddEui').value   || '').trim().replace(/[^0-9a-fA-F]/g, '').toUpperCase();
     const nwKey = (document.getElementById('svAddNwKey').value || '').trim().replace(/[^0-9a-fA-F]/g, '').toUpperCase();
     const name  = (document.getElementById('svAddName').value  || '').trim();
+    const placeOnMap = !!document.getElementById('svAddPlaceOnMap')?.checked;
     const err   = document.getElementById('svAddError');
     const btn   = document.getElementById('svAddSubmit');
 
@@ -2904,6 +2917,12 @@ function svSubmitAdd() {
         if (res.ok && res.data.success !== false) {
             _svAddDirty = false;
             svCloseAdd();
+            if (placeOnMap) {
+                const placeUrl = new URL('/', window.location.origin);
+                placeUrl.searchParams.set('place_sensor', eui);
+                window.location.href = placeUrl.toString();
+                return;
+            }
             svLoad();
         } else {
             const msg = (res.data && (res.data.message || res.data.error)) || 'Nepodarilo sa pridať senzor.';
@@ -3042,6 +3061,8 @@ document.getElementById('svList').addEventListener('contextmenu', function(e) {
             { icon: 'fa-pen', label: 'Upraviť senzor', action: function() { svOpenEdit(eui); } },
             { icon: 'fa-arrow-up-right-from-square', label: 'Detail senzora', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
             '-',
+            { icon: 'fa-trash', label: 'Vymazať senzor', danger: true, action: function() { deleteSensor(eui); } },
+            '-',
             { icon: 'fa-bell-plus', label: 'Pridať alert', action: function() { window.location.href = '/alerts'; } },
         ]);
     } else {
@@ -3083,6 +3104,7 @@ const SENSOR_AUTO_REFRESH_MS = 10000;
 const SENSOR_IS_ADMIN = {{ 'true' if current_user and current_user.role == 'admin' else 'false' }};
 const CAN_VIEW_SENSOR_AUDIT = {{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('view_admin_audit') else 'false' }};
 const CAN_EDIT_SENSORS = {{ 'true' if current_user and current_user.role in ['admin', 'user'] else 'false' }};
+const CAN_DELETE_SENSORS = {{ 'true' if current_user and current_user.permissions.get('can_add_sensors') else 'false' }};
 const SENSOR_PROFILE_OPTIONS = {{ sensor_profiles|tojson|safe }};
 const SENSOR_PROFILE_LIBRARY = Object.fromEntries((SENSOR_PROFILE_OPTIONS || []).map(profile => [String(profile.id || '').toLowerCase(), profile]));
 const SENSOR_VIEW_PREFS_KEY = 'sensors_view_prefs_v1';
@@ -3913,18 +3935,20 @@ function renderSensors(filteredSensors) {
                         <a href="/sensors/${encodeURIComponent(String(sensor.eui || '').trim().toUpperCase())}" class="sensor-action-icon" title="${appTranslate('sensors.open_detail', 'Otvoriť detail')}" onclick="event.stopPropagation()">
                             <i class="fas fa-up-right-from-square"></i>
                         </a>
+                        ${(CAN_EDIT_SENSORS || CAN_DELETE_SENSORS) ? `
                         ${CAN_EDIT_SENSORS ? `
                         <button type="button" class="sensor-action-icon" onclick="editSensor('${escapeHtml(sensor.eui)}')" title="${appTranslate('common.edit', 'Upraviť')}">
                             <i class="fas fa-pen"></i>
                         </button>
+                        ` : ''}
                         <div class="dropdown sensor-actions-menu">
                             <button class="sensor-action-icon sensor-actions-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" title="${appTranslate('common.more', 'Viac')}">
                                 <i class="fas fa-ellipsis-h"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><button class="dropdown-item" onclick="openAttachSensorModal('${escapeHtml(sensor.eui)}')"><i class="fas fa-link me-2"></i>${appTranslate('sensors.manage_attach_natural', 'Spravovať priradenie')}</button></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><button class="dropdown-item text-danger" onclick="deleteSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-trash me-2"></i>${appTranslate('common.delete', 'Vymazať')}</button></li>
+                                ${CAN_EDIT_SENSORS ? `<li><button class="dropdown-item" onclick="openAttachSensorModal('${escapeHtml(sensor.eui)}')"><i class="fas fa-link me-2"></i>${appTranslate('sensors.manage_attach_natural', 'Spravovať priradenie')}</button></li>` : ''}
+                                ${(CAN_EDIT_SENSORS && CAN_DELETE_SENSORS) ? '<li><hr class="dropdown-divider"></li>' : ''}
+                                ${CAN_DELETE_SENSORS ? `<li><button class="dropdown-item text-danger" onclick="deleteSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-trash me-2"></i>${appTranslate('common.delete', 'Vymazať')}</button></li>` : ''}
                             </ul>
                         </div>` : ''}
                     </div>
