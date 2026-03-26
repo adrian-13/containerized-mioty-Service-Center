@@ -3219,8 +3219,6 @@ function getSensorProfileUiHints(profileId) {
     const normalized = String(profileId || 'auto').trim().toLowerCase();
     switch (normalized) {
         case 'lansen_e2_co2':
-        case 'lansen_e2_co2_indoor':
-        case 'lansen_e2_co2_outdoor':
             return {
                 namePlaceholder: tr('sensors.profile_hint_co2_name', 'e.g. CO2 - Meeting room'),
                 tagsPlaceholder: tr('sensors.profile_hint_co2_tags', 'e.g. co2, indoor-air, office'),
@@ -3309,7 +3307,7 @@ function applySensorProfilePreset() {
     const expectedEl = document.getElementById('sensorExpectedInterval');
     const staleEl = document.getElementById('sensorStaleAfterHours');
     if (decoderEl) decoderEl.value = String(meta.payload_decoder || 'auto');
-    if (environmentEl) environmentEl.value = String(meta.environment_context || 'auto');
+    if (environmentEl && meta.environment_context != null) environmentEl.value = String(meta.environment_context || 'auto');
     if (reportingEl) reportingEl.value = String(meta.reporting_mode || 'auto');
     if (expectedEl) expectedEl.value = meta.expected_interval_seconds == null ? '' : String(meta.expected_interval_seconds);
     if (staleEl) staleEl.value = meta.stale_after_hours == null ? '' : String(meta.stale_after_hours);
@@ -3334,9 +3332,10 @@ function maybeSetSensorProfileCustom() {
     const staleValue = String(document.getElementById('sensorStaleAfterHours')?.value || '').trim();
     const presetExpected = meta.expected_interval_seconds == null ? '' : String(meta.expected_interval_seconds);
     const presetStale = meta.stale_after_hours == null ? '' : String(meta.stale_after_hours);
+    const presetEnvironment = meta.environment_context == null ? null : String(meta.environment_context || 'auto');
     const matchesPreset = (
         decoderValue === String(meta.payload_decoder || 'auto') &&
-        environmentValue === String(meta.environment_context || 'auto') &&
+        (presetEnvironment == null || environmentValue === presetEnvironment) &&
         reportingValue === String(meta.reporting_mode || 'auto') &&
         expectedValue === presetExpected &&
         staleValue === presetStale

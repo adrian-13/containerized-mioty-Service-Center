@@ -1732,12 +1732,14 @@ _UI_TRANSLATIONS["sk"].update({
     "sensors.fresh_indoor_air": "Čerstvá indoor kvalita vzduchu.",
     "sensor_profiles.auto.label": "Automaticky / odvodené",
     "sensor_profiles.auto.description": "Ponechá ručné nastavenia dekódera alebo ich odvodí z názvu senzora a tagov.",
-    "sensor_profiles.lansen_e2_co2_auto.label": "LANSEN E2 CO2",
-    "sensor_profiles.lansen_e2_co2_auto.description": "Periodická CO2 telemetria s automatickým určením prostredia a intervalom približne 6 minút.",
-    "sensor_profiles.lansen_e2_co2_indoor.label": "LANSEN E2 CO2 interiér",
-    "sensor_profiles.lansen_e2_co2_indoor.description": "CO2 telemetria pre interiér s prahmi pohodlia nastavenými pre obsadené priestory.",
-    "sensor_profiles.lansen_e2_co2_outdoor.label": "LANSEN E2 CO2 exteriér",
-    "sensor_profiles.lansen_e2_co2_outdoor.description": "CO2 telemetria pre exteriér s interpretáciou prispôsobenou vonkajšiemu prostrediu.",
+        "sensor_profiles.lansen_e2_co2.label": "LANSEN E2 CO2",
+        "sensor_profiles.lansen_e2_co2.description": "Periodická CO2 telemetria s približne 6-minútovým intervalom. Indoor a outdoor interpretácia sa riadi samostatným kontextom prostredia.",
+        "sensor_profiles.lansen_e2_co2_auto.label": "LANSEN E2 CO2",
+        "sensor_profiles.lansen_e2_co2_auto.description": "Periodická CO2 telemetria s približne 6-minútovým intervalom. Indoor a outdoor interpretácia sa riadi samostatným kontextom prostredia.",
+        "sensor_profiles.lansen_e2_co2_indoor.label": "LANSEN E2 CO2",
+        "sensor_profiles.lansen_e2_co2_indoor.description": "Periodická CO2 telemetria s približne 6-minútovým intervalom. Indoor a outdoor interpretácia sa riadi samostatným kontextom prostredia.",
+        "sensor_profiles.lansen_e2_co2_outdoor.label": "LANSEN E2 CO2",
+        "sensor_profiles.lansen_e2_co2_outdoor.description": "Periodická CO2 telemetria s približne 6-minútovým intervalom. Indoor a outdoor interpretácia sa riadi samostatným kontextom prostredia.",
     "sensor_profiles.lansen_m2_contact.label": "LANSEN M2 kontakt",
     "sensor_profiles.lansen_m2_contact.description": "Udalostný snímač dverí alebo okna s týždenným servisným oknom.",
     "sensor_profiles.custom.label": "Vlastný profil",
@@ -2310,37 +2312,13 @@ def _sensor_profile_catalog():
             "stale_after_hours": None,
             "enforced": False,
         },
-        "lansen_e2_co2_auto": {
-            "id": "lansen_e2_co2_auto",
+        "lansen_e2_co2": {
+            "id": "lansen_e2_co2",
             "label": "LANSEN E2 CO2",
-            "description": "Periodic CO2 telemetry with auto deployment context and 6 minute cadence.",
+            "description": "Periodic CO2 telemetry with a 6 minute cadence. Indoor/outdoor interpretation is controlled by environment context.",
             "short_label": "CO2",
             "payload_decoder": "lansen_e2_co2_v1",
-            "environment_context": "auto",
-            "reporting_mode": "periodic",
-            "expected_interval_seconds": 360,
-            "stale_after_hours": None,
-            "enforced": True,
-        },
-        "lansen_e2_co2_indoor": {
-            "id": "lansen_e2_co2_indoor",
-            "label": "LANSEN E2 CO2 Indoor",
-            "description": "Indoor CO2 telemetry with comfort thresholds tuned for occupied rooms.",
-            "short_label": "CO2 indoor",
-            "payload_decoder": "lansen_e2_co2_v1",
-            "environment_context": "indoor",
-            "reporting_mode": "periodic",
-            "expected_interval_seconds": 360,
-            "stale_after_hours": None,
-            "enforced": True,
-        },
-        "lansen_e2_co2_outdoor": {
-            "id": "lansen_e2_co2_outdoor",
-            "label": "LANSEN E2 CO2 Outdoor",
-            "description": "Outdoor CO2 telemetry with ambient context and 6 minute cadence.",
-            "short_label": "CO2 outdoor",
-            "payload_decoder": "lansen_e2_co2_v1",
-            "environment_context": "outdoor",
+            "environment_context": None,
             "reporting_mode": "periodic",
             "expected_interval_seconds": 360,
             "stale_after_hours": None,
@@ -2377,14 +2355,14 @@ def _normalize_sensor_profile(value):
     if raw in {"", "auto", "default", "infer", "inferred"}:
         return "auto"
     aliases = {
-        "co2": "lansen_e2_co2_auto",
-        "lansen_co2": "lansen_e2_co2_auto",
-        "lansen_e2_co2": "lansen_e2_co2_auto",
-        "lansen_e2_co2_auto": "lansen_e2_co2_auto",
-        "lansen_e2_co2_indoor": "lansen_e2_co2_indoor",
-        "lansen_e2_co2_outdoor": "lansen_e2_co2_outdoor",
-        "co2_indoor": "lansen_e2_co2_indoor",
-        "co2_outdoor": "lansen_e2_co2_outdoor",
+        "co2": "lansen_e2_co2",
+        "lansen_co2": "lansen_e2_co2",
+        "lansen_e2_co2": "lansen_e2_co2",
+        "lansen_e2_co2_auto": "lansen_e2_co2",
+        "lansen_e2_co2_indoor": "lansen_e2_co2",
+        "lansen_e2_co2_outdoor": "lansen_e2_co2",
+        "co2_indoor": "lansen_e2_co2",
+        "co2_outdoor": "lansen_e2_co2",
         "m2": "lansen_m2_contact",
         "lansen_m2": "lansen_m2_contact",
         "lan-mioty-m2": "lansen_m2_contact",
@@ -2404,9 +2382,7 @@ def _sensor_profile_options():
     catalog = _sensor_profile_catalog()
     order = [
         "auto",
-        "lansen_e2_co2_auto",
-        "lansen_e2_co2_indoor",
-        "lansen_e2_co2_outdoor",
+        "lansen_e2_co2",
         "lansen_m2_contact",
         "custom",
     ]
@@ -2420,11 +2396,7 @@ def _infer_sensor_profile(sensor):
     environment = str((sensor or {}).get("environment_context", "auto") or "auto").strip().lower()
     reporting_mode = _normalize_reporting_mode((sensor or {}).get("reporting_mode"))
     if decoder == "lansen_e2_co2_v1":
-        if environment == "indoor":
-            return "lansen_e2_co2_indoor"
-        if environment == "outdoor":
-            return "lansen_e2_co2_outdoor"
-        return "lansen_e2_co2_auto"
+        return "lansen_e2_co2"
     if decoder == "lansen_m2_v1" and reporting_mode in {"auto", "event"}:
         return "lansen_m2_contact"
     return explicit

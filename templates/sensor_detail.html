@@ -564,9 +564,10 @@ function getSensorProfileMeta(profileId){
   const base=VIEWER_SENSOR_PROFILE_LIBRARY[normalized]||{};
   const localizedLabels={
     auto: {{ t('sensor_profiles.auto.label', 'Automaticky / odvodené')|tojson }},
-    lansen_e2_co2_auto: {{ t('sensor_profiles.lansen_e2_co2_auto.label', 'LANSEN E2 CO2')|tojson }},
-    lansen_e2_co2_indoor: {{ t('sensor_profiles.lansen_e2_co2_indoor.label', 'LANSEN E2 CO2 interiér')|tojson }},
-    lansen_e2_co2_outdoor: {{ t('sensor_profiles.lansen_e2_co2_outdoor.label', 'LANSEN E2 CO2 exteriér')|tojson }},
+    lansen_e2_co2: {{ t('sensor_profiles.lansen_e2_co2.label', 'LANSEN E2 CO2')|tojson }},
+    lansen_e2_co2_auto: {{ t('sensor_profiles.lansen_e2_co2.label', 'LANSEN E2 CO2')|tojson }},
+    lansen_e2_co2_indoor: {{ t('sensor_profiles.lansen_e2_co2.label', 'LANSEN E2 CO2')|tojson }},
+    lansen_e2_co2_outdoor: {{ t('sensor_profiles.lansen_e2_co2.label', 'LANSEN E2 CO2')|tojson }},
     lansen_m2_contact: {{ t('sensor_profiles.lansen_m2_contact.label', 'LANSEN M2 kontakt')|tojson }},
     custom: {{ t('sensor_profiles.custom.label', 'Vlastný profil')|tojson }},
   };
@@ -1280,9 +1281,10 @@ load();
     const base = SENSOR_PROFILE_LIBRARY[normalized] || {};
     const localizedLabels = {
       auto: {{ t('sensor_profiles.auto.label', 'Automaticky / odvodené')|tojson }},
-      lansen_e2_co2_auto: {{ t('sensor_profiles.lansen_e2_co2_auto.label', 'LANSEN E2 CO2')|tojson }},
-      lansen_e2_co2_indoor: {{ t('sensor_profiles.lansen_e2_co2_indoor.label', 'LANSEN E2 CO2 interiér')|tojson }},
-      lansen_e2_co2_outdoor: {{ t('sensor_profiles.lansen_e2_co2_outdoor.label', 'LANSEN E2 CO2 exteriér')|tojson }},
+      lansen_e2_co2: {{ t('sensor_profiles.lansen_e2_co2.label', 'LANSEN E2 CO2')|tojson }},
+      lansen_e2_co2_auto: {{ t('sensor_profiles.lansen_e2_co2.label', 'LANSEN E2 CO2')|tojson }},
+      lansen_e2_co2_indoor: {{ t('sensor_profiles.lansen_e2_co2.label', 'LANSEN E2 CO2')|tojson }},
+      lansen_e2_co2_outdoor: {{ t('sensor_profiles.lansen_e2_co2.label', 'LANSEN E2 CO2')|tojson }},
       lansen_m2_contact: {{ t('sensor_profiles.lansen_m2_contact.label', 'LANSEN M2 kontakt')|tojson }},
       custom: {{ t('sensor_profiles.custom.label', 'Vlastný profil')|tojson }},
     };

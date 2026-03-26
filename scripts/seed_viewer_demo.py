@@ -74,7 +74,7 @@ DEMO_SENSORS = [
     DemoSensor(
         eui="A0412D2A10000101",
         name="CO2 Recepcia",
-        profile="lansen_e2_co2_indoor",
+        profile="lansen_e2_co2",
         gps_lat=48.767061,
         gps_lng=18.636184,
         marker_color="#16a34a",
@@ -85,7 +85,7 @@ DEMO_SENSORS = [
     DemoSensor(
         eui="A0412D2A10000102",
         name="CO2 Zasadacka",
-        profile="lansen_e2_co2_indoor",
+        profile="lansen_e2_co2",
         gps_lat=48.767406,
         gps_lng=18.636019,
         marker_color="#dc2626",
@@ -96,7 +96,7 @@ DEMO_SENSORS = [
     DemoSensor(
         eui="A0412D2A10000103",
         name="CO2 Sklad",
-        profile="lansen_e2_co2_auto",
+        profile="lansen_e2_co2",
         gps_lat=48.767745,
         gps_lng=18.634816,
         marker_color="#f59e0b",
@@ -129,7 +129,7 @@ DEMO_SENSORS = [
     DemoSensor(
         eui="A0412D2A10000106",
         name="CO2 Nova kancelaria",
-        profile="lansen_e2_co2_indoor",
+        profile="lansen_e2_co2",
         gps_lat=48.766551,
         gps_lng=18.635949,
         marker_color="#64748b",
