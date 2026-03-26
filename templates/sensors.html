@@ -3031,8 +3031,19 @@ function svSubmitEdit() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     })
-    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
-    .catch(function() { return { ok: false, data: { message: 'Chyba siete.' } }; })
+    .then(async function(r) {
+        const raw = await r.text();
+        let data = {};
+        try {
+            data = raw ? JSON.parse(raw) : {};
+        } catch (_err) {
+            data = { message: raw || ('HTTP ' + r.status) };
+        }
+        return { ok: r.ok, status: r.status, data: data };
+    })
+    .catch(function(error) {
+        return { ok: false, data: { message: (error && error.message) ? error.message : 'Chyba siete.' } };
+    })
     .then(function(res) {
         if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Uložiť'; }
         if (res.ok && res.data.success !== false) {

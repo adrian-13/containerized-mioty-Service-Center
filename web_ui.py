@@ -9466,6 +9466,142 @@ def add_sensor():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
+@app.route('/api/sensors/<eui>', methods=['PUT'])
+@login_required
+@permission_required('can_add_sensors')
+def update_sensor(eui):
+    eui_upper = str(eui or '').strip().upper()
+    patch = request.get_json(silent=True) or {}
+    if not eui_upper:
+        return jsonify({'success': False, 'message': 'EUI is required'}), 400
+
+    try:
+        sensors = _load_all_sensors()
+        active_tenant = _active_tenant_id()
+        target_index = None
+        existing_sensor = None
+        for idx, sensor in enumerate(sensors):
+            if str(sensor.get('eui', '')).upper() != eui_upper:
+                continue
+            if not _tenant_matches(_tenant_id_from_sensor(sensor), active_tenant):
+                continue
+            target_index = idx
+            existing_sensor = dict(sensor)
+            break
+
+        if target_index is None or not existing_sensor:
+            return jsonify({'success': False, 'message': 'Sensor not found'}), 404
+
+        merged = dict(existing_sensor)
+        merged.update(dict(patch or {}))
+        merged['eui'] = eui_upper
+        merged['tenant_id'] = _tenant_id_from_sensor(existing_sensor)
+        if existing_sensor.get('created_at'):
+            merged['created_at'] = existing_sensor.get('created_at')
+        if 'shared_tenants' not in merged and existing_sensor.get('shared_tenants') is not None:
+            merged['shared_tenants'] = existing_sensor.get('shared_tenants')
+
+        data = _normalize_sensor_payload(merged)
+
+        compare_fields = [
+            'nwKey',
+            'shortAddr',
+            'bidi',
+            'name',
+            'tags',
+            'sensor_profile',
+            'gps_lat',
+            'gps_lng',
+            'payload_decoder',
+            'environment_context',
+            'reporting_mode',
+            'expected_interval_seconds',
+            'stale_after_hours',
+        ]
+        changed_fields = [field for field in compare_fields if existing_sensor.get(field) != data.get(field)]
+
+        sensors[target_index] = data
+        _save_all_sensors(sensors)
+
+        _try_record_inventory_event(
+            "sensor",
+            "updated",
+            data.get("eui", ""),
+            {
+                "short_addr": data.get("shortAddr", ""),
+                "bidi": bool(data.get("bidi", False)),
+                "nwkey_present": bool(data.get("nwKey")),
+                "name": data.get("name", ""),
+                "tags_count": len(data.get("tags", [])),
+                "sensor_profile": data.get("sensor_profile", "auto"),
+                "payload_decoder": data.get("payload_decoder", "auto"),
+                "environment_context": data.get("environment_context", "auto"),
+                "reporting_mode": data.get("reporting_mode", "auto"),
+                "expected_interval_seconds": data.get("expected_interval_seconds"),
+                "stale_after_hours": data.get("stale_after_hours"),
+                "gps_lat": data.get("gps_lat"),
+                "gps_lng": data.get("gps_lng"),
+                "tenant_id": active_tenant,
+            }
+        )
+
+        _upsert_device_gps_position("sensor", data.get("eui", ""), data.get("gps_lat"), data.get("gps_lng"))
+        _record_admin_audit(
+            action='sensor.update',
+            entity='sensor',
+            target_id=data.get("eui", ""),
+            status='success',
+            details={
+                "name": data.get("name", ""),
+                "short_addr": data.get("shortAddr", ""),
+                "bidi": bool(data.get("bidi", False)),
+                "tags_count": len(data.get("tags", [])),
+                "sensor_profile": data.get("sensor_profile", "auto"),
+                "payload_decoder": data.get("payload_decoder", "auto"),
+                "environment_context": data.get("environment_context", "auto"),
+                "reporting_mode": data.get("reporting_mode", "auto"),
+                "expected_interval_seconds": data.get("expected_interval_seconds"),
+                "stale_after_hours": data.get("stale_after_hours"),
+                "gps_lat": data.get("gps_lat"),
+                "gps_lng": data.get("gps_lng"),
+                "tenant_id": active_tenant,
+            },
+        )
+
+        global tls_server_instance
+        tls_server = tls_server_instance
+        should_trigger_runtime_attach = any(field in {'nwKey', 'shortAddr', 'bidi'} for field in changed_fields)
+        attach_targets_after_save = _normalize_base_station_route_list(data.get("attached_base_stations", []))
+
+        if tls_server and hasattr(tls_server, 'reload_sensor_config'):
+            try:
+                tls_server.reload_sensor_config()
+
+                if not should_trigger_runtime_attach:
+                    return jsonify({'success': True, 'message': 'Sensor saved. Runtime attach unchanged (metadata-only update).'})
+
+                if hasattr(tls_server, 'connected_base_stations') and tls_server.connected_base_stations:
+                    if hasattr(tls_server, 'attach_sensor_sync'):
+                        attached_count = tls_server.attach_sensor_sync(
+                            data['eui'],
+                            attach_targets_after_save or None,
+                        )
+                        if attached_count > 0:
+                            return jsonify({'success': True, 'message': f'Sensor saved and attach requests sent to {attached_count} base stations'})
+                        return jsonify({'success': True, 'message': 'Sensor saved. Runtime attach will continue when base stations are reachable.'})
+                    return jsonify({'success': True, 'message': 'Sensor saved. Attach API is not available in runtime.'})
+
+                return jsonify({'success': True, 'message': 'Sensor saved. No connected base stations now; attach will run after reconnect.'})
+            except Exception as e:
+                print(f"Error notifying TLS server: {e}")
+                return jsonify({'success': True, 'message': 'Sensor saved but failed to notify TLS server'})
+
+        return jsonify({'success': True, 'message': 'Sensor saved (TLS server not available for attach)'})
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
 @app.route('/api/sensors/<eui>', methods=['DELETE'])
 @login_required
 @permission_required('can_add_sensors')
