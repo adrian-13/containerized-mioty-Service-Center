@@ -90,6 +90,7 @@
 }
 .sv-row:hover .sv-edit-btn { opacity: 1; }
 .sv-edit-btn:hover { background: #dbeafe; color: var(--brand-600); }
+.sv-edit-btn.is-danger:hover { background: #fde8e9; color: #b91c1c; }
 .sv-empty { text-align: center; color: #94a3b8; padding: 3rem 1rem; font-size: 0.88rem; }
 .sv-add-btn {
     margin-left: auto;
@@ -388,6 +389,9 @@ button:active {
             </div>
         </div>
         <div class="sv-modal-footer">
+            <button type="button" id="svEditDelete" class="sv-btn-secondary" style="margin-right:auto;color:#b91c1c;border-color:#fecaca;background:#fff5f5;" onclick="svDeleteSensorFromEdit()">
+                <i class="fas fa-trash"></i> {{ t('common.delete', 'Vymazať') }}
+            </button>
             <button class="sv-btn-secondary" onclick="svTryCloseEdit()">{{ t('common.cancel', 'Zrušiť') }}</button>
             <button id="svEditSubmit" class="sv-btn-primary" onclick="svSubmitEdit()">
                 <i class="fas fa-check"></i> {{ t('common.save', 'Uložiť') }}
@@ -2583,6 +2587,7 @@ button:active {
                 </form>
             </div>
             <div class="modal-footer sensor-config-footer">
+                <button type="button" class="btn btn-outline-danger me-auto d-none" id="sensorDeleteBtn" onclick="deleteSensor(editingEui)">{{ t('common.delete', 'Vymazať') }}</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('common.cancel', 'Cancel') }}</button>
                 <button type="button" class="btn btn-primary" onclick="saveSensor()">{{ t('common.save', 'Save') }}</button>
             </div>
@@ -2808,6 +2813,7 @@ function svRender() {
             '</span>' +
             '<span class="sv-badge ' + t + '">' + sl + '</span>' +
             '<button class="sv-edit-btn" title="Upraviť senzor" onclick="event.preventDefault();event.stopPropagation();svOpenEdit(\'' + esc(id) + '\')"><i class="fas fa-pen"></i></button>' +
+            '<button class="sv-edit-btn is-danger" title="Vymazať senzor" onclick="event.preventDefault();event.stopPropagation();svDeleteSensor(\'' + esc(id) + '\')"><i class="fas fa-trash"></i></button>' +
             '<span class="sv-link"><i class="fas fa-chevron-right"></i></span>' +
         '</a>';
     }).join('');
@@ -3014,10 +3020,39 @@ function svSubmitEdit() {
         }
     });
 }
+async function svDeleteSensor(eui) {
+    const confirmed = await apConfirm(
+        'Vymazať senzor <strong>' + esc(eui) + '</strong>? Týmto sa odstráni konfigurácia z registra.',
+        { title: 'Vymazať senzor', confirmLabel: 'Vymazať', danger: true }
+    );
+    if (!confirmed) return;
+
+    const editOpen = document.getElementById('svEditModal') && document.getElementById('svEditModal').style.display === 'flex';
+    fetch('/api/sensors/' + encodeURIComponent(eui), { method: 'DELETE' })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .catch(function() { return { ok: false, data: { message: 'Chyba siete.' } }; })
+        .then(function(res) {
+            if (res.ok && res.data.success !== false) {
+                _svEditDirty = false;
+                if (editOpen) svCloseEdit();
+                toast('success', (res.data && (res.data.message || res.data.error)) || 'Senzor bol vymazaný.');
+                svLoad();
+            } else {
+                const msg = (res.data && (res.data.message || res.data.error)) || 'Nepodarilo sa vymazať senzor.';
+                toast('error', msg);
+            }
+        });
+}
+function svDeleteSensorFromEdit() {
+    const eui = String(document.getElementById('svEditEui')?.value || '').trim();
+    if (!eui) return;
+    svDeleteSensor(eui);
+}
 window.svOpenEdit      = svOpenEdit;
 window.svCloseEdit     = svCloseEdit;
 window.svTryCloseEdit  = svTryCloseEdit;
 window.svSubmitEdit    = svSubmitEdit;
+window.svDeleteSensor  = svDeleteSensor;
 
 // ── Context menu ─────────────────────────────────────────────────────────────
 let _svCtxEl = null;
@@ -3061,7 +3096,7 @@ document.getElementById('svList').addEventListener('contextmenu', function(e) {
             { icon: 'fa-pen', label: 'Upraviť senzor', action: function() { svOpenEdit(eui); } },
             { icon: 'fa-arrow-up-right-from-square', label: 'Detail senzora', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
             '-',
-            { icon: 'fa-trash', label: 'Vymazať senzor', danger: true, action: function() { deleteSensor(eui); } },
+            { icon: 'fa-trash', label: 'Vymazať senzor', danger: true, action: function() { svDeleteSensor(eui); } },
             '-',
             { icon: 'fa-bell-plus', label: 'Pridať alert', action: function() { window.location.href = '/alerts'; } },
         ]);
@@ -3941,6 +3976,11 @@ function renderSensors(filteredSensors) {
                             <i class="fas fa-pen"></i>
                         </button>
                         ` : ''}
+                        ${CAN_DELETE_SENSORS ? `
+                        <button type="button" class="sensor-action-icon is-danger" onclick="deleteSensor('${escapeHtml(sensor.eui)}')" title="${appTranslate('common.delete', 'Vymazať')}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ` : ''}
                         <div class="dropdown sensor-actions-menu">
                             <button class="sensor-action-icon sensor-actions-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" title="${appTranslate('common.more', 'Viac')}">
                                 <i class="fas fa-ellipsis-h"></i>
@@ -4047,14 +4087,17 @@ function openSensorModal(sensor = null) {
     editingEui = sensor ? sensor.eui : null;
     const kicker = document.getElementById('sensorModalKicker');
     const subtitle = document.getElementById('sensorModalSubtitle');
+    const deleteBtn = document.getElementById('sensorDeleteBtn');
     if (sensor) {
         document.getElementById('sensorModalTitle').textContent = `${tr('common.edit', 'Upraviť')} ${tr('common.sensor', 'senzor')}`;
         if (kicker) kicker.textContent = tr('sensors.edit_sensor_kicker', 'Úprava senzora');
         if (subtitle) subtitle.textContent = sensor.name ? `${sensor.name} · ${sensor.eui}` : sensor.eui;
+        if (deleteBtn) deleteBtn.classList.remove('d-none');
     } else {
         document.getElementById('sensorModalTitle').textContent = tr('sensors.add_new_sensor', 'Pridať senzor');
         if (kicker) kicker.textContent = tr('sensors.new_sensor_kicker', 'Nový senzor');
         if (subtitle) subtitle.textContent = '';
+        if (deleteBtn) deleteBtn.classList.add('d-none');
     }
 
     if (sensor) {
@@ -4569,6 +4612,15 @@ async function deleteSensor(eui) {
 
     apiRequest(`/api/sensors/${eui}`, 'DELETE')
         .then(data => {
+            const modalEl = document.getElementById('sensorModal');
+            const modalInstance = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+            if (modalInstance && editingEui === eui) {
+                sensorModalCloseBySave = true;
+                modalInstance.hide();
+            }
+            if (editingEui === eui) {
+                editingEui = null;
+            }
             selectedSensors.delete(eui);
             showAlert('success', data.message || tr('runtime.sensor_deleted', 'Sensor {eui} deleted.', { eui }));
             loadSensors(true);
