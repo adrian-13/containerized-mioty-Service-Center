@@ -750,11 +750,27 @@ function render(d){
     // Default: show all available metrics
     return metrics;
   }
+  function getMetricBlueprintForSensorType(sensorData){
+    const profile=String(sensorData.config?.sensor_profile||'').toLowerCase();
+    const reportingMode=String(sensorData.config?.reporting_mode||sensorData.reporting_mode||'periodic').toLowerCase();
+    if(profile.includes('door')||profile.includes('contact')||profile.includes('m2')){
+      return [['any_alarm_active',null],['open_count',null],['last_alarm_duration_s',null],['battery_v_est',null]];
+    }
+    if(profile.includes('co2')||profile.includes('air')){
+      return [['co2_1_ppm',null],['temperature_1_c',null],['humidity_1_pct',null],['battery_v_est',null]];
+    }
+    if(reportingMode==='event'){
+      return [['any_alarm_active',null],['battery_v_est',null]];
+    }
+    return [['battery_v_est',null]];
+  }
   const displayMetrics=getMetricsForSensorType(allMetrics,d);
+  const usingBlueprintMetrics=!displayMetrics.length;
+  const metricCards=usingBlueprintMetrics?getMetricBlueprintForSensorType(d):displayMetrics;
 
   // Default/reset active key to use filtered metrics
-  if(!_activeKey||!displayMetrics.find(([k])=>k===_activeKey)){
-    _activeKey=displayMetrics[0]?displayMetrics[0][0]:null;
+  if(!_activeKey||!metricCards.find(([k])=>k===_activeKey)){
+    _activeKey=metricCards[0]?metricCards[0][0]:null;
   }
 
   // Extract info data (used in unified panel)
@@ -765,6 +781,13 @@ function render(d){
   const intervalStr=interval?(interval>=3600?Number(interval/3600).toFixed(1)+' hod':interval>=60?Math.round(interval/60)+' min':interval+' s'):'—';
   const lastSeenFull=d.last_seen?new Date(Number(d.last_seen)*1000).toLocaleString('sk-SK',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
 
+  const profileStr=String(cfg.sensor_profile||d.sensor_profile||'auto');
+  const profileMeta=getSensorProfileMeta(profileStr);
+  const profileLabel=profileMeta&&profileMeta.label?profileMeta.label:profileStr;
+  const preloadNote=usingBlueprintMetrics
+    ? '<div class="svd-ch-empty" style="padding:.1rem .9rem .85rem;text-align:left;">Profil senzora je nastavený. Karty aj graf sa doplnia po prvom uplinku.</div>'
+    : '';
+
   // Build unified overview panel - info + metrics
   const metricsGridHtml=`<section class="svd-card" id="svdMetricsCard">
     <div class="svd-info-strip">
@@ -772,13 +795,14 @@ function render(d){
       <div><div class="svd-info-label">Posledný uplink</div><div class="svd-info-val">${esc(lastSeenFull)}</div></div>
       <div><div class="svd-info-label">Interval</div><div class="svd-info-val">${esc(intervalStr)}</div></div>
     </div>
-    ${displayMetrics.length?`<div style="padding:.7rem .9rem .9rem">
+    ${metricCards.length?`<div style="padding:.7rem .9rem .9rem">
+      ${preloadNote}
       <div class="svd-mgrid">
-        ${displayMetrics.map(([k,v])=>{
+        ${metricCards.map(([k,v])=>{
           const tone=heroTone(k,v);
-          const dv=fmtHeroValue(k,v);
+          const dv=usingBlueprintMetrics?'â€”':fmtHeroValue(k,v);
           const unit=heroUnit(k);
-          const note=heroNote(k,v);
+          const note=usingBlueprintMetrics?'Čaká sa na prvý uplink':heroNote(k,v);
           const isActive=k===_activeKey;
           const icon=METRIC_ICONS[k]||'fa-chart-line';
           const shortLbl=METRIC_SHORT[k]||labelOf(k);
@@ -790,7 +814,7 @@ function render(d){
           </button>`;
         }).join('')}
       </div>
-    </div>`:''}
+    </div>`:`<div class="svd-empty">Pre tento profil zatiaľ nie sú pripravené žiadne metriky.</div>`}
   </section>`;
 
   // Chart card
@@ -804,11 +828,18 @@ function render(d){
         <button class="svd-ch-range-btn" data-minutes="43200">30d</button>
       </div>
     </div>
+    ${usingBlueprintMetrics?`<div class="svd-ch-empty" style="padding-top:.15rem;padding-bottom:0;">Graf sa začne vykresľovať po prijatí prvých dát pre metriku <strong>${esc(labelOf(_activeKey))}</strong>.</div>`:''}
     <div class="svd-chart-wrap"><canvas id="svdChart"></canvas></div>
   </section>`:'';
 
   document.getElementById('svdBody').innerHTML=metricsGridHtml+chartCardHtml+'<section class="svd-card" id="svdAlertsCard"><div class="svd-al-head"><span class="svd-al-title"><i class="fas fa-bell"></i> Alerty</span><button class="svd-al-add-btn" id="svdAlAddBtn"><i class="fas fa-plus"></i> Pridať alert</button></div><div id="svdAlList"><div class="svd-al-empty">Načítavam...</div></div></section>';
   loadAlerts();
+  const alertsCard=document.getElementById('svdAlertsCard');
+  if(alertsCard){
+    const profileInfo=document.createElement('div');
+    profileInfo.innerHTML='<div class="svd-info-head" style="padding-top:.2rem;">Profil senzora</div><div class="svd-info-grid" style="padding-top:.2rem;padding-bottom:.4rem;"><div><div class="svd-info-lbl">Profil</div><div class="svd-info-val">'+esc(profileLabel)+'</div></div></div>';
+    alertsCard.insertBefore(profileInfo, document.getElementById('svdAlList'));
+  }
 
   // Metric card click → switch active card + update chart title + reload chart
   document.querySelectorAll('#svdMetricsCard .svd-mcard').forEach(btn=>{
