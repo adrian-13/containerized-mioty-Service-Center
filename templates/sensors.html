@@ -211,8 +211,8 @@
     to { opacity: 1; transform: scale(1); }
 }
 
-/* Sensor rows fade in — NO DELAY for immediate response */
-.sv-row {
+/* Sensor rows fade in — only on first load, not on refresh */
+#svList.is-initial .sv-row {
     animation: fadeInUp .16s ease-out;
 }
 
@@ -286,8 +286,11 @@ button:active {
 }
 
 /* Form fields smooth focus — instant response */
-.sv-field input, .sv-field select {
-    transition: all .08s ease;
+.sv-field input {
+    transition: border-color .08s, box-shadow .08s, transform .08s;
+}
+.sv-field select {
+    transition: border-color .08s, box-shadow .08s;
 }
 .sv-field input:focus, .sv-field select:focus {
     transform: translateY(-1px);
@@ -400,7 +403,7 @@ button:active {
             <h3 class="sv-modal-title">
                 <i class="fas fa-plus" style="margin-right: .5rem; color: var(--brand-500);"></i>{{ t('sensors.add', 'Pridať senzor') }}
             </h3>
-            <button class="sv-modal-close" onclick="svCloseAdd()">&times;</button>
+            <button class="sv-modal-close" onclick="svTryCloseAdd()">&times;</button>
         </div>
         <div class="sv-modal-body">
             <div id="svAddError" style="display: none; background: #fde8e9; color: #a12b32; border-radius: .5rem; padding: .6rem .85rem; font-size: .82rem;"></div>
@@ -425,7 +428,7 @@ button:active {
             </div>
         </div>
         <div class="sv-modal-footer">
-            <button class="sv-btn-secondary" onclick="svCloseAdd()">{{ t('common.cancel', 'Zrušiť') }}</button>
+            <button class="sv-btn-secondary" onclick="svTryCloseAdd()">{{ t('common.cancel', 'Zrušiť') }}</button>
             <button id="svAddSubmit" class="sv-btn-primary" onclick="svSubmitAdd()">
                 <i class="fas fa-plus"></i> {{ t('sensors.add', 'Pridať') }}
             </button>
@@ -2777,12 +2780,14 @@ function svRender() {
         el.innerHTML = '<div class="sv-empty">' + (allSensors.length ? 'Žiadne výsledky' : 'Žiadne senzory') + '</div>';
         return;
     }
+    const _svFirst = !el.dataset.initialized;
     el.innerHTML = filtered.map(function(s) {
         const st  = s.activity_status || s.status || '';
         const t   = tier(s);
         const id  = s.eui || s.device_eui || s.sensor_id || '';
         const name= esc(s.name || id || '\u2014');
-        const sl  = esc(viewerStatusLabel(s) || st || 'unknown');
+        const _tierLabel = { online: 'Online', warn: 'Upozornenie', offline: 'Offline' };
+        const sl  = esc(_tierLabel[t] || viewerStatusLabel(s) || 'Neznámy');
         const sub = valueLine(s);
         const href= '/sensors/' + esc(id);
         return '<a href="' + href + '" class="sv-row" data-eui="' + esc(id) + '">' +
@@ -2796,6 +2801,11 @@ function svRender() {
             '<span class="sv-link"><i class="fas fa-chevron-right"></i></span>' +
         '</a>';
     }).join('');
+    if (_svFirst) {
+        el.dataset.initialized = '1';
+        el.classList.add('is-initial');
+        requestAnimationFrame(function() { requestAnimationFrame(function() { el.classList.remove('is-initial'); }); });
+    }
 }
 
 function svLoad() {
@@ -2828,9 +2838,11 @@ function svLoad() {
 }
 
 /* ── Add sensor modal ── */
+var _svAddDirty = false;
 function svOpenAdd() {
     const m = document.getElementById('svAddModal');
     if (!m) return;
+    _svAddDirty = false;
     document.getElementById('svAddEui').value   = '';
     document.getElementById('svAddNwKey').value = '';
     document.getElementById('svAddName').value  = '';
@@ -2838,16 +2850,27 @@ function svOpenAdd() {
     if (err) { err.style.display = 'none'; err.textContent = ''; }
     m.classList.remove('is-closing');
     m.style.display = 'flex';
+    m.querySelectorAll('input:not([readonly]),select,textarea').forEach(function(el) {
+        el.oninput = function() { _svAddDirty = true; };
+        el.onchange = function() { _svAddDirty = true; };
+    });
     setTimeout(function() { document.getElementById('svAddEui').focus(); }, 100);
 }
 function svCloseAdd() {
     const m = document.getElementById('svAddModal');
     if (!m) return;
+    _svAddDirty = false;
     m.classList.add('is-closing');
     setTimeout(function() {
         m.style.display = 'none';
         m.classList.remove('is-closing');
     }, 220);
+}
+async function svTryCloseAdd() {
+    if (_svAddDirty) {
+        if (!await apConfirm('Máte neuložené zmeny. Zahodiť ich?', {title:'Zahodiť zmeny', confirmLabel:'Zahodiť', danger:true})) return;
+    }
+    svCloseAdd();
 }
 function svSubmitAdd() {
     const eui   = (document.getElementById('svAddEui').value   || '').trim().replace(/[^0-9a-fA-F]/g, '').toUpperCase();
@@ -2879,6 +2902,7 @@ function svSubmitAdd() {
     .then(function(res) {
         if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus me-1"></i>Pridať'; }
         if (res.ok && res.data.success !== false) {
+            _svAddDirty = false;
             svCloseAdd();
             svLoad();
         } else {
@@ -2889,17 +2913,18 @@ function svSubmitAdd() {
 }
 window.svOpenAdd   = svOpenAdd;
 window.svCloseAdd  = svCloseAdd;
+window.svTryCloseAdd = svTryCloseAdd;
 window.svSubmitAdd = svSubmitAdd;
 
 // Close modals on backdrop click / keyboard
 document.addEventListener('click', function(e) {
     const ma = document.getElementById('svAddModal');
-    if (ma && e.target === ma) svCloseAdd();
+    if (ma && e.target === ma) svTryCloseAdd();
     const me = document.getElementById('svEditModal');
     if (me && e.target === me) svTryCloseEdit();
 });
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') { svCloseAdd(); svTryCloseEdit(); }
+    if (e.key === 'Escape') { svTryCloseAdd(); svTryCloseEdit(); }
     if (e.key === 'Enter' && document.getElementById('svAddModal') &&
         document.getElementById('svAddModal').style.display === 'flex') svSubmitAdd();
     if (e.key === 'Enter' && document.getElementById('svEditModal') &&

@@ -457,13 +457,12 @@
     100% { background-position: 1000px 0; }
 }
 
-/* List items animation — NO DELAY for immediate response */
-.mview-sensor-row {
+/* List items animation — only on first load, not on refresh */
+#mviewSensorList.is-initial .mview-sensor-row {
     animation: fadeInUp .18s ease-out;
 }
 
-/* Alert rows animation — NO DELAY for immediate response */
-.mview-alert-row {
+#mviewAlerts.is-initial .mview-alert-row {
     animation: fadeInUp .16s ease-out;
 }
 
@@ -2341,11 +2340,13 @@ function renderList(sensors) {
             (currentFilter === 'all' ? 'Žiadne senzory' : 'Žiadne výsledky') + '</div>';
         return;
     }
+    const _listFirst = !el.dataset.initialized;
     el.innerHTML = sensors.map(function(s) {
         const raw    = s.activity_status || s.status || 'unknown';
         const tier   = SENSOR_TIER(s);
         const name   = esc(s.name || s.eui || s.device_eui || s.sensor_id || '\u2014');
-        const slabel = esc(SENSOR_STATUS_LABEL(s));
+        const _tierLabel = { online: 'Online', warn: 'Upozornenie', offline: 'Offline' };
+        const slabel = esc(_tierLabel[tier] || SENSOR_STATUS_LABEL(s));
         const id     = sensorId(s);
         const href   = '/sensors/' + esc(id);
         const sub    = valueLine(s);
@@ -2366,6 +2367,11 @@ function renderList(sensors) {
         '</div>' +
         (hasMetrics ? '<div class="mview-metrics-drop" id="mdrop-' + esc(id) + '">' + chips + '</div>' : '');
     }).join('');
+    if (_listFirst) {
+        el.dataset.initialized = '1';
+        el.classList.add('is-initial');
+        requestAnimationFrame(function() { requestAnimationFrame(function() { el.classList.remove('is-initial'); }); });
+    }
 }
 
 /* ── Metric drop toggle ── */
@@ -2377,6 +2383,7 @@ function toggleMetricsDrop(id, e) {
     const open = drop.classList.toggle('is-open');
     btn.classList.toggle('is-open', open);
 }
+window.toggleMetricsDrop = toggleMetricsDrop;
 
 /* ── User menu toggle ── */
 function toggleUserMenu() {
@@ -2442,6 +2449,7 @@ function renderAlerts() {
                 badge.textContent = visible.length || '';
                 badge.classList.toggle('is-visible', visible.length > 0);
             }
+            const _alertFirst = !body.dataset.initialized;
             if (!visible.length) {
                 body.innerHTML = '<div class="mview-alerts-empty">Žiadne upozornenia</div>';
                 return;
@@ -2461,6 +2469,11 @@ function renderAlerts() {
                     '<i class="fas fa-chevron-right" style="font-size:.58rem;color:#cbd5e1;flex-shrink:0"></i>' +
                 '</a>';
             }).join('');
+            if (_alertFirst) {
+                body.dataset.initialized = '1';
+                body.classList.add('is-initial');
+                requestAnimationFrame(function() { requestAnimationFrame(function() { body.classList.remove('is-initial'); }); });
+            }
         });
 }
 

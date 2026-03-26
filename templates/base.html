@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
     <title>Kinet MIOTY Center - {{ translate_page_title(self.title()|striptags|trim) }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,6 +42,10 @@
             --ui-content-pad-y: clamp(1rem, 1.3vw, 1.8rem);
             --ui-sidebar-pad-y: clamp(0.8rem, 0.95vw, 1rem);
             --ui-sidebar-pad-x: clamp(0.64rem, 0.8vw, 0.9rem);
+        }
+
+        html {
+            color-scheme: light;
         }
 
         html.ui-theme-kinet {
@@ -517,8 +522,9 @@
             gap: 0.9rem;
             padding: var(--ui-topbar-pad-y) var(--ui-topbar-pad-x);
             border-bottom: 1px solid #e9eff5;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(10px);
+            background: #ffffff;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
         }
 
@@ -839,6 +845,331 @@
             font-size: 0.72rem;
         }
 
+        .viewer-guide-entry {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .viewer-guide-open {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            border: 1px solid rgba(var(--brand-rgb), 0.18);
+            border-radius: 0.55rem;
+            background: rgba(var(--brand-rgb), 0.08);
+            color: var(--brand-600);
+            font-size: 0.74rem;
+            font-weight: 800;
+            padding: 0.42rem 0.8rem;
+        }
+
+        .viewer-guide-open:hover,
+        .viewer-guide-open:focus {
+            background: rgba(var(--brand-rgb), 0.12);
+            border-color: rgba(var(--brand-rgb), 0.28);
+            color: var(--brand-600);
+        }
+
+        .viewer-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        .viewer-guide-hero {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.9rem;
+            background: linear-gradient(135deg, rgba(var(--brand-rgb), 0.1) 0%, rgba(255, 255, 255, 0.96) 60%);
+            padding: 1rem 1rem 0.95rem;
+            margin-bottom: 0.95rem;
+        }
+
+        .viewer-guide-kicker {
+            margin: 0 0 0.28rem;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--brand-600);
+        }
+
+        .viewer-guide-title {
+            margin: 0;
+            font-size: 1.08rem;
+            font-weight: 800;
+            color: var(--text-900);
+        }
+
+        .viewer-guide-copy {
+            margin: 0.45rem 0 0;
+            font-size: 0.78rem;
+            color: var(--text-700);
+            line-height: 1.55;
+            max-width: 64ch;
+        }
+
+        .viewer-guide-card {
+            display: grid;
+            gap: 0.7rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.9rem;
+            background: #fbfdff;
+            padding: 0.95rem;
+        }
+
+        .viewer-guide-card.is-current {
+            border-color: rgba(var(--brand-rgb), 0.35);
+            box-shadow: 0 10px 24px rgba(var(--brand-rgb), 0.12);
+            background: linear-gradient(180deg, rgba(var(--brand-rgb), 0.08) 0%, #ffffff 100%);
+        }
+
+        .viewer-guide-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .viewer-guide-icon {
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(var(--brand-rgb), 0.12);
+            color: var(--brand-600);
+            font-size: 0.92rem;
+            flex-shrink: 0;
+        }
+
+        .viewer-guide-label {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            background: rgba(var(--brand-rgb), 0.12);
+            color: var(--brand-600);
+            font-size: 0.64rem;
+            font-weight: 800;
+            padding: 0.18rem 0.48rem;
+            white-space: nowrap;
+        }
+
+        .viewer-guide-card-title {
+            margin: 0 0 0.18rem;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--text-900);
+        }
+
+        .viewer-guide-card-copy {
+            margin: 0;
+            font-size: 0.73rem;
+            color: var(--text-700);
+            line-height: 1.55;
+        }
+
+        .viewer-guide-list {
+            margin: 0;
+            padding-left: 1rem;
+            display: grid;
+            gap: 0.32rem;
+            color: var(--text-700);
+            font-size: 0.72rem;
+            line-height: 1.5;
+        }
+
+        .viewer-guide-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            width: fit-content;
+            border: 1px solid #dbe4ee;
+            border-radius: 0.55rem;
+            background: #fff;
+            color: var(--text-700);
+            font-size: 0.73rem;
+            font-weight: 800;
+            padding: 0.42rem 0.72rem;
+            text-decoration: none;
+        }
+
+        .viewer-guide-link:hover,
+        .viewer-guide-link:focus {
+            text-decoration: none;
+            color: var(--brand-600);
+            border-color: rgba(var(--brand-rgb), 0.28);
+            background: rgba(var(--brand-rgb), 0.05);
+        }
+
+        .viewer-guide-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .viewer-guide-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-700);
+            cursor: pointer;
+        }
+
+        .viewer-guide-toggle input {
+            width: auto;
+            transform: none;
+            accent-color: var(--brand-500);
+        }
+
+        .app-tour-backdrop {
+            display: none;
+        }
+
+        .app-tour-highlight {
+            position: relative !important;
+            z-index: 2062 !important;
+        }
+
+        /* Spotlight: huge spread shadow dims the whole screen; the element itself is the "hole" */
+        .app-tour-spotlight {
+            position: fixed;
+            pointer-events: none;
+            z-index: 2058;
+            display: none;
+            box-shadow:
+                0 0 0 3000px rgba(15, 23, 42, 0.50),
+                0 0 0 2px  rgba(255, 255, 255, 0.96),
+                0 0 0 4px  rgba(var(--brand-rgb), 0.7),
+                0 6px 20px rgba(15, 23, 42, 0.20);
+        }
+
+        .app-tour-spotlight.is-visible {
+            display: block;
+        }
+
+        .app-tour-card {
+            position: fixed;
+            width: min(24rem, calc(100vw - 1.5rem));
+            z-index: 2065;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 26px 56px rgba(15, 23, 42, 0.22);
+            padding: 1rem;
+            display: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .app-tour-card.is-visible {
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .app-tour-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.8rem;
+        }
+
+        .app-tour-kicker {
+            margin: 0 0 0.18rem;
+            font-size: 0.67rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--brand-600);
+        }
+
+        .app-tour-title {
+            margin: 0;
+            font-size: 0.96rem;
+            font-weight: 800;
+            color: var(--text-900);
+        }
+
+        .app-tour-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border: 1px solid #dbe4ee;
+            border-radius: 0.7rem;
+            background: #fff;
+            color: var(--text-500);
+        }
+
+        .app-tour-close:hover,
+        .app-tour-close:focus {
+            color: var(--text-900);
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .app-tour-copy {
+            margin: 0;
+            font-size: 0.78rem;
+            line-height: 1.6;
+            color: var(--text-700);
+        }
+
+        .app-tour-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .app-tour-progress {
+            font-size: 0.71rem;
+            font-weight: 800;
+            color: var(--text-500);
+        }
+
+        .app-tour-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .app-tour-btns {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .app-tour-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            border-radius: 0.62rem;
+            padding: 0.48rem 0.85rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .app-tour-btn[disabled] {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
         .display-zoom-value {
             font-size: 0.76rem;
             color: #4f647f;
@@ -1105,6 +1436,15 @@
             min-height: 2.5rem;
             font-size: 0.875rem;
             color: var(--text-900);
+            background-color: #ffffff;
+        }
+
+        select,
+        option,
+        optgroup {
+            color-scheme: light;
+            background-color: #ffffff;
+            color: var(--text-900);
         }
 
         .form-control:focus,
@@ -1137,6 +1477,14 @@
             border: 1px solid #e2e8f0;
             border-radius: 0.75rem;
             box-shadow: var(--shadow-strong);
+        }
+
+        .fade {
+            transition: none !important;
+        }
+
+        .collapsing {
+            transition: none !important;
         }
 
         .modal-header {
@@ -1397,6 +1745,10 @@
             .app-content {
                 padding-bottom: 1.2rem;
             }
+
+            .viewer-guide-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* ── Role-based & advanced-mode visibility ────────────── */
@@ -1519,12 +1871,12 @@
 
         /* Smooth dropdown menus */
         .dropdown-menu {
-            animation: slideInDown .18s ease-out;
+            animation: none;
         }
 
         /* Global button animations — instant response */
         button, [role="button"] {
-            transition: all .08s ease;
+            transition: background-color .08s ease, border-color .08s ease, color .08s ease, box-shadow .08s ease, transform .08s ease;
         }
         button:hover, [role="button"]:hover {
             transform: translateY(-1px);
@@ -1540,18 +1892,18 @@
 
         /* Form input smooth focus — instant response */
         input, textarea, select {
-            transition: all .08s ease;
+            transition: border-color .08s ease, box-shadow .08s ease, background-color .08s ease, color .08s ease;
         }
         input:focus, textarea:focus, select:focus {
-            transform: scale(1.01);
+            transform: none;
         }
 
         /* Modal smooth entrance — instant, no delay */
         .modal {
-            animation: fadeIn .15s ease-out;
+            animation: none;
         }
         .modal-content {
-            animation: slideInDown .2s cubic-bezier(.34, 1.56, .64, 1);
+            animation: none;
         }
 
         /* Alert toast animations — fast entrance */
@@ -1747,7 +2099,7 @@
                         <span class="viewer-brand-name">Kinet MIOTY</span>
                     </a>
                     <div class="viewer-nav-sep"></div>
-                    <nav class="viewer-topnav" aria-label="{{ t('common.navigation', 'Navigation') }}">
+                    <nav class="viewer-topnav" id="viewerTopnav" aria-label="{{ t('common.navigation', 'Navigation') }}">
                         <a class="viewer-nav-link {% if endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
                             <i class="fas fa-chart-pie"></i> {{ t('nav.dashboard', 'Dashboard') }}
                         </a>
@@ -1781,12 +2133,17 @@
                             <span class="topbar-clock-date" id="appTopbarClockDate">--.--.----</span>
                         </span>
                     </div>
+                    {% if current_user and current_user.role == 'viewer' %}
+                    <button class="topbar-tool" type="button" id="viewerGuideBtn" title="{{ t('viewer.guide_open', 'Otvoriť sprievodcu') }}" aria-label="{{ t('viewer.guide_open', 'Otvoriť sprievodcu') }}">
+                        <i class="fas fa-circle-question"></i>
+                    </button>
+                    {% endif %}
                     {% if not (current_user and current_user.role == 'viewer') %}
                     <button class="topbar-tool" type="button" id="advancedModeBtn" onclick="toggleAdvancedMode()" title="{{ t('display.advanced_mode', 'Pokročilý režim') }}" aria-label="{{ t('display.advanced_mode', 'Pokročilý režim') }}">
                         <i class="fas fa-flask"></i>
                     </button>
                     {% endif %}
-                    <button class="topbar-tool" type="button" data-bs-toggle="modal" data-bs-target="#displaySettingsModal" title="{{ t('display.settings', 'Display Settings') }}" aria-label="{{ t('display.settings', 'Display Settings') }}">
+                    <button class="topbar-tool" type="button" id="displaySettingsBtn" data-bs-toggle="modal" data-bs-target="#displaySettingsModal" title="{{ t('display.settings', 'Display Settings') }}" aria-label="{{ t('display.settings', 'Display Settings') }}">
                         <i class="fas fa-sliders-h"></i>
                     </button>
                     <span class="topbar-actions-sep" aria-hidden="true"></span>
@@ -1849,6 +2206,20 @@
                         </select>
                         <p class="display-setting-note">{{ t('display.theme_note', 'Applies a light color palette variant across the interface.') }}</p>
                     </section>
+                    {% if current_user and current_user.role == 'viewer' %}
+                    <section class="display-setting-card">
+                        <div class="viewer-guide-entry">
+                            <div>
+                                <p class="display-setting-title">{{ t('viewer.guide_title', 'Sprievodca pre viewer') }}</p>
+                                <p class="display-setting-note">{{ t('viewer.guide_settings_note', 'Rýchly prehľad, kde sledovať senzory, pracovať s upozorneniami a čo v tejto roli môžete meniť.') }}</p>
+                            </div>
+                            <button type="button" class="viewer-guide-open" id="viewerGuideSettingsBtn">
+                                <i class="fas fa-route"></i>
+                                <span>{{ t('viewer.guide_open', 'Otvoriť sprievodcu') }}</span>
+                            </button>
+                        </div>
+                    </section>
+                    {% endif %}
                     <section class="display-setting-card">
                         <p class="display-setting-title">{{ t('common.language', 'Language') }}</p>
                         <div class="topbar-lang-switch" aria-label="{{ t('common.language', 'Language') }}">
@@ -1871,6 +2242,253 @@
             </div>
         </div>
     </div>
+
+    {% if current_user and current_user.role == 'viewer' %}
+    <div class="modal fade" id="viewerGuideModal" tabindex="-1" aria-labelledby="viewerGuideModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        {% if endpoint == 'index' %}
+                        <p class="viewer-guide-kicker mb-1"><i class="fas fa-chart-pie me-1"></i>Dashboard</p>
+                        <h5 class="modal-title" id="viewerGuideModalLabel">Rýchly prehľad stavu zariadení</h5>
+                        {% elif endpoint == 'sensors' %}
+                        <p class="viewer-guide-kicker mb-1"><i class="fas fa-microchip me-1"></i>Senzory</p>
+                        <h5 class="modal-title" id="viewerGuideModalLabel">Správa a prehľad zariadení</h5>
+                        {% elif endpoint == 'sensor_detail_page' %}
+                        <p class="viewer-guide-kicker mb-1"><i class="fas fa-microchip me-1"></i>Detail senzora</p>
+                        <h5 class="modal-title" id="viewerGuideModalLabel">Metriky, história a alerting</h5>
+                        {% elif endpoint == 'alerts_page' %}
+                        <p class="viewer-guide-kicker mb-1"><i class="fas fa-bell me-1"></i>Upozornenia</p>
+                        <h5 class="modal-title" id="viewerGuideModalLabel">Incidenty, pravidlá a história</h5>
+                        {% else %}
+                        <p class="viewer-guide-kicker mb-1"><i class="fas fa-circle-question me-1"></i>Rýchly sprievodca</p>
+                        <h5 class="modal-title" id="viewerGuideModalLabel">Sprievodca pre viewer</h5>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+                </div>
+                <div class="modal-body">
+
+                    {% if endpoint == 'index' %}
+                    {# ── DASHBOARD ── #}
+                    <p class="viewer-guide-copy mb-3">Táto stránka je váš každodenný rozcestník — jedným pohľadom vidíte kde sú senzory, aký majú stav a čo si práve žiada pozornosť.</p>
+                    <div class="viewer-guide-grid">
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-map-location-dot"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Mapa senzorov</h6>
+                            <p class="viewer-guide-card-copy">Interaktívna mapa zobrazuje polohu všetkých zariadení farebne podľa stavu.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Kliknutie na marker otvorí detail senzora</li>
+                                <li>Marker sa dá pretiahnuť myšou na novú polohu</li>
+                                <li>Farba markera zodpovedá stavu: zelená / oranžová / červená</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-list-ul"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Zoznam senzorov</h6>
+                            <p class="viewer-guide-card-copy">Ľavý panel rýchlo filtruje zariadenia podľa prevádzkového stavu.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Filtrovanie: Online / Upozornenie / Offline</li>
+                                <li>Kliknutie na riadok otvorí detail senzora</li>
+                                <li>Pravé tlačidlo → rýchle akcie (detail, alert)</li>
+                                <li>Tlačidlo Obnoviť načíta aktuálne dáta</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-bell"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Panel upozornení</h6>
+                            <p class="viewer-guide-card-copy">Spodná časť obrazovky zobrazuje všetky práve otvorené incidenty v reálnom čase.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Červená = chyba / nedostupnosť, oranžová = upozornenie</li>
+                                <li>Kliknutie → detail príslušného senzora</li>
+                                <li>Pravé tlačidlo → potvrdiť na 4 hod. alebo 24 hod.</li>
+                            </ul>
+                        </section>
+                    </div>
+
+                    {% elif endpoint == 'sensors' %}
+                    {# ── SENZORY ── #}
+                    <p class="viewer-guide-copy mb-3">Kompletný zoznam všetkých zariadení vo vašej sieti. Odtiaľto filtrujete, hľadáte, upravujete a pristupujete na detail každého senzora.</p>
+                    <div class="viewer-guide-grid">
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-filter"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Filtrovanie a vyhľadávanie</h6>
+                            <p class="viewer-guide-card-copy">Rýchlo nájdite zariadenia, ktoré potrebujete riešiť.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Záložky Všetky / Online / Upozornenie / Offline nad zoznamom</li>
+                                <li>Pole hľadania filtruje podľa názvu alebo EUI</li>
+                                <li>Počty pri záložkách sa aktualizujú automaticky</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-pen"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Úprava senzora</h6>
+                            <p class="viewer-guide-card-copy">Základné nastavenia senzora upravíte priamo zo zoznamu bez nutnosti otvárať detail.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Ikona <i class="fas fa-pen" style="font-size:.75em"></i> sa zobrazí pri hover na riadok</li>
+                                <li>Kliknutím otvoríte modálne okno pre zmenu názvu a tagov</li>
+                                <li>Pravé tlačidlo myši ponúka ďalšie akcie</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-arrow-up-right-from-square"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Detail senzora</h6>
+                            <p class="viewer-guide-card-copy">Každý riadok je klikateľný — otvorí plný detail zariadenia.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Aktuálne metriky, historické grafy a telemetria</li>
+                                <li>Nastavenie prahových alertov priamo pre daný senzor</li>
+                                <li>Stav, čas posledného uplinku a konfigurácia</li>
+                            </ul>
+                        </section>
+                    </div>
+
+                    {% elif endpoint == 'sensor_detail_page' %}
+                    {# ── DETAIL SENZORA ── #}
+                    <p class="viewer-guide-copy mb-3">Všetko o jednom senzore na jednom mieste — od aktuálnych hodnôt cez historické grafy až po nastavenie vlastných upozornení.</p>
+                    <div class="viewer-guide-grid">
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-gauge-high"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Metrické karty</h6>
+                            <p class="viewer-guide-card-copy">Aktuálne namerané hodnoty zobrazené ako farebné karty s ikonami.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Kliknutie na kartu zobrazí historický graf tejto hodnoty</li>
+                                <li>Farba karty zodpovedá kvalite / stavu meranej veličiny</li>
+                                <li>Zobrazujú sa len hlavné metriky relevantné pre typ senzora</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-satellite-dish"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Záložka Telemetria</h6>
+                            <p class="viewer-guide-card-copy">Surový log všetkých prijatých správ zo senzora.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Každý riadok = jeden uplink s časom prijatia</li>
+                                <li>Sila signálu (RSSI) a počet gateway, cez ktoré správa prišla</li>
+                                <li>Dekódované hodnoty pre každú správu</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-bell"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Záložka Alerting</h6>
+                            <p class="viewer-guide-card-copy">Nastavte vlastné prahové upozornenie pre akúkoľvek metriku tohto senzora.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Vyberte metriku (napr. CO₂) a nastavte podmienku a prah</li>
+                                <li>Závažnosť: Varovanie alebo Kritické</li>
+                                <li>Alert sa spustí hneď, ako senzor odošle hodnotu za prahom</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-chart-line"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Záložka Grafy</h6>
+                            <p class="viewer-guide-card-copy">Vizualizácia histórie meraní vybranej metriky za zvolené časové obdobie.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Graf sa zobrazí po kliknutí na metriku v kartách hore</li>
+                                <li>Zmenou záložky Grafy získate väčšie plnohodnotné zobrazenie</li>
+                                <li>Dáta sú zoradené od najstaršieho po najnovší záznam</li>
+                            </ul>
+                        </section>
+                    </div>
+
+                    {% elif endpoint == 'alerts_page' %}
+                    {# ── UPOZORNENIA ── #}
+                    <p class="viewer-guide-copy mb-3">Centrálne miesto pre všetko čo súvisí s upozorneniami — sledujete aktívne incidenty, spravujete pravidlá a prezeráte históriu udalostí.</p>
+                    <div class="viewer-guide-grid">
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-circle-exclamation"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Záložka Aktívne</h6>
+                            <p class="viewer-guide-card-copy">Všetky práve otvorené incidenty — to čo potrebuje riešenie teraz.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Červené = chyba / nedostupnosť, oranžové = varovanie</li>
+                                <li>Pravé tlačidlo → potvrdiť incident na 4 hod. alebo 24 hod.</li>
+                                <li>Kliknutie na riadok → detail príslušného senzora</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-sliders"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Záložka Pravidlá</h6>
+                            <p class="viewer-guide-card-copy">Definujte vlastné podmienky, kedy má systém vytvoriť upozornenie.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Prahový alert: napr. CO₂ &gt; 1000 ppm, Teplota &gt; 30 °C</li>
+                                <li>Alert dostupnosti: spustí sa, keď senzor prestane odosielať správy</li>
+                                <li>Pravidlo aktivujete alebo deaktivujete jedným kliknutím</li>
+                                <li>Pravé tlačidlo na pravidlo → upraviť alebo zmazať</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-clock-rotate-left"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Záložka História</h6>
+                            <p class="viewer-guide-card-copy">Kompletný log vzniku a uzavretia všetkých incidentov.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Filtrujte podľa senzora, zdroja, závažnosti alebo typu udalosti</li>
+                                <li>Vznik incidentu = <em>Vzniknuté</em>, koniec = <em>Vyriešené</em></li>
+                                <li>Vyhľadávanie v poli hore filtruje podľa senzora alebo dôvodu</li>
+                            </ul>
+                        </section>
+                    </div>
+
+                    {% else %}
+                    {# ── FALLBACK ── #}
+                    <p class="viewer-guide-copy">Táto rola je zameraná na každodennú prevádzku. Dashboard slúži na rýchly prehľad, Senzory na detail a základné nastavenia a Upozornenia na incidenty, pravidlá a históriu.</p>
+                    {% endif %}
+
+                </div>
+                <div class="modal-footer justify-content-end">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Zavrieť</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="appTourBackdrop" class="app-tour-backdrop" aria-hidden="true"></div>
+    <div id="appTourSpotlight" class="app-tour-spotlight" aria-hidden="true"></div>
+    <div id="appTourCard" class="app-tour-card" role="dialog" aria-live="polite" aria-label="{{ t('viewer.guide_title', 'Sprievodca pre viewer') }}">
+        <div class="app-tour-head">
+            <div>
+                <p class="app-tour-kicker">{{ t('viewer.guide_kicker', 'Rýchly sprievodca') }}</p>
+                <h6 class="app-tour-title" id="appTourTitle">{{ t('viewer.guide_title', 'Sprievodca pre viewer') }}</h6>
+            </div>
+            <button type="button" class="app-tour-close" id="appTourClose" aria-label="{{ t('common.close', 'Close') }}">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
+        <p class="app-tour-copy" id="appTourCopy">{{ t('viewer.guide_intro_copy', 'Táto rola je zameraná na každodennú prevádzku.') }}</p>
+        <div class="app-tour-meta">
+            <span class="app-tour-progress" id="appTourProgress">1 / 1</span>
+        </div>
+        <div class="app-tour-actions">
+            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" id="appTourSkip">{{ t('common.cancel', 'Zrušiť') }}</button>
+            <div class="app-tour-btns">
+                <button type="button" class="btn btn-outline-secondary btn-sm app-tour-btn" id="appTourPrev">{{ t('common.back', 'Späť') }}</button>
+                <button type="button" class="btn btn-primary btn-sm app-tour-btn" id="appTourNext">{{ t('common.next', 'Ďalej') }}</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <div id="appToastContainer" class="app-toast-container" aria-live="polite" aria-atomic="true"></div>
 
@@ -2577,7 +3195,10 @@
         }
 
         const APP_USER_ROLE = {{ (current_user.role)|tojson if current_user else '"guest"' }};
+        const APP_ENDPOINT = {{ endpoint|tojson }};
         const ADVANCED_MODE_KEY = 'service-center.advanced-mode.v1';
+        const VIEWER_GUIDE_KEY = 'service-center.viewer-guide.v1';
+        const VIEWER_GUIDE_VERSION = '2026-03';
 
         function _updateAdvancedModeBtn(isAdvanced) {
             const btn = document.getElementById('advancedModeBtn');
@@ -2609,6 +3230,441 @@
             _updateAdvancedModeBtn(isAdvanced);
         }
 
+        function loadViewerGuidePrefs() {
+            const defaults = { autostart: true, lastSeenVersion: '' };
+            try {
+                const parsed = JSON.parse(localStorage.getItem(VIEWER_GUIDE_KEY) || '{}');
+                return {
+                    autostart: parsed.autostart !== false,
+                    lastSeenVersion: String(parsed.lastSeenVersion || '')
+                };
+            } catch (error) {
+                return defaults;
+            }
+        }
+
+        function saveViewerGuidePrefs(prefs) {
+            try {
+                localStorage.setItem(VIEWER_GUIDE_KEY, JSON.stringify({
+                    autostart: prefs.autostart !== false,
+                    lastSeenVersion: String(prefs.lastSeenVersion || '')
+                }));
+            } catch (error) {
+                // ignore localStorage limitations
+            }
+        }
+
+        const viewerTourState = {
+            active: false,
+            steps: [],
+            index: 0,
+            currentTarget: null,
+            pendingTimer: null,
+            restoreAlertTab: ''
+        };
+
+        function markViewerGuideSeen(prefs = null) {
+            const nextPrefs = prefs || loadViewerGuidePrefs();
+            nextPrefs.lastSeenVersion = VIEWER_GUIDE_VERSION;
+            saveViewerGuidePrefs(nextPrefs);
+        }
+
+        function openViewerGuide(options = {}) {
+            if (APP_USER_ROLE !== 'viewer' || typeof bootstrap === 'undefined') return;
+            const modalEl = document.getElementById('viewerGuideModal');
+            if (!modalEl) return;
+            const showGuide = () => {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            };
+            if (options.closeSettings) {
+                const settingsEl = document.getElementById('displaySettingsModal');
+                if (settingsEl) {
+                    const settingsModal = bootstrap.Modal.getInstance(settingsEl);
+                    if (settingsModal) {
+                        settingsModal.hide();
+                        window.setTimeout(showGuide, 180);
+                        return;
+                    }
+                }
+            }
+            showGuide();
+        }
+
+        function closeViewerGuideModal() {
+            if (APP_USER_ROLE !== 'viewer' || typeof bootstrap === 'undefined') return;
+            const modalEl = document.getElementById('viewerGuideModal');
+            if (!modalEl) return;
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
+        function clearViewerTourHighlight() {
+            if (!viewerTourState.currentTarget) return;
+            const target = viewerTourState.currentTarget;
+            target.classList.remove('app-tour-highlight');
+            if (target.dataset.appTourRestorePosition !== undefined) {
+                target.style.position = target.dataset.appTourRestorePosition;
+                delete target.dataset.appTourRestorePosition;
+            }
+            viewerTourState.currentTarget = null;
+            const spotlight = document.getElementById('appTourSpotlight');
+            if (spotlight) spotlight.classList.remove('is-visible');
+        }
+
+        function setViewerTourHighlight(target) {
+            clearViewerTourHighlight();
+            if (!target) return;
+            target.dataset.appTourRestorePosition = target.style.position || '';
+            if (window.getComputedStyle(target).position === 'static') {
+                target.style.position = 'relative';
+            }
+            target.classList.add('app-tour-highlight');
+            viewerTourState.currentTarget = target;
+
+            const spotlight = document.getElementById('appTourSpotlight');
+            if (spotlight) {
+                const pad = 7;
+                const rect = target.getBoundingClientRect();
+                const br = window.getComputedStyle(target).borderRadius || '6px';
+                spotlight.style.top    = `${rect.top    - pad}px`;
+                spotlight.style.left   = `${rect.left   - pad}px`;
+                spotlight.style.width  = `${rect.width  + pad * 2}px`;
+                spotlight.style.height = `${rect.height + pad * 2}px`;
+                spotlight.style.borderRadius = br;
+                spotlight.classList.add('is-visible');
+            }
+        }
+
+        function isViewerTourTargetVisible(target) {
+            if (!target) return false;
+            const style = window.getComputedStyle(target);
+            if (style.display === 'none' || style.visibility === 'hidden') return false;
+            const rect = target.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+        }
+
+        function buildViewerTourSteps() {
+            const baseSteps = APP_ENDPOINT === 'sensors' || APP_ENDPOINT === 'alerts_page' ? [] : [
+                {
+                    selector: '#viewerTopnav',
+                    title: 'Hlavná navigácia',
+                    copy: 'Tu sa prepínate medzi hlavnými sekciami. Dashboard je pre rýchly prehľad, Senzory pre detail zariadení a Upozornenia pre incidenty, pravidlá a históriu.'
+                },
+                {
+                    selector: '.viewer-nav-link.active',
+                    title: 'Aktuálna sekcia',
+                    copy: 'Zvýraznená položka ukazuje, kde sa práve nachádzate. Táto ukážka sa vždy prispôsobí aktuálnej stránke.'
+                },
+                {
+                    selector: '#displaySettingsBtn',
+                    title: 'Nastavenia zobrazenia',
+                    copy: 'Tu zmeníte jazyk, mierku rozhrania, hustotu zobrazenia a farebnú schému.'
+                }
+            ];
+            const steps = [...baseSteps];
+
+            if (APP_ENDPOINT === 'index') {
+                steps.push(
+                    {
+                        selector: '#mviewFilters',
+                        title: 'Rýchle filtre senzorov',
+                        copy: 'Použite ich na okamžité rozdelenie senzorov podľa stavu. Takto sa najrýchlejšie prekliknete na senzory s problémom.'
+                    },
+                    {
+                        selector: '#mviewSensorList',
+                        title: 'Zoznam senzorov',
+                        copy: 'Tu vidíte aktuálne zariadenia, ich stav a základné metriky. Kliknutím sa presuniete na detail alebo na mapu.'
+                    },
+                    {
+                        selector: '#mviewAlerts',
+                        title: 'Live upozornenia',
+                        copy: 'Táto sekcia ukazuje aktuálne otvorené incidenty. Je to najrýchlejší operatívny prehľad toho, čo treba riešiť.'
+                    },
+                    {
+                        selector: '#mview-map',
+                        title: 'Mapa a priestorový kontext',
+                        copy: 'Mapa pomáha zorientovať sa, kde sa senzor nachádza a rýchlo otvoriť jeho detail priamo z dashboardu.'
+                    }
+                );
+            } else if (APP_ENDPOINT === 'sensors') {
+                steps.push(
+                    {
+                        selector: '.sv-toolbar',
+                        title: 'Vyhľadávanie a základné akcie',
+                        copy: 'V hornej lište vyhľadáte konkrétny senzor, vidíte čas posledného obnovienia a podľa oprávnení môžete pridať nový senzor.'
+                    },
+                    {
+                        selector: '.sv-filters',
+                        title: 'Filtrovanie podľa stavu',
+                        copy: 'Prepínajte medzi všetkými senzormi, online zariadeniami, upozorneniami a offline senzormi.'
+                    },
+                    {
+                        selector: '#svList',
+                        title: 'Pracovný zoznam senzorov',
+                        copy: 'Tu otvoríte detail senzora alebo cez pravé tlačidlo vyvoláte rýchle akcie ako úpravu či vytvorenie upozornenia.'
+                    }
+                );
+                if (document.querySelector('.sv-add-btn')) {
+                    steps.push({
+                        selector: '.sv-add-btn',
+                        title: 'Pridať senzor',
+                        copy: 'Ak máte oprávnenie na pridávanie, nové zariadenie založíte priamo odtiaľto.'
+                    });
+                }
+            } else if (APP_ENDPOINT === 'alerts_page') {
+                steps.push(
+                    {
+                        selector: '.ap-nav-tabs',
+                        title: 'Prepínanie sekcií',
+                        copy: 'Na tejto stránke sa prepínate medzi aktívnymi upozorneniami, pravidlami a históriou.'
+                    },
+                    {
+                        selector: '#panel-alerts',
+                        title: 'Aktívne upozornenia',
+                        copy: 'Tu vidíte otvorené incidenty a ich dôvod. Toto je live prevádzkový pohľad.',
+                        before: () => document.querySelector('.ap-nav-btn[data-tab=\"alerts\"]')?.click()
+                    },
+                    {
+                        selector: '#panel-rules',
+                        title: 'Pravidlá upozornení',
+                        copy: 'V tejto časti si vytvárate a upravujete vlastné pravidlá pre limity a dostupnosť.',
+                        before: () => document.querySelector('.ap-nav-btn[data-tab=\"rules\"]')?.click()
+                    },
+                    {
+                        selector: '#panel-history .ap-toolbar',
+                        title: 'Filtrovanie histórie',
+                        copy: 'Históriu viete filtrovať podľa senzora, zdroja, udalosti, závažnosti aj textu v dôvode incidentu.',
+                        before: () => document.querySelector('.ap-nav-btn[data-tab=\"history\"]')?.click()
+                    }
+                );
+            }
+
+            return steps;
+        }
+
+        function positionViewerTourCard(target) {
+            const card = document.getElementById('appTourCard');
+            if (!card || !target) return;
+            const pad = 7;
+            const raw = target.getBoundingClientRect();
+            const rect = { top: raw.top - pad, bottom: raw.bottom + pad, left: raw.left - pad, width: raw.width + pad * 2 };
+            const cardRect = card.getBoundingClientRect();
+            const gap = 14;
+            let top = rect.bottom + gap;
+            if (top + cardRect.height > window.innerHeight - 12) {
+                top = rect.top - cardRect.height - gap;
+            }
+            if (top < 12) {
+                top = Math.max(12, window.innerHeight - cardRect.height - 12);
+            }
+
+            let left = rect.left;
+            if (left + cardRect.width > window.innerWidth - 12) {
+                left = window.innerWidth - cardRect.width - 12;
+            }
+            if (left < 12) left = 12;
+
+            card.style.top = `${Math.round(top)}px`;
+            card.style.left = `${Math.round(left)}px`;
+        }
+
+        function renderViewerTourStep() {
+            if (!viewerTourState.active) return;
+            const step = viewerTourState.steps[viewerTourState.index];
+            if (!step) {
+                stopViewerTour(true);
+                return;
+            }
+            if (viewerTourState.pendingTimer) {
+                window.clearTimeout(viewerTourState.pendingTimer);
+            }
+            if (typeof step.before === 'function') {
+                try { step.before(); } catch (error) {}
+            }
+            viewerTourState.pendingTimer = window.setTimeout(() => {
+                const target = step.selector ? document.querySelector(step.selector) : null;
+                if (!isViewerTourTargetVisible(target)) {
+                    if (viewerTourState.index < viewerTourState.steps.length - 1) {
+                        viewerTourState.index += 1;
+                        renderViewerTourStep();
+                    } else {
+                        stopViewerTour(true);
+                    }
+                    return;
+                }
+
+                target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                window.setTimeout(() => {
+                    if (!viewerTourState.active) return;
+                    const card = document.getElementById('appTourCard');
+                    const backdrop = document.getElementById('appTourBackdrop');
+                    const title = document.getElementById('appTourTitle');
+                    const copy = document.getElementById('appTourCopy');
+                    const progress = document.getElementById('appTourProgress');
+                    const prevBtn = document.getElementById('appTourPrev');
+                    const nextBtn = document.getElementById('appTourNext');
+                    if (!card || !backdrop || !title || !copy || !progress || !prevBtn || !nextBtn) return;
+
+                    setViewerTourHighlight(target);
+                    title.textContent = step.title || 'Sprievodca';
+                    copy.textContent = step.copy || '';
+                    progress.textContent = `${viewerTourState.index + 1} / ${viewerTourState.steps.length}`;
+                    prevBtn.disabled = viewerTourState.index === 0;
+                    nextBtn.textContent = viewerTourState.index === viewerTourState.steps.length - 1
+                        ? appTranslate('common.done', 'Hotovo')
+                        : appTranslate('common.next', 'Ďalej');
+                    backdrop.classList.add('is-visible');
+                    card.classList.add('is-visible');
+                    positionViewerTourCard(target);
+                }, 220);
+            }, step.delay || 120);
+        }
+
+        function handleViewerTourViewport() {
+            if (!viewerTourState.active || !viewerTourState.currentTarget) return;
+            positionViewerTourCard(viewerTourState.currentTarget);
+        }
+
+        function stopViewerTour(markSeen = false) {
+            if (viewerTourState.pendingTimer) {
+                window.clearTimeout(viewerTourState.pendingTimer);
+                viewerTourState.pendingTimer = null;
+            }
+            const backdrop = document.getElementById('appTourBackdrop');
+            const card = document.getElementById('appTourCard');
+            if (backdrop) backdrop.classList.remove('is-visible');
+            if (card) card.classList.remove('is-visible');
+            clearViewerTourHighlight();
+            if (viewerTourState.restoreAlertTab) {
+                document.querySelector(`.ap-nav-btn[data-tab="${viewerTourState.restoreAlertTab}"]`)?.click();
+            }
+            viewerTourState.restoreAlertTab = '';
+            viewerTourState.active = false;
+            viewerTourState.steps = [];
+            viewerTourState.index = 0;
+            window.removeEventListener('resize', handleViewerTourViewport);
+            document.removeEventListener('scroll', handleViewerTourViewport, true);
+            if (markSeen) {
+                markViewerGuideSeen();
+            }
+        }
+
+        function startViewerTour() {
+            if (APP_USER_ROLE !== 'viewer' || typeof bootstrap === 'undefined') return;
+            const steps = buildViewerTourSteps();
+            if (!steps.length) return;
+            if (viewerTourState.active) {
+                stopViewerTour(false);
+            }
+            closeViewerGuideModal();
+            const settingsEl = document.getElementById('displaySettingsModal');
+            if (settingsEl) {
+                const settingsModal = bootstrap.Modal.getInstance(settingsEl);
+                if (settingsModal) settingsModal.hide();
+            }
+            viewerTourState.restoreAlertTab = document.querySelector('.ap-nav-btn.is-active')?.dataset.tab || '';
+            viewerTourState.active = true;
+            viewerTourState.steps = steps;
+            viewerTourState.index = 0;
+            window.addEventListener('resize', handleViewerTourViewport);
+            document.addEventListener('scroll', handleViewerTourViewport, true);
+            window.setTimeout(() => renderViewerTourStep(), 220);
+        }
+
+        function initViewerGuide() {
+            if (APP_USER_ROLE !== 'viewer' || typeof bootstrap === 'undefined') return;
+            const prefs = loadViewerGuidePrefs();
+            const modalEl = document.getElementById('viewerGuideModal');
+            const openBtn = document.getElementById('viewerGuideBtn');
+            const settingsBtn = document.getElementById('viewerGuideSettingsBtn');
+            const openSettingsLink = document.getElementById('viewerGuideOpenSettingsLink');
+            const startBtn = document.getElementById('viewerGuideStartBtn');
+            const autostartInput = document.getElementById('viewerGuideAutostart');
+            const skipBtn = document.getElementById('appTourSkip');
+            const closeBtn = document.getElementById('appTourClose');
+            const prevBtn = document.getElementById('appTourPrev');
+            const nextBtn = document.getElementById('appTourNext');
+            const backdrop = document.getElementById('appTourBackdrop');
+
+            if (autostartInput) {
+                autostartInput.checked = prefs.autostart !== false;
+                autostartInput.addEventListener('change', () => {
+                    prefs.autostart = !!autostartInput.checked;
+                    saveViewerGuidePrefs(prefs);
+                });
+            }
+
+            if (openBtn) {
+                openBtn.addEventListener('click', () => startViewerTour());
+            }
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', () => openViewerGuide({ closeSettings: true }));
+            }
+            if (startBtn) {
+                startBtn.addEventListener('click', () => startViewerTour());
+            }
+            if (openSettingsLink) {
+                openSettingsLink.addEventListener('click', () => {
+                    const guideModal = bootstrap.Modal.getInstance(document.getElementById('viewerGuideModal'));
+                    if (guideModal) guideModal.hide();
+                    const settingsEl = document.getElementById('displaySettingsModal');
+                    if (!settingsEl) return;
+                    window.setTimeout(() => {
+                        bootstrap.Modal.getOrCreateInstance(settingsEl).show();
+                    }, 180);
+                });
+            }
+            if (skipBtn) skipBtn.addEventListener('click', () => stopViewerTour(true));
+            if (closeBtn) closeBtn.addEventListener('click', () => stopViewerTour(true));
+            if (backdrop) backdrop.addEventListener('click', () => stopViewerTour(true));
+            if (prevBtn) prevBtn.addEventListener('click', () => {
+                if (!viewerTourState.active || viewerTourState.index <= 0) return;
+                viewerTourState.index -= 1;
+                renderViewerTourStep();
+            });
+            if (nextBtn) nextBtn.addEventListener('click', () => {
+                if (!viewerTourState.active) return;
+                if (viewerTourState.index >= viewerTourState.steps.length - 1) {
+                    stopViewerTour(true);
+                    return;
+                }
+                viewerTourState.index += 1;
+                renderViewerTourStep();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (!viewerTourState.active) return;
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    stopViewerTour(true);
+                } else if (event.key === 'ArrowRight' || event.key === 'Enter') {
+                    event.preventDefault();
+                    if (viewerTourState.index >= viewerTourState.steps.length - 1) stopViewerTour(true);
+                    else {
+                        viewerTourState.index += 1;
+                        renderViewerTourStep();
+                    }
+                } else if (event.key === 'ArrowLeft' && viewerTourState.index > 0) {
+                    event.preventDefault();
+                    viewerTourState.index -= 1;
+                    renderViewerTourStep();
+                }
+            });
+
+            if (modalEl) {
+                modalEl.addEventListener('hidden.bs.modal', () => {
+                    if (!viewerTourState.active) {
+                        saveViewerGuidePrefs(loadViewerGuidePrefs());
+                    }
+                });
+            }
+
+            if (prefs.autostart !== false && prefs.lastSeenVersion !== VIEWER_GUIDE_VERSION) {
+                markViewerGuideSeen(prefs);
+                window.setTimeout(() => startViewerTour(), 620);
+            }
+        }
+
         applyDisplayPrefs();
         initDisplaySettings();
         initTopbarClock();
@@ -2616,6 +3672,9 @@
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        initViewerGuide();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

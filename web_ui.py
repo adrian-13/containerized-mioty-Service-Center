@@ -4880,21 +4880,111 @@ def _save_alert_state_file(state: dict) -> None:
         except Exception:
             pass
 
-def _persist_alert_runtime_state(alerts: list, triggered: list) -> None:
+def _iso_timestamp_value(value: Any) -> Optional[str]:
+    if value in (None, ""):
+        return None
+    if hasattr(value, "isoformat"):
+        try:
+            return value.isoformat()
+        except Exception:
+            pass
+    text = str(value).strip()
+    return text or None
+
+def _normalize_runtime_history_record(
+    record: Any,
+    *,
+    fallback_tenant: Optional[str] = None,
+    default_source: str = "threshold",
+) -> Optional[Dict[str, Any]]:
+    if not isinstance(record, dict):
+        return None
+    incident_id = str(record.get("id") or record.get("alert_id") or "").strip()
+    sensor_eui = str(record.get("sensor_eui") or record.get("eui") or "").strip().upper()
+    if not incident_id or not sensor_eui:
+        return None
+
+    tenant_id = _normalize_tenant_id(
+        record.get("tenant_id"),
+        fallback=fallback_tenant or _default_tenant_id(),
+    )
+    severity_raw = str(record.get("severity") or record.get("tier") or "warning").strip().lower()
+    severity = "critical" if severity_raw in {"critical", "error", "danger"} else "warning"
+    source = str(record.get("source") or default_source or "threshold").strip().lower() or "threshold"
+    kind = str(record.get("kind") or ("activity" if source == "activity" else "threshold")).strip().lower()
+    sensor_name = str(record.get("sensor_name") or record.get("name") or sensor_eui).strip() or sensor_eui
+    payload = dict(record.get("payload") or {}) if isinstance(record.get("payload"), dict) else {}
+    payload.setdefault("id", incident_id)
+    payload.setdefault("sensor_eui", sensor_eui)
+    payload.setdefault("sensor_name", sensor_name)
+    payload.setdefault("name", str(record.get("name") or sensor_name).strip() or sensor_name)
+    payload.setdefault("severity", severity)
+    payload.setdefault("source", source)
+    payload.setdefault("kind", kind)
+
+    optional_fields = {
+        "metric": record.get("metric"),
+        "condition": record.get("condition"),
+        "threshold": record.get("threshold"),
+        "current_value": record.get("current_value"),
+        "current_status": record.get("current_status"),
+        "hours_since_last_seen": record.get("hours_since_last_seen"),
+        "reason": record.get("reason"),
+        "desc": record.get("desc") or record.get("text"),
+        "val_str": record.get("val_str") if record.get("val_str") is not None else record.get("valStr"),
+        "rule_id": record.get("rule_id") if record.get("rule_id") is not None else record.get("ruleId"),
+        "link_url": record.get("link_url") if record.get("link_url") is not None else record.get("linkUrl"),
+    }
+    for key, value in optional_fields.items():
+        if value not in (None, ""):
+            payload[key] = value
+
+    triggered_at = _iso_timestamp_value(record.get("triggered_at"))
+    if not triggered_at:
+        triggered_at = _iso_timestamp_value(record.get("triggeredAt"))
+    if triggered_at:
+        payload["triggered_at"] = triggered_at
+
+    return {
+        "id": incident_id,
+        "tenant_id": tenant_id,
+        "sensor_eui": sensor_eui,
+        "severity": severity,
+        "payload": payload,
+    }
+
+def _persist_runtime_history_state(known_records: list, active_records: list) -> None:
+    normalized_known = [
+        item for item in (
+            _normalize_runtime_history_record(record)
+            for record in (known_records or [])
+        )
+        if item
+    ]
+    if not normalized_known:
+        return
+
+    normalized_active = [
+        item for item in (
+            _normalize_runtime_history_record(
+                record,
+                fallback_tenant=(normalized_known[0].get("tenant_id") if normalized_known else _default_tenant_id()),
+            )
+            for record in (active_records or [])
+        )
+        if item
+    ]
+    active_by_key = {
+        (str(item.get("tenant_id")), str(item.get("id"))): item
+        for item in normalized_active
+    }
+
     conn = None
     try:
         conn, err = _timescale_connect()
         if conn is None:
-            return
+            raise RuntimeError("db unavailable")
         _ensure_timescale_schema(conn)
-        normalized_alerts = [a for a in (_normalize_stored_alert(alert) for alert in alerts or []) if a]
-        if not normalized_alerts:
-            return
-        triggered_by_id = {
-            str(item.get("id") or ""): dict(item)
-            for item in (triggered or [])
-            if str(item.get("id") or "").strip()
-        }
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT tenant_id, alert_id, is_active, last_triggered_at, last_resolved_at, payload
@@ -4911,55 +5001,65 @@ def _persist_alert_runtime_state(alerts: list, triggered: list) -> None:
                 }
 
             now_iso = datetime.now(timezone.utc).isoformat()
-            for alert in normalized_alerts:
-                alert_id = str(alert.get("id") or "")
-                if not alert_id:
-                    continue
-                tenant_id = _normalize_tenant_id(alert.get("tenant_id"), fallback=_default_tenant_id())
-                previous = existing.get((tenant_id, alert_id)) or {}
+            for known in normalized_known:
+                key = (str(known.get("tenant_id")), str(known.get("id")))
+                previous = existing.get(key) or {}
                 was_active = bool(previous.get("is_active", False))
-                is_active_now = alert_id in triggered_by_id
-                event_payload = dict(triggered_by_id.get(alert_id) or alert)
-                payload_json = json.dumps(event_payload, separators=(",", ":"), ensure_ascii=True)
+                active_item = active_by_key.get(key)
+                is_active_now = active_item is not None
+                if not is_active_now and not was_active:
+                    continue
 
-                if is_active_now and not was_active:
+                if is_active_now:
+                    active_payload = dict(active_item.get("payload") or {})
+                    active_payload.setdefault(
+                        "triggered_at",
+                        _iso_timestamp_value(previous.get("last_triggered_at")) or now_iso,
+                    )
+                    payload_for_state = active_payload
+                    payload_json = json.dumps(active_payload, separators=(",", ":"), ensure_ascii=True)
+                    if not was_active:
+                        cur.execute("""
+                            INSERT INTO alert_events
+                                (tenant_id, alert_id, sensor_eui, event_type, severity, payload)
+                            VALUES
+                                (%s, %s, %s, %s, %s, %s::jsonb)
+                        """, (
+                            known.get("tenant_id"),
+                            known.get("id"),
+                            known.get("sensor_eui"),
+                            "triggered",
+                            known.get("severity", "warning"),
+                            payload_json,
+                        ))
+                    last_triggered_at = active_payload.get("triggered_at") or now_iso
+                    last_resolved_at = previous.get("last_resolved_at")
+                else:
+                    resolved_payload = dict(previous.get("payload") or known.get("payload") or {})
+                    resolved_payload.setdefault(
+                        "triggered_at",
+                        _iso_timestamp_value(previous.get("last_triggered_at")),
+                    )
+                    resolved_payload["resolved_at"] = now_iso
+                    payload_for_state = resolved_payload
+                    payload_json = json.dumps(resolved_payload, separators=(",", ":"), ensure_ascii=True)
                     cur.execute("""
                         INSERT INTO alert_events
                             (tenant_id, alert_id, sensor_eui, event_type, severity, payload)
                         VALUES
                             (%s, %s, %s, %s, %s, %s::jsonb)
                     """, (
-                        tenant_id,
-                        alert_id,
-                        alert.get("sensor_eui"),
-                        "triggered",
-                        alert.get("severity", "warning"),
+                        known.get("tenant_id"),
+                        known.get("id"),
+                        known.get("sensor_eui"),
+                        "resolved",
+                        previous.get("payload", {}).get("severity") or known.get("severity", "warning"),
                         payload_json,
                     ))
-                elif was_active and not is_active_now:
-                    resolved_payload = dict(previous.get("payload") or {})
-                    if not resolved_payload:
-                        resolved_payload = dict(alert)
-                    resolved_payload["resolved_at"] = now_iso
-                    cur.execute("""
-                        INSERT INTO alert_events
-                            (tenant_id, alert_id, sensor_eui, event_type, severity, payload)
-                        VALUES
-                            (%s, %s, %s, %s, %s, %s::jsonb)
-                    """, (
-                        tenant_id,
-                        alert_id,
-                        alert.get("sensor_eui"),
-                        "resolved",
-                        alert.get("severity", "warning"),
-                        json.dumps(resolved_payload, separators=(",", ":"), ensure_ascii=True),
-                    ))
-
-                last_triggered_at = previous.get("last_triggered_at")
-                last_resolved_at = previous.get("last_resolved_at")
-                if is_active_now and not was_active:
-                    last_triggered_at = now_iso
-                if was_active and not is_active_now:
+                    last_triggered_at = (
+                        resolved_payload.get("triggered_at")
+                        or _iso_timestamp_value(previous.get("last_triggered_at"))
+                    )
                     last_resolved_at = now_iso
 
                 cur.execute("""
@@ -4977,18 +5077,68 @@ def _persist_alert_runtime_state(alerts: list, triggered: list) -> None:
                         last_resolved_at = EXCLUDED.last_resolved_at,
                         updated_at = NOW()
                 """, (
-                    tenant_id,
-                    alert_id,
-                    alert.get("sensor_eui"),
+                    known.get("tenant_id"),
+                    known.get("id"),
+                    known.get("sensor_eui"),
                     is_active_now,
-                    alert.get("severity", "warning"),
+                    payload_for_state.get("severity") or known.get("severity", "warning"),
                     payload_json,
                     last_triggered_at,
                     last_resolved_at,
                 ))
     except Exception:
-        _persist_alert_state_file_fallback(alerts, triggered)
-        return
+        try:
+            state = _load_alert_state_file()
+            now_iso = datetime.now(timezone.utc).isoformat()
+            for known in normalized_known:
+                state_key = f"{known.get('tenant_id')}::{known.get('id')}"
+                previous = state.get(state_key) or {}
+                was_active = bool(previous.get("is_active", False))
+                active_item = active_by_key.get((str(known.get("tenant_id")), str(known.get("id"))))
+                is_active_now = active_item is not None
+                if not is_active_now and not was_active:
+                    continue
+
+                if is_active_now:
+                    active_payload = dict(active_item.get("payload") or {})
+                    active_payload.setdefault("triggered_at", previous.get("triggered_at") or now_iso)
+                    if not was_active:
+                        _append_alert_event_file({
+                            "ts": now_iso,
+                            "alert_id": known.get("id"),
+                            "tenant_id": known.get("tenant_id"),
+                            "sensor_eui": known.get("sensor_eui"),
+                            "event_type": "triggered",
+                            "severity": known.get("severity", "warning"),
+                            **active_payload,
+                        })
+                    state[state_key] = {
+                        "is_active": True,
+                        "triggered_at": active_payload.get("triggered_at"),
+                        "payload": active_payload,
+                    }
+                else:
+                    resolved_payload = dict(previous.get("payload") or known.get("payload") or {})
+                    resolved_payload.setdefault("triggered_at", previous.get("triggered_at"))
+                    resolved_payload["resolved_at"] = now_iso
+                    _append_alert_event_file({
+                        "ts": now_iso,
+                        "alert_id": known.get("id"),
+                        "tenant_id": known.get("tenant_id"),
+                        "sensor_eui": known.get("sensor_eui"),
+                        "event_type": "resolved",
+                        "severity": previous.get("payload", {}).get("severity") or known.get("severity", "warning"),
+                        **resolved_payload,
+                    })
+                    state[state_key] = {
+                        "is_active": False,
+                        "triggered_at": resolved_payload.get("triggered_at"),
+                        "resolved_at": now_iso,
+                        "payload": resolved_payload,
+                    }
+            _save_alert_state_file(state)
+        except Exception:
+            return
     finally:
         try:
             if conn is not None:
@@ -4996,58 +5146,52 @@ def _persist_alert_runtime_state(alerts: list, triggered: list) -> None:
         except Exception:
             pass
 
+def _persist_alert_runtime_state(alerts: list, triggered: list) -> None:
+    normalized_alerts = [a for a in (_normalize_stored_alert(alert) for alert in alerts or []) if a]
+    if not normalized_alerts:
+        return
+    known_records = []
+    for alert in normalized_alerts:
+        kind = _normalize_alert_kind(alert.get("kind"))
+        known_records.append({
+            "id": alert.get("id"),
+            "tenant_id": alert.get("tenant_id"),
+            "sensor_eui": alert.get("sensor_eui"),
+            "severity": alert.get("severity"),
+            "name": alert.get("name"),
+            "kind": kind,
+            "metric": alert.get("metric"),
+            "condition": alert.get("condition"),
+            "threshold": alert.get("threshold"),
+            "source": "offline_rule" if kind == "sensor_offline" else "threshold",
+            "payload": dict(alert),
+        })
+    active_records = []
+    for item in (triggered or []):
+        kind = _normalize_alert_kind(item.get("kind"))
+        active_records.append({
+            "id": item.get("id"),
+            "tenant_id": item.get("tenant_id"),
+            "sensor_eui": item.get("sensor_eui"),
+            "severity": item.get("severity"),
+            "name": item.get("name"),
+            "kind": kind,
+            "metric": item.get("metric"),
+            "condition": item.get("condition"),
+            "threshold": item.get("threshold"),
+            "current_value": item.get("current_value"),
+            "current_status": item.get("current_status"),
+            "hours_since_last_seen": item.get("hours_since_last_seen"),
+            "triggered_at": item.get("triggered_at"),
+            "source": "offline_rule" if kind == "sensor_offline" else "threshold",
+            "payload": dict(item),
+        })
+    _persist_runtime_history_state(known_records, active_records)
+
 def _persist_alert_state_file_fallback(alerts: list, triggered: list) -> None:
-    """File-based fallback for alert state/history when DB is unavailable."""
+    """Backward-compatible wrapper; generic runtime history fallback handles file persistence."""
     try:
-        triggered_ids = {str(t.get("id") or "") for t in (triggered or []) if t.get("id")}
-        state = _load_alert_state_file()
-        now_iso = datetime.now(timezone.utc).isoformat()
-
-        for alert in (alerts or []):
-            alert_id = str(alert.get("id") or "")
-            if not alert_id:
-                continue
-            was_active = bool((state.get(alert_id) or {}).get("is_active", False))
-            is_active_now = alert_id in triggered_ids
-            triggered_item = next((t for t in (triggered or []) if str(t.get("id") or "") == alert_id), None)
-
-            if is_active_now and not was_active:
-                state[alert_id] = {
-                    "is_active": True,
-                    "triggered_at": now_iso,
-                    "sensor_eui": alert.get("sensor_eui"),
-                    "severity": alert.get("severity", "warning"),
-                }
-                _append_alert_event_file({
-                    "ts": now_iso,
-                    "alert_id": alert_id,
-                    "sensor_eui": alert.get("sensor_eui"),
-                    "event_type": "triggered",
-                    "severity": alert.get("severity", "warning"),
-                    "name": alert.get("name", ""),
-                    "metric": alert.get("metric", ""),
-                    "kind": alert.get("kind", "threshold"),
-                    "trigger_value": triggered_item.get("current_value") if triggered_item else None,
-                    "trigger_status": triggered_item.get("current_status") if triggered_item else None,
-                    "resolved_at": None,
-                })
-            elif was_active and not is_active_now:
-                prev = state.get(alert_id) or {}
-                state[alert_id] = {"is_active": False, "resolved_at": now_iso}
-                _append_alert_event_file({
-                    "ts": now_iso,
-                    "alert_id": alert_id,
-                    "sensor_eui": alert.get("sensor_eui"),
-                    "event_type": "resolved",
-                    "severity": alert.get("severity", "warning"),
-                    "name": alert.get("name", ""),
-                    "metric": alert.get("metric", ""),
-                    "kind": alert.get("kind", "threshold"),
-                    "triggered_at": prev.get("triggered_at"),
-                    "trigger_value": prev.get("trigger_value"),
-                    "resolved_at": now_iso,
-                })
-        _save_alert_state_file(state)
+        _persist_alert_runtime_state(alerts, triggered)
     except Exception:
         pass
 
@@ -5141,38 +5285,43 @@ def _build_visible_sensor_lookup(active_tenant: str) -> Dict[str, Dict[str, Any]
 
 def _alert_metric_metadata() -> Dict[str, Dict[str, str]]:
     return {
-        "co2_1_ppm": {"label": "CO2", "unit": "ppm", "value_type": "number"},
-        "co2_2_ppm": {"label": "CO2 (secondary)", "unit": "ppm", "value_type": "number"},
-        "temperature_1_c": {"label": "Temperature", "unit": "C", "value_type": "number"},
-        "temperature_2_c": {"label": "Temperature 2", "unit": "C", "value_type": "number"},
-        "humidity_1_pct": {"label": "Humidity", "unit": "%", "value_type": "number"},
-        "humidity_2_pct": {"label": "Humidity 2", "unit": "%", "value_type": "number"},
-        "battery_v_est": {"label": "Battery", "unit": "V", "value_type": "number"},
-        "battery_mv": {"label": "Battery", "unit": "mV", "value_type": "number"},
-        "co2_last_calibration_ppm": {"label": "CO2 last calibration", "unit": "ppm", "value_type": "number"},
-        "days_to_next_calibration": {"label": "Days to calibration", "unit": "d", "value_type": "number"},
-        "calibration_not_done": {"label": "Calibration missing", "unit": "", "value_type": "boolean"},
-        "co2_error": {"label": "CO2 sensor error", "unit": "", "value_type": "boolean"},
-        "total_openings": {"label": "Total openings", "unit": "", "value_type": "number"},
-        "internal_magnet_alarm": {"label": "Internal alarm", "unit": "", "value_type": "boolean"},
-        "external_alarm": {"label": "External alarm", "unit": "", "value_type": "boolean"},
-        "internal_magnet_alarm_last_5min": {"label": "Internal alarm 5 min", "unit": "", "value_type": "boolean"},
-        "internal_magnet_alarm_last_10min": {"label": "Internal alarm 10 min", "unit": "", "value_type": "boolean"},
-        "internal_magnet_alarm_last_1h": {"label": "Internal alarm 1 h", "unit": "", "value_type": "boolean"},
-        "internal_magnet_alarm_last_24h": {"label": "Internal alarm 24 h", "unit": "", "value_type": "boolean"},
-        "external_alarm_last_5min": {"label": "External alarm 5 min", "unit": "", "value_type": "boolean"},
-        "external_alarm_last_10min": {"label": "External alarm 10 min", "unit": "", "value_type": "boolean"},
-        "external_alarm_last_1h": {"label": "External alarm 1 h", "unit": "", "value_type": "boolean"},
-        "external_alarm_last_24h": {"label": "External alarm 24 h", "unit": "", "value_type": "boolean"},
-        "minutes_since_last_alarm": {"label": "Minutes since last alarm", "unit": "min", "value_type": "number"},
-        "duration_last_alarm_minutes": {"label": "Last alarm duration", "unit": "min", "value_type": "number"},
-        "operating_years": {"label": "Operating years", "unit": "y", "value_type": "number"},
-        "runtime_years": {"label": "Runtime years", "unit": "y", "value_type": "number"},
-        "low_batt": {"label": "Low battery", "unit": "", "value_type": "boolean"},
-        "sabotage_internal": {"label": "Internal sabotage", "unit": "", "value_type": "boolean"},
-        "sabotage_external": {"label": "External sabotage", "unit": "", "value_type": "boolean"},
-        "async_message": {"label": "Async message", "unit": "", "value_type": "boolean"},
-        "any_alarm_active": {"label": "Any alarm active", "unit": "", "value_type": "boolean"},
+        "co2_1_ppm":                        {"label": "CO₂",                        "unit": "ppm", "value_type": "number"},
+        "co2_2_ppm":                        {"label": "CO₂ (predch.)",              "unit": "ppm", "value_type": "number"},
+        "temperature_1_c":                  {"label": "Teplota",                    "unit": "°C",  "value_type": "number"},
+        "temperature_2_c":                  {"label": "Teplota 2",                  "unit": "°C",  "value_type": "number"},
+        "humidity_1_pct":                   {"label": "Vlhkosť",                    "unit": "%",   "value_type": "number"},
+        "humidity_2_pct":                   {"label": "Vlhkosť 2",                  "unit": "%",   "value_type": "number"},
+        "battery_v_est":                    {"label": "Batéria",                    "unit": "V",   "value_type": "number"},
+        "battery_mv":                       {"label": "Batéria",                    "unit": "mV",  "value_type": "number"},
+        "any_alarm_active":                 {"label": "Alarm aktívny",              "unit": "",    "value_type": "boolean"},
+        "alarm_count":                      {"label": "Počet alarmov",              "unit": "",    "value_type": "number"},
+        "open_count":                       {"label": "Počet otvorení",             "unit": "",    "value_type": "number"},
+        "total_openings":                   {"label": "Počet otvorení (celk.)",     "unit": "",    "value_type": "number"},
+        "last_alarm_duration_s":            {"label": "Trvanie alarmu",             "unit": "s",   "value_type": "number"},
+        "last_alarm_input":                 {"label": "Vstup alarmu",               "unit": "",    "value_type": "number"},
+        "tamper":                           {"label": "Tamper / sabotáž",           "unit": "",    "value_type": "boolean"},
+        "internal_magnet_alarm":            {"label": "Interný alarm",              "unit": "",    "value_type": "boolean"},
+        "external_alarm":                   {"label": "Externý alarm",              "unit": "",    "value_type": "boolean"},
+        "internal_magnet_alarm_last_5min":  {"label": "Interný alarm (5 min)",      "unit": "",    "value_type": "boolean"},
+        "internal_magnet_alarm_last_10min": {"label": "Interný alarm (10 min)",     "unit": "",    "value_type": "boolean"},
+        "internal_magnet_alarm_last_1h":    {"label": "Interný alarm (1 hod)",      "unit": "",    "value_type": "boolean"},
+        "internal_magnet_alarm_last_24h":   {"label": "Interný alarm (24 hod)",     "unit": "",    "value_type": "boolean"},
+        "external_alarm_last_5min":         {"label": "Externý alarm (5 min)",      "unit": "",    "value_type": "boolean"},
+        "external_alarm_last_10min":        {"label": "Externý alarm (10 min)",     "unit": "",    "value_type": "boolean"},
+        "external_alarm_last_1h":           {"label": "Externý alarm (1 hod)",      "unit": "",    "value_type": "boolean"},
+        "external_alarm_last_24h":          {"label": "Externý alarm (24 hod)",     "unit": "",    "value_type": "boolean"},
+        "minutes_since_last_alarm":         {"label": "Minúty od posledného alarmu","unit": "min", "value_type": "number"},
+        "duration_last_alarm_minutes":      {"label": "Trvanie posledného alarmu",  "unit": "min", "value_type": "number"},
+        "co2_last_calibration_ppm":         {"label": "CO₂ kalibrácia",             "unit": "ppm", "value_type": "number"},
+        "days_to_next_calibration":         {"label": "Dní do kalibrácie",          "unit": "d",   "value_type": "number"},
+        "calibration_not_done":             {"label": "Kalibrácia chýba",           "unit": "",    "value_type": "boolean"},
+        "co2_error":                        {"label": "Chyba CO₂ senzora",          "unit": "",    "value_type": "boolean"},
+        "operating_years":                  {"label": "Roky prevádzky",             "unit": "r.",  "value_type": "number"},
+        "runtime_years":                    {"label": "Roky behu",                  "unit": "r.",  "value_type": "number"},
+        "low_batt":                         {"label": "Slabá batéria",              "unit": "",    "value_type": "boolean"},
+        "sabotage_internal":                {"label": "Interná sabotáž",            "unit": "",    "value_type": "boolean"},
+        "sabotage_external":                {"label": "Externá sabotáž",            "unit": "",    "value_type": "boolean"},
+        "async_message":                    {"label": "Asynchrónna správa",         "unit": "",    "value_type": "boolean"},
     }
 
 
@@ -5282,6 +5431,23 @@ def _build_sensor_alert_metric_options(sensor_config: Optional[Dict[str, Any]], 
             field_key = str(field.get("key") or "").strip()
             if field_key and field_type in {"uint", "int", "bool"}:
                 metric_keys.append(field_key)
+
+    # Apply the same sensor-type display filter as sensor_detail.html
+    _DETAIL_SKIP = {
+        'co2_last_calibration_ppm', 'days_to_next_calibration', 'co2_error',
+        'calibration_not_done', 'temperature_2_c', 'humidity_2_pct',
+        'pressure_pa', 'altitude_m',
+    }
+    sensor_profile_str = str(sensor_config.get('sensor_profile') or '').lower()
+    profile_check = profile_id.lower() + ' ' + sensor_profile_str
+    if 'm2' in profile_check or 'door' in profile_check or 'contact' in profile_check or 'open_count' in values:
+        _display = {'any_alarm_active', 'open_count', 'last_alarm_duration_s', 'battery_v_est', 'tamper'}
+        metric_keys = [k for k in metric_keys if k in _display]
+    elif 'co2' in profile_check or 'air' in profile_check or 'co2_1_ppm' in values:
+        _display = {'co2_1_ppm', 'co2_2_ppm', 'temperature_1_c', 'humidity_1_pct', 'battery_v_est', 'any_alarm_active'}
+        metric_keys = [k for k in metric_keys if k in _display]
+    else:
+        metric_keys = [k for k in metric_keys if k not in _DETAIL_SKIP]
 
     custom_field_map = {}
     if isinstance(custom_profile, dict):
@@ -5607,13 +5773,13 @@ def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
     }
 
     incidents: list[Dict[str, Any]] = []
+    activity_known_records: list[Dict[str, Any]] = []
+    activity_active_records: list[Dict[str, Any]] = []
 
     for sensor_eui, sensor_config in visible_sensors.items():
         availability = _sensor_availability_snapshot(sensor_config, active_tenant)
-        if sensor_eui in enabled_offline_rule_sensors:
-            continue
-        if not bool(availability.get("status_incident")):
-            continue
+        sensor_name = str(sensor_config.get("name") or sensor_eui)
+        status_incident = bool(availability.get("status_incident"))
         severity = "error" if availability.get("status_incident_severity") == "error" else "warn"
         raw_status = str(availability.get("activity_status") or "").strip().lower()
         reason = _generic_sensor_availability_reason(raw_status)
@@ -5624,12 +5790,32 @@ def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
                 hours_str = f"{float(hours_since_last_seen):.1f} h"
         except (TypeError, ValueError):
             hours_str = ""
-        incidents.append({
+        activity_record = {
             "id": f"{sensor_eui}:activity",
+            "tenant_id": active_tenant,
+            "sensor_eui": sensor_eui,
+            "sensor_name": sensor_name,
+            "name": sensor_name,
+            "severity": "critical" if severity == "error" else "warning",
+            "source": "activity",
+            "kind": "activity",
+            "reason": reason,
+            "desc": reason,
+            "current_status": raw_status,
+            "hours_since_last_seen": hours_since_last_seen,
+            "triggered_at": _estimate_sensor_incident_started_at(availability),
+            "val_str": hours_str,
+            "link_url": f"/sensors/{urllib.parse.quote(sensor_eui)}",
+        }
+        activity_known_records.append(activity_record)
+        if not status_incident or sensor_eui in enabled_offline_rule_sensors:
+            continue
+        incidents.append({
+            "id": activity_record["id"],
             "tier": severity,
             "level": "danger" if severity == "error" else "warn",
-            "severity": "critical" if severity == "error" else "warning",
-            "name": str(sensor_config.get("name") or sensor_eui),
+            "severity": activity_record["severity"],
+            "name": sensor_name,
             "text": reason,
             "desc": reason,
             "reason": reason,
@@ -5637,11 +5823,17 @@ def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
             "source": "activity",
             "kind": "activity",
             "ackKey": f"{sensor_eui}:activity",
-            "triggeredAt": _estimate_sensor_incident_started_at(availability),
+            "triggeredAt": activity_record["triggered_at"],
             "ruleId": None,
             "valStr": hours_str,
-            "linkUrl": f"/sensors/{urllib.parse.quote(sensor_eui)}",
+            "linkUrl": activity_record["link_url"],
+            "current_status": raw_status,
+            "hours_since_last_seen": hours_since_last_seen,
         })
+        activity_active_records.append(activity_record)
+
+    if activity_known_records:
+        _persist_runtime_history_state(activity_known_records, activity_active_records)
 
     for alert in _evaluate_triggered_alerts(active_tenant, visible_sensors=visible_sensors, persist_state=True):
         kind = _normalize_alert_kind(alert.get("kind"))
@@ -9796,6 +9988,12 @@ def api_alerts_history():
     try:
         active_tenant = _active_tenant_id()
         limit = min(int(request.args.get('limit', 200)), 500)
+        fetch_limit = 500
+        sensor_filter = str(request.args.get('sensor_eui') or '').strip().upper()
+        event_filter = str(request.args.get('event_type') or '').strip().lower()
+        severity_filter = str(request.args.get('severity') or '').strip().lower()
+        source_filter = str(request.args.get('source') or '').strip().lower()
+        search_filter = str(request.args.get('q') or '').strip().lower()
 
         # Build sensor name lookup
         sensors = _filter_sensors_for_tenant(_load_all_sensors(), active_tenant)
@@ -9803,6 +10001,70 @@ def api_alerts_history():
 
         # Build alert rule name lookup
         alert_rules = {str(a.get('id', '')): a for a in _load_alerts()}
+
+        def _history_event_from_payload(ts_value: Any, alert_id: Any, sensor_eui: Any, event_type: Any, severity: Any, payload: Any) -> Dict[str, Any]:
+            p = payload if isinstance(payload, dict) else {}
+            eui = str(sensor_eui or p.get('sensor_eui') or '').upper()
+            rule = alert_rules.get(str(alert_id) or '') or {}
+            source = str(
+                p.get('source')
+                or ('offline_rule' if _normalize_alert_kind(rule.get('kind') or p.get('kind')) == 'sensor_offline' else 'threshold')
+            ).strip().lower()
+            kind = str(rule.get('kind') or p.get('kind') or ('activity' if source == 'activity' else 'threshold')).strip().lower()
+            return {
+                "ts": ts_value.isoformat() if hasattr(ts_value, 'isoformat') else str(ts_value or ''),
+                "alert_id": str(alert_id or p.get('id') or ''),
+                "sensor_eui": eui,
+                "sensor_name": sensor_names.get(eui, p.get('sensor_name') or eui),
+                "event_type": str(event_type or '').strip().lower(),
+                "severity": "critical" if str(severity or p.get('severity') or '').strip().lower() == 'critical' else "warning",
+                "source": source,
+                "kind": kind,
+                "name": str(rule.get('name') or p.get('name') or p.get('sensor_name') or sensor_names.get(eui, eui) or '').strip(),
+                "metric": str(rule.get('metric') or p.get('metric') or '').strip(),
+                "condition": str(rule.get('condition') or p.get('condition') or '').strip(),
+                "threshold": p.get('threshold'),
+                "reason": str(p.get('reason') or p.get('desc') or '').strip(),
+                "desc": str(p.get('desc') or p.get('reason') or '').strip(),
+                "trigger_value": p.get('current_value') if p.get('current_value') is not None else p.get('trigger_value'),
+                "val_str": p.get('val_str') if p.get('val_str') not in (None, '') else p.get('valStr'),
+                "trigger_status": p.get('current_status') or p.get('trigger_status'),
+                "triggered_at": p.get('triggered_at'),
+                "resolved_at": p.get('resolved_at'),
+                "hours_since_last_seen": p.get('hours_since_last_seen'),
+                "link_url": p.get('link_url'),
+                "rule_id": p.get('rule_id'),
+            }
+
+        def _history_event_matches(event: Dict[str, Any]) -> bool:
+            if sensor_filter and str(event.get('sensor_eui') or '').upper() != sensor_filter:
+                return False
+            if event_filter and str(event.get('event_type') or '').lower() != event_filter:
+                return False
+            if severity_filter and str(event.get('severity') or '').lower() != severity_filter:
+                return False
+            if source_filter:
+                source = str(event.get('source') or '').lower()
+                if source_filter == 'rules':
+                    if source not in {'threshold', 'offline_rule'}:
+                        return False
+                elif source != source_filter:
+                    return False
+            if search_filter:
+                haystack = " ".join([
+                    str(event.get('name') or ''),
+                    str(event.get('sensor_name') or ''),
+                    str(event.get('sensor_eui') or ''),
+                    str(event.get('reason') or ''),
+                    str(event.get('desc') or ''),
+                    str(event.get('metric') or ''),
+                    str(event.get('source') or ''),
+                    str(event.get('kind') or ''),
+                    str(event.get('trigger_status') or ''),
+                ]).lower()
+                if search_filter not in haystack:
+                    return False
+            return True
 
         events = []
 
@@ -9818,24 +10080,9 @@ def api_alerts_history():
                         WHERE tenant_id = %s
                         ORDER BY ts DESC
                         LIMIT %s
-                    """, (_normalize_tenant_id(active_tenant, fallback=_default_tenant_id()), limit))
+                    """, (_normalize_tenant_id(active_tenant, fallback=_default_tenant_id()), fetch_limit))
                     for ts, alert_id, sensor_eui, event_type, severity, payload in (cur.fetchall() or []):
-                        rule = alert_rules.get(str(alert_id) or '') or {}
-                        p = payload if isinstance(payload, dict) else {}
-                        events.append({
-                            "ts": ts.isoformat() if hasattr(ts, 'isoformat') else str(ts),
-                            "alert_id": alert_id,
-                            "sensor_eui": sensor_eui,
-                            "sensor_name": sensor_names.get(str(sensor_eui or '').upper(), sensor_eui),
-                            "event_type": event_type,
-                            "severity": severity,
-                            "name": rule.get('name') or p.get('name') or '',
-                            "metric": rule.get('metric') or p.get('metric') or '',
-                            "kind": rule.get('kind') or p.get('kind') or 'threshold',
-                            "trigger_value": p.get('current_value'),
-                            "trigger_status": p.get('current_status'),
-                            "resolved_at": p.get('resolved_at'),
-                        })
+                        events.append(_history_event_from_payload(ts, alert_id, sensor_eui, event_type, severity, payload))
         except Exception:
             pass
         finally:
@@ -9847,25 +10094,18 @@ def api_alerts_history():
 
         # File-based fallback if DB had no results
         if not events:
-            for e in sorted(_load_alert_events_file(), key=lambda x: x.get('ts', ''), reverse=True)[:limit]:
-                rule = alert_rules.get(str(e.get('alert_id') or '')) or {}
-                eui = str(e.get('sensor_eui') or '').upper()
-                events.append({
-                    "ts": e.get('ts', ''),
-                    "alert_id": e.get('alert_id', ''),
-                    "sensor_eui": e.get('sensor_eui', ''),
-                    "sensor_name": sensor_names.get(eui, eui),
-                    "event_type": e.get('event_type', ''),
-                    "severity": e.get('severity', 'warning'),
-                    "name": rule.get('name') or e.get('name') or '',
-                    "metric": rule.get('metric') or e.get('metric') or '',
-                    "kind": rule.get('kind') or e.get('kind') or 'threshold',
-                    "trigger_value": e.get('trigger_value'),
-                    "trigger_status": e.get('trigger_status'),
-                    "resolved_at": e.get('resolved_at'),
-                })
+            for e in sorted(_load_alert_events_file(), key=lambda x: x.get('ts', ''), reverse=True)[:fetch_limit]:
+                events.append(_history_event_from_payload(
+                    e.get('ts', ''),
+                    e.get('alert_id', ''),
+                    e.get('sensor_eui', ''),
+                    e.get('event_type', ''),
+                    e.get('severity', 'warning'),
+                    e,
+                ))
 
-        return jsonify({"success": True, "events": events})
+        events = [event for event in events if _history_event_matches(event)]
+        return jsonify({"success": True, "events": events[:limit]})
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc), "events": []}), 500
 

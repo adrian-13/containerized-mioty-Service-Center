@@ -861,7 +861,7 @@ async function loadTelemetryChart(key,minutes){
 
 // ── Alerts ──────────────────────────────────────────────────────────────────
 const COND_LABEL={'gt':'>','gte':'≥','lt':'<','lte':'≤','eq':'='};
-const METRIC_NAMES={co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm aktívny',alarm_count:'Počet alarmov',open_count:'Počet otvorení'};
+const METRIC_NAMES={co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm aktívny',alarm_count:'Počet alarmov',open_count:'Počet otvorení',last_alarm_duration_s:'Trvanie alarmu',last_alarm_input:'Vstup alarmu',tamper:'Tamper / sabotáž'};
 const METRIC_UNIT={co2_1_ppm:'ppm',co2_2_ppm:'ppm',temperature_1_c:'°C',temperature_2_c:'°C',humidity_1_pct:'%',battery_v_est:'V'};
 
 let _alerts=[];
@@ -927,9 +927,21 @@ function renderAlertsList(){
 }
 
 function openAlertModal(existingAlert){
-  // Build metric options from current sensor data
+  // Build metric options — same type-based filter as the metrics display
   const vals=(_data&&_data.latest_uplink&&_data.latest_uplink.decoded&&_data.latest_uplink.decoded.values)||{};
-  const metricKeys=Object.keys(vals).filter(k=>!k.startsWith('_')&&typeof vals[k]==='number');
+  const profile=String((_data&&_data.config&&_data.config.sensor_profile)||'').toLowerCase();
+  const allKeys=Object.keys(vals).filter(k=>!k.startsWith('_')&&(typeof vals[k]==='number'||typeof vals[k]==='boolean'));
+  let metricKeys;
+  if(profile.includes('m2')||profile.includes('door')||profile.includes('contact')||'open_count' in vals){
+    const keep=new Set(['any_alarm_active','open_count','last_alarm_duration_s','battery_v_est','tamper']);
+    metricKeys=allKeys.filter(k=>keep.has(k));
+  }else if(profile.includes('co2')||profile.includes('air')||'co2_1_ppm' in vals){
+    const keep=new Set(['co2_1_ppm','co2_2_ppm','temperature_1_c','humidity_1_pct','battery_v_est','any_alarm_active']);
+    metricKeys=allKeys.filter(k=>keep.has(k));
+  }else{
+    const skip=new Set(['co2_last_calibration_ppm','days_to_next_calibration','co2_error','calibration_not_done','temperature_2_c','humidity_2_pct','pressure_pa','altitude_m']);
+    metricKeys=allKeys.filter(k=>!skip.has(k));
+  }
   const metricOptions=metricKeys.map(k=>`<option value="${esc(k)}" ${existingAlert&&existingAlert.metric===k?'selected':''}>${esc(METRIC_NAMES[k]||k.replace(/_/g,' '))} (${esc(String(vals[k]))})</option>`).join('');
 
   const modal=document.createElement('div');
@@ -1002,12 +1014,12 @@ function openAlertModal(existingAlert){
   modal.addEventListener('click',function(e){if(e.target===modal)tryClose();});
 
   modal.querySelector('#svdAlModalSave').onclick=async function(){
-    const name=document.getElementById('svdAlFName').value.trim();
-    const metric=document.getElementById('svdAlFMetric').value;
-    const condition=document.getElementById('svdAlFCond').value;
-    const threshold=document.getElementById('svdAlFThreshold').value;
-    const severity=document.getElementById('svdAlFSev').value;
-    const enabled=document.getElementById('svdAlFEnabled').checked;
+    const name=modal.querySelector('#svdAlFName').value.trim();
+    const metric=modal.querySelector('#svdAlFMetric').value;
+    const condition=modal.querySelector('#svdAlFCond').value;
+    const threshold=modal.querySelector('#svdAlFThreshold').value;
+    const severity=modal.querySelector('#svdAlFSev').value;
+    const enabled=modal.querySelector('#svdAlFEnabled').checked;
     if(!metric||threshold===''){svdToast('Vyplňte metriku a prah.','warn');return;}
     const body={sensor_eui:EUI,name,metric,condition,threshold:parseFloat(threshold),severity,enabled};
     try{

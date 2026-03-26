@@ -127,6 +127,7 @@
     background:var(--surface-1); outline:none; transition:border-color .1s;
 }
 .ap-sel:focus { border-color:var(--brand-500); box-shadow:0 0 0 2px rgba(var(--brand-rgb),.12); }
+.ap-search { min-width:180px; }
 
 .ap-chips {
     display:flex; gap:.18rem; background:rgba(0,0,0,.04);
@@ -365,6 +366,12 @@
     font-size:.61rem; font-weight:600; color:var(--text-500);
     background:var(--surface-2); border-radius:.22rem; padding:.03rem .28rem;
 }
+.ap-hmeta { display:flex; align-items:center; gap:.3rem; flex-wrap:wrap; margin-top:.06rem; }
+.ap-hmini {
+    display:inline-flex; align-items:center; gap:.2rem;
+    font-size:.58rem; font-weight:700; color:var(--text-500);
+    background:rgba(0,0,0,.04); border-radius:999px; padding:.08rem .34rem;
+}
 .ap-hdesc { font-size:.66rem; color:var(--text-500); margin-top:.04rem; }
 
 .ap-hright { display:flex; flex-direction:column; align-items:flex-end; gap:.14rem; flex-shrink:0; }
@@ -408,18 +415,14 @@
 /* ── Modal ── */
 .ap-backdrop {
     position:fixed; inset:0; background:rgba(15,23,42,.38);
-    backdrop-filter:blur(3px); z-index:1200;
+    z-index:1200;
     display:flex; align-items:center; justify-content:center; padding:1rem;
-    animation:apFade .14s ease-out;
 }
-@keyframes apFade { from{opacity:0} to{opacity:1} }
 .ap-modal {
     background:var(--surface-1); border-radius:1.1rem;
     box-shadow:var(--shadow-strong);
     width:100%; max-width:420px; overflow:hidden;
-    animation:apPop .18s cubic-bezier(.34,1.56,.64,1);
 }
-@keyframes apPop { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
 .ap-mhead {
     display:flex; align-items:center; justify-content:space-between;
     padding:.88rem 1.15rem; border-bottom:1px solid var(--line);
@@ -579,6 +582,28 @@
 
     <!-- Panel: History -->
     <div id="panel-history" class="ap-panel">
+      <div class="ap-toolbar">
+        <select class="ap-sel" id="alpHistorySensorFilter">
+          <option value="">Všetky senzory</option>
+        </select>
+        <select class="ap-sel" id="alpHistorySourceFilter">
+          <option value="">Všetky zdroje</option>
+          <option value="activity">Stav senzoru</option>
+          <option value="threshold">Prahové pravidlo</option>
+          <option value="offline_rule">Pravidlo dostupnosti</option>
+        </select>
+        <select class="ap-sel" id="alpHistoryEventFilter">
+          <option value="">Všetky udalosti</option>
+          <option value="triggered">Vzniknuté</option>
+          <option value="resolved">Vyriešené</option>
+        </select>
+        <select class="ap-sel" id="alpHistorySeverityFilter">
+          <option value="">Všetky závažnosti</option>
+          <option value="warning">Varovanie</option>
+          <option value="critical">Kritické</option>
+        </select>
+        <input class="ap-sel ap-search" id="alpHistorySearch" type="search" placeholder="Hľadať senzor alebo dôvod">
+      </div>
       <div id="alpHistoryBody">
         <div class="ap-empty">
           <div class="ap-empty-ico"><i class="fas fa-spinner fa-spin"></i></div>
@@ -679,17 +704,24 @@ document.querySelectorAll('.ap-nav-btn').forEach(function(btn){
 var COND_LABEL={gt:'>',gte:'>=',lt:'<',lte:'<=',eq:'='};
 var COND_TEXT={gt:'vyššia ako',gte:'vyššia alebo rovná',lt:'nižšia ako',lte:'nižšia alebo rovná',eq:'rovná sa'};
 var METRIC_NAMES={
-    co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ 2',
+    co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',
     temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',
     humidity_1_pct:'Vlhkosť',humidity_2_pct:'Vlhkosť 2',
     battery_v_est:'Batéria',battery_mv:'Batéria',
-    any_alarm_active:'Alarm aktívny',total_openings:'Počet otvorení',
+    any_alarm_active:'Alarm aktívny',alarm_count:'Počet alarmov',
+    open_count:'Počet otvorení',total_openings:'Počet otvorení (celk.)',
+    last_alarm_duration_s:'Trvanie alarmu',last_alarm_input:'Vstup alarmu',
+    tamper:'Tamper / sabotáž',
     internal_magnet_alarm:'Interný alarm',external_alarm:'Externý alarm',
-    minutes_since_last_alarm:'Minúty od alarmu',duration_last_alarm_minutes:'Trvanie alarmu',
-    low_batt:'Nízka batéria',sabotage_internal:'Sabotáž interná',
-    sabotage_external:'Sabotáž externá',async_message:'Asynchrónna správa',
-    co2_error:'CO₂ chyba',calibration_not_done:'Kalibrácia chyba',
-    days_to_next_calibration:'Dni do kalibrácie'
+    internal_magnet_alarm_last_5min:'Interný alarm (5 min)',internal_magnet_alarm_last_10min:'Interný alarm (10 min)',
+    internal_magnet_alarm_last_1h:'Interný alarm (1 hod)',internal_magnet_alarm_last_24h:'Interný alarm (24 hod)',
+    external_alarm_last_5min:'Externý alarm (5 min)',external_alarm_last_10min:'Externý alarm (10 min)',
+    external_alarm_last_1h:'Externý alarm (1 hod)',external_alarm_last_24h:'Externý alarm (24 hod)',
+    minutes_since_last_alarm:'Minúty od posledného alarmu',duration_last_alarm_minutes:'Trvanie posledného alarmu',
+    low_batt:'Slabá batéria',sabotage_internal:'Interná sabotáž',
+    sabotage_external:'Externá sabotáž',async_message:'Asynchrónna správa',
+    co2_error:'Chyba CO₂ senzora',calibration_not_done:'Kalibrácia chýba',
+    days_to_next_calibration:'Dní do kalibrácie'
 };
 var METRIC_UNIT={
     co2_1_ppm:'ppm',co2_2_ppm:'ppm',
@@ -711,6 +743,12 @@ var _allSensors=[];
 var _filterEui='';
 var _rulesQuickFilter='all';
 var _alertOptionsCache=new Map();
+var _historyFilterSensor='';
+var _historyFilterSource='';
+var _historyFilterEvent='';
+var _historyFilterSeverity='';
+var _historySearch='';
+var _historySearchTimer=null;
 
 var _ctxMenu=null;
 function closeCtx(){if(_ctxMenu){_ctxMenu.remove();_ctxMenu=null;}}
@@ -735,6 +773,31 @@ function formatMetricValue(metric,value){
 function formatHoursAgo(hours){
     var num=Number(hours);if(!Number.isFinite(num)||num<=0)return'';
     return(num>=24?num.toFixed(1):num.toFixed(2))+' h';
+}
+function historySourceLabel(source){
+    source=String(source||'').toLowerCase();
+    if(source==='activity')return'Stav senzoru';
+    if(source==='offline_rule')return'Pravidlo dostupnosti';
+    if(source==='threshold')return'Prahové pravidlo';
+    return'Pravidlo';
+}
+function historyTypeLabel(event){
+    var kind=String((event&&event.kind)||'').toLowerCase();
+    if(kind==='activity')return'Stav senzoru';
+    if(kind==='sensor_offline')return'Senzor nedostupný';
+    return'Prahové pravidlo';
+}
+function historyDesc(event){
+    if(event&&event.reason)return String(event.reason);
+    if(event&&event.desc)return String(event.desc);
+    if(String((event&&event.kind)||'').toLowerCase()==='sensor_offline'){
+        return'Senzor nedostupný'+(event.trigger_status?' ('+String(event.trigger_status)+')':'');
+    }
+    if(event&&event.metric){
+        var value=event.val_str||formatMetricValue(event.metric,event.trigger_value);
+        return metricName(event.metric)+(value?' = '+value:'');
+    }
+    return'';
 }
 
 /* ── KPI ── */
@@ -796,14 +859,27 @@ async function loadSensors(){
         var r=await fetch('/api/sensors');var d=await r.json();
         _allSensors=Array.isArray(d)?d:(Array.isArray(d.sensors)?d.sensors:Object.values(d||{}));
     }catch(e){_allSensors=[];}
-    var sel=document.getElementById('alpSensorFilter');if(!sel)return;
-    _allSensors.forEach(function(s){
-        var opt=document.createElement('option');
-        opt.value=String(s.eui||'').toUpperCase();
-        opt.textContent=(s.name||s.eui||'')+(s.eui?' ('+String(s.eui).toUpperCase().slice(-4)+')':'');
-        sel.appendChild(opt);
-    });
-    sel.addEventListener('change',function(){_filterEui=this.value;renderRules();});
+    function fillSensorSelect(selectId,currentValue){
+        var sel=document.getElementById(selectId);if(!sel)return;
+        var firstOption=sel.querySelector('option');
+        var firstHtml=firstOption?firstOption.outerHTML:'<option value="">Všetky senzory</option>';
+        sel.innerHTML=firstHtml;
+        _allSensors.forEach(function(s){
+            var opt=document.createElement('option');
+            opt.value=String(s.eui||'').toUpperCase();
+            opt.textContent=(s.name||s.eui||'')+(s.eui?' ('+String(s.eui).toUpperCase().slice(-4)+')':'');
+            sel.appendChild(opt);
+        });
+        sel.value=currentValue||'';
+    }
+    fillSensorSelect('alpSensorFilter',_filterEui);
+    fillSensorSelect('alpHistorySensorFilter',_historyFilterSensor);
+
+    var ruleSel=document.getElementById('alpSensorFilter');
+    if(ruleSel)ruleSel.onchange=function(){_filterEui=this.value;renderRules();};
+
+    var historySel=document.getElementById('alpHistorySensorFilter');
+    if(historySel)historySel.onchange=function(){_historyFilterSensor=this.value;loadHistory();};
 }
 function sensorName(eui){
     var s=_allSensors.find(function(x){return String(x.eui||'').toUpperCase()===String(eui||'').toUpperCase();});
@@ -1114,28 +1190,28 @@ function openModal(sensorEui,existingRule,options){
         el.addEventListener('input',function(){_dirty=true;});
     });
     document.addEventListener('keydown',onModalKeydown,true);
-    document.getElementById('alpMClose').onclick=function(){tryClose('cancel');};
-    document.getElementById('alpMCancel').onclick=function(){tryClose('cancel');};
+    modal.querySelector('#alpMClose').onclick=function(){tryClose('cancel');};
+    modal.querySelector('#alpMCancel').onclick=function(){tryClose('cancel');};
     modal.addEventListener('click',function(e){if(e.target===modal)tryClose('cancel');});
 
     /* Pre-fill fields when editing */
     if(isEdit){
-        document.getElementById('alpMKind').value=existingRule.kind||'threshold';
-        document.getElementById('alpMName').value=existingRule.name||'';
-        document.getElementById('alpMCond').value=existingRule.condition||'gt';
+        modal.querySelector('#alpMKind').value=existingRule.kind||'threshold';
+        modal.querySelector('#alpMName').value=existingRule.name||'';
+        modal.querySelector('#alpMCond').value=existingRule.condition||'gt';
         if(existingRule.threshold!==null&&existingRule.threshold!==undefined)
-            document.getElementById('alpMThreshold').value=existingRule.threshold;
-        document.getElementById('alpMSev').value=existingRule.severity||'warning';
-        document.getElementById('alpMEnabled').checked=!!existingRule.enabled;
+            modal.querySelector('#alpMThreshold').value=existingRule.threshold;
+        modal.querySelector('#alpMSev').value=existingRule.severity||'warning';
+        modal.querySelector('#alpMEnabled').checked=!!existingRule.enabled;
     }
 
     async function refreshModalState(){
-        var sEui=document.getElementById('alpMSensor').value;
-        var kind=document.getElementById('alpMKind').value;
-        var metricWrap=document.getElementById('alpMMetricWrap');
-        var thresholdRow=document.getElementById('alpMThresholdRow');
-        var metricSelect=document.getElementById('alpMMetric');
-        var infoWrap=document.getElementById('alpMInfoWrap');
+        var sEui=modal.querySelector('#alpMSensor').value;
+        var kind=modal.querySelector('#alpMKind').value;
+        var metricWrap=modal.querySelector('#alpMMetricWrap');
+        var thresholdRow=modal.querySelector('#alpMThresholdRow');
+        var metricSelect=modal.querySelector('#alpMMetric');
+        var infoWrap=modal.querySelector('#alpMInfoWrap');
         var previousMetric=metricSelect.value||(isEdit?existingRule.metric||'':'');
         metricWrap.style.display=kind==='threshold'?'block':'none';
         thresholdRow.style.display=kind==='threshold'?'grid':'none';
@@ -1162,14 +1238,14 @@ function openModal(sensorEui,existingRule,options){
         }
     }
     refreshModalState();
-    document.getElementById('alpMSensor').addEventListener('change',refreshModalState);
-    document.getElementById('alpMKind').addEventListener('change',refreshModalState);
+    modal.querySelector('#alpMSensor').addEventListener('change',refreshModalState);
+    modal.querySelector('#alpMKind').addEventListener('change',refreshModalState);
 
-    document.getElementById('alpMSave').onclick=async function(){
-        var sEui=document.getElementById('alpMSensor').value;var kind=document.getElementById('alpMKind').value;
-        var name=document.getElementById('alpMName').value.trim();var metric=document.getElementById('alpMMetric').value;
-        var condition=document.getElementById('alpMCond').value;var threshold=document.getElementById('alpMThreshold').value;
-        var severity=document.getElementById('alpMSev').value;var enabled=document.getElementById('alpMEnabled').checked;
+    modal.querySelector('#alpMSave').onclick=async function(){
+        var sEui=modal.querySelector('#alpMSensor').value;var kind=modal.querySelector('#alpMKind').value;
+        var name=modal.querySelector('#alpMName').value.trim();var metric=modal.querySelector('#alpMMetric').value;
+        var condition=modal.querySelector('#alpMCond').value;var threshold=modal.querySelector('#alpMThreshold').value;
+        var severity=modal.querySelector('#alpMSev').value;var enabled=modal.querySelector('#alpMEnabled').checked;
         if(!sEui){apToast('Vyber senzor.','warn');return;}
         if(kind==='threshold'&&(!metric||threshold==='')){apToast('Vyplň metriku a prah.','warn');return;}
         var payload={sensor_eui:sEui,kind:kind,name:name,metric:kind==='threshold'?metric:'',condition:kind==='threshold'?condition:'',threshold:kind==='threshold'?parseFloat(threshold):null,severity:severity,enabled:enabled};
@@ -1225,44 +1301,65 @@ function fmtDuration(startIso,endIso){
         return mins+'min';
     }catch(e){return'';}
 }
+var historySourceSel=document.getElementById('alpHistorySourceFilter');
+if(historySourceSel)historySourceSel.onchange=function(){_historyFilterSource=this.value;loadHistory();};
+var historyEventSel=document.getElementById('alpHistoryEventFilter');
+if(historyEventSel)historyEventSel.onchange=function(){_historyFilterEvent=this.value;loadHistory();};
+var historySeveritySel=document.getElementById('alpHistorySeverityFilter');
+if(historySeveritySel)historySeveritySel.onchange=function(){_historyFilterSeverity=this.value;loadHistory();};
+var historySearchEl=document.getElementById('alpHistorySearch');
+if(historySearchEl)historySearchEl.addEventListener('input',function(){
+    _historySearch=this.value||'';
+    if(_historySearchTimer)window.clearTimeout(_historySearchTimer);
+    _historySearchTimer=window.setTimeout(loadHistory,180);
+});
 async function loadHistory(){
     var body=document.getElementById('alpHistoryBody');if(!body)return;
     try{
-        var r=await fetch('/api/alerts/history?limit=100');var d=await r.json();var events=d.events||[];
+        var qs=new URLSearchParams();
+        qs.set('limit','150');
+        if(_historyFilterSensor)qs.set('sensor_eui',_historyFilterSensor);
+        if(_historyFilterSource)qs.set('source',_historyFilterSource);
+        if(_historyFilterEvent)qs.set('event_type',_historyFilterEvent);
+        if(_historyFilterSeverity)qs.set('severity',_historyFilterSeverity);
+        if(String(_historySearch||'').trim())qs.set('q',String(_historySearch||'').trim());
+        var r=await fetch('/api/alerts/history?'+qs.toString());var d=await r.json();var events=d.events||[];
         var tb=document.getElementById('alpTabHistory');
         if(tb)tb.textContent=events.length?String(events.length):'';
         if(!events.length){
             body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-clock-rotate-left"></i></div>'
-                +'<div class="ap-empty-h">Zatiaľ žiadna história</div>'
-                +'<div class="ap-empty-p">História sa začne zaznamenávať keď sa prvý alert spustí alebo vyrieši.</div></div>';
+                +'<div class="ap-empty-h">?iadna zhoda v hist?rii</div>'
+                +'<div class="ap-empty-p">Sk?ste upravi? filtre alebo po?kajte na prv? vzniknut? upozornenie.</div></div>';
             return;
         }
         var rows=events.map(function(e){
             var isTriggered=e.event_type==='triggered';var isCritical=e.severity==='critical';
             var colorClass=isTriggered?(isCritical?'is-error':'is-warn'):'is-ok';
             var badge=isTriggered
-                ?'<span class="ap-hbadge '+colorClass+'">'+(isCritical?'Kritické':'Varovanie')+'</span>'
-                :'<span class="ap-hbadge is-ok">Vyriešené</span>';
-            var desc=e.kind==='sensor_offline'
-                ?'Senzor nedostupný'+(e.trigger_status?' ('+esc(e.trigger_status)+')':'')
-                :(e.metric?(metricName(e.metric)+(e.trigger_value!=null?' = '+Number(e.trigger_value).toFixed(2)+(metricUnit(e.metric)||''):'')):'');
+                ?'<span class="ap-hbadge '+colorClass+'">'+(isCritical?'Kritick?':'Varovanie')+'</span>'
+                :'<span class="ap-hbadge is-ok">Vyrie?en?</span>';
+            var desc=historyDesc(e);
             var dur=!isTriggered&&e.triggered_at?fmtDuration(e.triggered_at,e.ts):'';
+            var sourceBadge='<span class="ap-hmini">'+esc(historySourceLabel(e.source))+'</span>';
+            var typeBadge='<span class="ap-hmini">'+esc(historyTypeLabel(e))+'</span>';
+            var eventBadge='<span class="ap-hmini">'+esc(isTriggered?'Vznik':'Uzavretie')+'</span>';
             return '<div class="ap-hrow">'
                 +'<span class="ap-hdot '+colorClass+'"></span>'
                 +'<div class="ap-hbody"><div class="ap-htop"><span class="ap-hname">'+esc(e.name||e.sensor_name)+'</span>'
-                    +(e.name&&e.sensor_name?'<span class="ap-hsensor">'+esc(e.sensor_name)+'</span>':'')+'</div>'
-                    +(desc?'<div class="ap-hdesc">'+desc+'</div>':'')+'</div>'
+                    +(e.name&&e.sensor_name&&e.name!==e.sensor_name?'<span class="ap-hsensor">'+esc(e.sensor_name)+'</span>':'')+'</div>'
+                    +'<div class="ap-hmeta">'+sourceBadge+typeBadge+eventBadge+'</div>'
+                    +(desc?'<div class="ap-hdesc">'+esc(desc)+'</div>':'')+'</div>'
                 +'<div class="ap-hright">'+badge
                     +'<span class="ap-htime" title="'+esc(e.ts)+'">'+fmtTs(e.ts)+'</span>'
                     +(dur?'<span class="ap-hdur">'+esc(dur)+'</span>':'')+'</div></div>';
         }).join('');
         body.innerHTML='<div class="ap-hist">'+rows+'</div>';
     }catch(e){
-        if(body)body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-circle-exclamation"></i></div><div class="ap-empty-h">Chyba načítania histórie</div></div>';
+        if(body)body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-circle-exclamation"></i></div><div class="ap-empty-h">Chyba na??tania hist?rie</div></div>';
     }
 }
 
-/* ── Init ── */
+/* ?? Init ?? */
 Promise.all([loadSensors(),loadRules(),loadTriggered(),loadHistory()]).then(function(){
     handleEntryIntent();
 });
