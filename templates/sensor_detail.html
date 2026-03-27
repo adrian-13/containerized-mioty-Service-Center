@@ -701,17 +701,40 @@ function renderChart(canvasId,rows,key,color){
     if(Number.isFinite(n)&&isoStr){labels.push(fmtTs(isoStr));data.push(n);}
   }
   if(data.length<2){el.parentElement.innerHTML='<div class="svd-ch-empty">Zatiaľ málo dát pre graf</div>';return;}
+
+  // Detect rendering mode based on data characteristics
+  const uniqueVals=[...new Set(data)];
+  const isBinary=uniqueVals.length<=2&&uniqueVals.every(v=>v===0||v===1);
+  const STEP_KEYS=new Set(['any_alarm_active','alarm_count','open_count','last_alarm_input','tamper','alarm_active']);
+  const allInts=data.every(v=>v===Math.round(v));
+  const isStepped=isBinary||STEP_KEYS.has(key)||(allInts&&uniqueVals.length<=8);
+
   const ctx2d=el.getContext('2d');
   const grad=ctx2d.createLinearGradient(0,0,0,el.parentElement.offsetHeight||160);
-  grad.addColorStop(0,'rgba('+hexRgb(lineColor)+',.15)');
+  grad.addColorStop(0,'rgba('+hexRgb(lineColor)+','+(isBinary?.28:.15)+')');
   grad.addColorStop(1,'rgba('+hexRgb(lineColor)+',0)');
+
+  // Always show event markers on stepped charts; hide points for dense continuous data
+  const pointR=isStepped?Math.min(5,Math.max(3,Math.floor(150/data.length))):data.length<=20?3:0;
+
+  // Y-axis: binary gets labelled 0/1 with extra headroom, stepped gets integer ticks
+  const yAxis={grid:{color:'rgba(15,23,42,.05)'},border:{display:false},ticks:{color:'#9aa8bc',font:{size:10},maxTicksLimit:4,padding:6}};
+  if(isBinary){
+    yAxis.min=-0.3;yAxis.max=1.5;
+    yAxis.ticks={color:'#9aa8bc',font:{size:10},stepSize:1,callback:v=>v===1?'Áno':v===0?'Nie':''};
+  }else if(isStepped){
+    yAxis.ticks={...yAxis.ticks,precision:0};
+  }
+
   new Chart(el,{
     type:'line',
     data:{labels,datasets:[{
       data,
-      borderColor:lineColor,borderWidth:2,
-      backgroundColor:grad,fill:true,tension:.4,
-      pointRadius:data.length<=20?3:0,
+      borderColor:lineColor,borderWidth:isStepped?2.5:2,
+      backgroundColor:grad,fill:true,
+      tension:isStepped?0:.4,
+      stepped:isStepped?'before':false,
+      pointRadius:pointR,
       pointHoverRadius:5,
       pointBackgroundColor:lineColor,pointBorderColor:'#fff',pointBorderWidth:2
     }]},
@@ -722,12 +745,12 @@ function renderChart(canvasId,rows,key,color){
         tooltip:{
           backgroundColor:'rgba(15,23,42,.88)',titleColor:'#94a3b8',bodyColor:'#f1f5f9',
           borderColor:'rgba(255,255,255,.1)',borderWidth:1,padding:8,
-          callbacks:{label:c=>' '+fmtValue(key,c.parsed.y)}
+          callbacks:{label:c=>isBinary?' '+(c.parsed.y===1?'Áno':'Nie'):' '+fmtValue(key,c.parsed.y)}
         }
       },
       scales:{
         x:{grid:{display:false},border:{display:false},ticks:{color:'#9aa8bc',font:{size:10,weight:'700'},maxTicksLimit:6,maxRotation:0}},
-        y:{grid:{color:'rgba(15,23,42,.05)'},border:{display:false},ticks:{color:'#9aa8bc',font:{size:10},maxTicksLimit:4,padding:6}}
+        y:yAxis
       }
     }
   });
