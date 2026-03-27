@@ -341,11 +341,34 @@
 .svd-ch-range-btn:hover{background:#f0f5fd;border-color:#b0c4de}
 .svd-ch-range-btn.is-active{background:var(--brand-500);border-color:var(--brand-600);color:#fff}
 .svd-ch-status{font-size:.66rem;color:#8a9ab0;font-weight:700}
-.svd-chart-wrap{position:relative;height:180px;padding:.2rem 1.2rem .9rem}
-.svd-resize-handle{height:20px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;user-select:none;margin:.15rem 1.2rem .5rem}
-.svd-resize-handle::after{content:'';display:block;width:44px;height:14px;border-radius:7px;background-color:#eef2f8;background-image:radial-gradient(circle,#a0b8d0 2px,transparent 2px);background-size:8px 6px;background-position:center;border:1px solid #d4e0ef;box-shadow:0 1px 2px rgba(15,23,42,.06);transition:background-color .15s,background-image .15s,border-color .15s,box-shadow .15s}
-.svd-resize-handle:hover::after{background-color:#dde8f5;background-image:radial-gradient(circle,#5b8ab8 2px,transparent 2px);border-color:#b0c8e0;box-shadow:0 1px 4px rgba(15,23,42,.14)}
+.svd-chart-wrap{position:relative;height:220px;padding:.2rem 1.2rem .9rem;cursor:pointer}
+.svd-ch-expand-btn{display:inline-flex;align-items:center;gap:.34rem;border:1px solid #d7e2ef;background:#fff;color:#4e6a88;border-radius:.48rem;padding:.22rem .56rem;font-size:.68rem;font-weight:800;cursor:pointer;transition:background .12s,color .12s,border-color .12s,transform .12s}
+.svd-ch-expand-btn:hover{background:#f0f5fd;border-color:#b0c4de;color:#18385f;transform:translateY(-1px)}
 .svd-ch-empty{padding:.9rem 1.2rem;font-size:.76rem;color:#8a9ab0;text-align:center}
+.svd-chart-modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(4px);z-index:1400;display:flex;align-items:center;justify-content:center;padding:1.2rem;animation:fadeIn .18s ease-out}
+.svd-chart-modal{width:min(1080px,100%);max-height:min(88vh,920px);background:#fff;border-radius:1.2rem;box-shadow:0 24px 70px rgba(15,23,42,.28);overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;animation:scaleIn .18s ease-out}
+.svd-chart-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem 1.2rem;border-bottom:1px solid #e8eef8;background:linear-gradient(180deg,#f8fbff 0%,#f4f8ff 100%)}
+.svd-chart-modal-kicker{font-size:.63rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7a8fa8}
+.svd-chart-modal-title{font-size:1.02rem;font-weight:800;color:#13263f;margin:.12rem 0 0;display:flex;align-items:center;gap:.45rem}
+.svd-chart-modal-sub{font-size:.74rem;color:#7a8fa8;margin:.16rem 0 0}
+.svd-chart-modal-body{padding:.8rem 1rem 1rem;display:grid;gap:.75rem;min-height:0}
+.svd-chart-modal-tools{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+.svd-chart-modal-status{font-size:.72rem;color:#7a8fa8;font-weight:700}
+.svd-chart-modal-range{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap}
+.svd-chart-modal-wrap{min-height:0;height:min(64vh,620px);padding:.2rem;background:linear-gradient(180deg,#fbfdff 0%,#f8fbff 100%);border:1px solid #e5edf7;border-radius:1rem}
+.svd-chart-modal-close{border:none;background:#fff;color:#7a8fa8;cursor:pointer;font-size:1rem;line-height:1;padding:.34rem .42rem;border-radius:.55rem;border:1px solid #d7e2ef;transition:background .12s,color .12s,border-color .12s}
+.svd-chart-modal-close:hover{background:#eef3fb;color:#18385f;border-color:#bfd1e4}
+.svd-chart-modal-footer{padding:.9rem 1.2rem;border-top:1px solid #e8eef8;display:flex;justify-content:flex-end;background:#fbfdff}
+.svd-chart-modal-hint{font-size:.72rem;color:#8a9ab0}
+.svd-chart-wrap:focus-visible,.svd-ch-expand-btn:focus-visible,.svd-chart-modal-close:focus-visible{outline:2px solid rgba(34,118,210,.26);outline-offset:2px}
+@media(max-width:720px){
+  .svd-chart-wrap{height:200px}
+  .svd-chart-modal-backdrop{padding:.7rem}
+  .svd-chart-modal{max-height:94vh;border-radius:1rem}
+  .svd-chart-modal-head{padding:.9rem 1rem}
+  .svd-chart-modal-body{padding:.75rem}
+  .svd-chart-modal-wrap{height:min(58vh,480px)}
+}
 /* Sensor info */
 .svd-info-head{padding:.76rem 1.2rem .1rem;font-size:.68rem;font-weight:800;color:#7a8fa8;text-transform:uppercase;letter-spacing:.09em}
 .svd-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr));gap:.3rem .9rem;padding:.3rem 1.2rem .9rem}
@@ -557,7 +580,7 @@ button:active {
 const EUI={{ sensor_eui|tojson }};
 const VIEWER_SENSOR_PROFILE_OPTIONS={{ sensor_profiles|tojson|safe }};
 const VIEWER_SENSOR_PROFILE_LIBRARY=Object.fromEntries((VIEWER_SENSOR_PROFILE_OPTIONS||[]).map((p)=>[String(p.id||'').toLowerCase(),p]));
-let _activeKey=null,_data=null;
+let _activeKey=null,_data=null,_activeChartMinutes=1440,_activeChartRows=[],_activeChartColor='#2563eb',_chartModalEscHandler=null;
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function fmtNum(v,dec,unit){const n=Number(v);return Number.isFinite(n)?n.toFixed(dec)+(unit||''):'-';}
 function getSensorProfileMeta(profileId){
@@ -772,6 +795,66 @@ function renderChart(canvasId,rows,key,color){
   });
 }
 
+function syncChartRangeButtons(minutes){
+  document.querySelectorAll('.svd-ch-range-btn[data-minutes]').forEach(btn=>{
+    btn.classList.toggle('is-active',Number(btn.dataset.minutes)===Number(minutes));
+  });
+}
+
+function closeChartModal(){
+  const modal=document.getElementById('svdChartModal');
+  if(modal)modal.remove();
+  if(_chartModalEscHandler){
+    document.removeEventListener('keydown',_chartModalEscHandler);
+    _chartModalEscHandler=null;
+  }
+}
+
+function openChartModal(){
+  if(!_activeKey||document.getElementById('svdChartModal'))return;
+  const modal=document.createElement('div');
+  modal.className='svd-chart-modal-backdrop';
+  modal.id='svdChartModal';
+  modal.innerHTML=`<div class="svd-chart-modal" role="dialog" aria-modal="true" aria-labelledby="svdChartModalTitle">
+    <div class="svd-chart-modal-head">
+      <div>
+        <div class="svd-chart-modal-kicker">Detail grafu</div>
+        <div class="svd-chart-modal-title" id="svdChartModalTitle"><i class="fas fa-chart-line" style="opacity:.55"></i> ${esc(labelOf(_activeKey))}</div>
+        <div class="svd-chart-modal-sub">${esc((_data&&_data.config&&_data.config.name)||(_data&&_data.eui)||EUI)}</div>
+      </div>
+      <button class="svd-chart-modal-close" id="svdChartModalClose" title="Zavrieť"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="svd-chart-modal-body">
+      <div class="svd-chart-modal-tools">
+        <div class="svd-chart-modal-status" id="svdChartModalStatus">${_activeChartRows.length?_activeChartRows.length+' záznamov':'Načítavam…'}</div>
+        <div class="svd-chart-modal-range">
+          <button class="svd-ch-range-btn" data-minutes="1440">24h</button>
+          <button class="svd-ch-range-btn" data-minutes="10080">7d</button>
+          <button class="svd-ch-range-btn" data-minutes="43200">30d</button>
+        </div>
+      </div>
+      <div class="svd-chart-modal-wrap" id="svdChartModalWrap"><canvas id="svdChartModalCanvas"></canvas></div>
+    </div>
+    <div class="svd-chart-modal-footer">
+      <div class="svd-chart-modal-hint">Rozšírený pohľad na zvolenú metriku.</div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  syncChartRangeButtons(_activeChartMinutes);
+  modal.querySelector('#svdChartModalClose').onclick=closeChartModal;
+  modal.addEventListener('click',function(e){if(e.target===modal)closeChartModal();});
+  modal.querySelectorAll('.svd-ch-range-btn[data-minutes]').forEach(btn=>{
+    btn.addEventListener('click',function(){loadTelemetryChart(_activeKey,Number(this.dataset.minutes));});
+  });
+  _chartModalEscHandler=function(e){if(e.key==='Escape')closeChartModal();};
+  document.addEventListener('keydown',_chartModalEscHandler);
+  requireChartJs(()=>{
+    if(document.getElementById('svdChartModalCanvas')){
+      renderChart('svdChartModalCanvas',_activeChartRows,_activeKey,_activeChartColor);
+    }
+  });
+}
+
 function render(d){
   _data=d;
   const cfg=d.config||{};
@@ -878,11 +961,11 @@ function render(d){
         <button class="svd-ch-range-btn is-active" data-minutes="1440">24h</button>
         <button class="svd-ch-range-btn" data-minutes="10080">7d</button>
         <button class="svd-ch-range-btn" data-minutes="43200">30d</button>
+        <button class="svd-ch-expand-btn" id="svdChartExpandBtn" title="Zväčšiť graf"><i class="fas fa-up-right-and-down-left-from-center"></i> Zväčšiť</button>
       </div>
     </div>
     ${usingBlueprintMetrics?`<div class="svd-ch-empty" style="padding-top:.15rem;padding-bottom:0;">Graf sa začne vykresľovať po prijatí prvých dát pre metriku <strong>${esc(labelOf(_activeKey))}</strong>.</div>`:''}
-    <div class="svd-chart-wrap" id="svdChartWrap"><canvas id="svdChart"></canvas></div>
-    <div class="svd-resize-handle" id="svdResizeHandle" title="Potiahnuť pre zmenu veľkosti grafu"></div>
+    <div class="svd-chart-wrap" id="svdChartWrap" role="button" tabindex="0" title="Otvoriť zväčšený graf"><canvas id="svdChart"></canvas></div>
   </section>`:'';
 
   document.getElementById('svdBody').innerHTML=metricsGridHtml+chartCardHtml+'<section class="svd-card" id="svdAlertsCard"><div class="svd-al-head"><span class="svd-al-title"><i class="fas fa-bell"></i> Alerty</span><button class="svd-al-add-btn" id="svdAlAddBtn"><i class="fas fa-plus"></i> Pridať alert</button></div><div id="svdAlList"><div class="svd-al-empty">Načítavam...</div></div></section>';
@@ -906,55 +989,46 @@ function render(d){
   if(_activeKey){
     document.querySelectorAll('#svdMainCard .svd-ch-range-btn').forEach(btn=>{
       btn.addEventListener('click',function(){
-        document.querySelectorAll('#svdMainCard .svd-ch-range-btn').forEach(b=>b.classList.remove('is-active'));
-        this.classList.add('is-active');
         loadTelemetryChart(_activeKey,Number(this.dataset.minutes));
       });
     });
-    loadTelemetryChart(_activeKey,1440);
-    // Drag-to-resize chart
-    (function(){
-      const wrap=document.getElementById('svdChartWrap');
-      const handle=document.getElementById('svdResizeHandle');
-      if(!wrap||!handle)return;
-      const K='svd_chart_h';
-      const saved=parseInt(localStorage.getItem(K));
-      if(saved>=100&&saved<=600)wrap.style.height=saved+'px';
-      handle.addEventListener('mousedown',function(e){
-        const startY=e.clientY,startH=wrap.offsetHeight;
-        e.preventDefault();
-        function onMove(mv){
-          const h=Math.min(600,Math.max(100,startH+(mv.clientY-startY)));
-          wrap.style.height=h+'px';
-          const ch=window.Chart&&Chart.getChart(document.getElementById('svdChart'));
-          if(ch)ch.resize();
+    const wrap=document.getElementById('svdChartWrap');
+    const expandBtn=document.getElementById('svdChartExpandBtn');
+    if(wrap){
+      wrap.addEventListener('click',openChartModal);
+      wrap.addEventListener('keydown',function(e){
+        if(e.key==='Enter'||e.key===' '){
+          e.preventDefault();
+          openChartModal();
         }
-        function onUp(){
-          localStorage.setItem(K,wrap.offsetHeight);
-          document.removeEventListener('mousemove',onMove);
-          document.removeEventListener('mouseup',onUp);
-        }
-        document.addEventListener('mousemove',onMove);
-        document.addEventListener('mouseup',onUp);
       });
-    })();
+    }
+    if(expandBtn)expandBtn.addEventListener('click',openChartModal);
+    loadTelemetryChart(_activeKey,_activeChartMinutes||1440);
   }
 }
 
-async function loadTelemetryChart(key,minutes){
+async function _loadTelemetryChartLegacy(key,minutes){
   _activeKey=key;
+  _activeChartMinutes=minutes||1440;
+  syncChartRangeButtons(_activeChartMinutes);
   const statusEl=document.getElementById('svdChartStatus');
+  const modalStatusEl=document.getElementById('svdChartModalStatus');
   const canvasEl=document.getElementById('svdChart');
   if(!canvasEl)return;
   if(statusEl)statusEl.textContent='Načítavam…';
+  if(modalStatusEl)modalStatusEl.textContent='Načítavam…';
   const vals=(_data&&_data.latest_uplink&&_data.latest_uplink.decoded&&_data.latest_uplink.decoded.values)||{};
   const tone=heroTone(key,vals[key]);
   const chartColor={green:'#16a34a',amber:'#d97706',red:'#dc2626',blue:'#3b82f6'}[tone]||'#2563eb';
   try{
-    const r=await fetch('/api/sensors/telemetry/history?sensor_eui='+encodeURIComponent(EUI)+'&minutes='+minutes+'&limit=300');
+    const r=await fetch('/api/sensors/telemetry/history?sensor_eui='+encodeURIComponent(EUI)+'&minutes='+_activeChartMinutes+'&limit=300');
     const d=await r.json();
     if(!d.success)throw new Error(d.error||'Chyba');
     const rows=d.rows||[];
+    _activeChartRows=rows;
+    _activeChartColor=chartColor;
+    const statusText=rows.length?rows.length+' záznamov':'';
     if(statusEl)statusEl.textContent=rows.length?rows.length+' záznamov':'';
     requireChartJs(()=>{if(document.getElementById('svdChart'))renderChart('svdChart',rows,key,chartColor);});
   }catch(e){
@@ -966,6 +1040,39 @@ async function loadTelemetryChart(key,minutes){
 const COND_LABEL={'gt':'>','gte':'≥','lt':'<','lte':'≤','eq':'='};
 const METRIC_NAMES={co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm aktívny',alarm_count:'Počet alarmov',open_count:'Počet otvorení',last_alarm_duration_s:'Trvanie alarmu',last_alarm_input:'Vstup alarmu',tamper:'Tamper / sabotáž'};
 const METRIC_UNIT={co2_1_ppm:'ppm',co2_2_ppm:'ppm',temperature_1_c:'°C',temperature_2_c:'°C',humidity_1_pct:'%',battery_v_est:'V'};
+
+async function loadTelemetryChart(key,minutes){
+  _activeKey=key;
+  _activeChartMinutes=minutes||1440;
+  syncChartRangeButtons(_activeChartMinutes);
+  const statusEl=document.getElementById('svdChartStatus');
+  const modalStatusEl=document.getElementById('svdChartModalStatus');
+  const canvasEl=document.getElementById('svdChart');
+  if(!canvasEl)return;
+  if(statusEl)statusEl.textContent='Načítavam…';
+  if(modalStatusEl)modalStatusEl.textContent='Načítavam…';
+  const vals=(_data&&_data.latest_uplink&&_data.latest_uplink.decoded&&_data.latest_uplink.decoded.values)||{};
+  const tone=heroTone(key,vals[key]);
+  const chartColor={green:'#16a34a',amber:'#d97706',red:'#dc2626',blue:'#3b82f6'}[tone]||'#2563eb';
+  try{
+    const r=await fetch('/api/sensors/telemetry/history?sensor_eui='+encodeURIComponent(EUI)+'&minutes='+_activeChartMinutes+'&limit=300');
+    const d=await r.json();
+    if(!d.success)throw new Error(d.error||'Chyba');
+    const rows=d.rows||[];
+    _activeChartRows=rows;
+    _activeChartColor=chartColor;
+    const statusText=rows.length?rows.length+' záznamov':'';
+    if(statusEl)statusEl.textContent=statusText;
+    if(modalStatusEl)modalStatusEl.textContent=statusText||'Bez záznamov';
+    requireChartJs(()=>{
+      if(document.getElementById('svdChart'))renderChart('svdChart',rows,key,chartColor);
+      if(document.getElementById('svdChartModalCanvas'))renderChart('svdChartModalCanvas',rows,key,chartColor);
+    });
+  }catch(e){
+    if(statusEl)statusEl.textContent='Chyba načítania';
+    if(modalStatusEl)modalStatusEl.textContent='Chyba načítania';
+  }
+}
 
 let _alerts=[];
 
