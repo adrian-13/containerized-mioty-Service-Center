@@ -1328,16 +1328,16 @@ async function loadHistory(){
         if(tb)tb.textContent=events.length?String(events.length):'';
         if(!events.length){
             body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-clock-rotate-left"></i></div>'
-                +'<div class="ap-empty-h">?iadna zhoda v hist?rii</div>'
-                +'<div class="ap-empty-p">Sk?ste upravi? filtre alebo po?kajte na prv? vzniknut? upozornenie.</div></div>';
+                +'<div class="ap-empty-h">Žiadna zhoda v histórii</div>'
+                +'<div class="ap-empty-p">Skúste upraviť filtre alebo počkajte na prvé vzniknuté upozornenie.</div></div>';
             return;
         }
         var rows=events.map(function(e){
             var isTriggered=e.event_type==='triggered';var isCritical=e.severity==='critical';
             var colorClass=isTriggered?(isCritical?'is-error':'is-warn'):'is-ok';
             var badge=isTriggered
-                ?'<span class="ap-hbadge '+colorClass+'">'+(isCritical?'Kritick?':'Varovanie')+'</span>'
-                :'<span class="ap-hbadge is-ok">Vyrie?en?</span>';
+                ?'<span class="ap-hbadge '+colorClass+'">'+(isCritical?'Kritické':'Varovanie')+'</span>'
+                :'<span class="ap-hbadge is-ok">Vyriešené</span>';
             var desc=historyDesc(e);
             var dur=!isTriggered&&e.triggered_at?fmtDuration(e.triggered_at,e.ts):'';
             var sourceBadge='<span class="ap-hmini">'+esc(historySourceLabel(e.source))+'</span>';
@@ -1355,7 +1355,7 @@ async function loadHistory(){
         }).join('');
         body.innerHTML='<div class="ap-hist">'+rows+'</div>';
     }catch(e){
-        if(body)body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-circle-exclamation"></i></div><div class="ap-empty-h">Chyba na??tania hist?rie</div></div>';
+        if(body)body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-circle-exclamation"></i></div><div class="ap-empty-h">Chyba načítania histórie</div></div>';
     }
 }
 
