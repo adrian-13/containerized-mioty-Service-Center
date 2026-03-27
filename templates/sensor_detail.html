@@ -702,12 +702,10 @@ function renderChart(canvasId,rows,key,color){
   }
   if(data.length<2){el.parentElement.innerHTML='<div class="svd-ch-empty">Zatiaľ málo dát pre graf</div>';return;}
 
-  // Detect rendering mode based on data characteristics
+  // Detect rendering mode: stepped only for binary (0/1) data
   const uniqueVals=[...new Set(data)];
   const isBinary=uniqueVals.length<=2&&uniqueVals.every(v=>v===0||v===1);
-  const STEP_KEYS=new Set(['any_alarm_active','alarm_count','open_count','last_alarm_input','tamper','alarm_active']);
-  const allInts=data.every(v=>v===Math.round(v));
-  const isStepped=isBinary||STEP_KEYS.has(key)||(allInts&&uniqueVals.length<=8);
+  const isStepped=isBinary;
 
   const ctx2d=el.getContext('2d');
   const grad=ctx2d.createLinearGradient(0,0,0,el.parentElement.offsetHeight||160);
