@@ -353,6 +353,10 @@ body.svd-chart-resizing,body.svd-chart-resizing *{cursor:row-resize!important}
 #svdMainCard .svd-resize-handle::before{content:'';position:absolute;inset:-6px 0;transform:none;background:none;height:auto}
 #svdMainCard .svd-resize-handle::after{content:'';position:absolute;inset:0;background:none;width:auto;height:auto;border-radius:inherit;opacity:1;box-shadow:none}
 #svdMainCard .svd-resize-handle:hover,#svdMainCard .svd-resize-handle.is-dragging{background:var(--brand-500,#eb7e17)}
+#svdMainCard{overflow:hidden}
+#svdMainCard .svd-chart-wrap{height:320px;padding:.2rem 1.2rem 0}
+#svdMainCard .svd-resize-handle{margin:0;height:8px;border-radius:0 0 1rem 1rem;border-top:1px solid #e8eef6}
+#svdMainCard .svd-resize-handle::before{inset:-6px 0}
 .svd-ch-empty{padding:.9rem 1.2rem;font-size:.76rem;color:#8a9ab0;text-align:center}
 /* Sensor info */
 .svd-info-head{padding:.76rem 1.2rem .1rem;font-size:.68rem;font-weight:800;color:#7a8fa8;text-transform:uppercase;letter-spacing:.09em}
