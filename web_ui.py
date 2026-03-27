@@ -1,4 +1,5 @@
 import csv
+import copy
 import io
 import json
 import logging
@@ -59,6 +60,9 @@ _viewer_demo_seed_state = {
     "last_attempt_ts": 0.0,
     "last_error": "",
 }
+_viewer_sensor_list_cache_lock = threading.Lock()
+_viewer_sensor_list_cache = {}
+_VIEWER_SENSOR_LIST_CACHE_TTL_SECONDS = 15.0
 _timescale_uplink_stats = {
     "queued": 0,
     "written": 0,
@@ -4710,6 +4714,37 @@ def _load_all_sensors():
 def _save_all_sensors(sensors):
     with open(bssci_config.SENSOR_CONFIG_FILE, "w") as f:
         json.dump(list(sensors or []), f, indent=4)
+    _invalidate_viewer_sensor_list_cache()
+
+
+def _invalidate_viewer_sensor_list_cache(tenant_id: Optional[str] = None):
+    with _viewer_sensor_list_cache_lock:
+        if tenant_id is None:
+            _viewer_sensor_list_cache.clear()
+            return
+        _viewer_sensor_list_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
+
+
+def _get_cached_viewer_sensor_list(tenant_id: str):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _viewer_sensor_list_cache_lock:
+        entry = _viewer_sensor_list_cache.get(tenant_key)
+        if not entry:
+            return None
+        age = time.time() - float(entry.get("ts") or 0.0)
+        if age > _VIEWER_SENSOR_LIST_CACHE_TTL_SECONDS:
+            _viewer_sensor_list_cache.pop(tenant_key, None)
+            return None
+        return copy.deepcopy(entry.get("payload") or {})
+
+
+def _store_cached_viewer_sensor_list(tenant_id: str, payload: Dict[str, Any]):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _viewer_sensor_list_cache_lock:
+        _viewer_sensor_list_cache[tenant_key] = {
+            "ts": time.time(),
+            "payload": copy.deepcopy(payload or {}),
+        }
 
 # ── Alert helpers ────────────────────────────────────────────────────────────
 
@@ -9162,6 +9197,12 @@ def get_sensors():
         global tls_server_instance
         tls_server = tls_server_instance
         active_tenant = _active_tenant_id()
+        current_role = _normalize_user_role(session.get('role', 'viewer'))
+        force_refresh = str(request.args.get('refresh', '') or '').strip().lower() in {'1', 'true', 'yes'}
+        if current_role == 'viewer' and not force_refresh:
+            cached_payload = _get_cached_viewer_sensor_list(active_tenant)
+            if cached_payload is not None:
+                return jsonify(cached_payload)
         
         # Load sensors from config file first
         sensor_status = {}
@@ -9414,6 +9455,8 @@ def get_sensors():
                 })
                     
             print(f"Processed sensor status for {len(sensor_status)} sensors with registration data")
+            if current_role == 'viewer':
+                _store_cached_viewer_sensor_list(active_tenant, sensor_status)
             return jsonify(sensor_status)
         except FileNotFoundError:
             sensor_file = getattr(bssci_config, 'SENSOR_CONFIG_FILE', 'endpoints.json')
