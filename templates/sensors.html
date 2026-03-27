@@ -2812,6 +2812,7 @@ function svSetFilter(f) {
     svRender();
 }
 window.svSetFilter = svSetFilter;
+window.svRender    = svRender;
 
 function svRender() {
     const q = normalizeViewerSearchText((document.getElementById('svSearch') || {}).value || '');
