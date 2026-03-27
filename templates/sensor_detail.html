@@ -342,6 +342,19 @@
 .svd-ch-range-btn.is-active{background:var(--brand-500);border-color:var(--brand-600);color:#fff}
 .svd-ch-status{font-size:.66rem;color:#8a9ab0;font-weight:700}
 .svd-chart-wrap{position:relative;height:260px;padding:.2rem 1.2rem .4rem;transition:height .14s ease}
+.svd-card .svd-chart-wrap{opacity:1;transform:translateY(0);transition:height .14s ease,opacity .18s ease,transform .18s ease}
+.svd-card.is-refreshing .svd-chart-wrap{opacity:.62;transform:translateY(2px)}
+.svd-mcard{transition:border-color .14s ease,background-color .14s ease,box-shadow .18s ease,transform .18s ease}
+.svd-mcard.is-pulse{animation:svdMetricPulse .28s ease}
+@keyframes svdMetricPulse{
+  0%{transform:translateY(0) scale(1)}
+  45%{transform:translateY(-1px) scale(1.015)}
+  100%{transform:translateY(0) scale(1)}
+}
+@media (prefers-reduced-motion: reduce){
+  .svd-card .svd-chart-wrap,.svd-mcard{transition:none}
+  .svd-mcard.is-pulse{animation:none}
+}
 .svd-resize-handle{position:relative;cursor:ns-resize;user-select:none;margin:0 1.2rem .9rem;height:24px;display:flex;align-items:center;justify-content:center;touch-action:none}
 .svd-resize-handle::before{content:'Potiahnutím zväčšíte graf';font-size:.62rem;font-weight:700;letter-spacing:.01em;color:#8fa0b5;transition:color .15s ease,opacity .15s ease}
 .svd-resize-handle::after{content:'';display:block;width:100%;max-width:220px;height:10px;border-radius:999px;background:linear-gradient(180deg,#eef4fb 0%,#e4edf8 100%);border:1px solid #d4e0ef;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 1px 2px rgba(15,23,42,.06);transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease}
@@ -685,6 +698,7 @@ function heroNote(k,v){
 function fmtTs(iso){try{const d=new Date(iso);return d.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});}catch(e){return'';}}
 
 let _cjsCbs=[];
+let _chartRefreshTimer=0;
 function requireChartJs(cb){
   if(window.Chart){cb();return;}
   _cjsCbs.push(cb);
@@ -694,6 +708,27 @@ function requireChartJs(cb){
   s.src='https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
   s.onload=()=>{_cjsCbs.forEach(f=>f());_cjsCbs=[];};
   document.head.appendChild(s);
+}
+function animateChartRefresh(){
+  const card=document.getElementById('svdMainCard');
+  if(!card)return;
+  card.classList.remove('is-refreshing');
+  void card.offsetWidth;
+  card.classList.add('is-refreshing');
+  if(_chartRefreshTimer)clearTimeout(_chartRefreshTimer);
+  _chartRefreshTimer=setTimeout(()=>card.classList.remove('is-refreshing'),220);
+}
+function pulseActiveMetricCard(key){
+  const cards=document.querySelectorAll('#svdMetricsCard .svd-mcard');
+  let target=null;
+  cards.forEach(card=>{
+    card.classList.remove('is-pulse');
+    if(card.dataset.mkey===key)target=card;
+  });
+  if(!target)return;
+  void target.offsetWidth;
+  target.classList.add('is-pulse');
+  setTimeout(()=>target&&target.classList.remove('is-pulse'),280);
 }
 function renderChart(canvasId,rows,key,color){
   const lineColor=color||'#2563eb';
@@ -906,6 +941,7 @@ function render(d){
       if(!key)return;
       document.querySelectorAll('#svdMetricsCard .svd-mcard').forEach(b=>b.classList.remove('is-active'));
       this.classList.add('is-active');
+      pulseActiveMetricCard(key);
       const titleEl=document.getElementById('svdChTitle');
       if(titleEl)titleEl.innerHTML=`<i class="fas fa-chart-line" style="opacity:.55"></i> ${esc(labelOf(key))}`;
       const activeRangeBtn=document.querySelector('#svdMainCard .svd-ch-range-btn.is-active');
@@ -970,6 +1006,7 @@ function render(d){
 
 async function loadTelemetryChart(key,minutes){
   _activeKey=key;
+  animateChartRefresh();
   const statusEl=document.getElementById('svdChartStatus');
   const canvasEl=document.getElementById('svdChart');
   if(!canvasEl)return;
