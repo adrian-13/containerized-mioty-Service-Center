@@ -342,10 +342,9 @@
 .svd-ch-range-btn.is-active{background:var(--brand-500);border-color:var(--brand-600);color:#fff}
 .svd-ch-status{font-size:.66rem;color:#8a9ab0;font-weight:700}
 .svd-chart-wrap{position:relative;height:180px;padding:.2rem 1.2rem .9rem}
-.svd-resize-handle{height:18px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;user-select:none;margin:.1rem 1.2rem .5rem;border-radius:.5rem;opacity:.5;transition:background .15s,opacity .15s}
-.svd-resize-handle:hover{background:rgba(176,196,222,.18);opacity:1}
-.svd-resize-handle::after{content:'';display:block;width:2.2rem;height:2px;border-radius:2px;background:#b0c4de;box-shadow:0 -5px 0 #b0c4de,0 5px 0 #b0c4de;transition:background .15s,box-shadow .15s}
-.svd-resize-handle:hover::after{background:#7a9bc0;box-shadow:0 -5px 0 #7a9bc0,0 5px 0 #7a9bc0}
+.svd-resize-handle{height:20px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;user-select:none;margin:.15rem 1.2rem .5rem}
+.svd-resize-handle::after{content:'';display:block;width:44px;height:14px;border-radius:7px;background-color:#eef2f8;background-image:radial-gradient(circle,#a0b8d0 2px,transparent 2px);background-size:8px 6px;background-position:center;border:1px solid #d4e0ef;box-shadow:0 1px 2px rgba(15,23,42,.06);transition:background-color .15s,background-image .15s,border-color .15s,box-shadow .15s}
+.svd-resize-handle:hover::after{background-color:#dde8f5;background-image:radial-gradient(circle,#5b8ab8 2px,transparent 2px);border-color:#b0c8e0;box-shadow:0 1px 4px rgba(15,23,42,.14)}
 .svd-ch-empty{padding:.9rem 1.2rem;font-size:.76rem;color:#8a9ab0;text-align:center}
 /* Sensor info */
 .svd-info-head{padding:.76rem 1.2rem .1rem;font-size:.68rem;font-weight:800;color:#7a8fa8;text-transform:uppercase;letter-spacing:.09em}
@@ -883,7 +882,7 @@ function render(d){
     </div>
     ${usingBlueprintMetrics?`<div class="svd-ch-empty" style="padding-top:.15rem;padding-bottom:0;">Graf sa začne vykresľovať po prijatí prvých dát pre metriku <strong>${esc(labelOf(_activeKey))}</strong>.</div>`:''}
     <div class="svd-chart-wrap" id="svdChartWrap"><canvas id="svdChart"></canvas></div>
-    <div class="svd-resize-handle" id="svdResizeHandle"></div>
+    <div class="svd-resize-handle" id="svdResizeHandle" title="Potiahnuť pre zmenu veľkosti grafu"></div>
   </section>`:'';
 
   document.getElementById('svdBody').innerHTML=metricsGridHtml+chartCardHtml+'<section class="svd-card" id="svdAlertsCard"><div class="svd-al-head"><span class="svd-al-title"><i class="fas fa-bell"></i> Alerty</span><button class="svd-al-add-btn" id="svdAlAddBtn"><i class="fas fa-plus"></i> Pridať alert</button></div><div id="svdAlList"><div class="svd-al-empty">Načítavam...</div></div></section>';

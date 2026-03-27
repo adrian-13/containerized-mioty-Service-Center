@@ -259,29 +259,34 @@
     background: linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%);
 }
 .telemetry-resize-handle {
-    height: 18px;
+    height: 20px;
     cursor: ns-resize;
     display: flex;
     align-items: center;
     justify-content: center;
     user-select: none;
     margin: .15rem 0 .5rem;
-    border-radius: .5rem;
-    opacity: .5;
-    transition: background .15s, opacity .15s;
 }
-.telemetry-resize-handle:hover { background: rgba(176,196,222,.18); opacity: 1; }
 .telemetry-resize-handle::after {
     content: '';
     display: block;
-    width: 2.2rem;
-    height: 2px;
-    border-radius: 2px;
-    background: #b0c4de;
-    box-shadow: 0 -5px 0 #b0c4de, 0 5px 0 #b0c4de;
-    transition: background .15s, box-shadow .15s;
+    width: 44px;
+    height: 14px;
+    border-radius: 7px;
+    background-color: #eef2f8;
+    background-image: radial-gradient(circle, #a0b8d0 2px, transparent 2px);
+    background-size: 8px 6px;
+    background-position: center;
+    border: 1px solid #d4e0ef;
+    box-shadow: 0 1px 2px rgba(15,23,42,.06);
+    transition: background-color .15s, background-image .15s, border-color .15s, box-shadow .15s;
 }
-.telemetry-resize-handle:hover::after { background: #7a9bc0; box-shadow: 0 -5px 0 #7a9bc0, 0 5px 0 #7a9bc0; }
+.telemetry-resize-handle:hover::after {
+    background-color: #dde8f5;
+    background-image: radial-gradient(circle, #5b8ab8 2px, transparent 2px);
+    border-color: #b0c8e0;
+    box-shadow: 0 1px 4px rgba(15,23,42,.14);
+}
 
 .telemetry-trend-empty {
     display: grid;
@@ -625,7 +630,7 @@
             </div>
             <div class="telemetry-trend-summary" id="telemetryTrendSummary" style="display:none;"></div>
             <canvas id="telemetryTrendCanvas" class="telemetry-trend-canvas" width="1200" height="190" style="display:none;"></canvas>
-            <div class="telemetry-resize-handle" id="telemetryResizeHandle" style="display:none;"></div>
+            <div class="telemetry-resize-handle" id="telemetryResizeHandle" style="display:none;" title="Potiahnuť pre zmenu veľkosti grafu"></div>
             <div id="telemetryTrendEmpty" class="telemetry-trend-empty">{{ t('telemetry.select_one_sensor_for_trend', 'Select one sensor to render a compact trend of the primary decoded metric for its payload profile.') }}</div>
         </div>
     </section>
