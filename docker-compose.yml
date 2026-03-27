@@ -1,7 +1,7 @@
 
 services:
   # One-shot service: ensures all config files exist before the main
-  # container starts.  Fixes the Docker bind-mount "directory" problem
+  # container starts. Fixes the Docker bind-mount "directory" problem
   # on fresh clones where the host files do not yet exist.
   init-config:
     image: busybox
@@ -11,6 +11,7 @@ services:
     command:
       - |
         cd /workspace
+        mkdir -p data logs certs
         seed() {
           target="$$1"; default="$$2"
           [ -d "$$target" ] && rm -rf "$$target"
@@ -34,6 +35,49 @@ services:
         seed .env                    .env.example
         echo "Config files ready."
 
+  # One-shot service: seeds demo telemetry into TimescaleDB on first run.
+  # Uses a named volume as a marker so it only runs once per deployment.
+  # To re-seed: docker compose down -v && docker compose up -d --build
+  seed-demo:
+    build: .
+    user: "0:0"
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        if [ -f /seed-state/.done ]; then
+          echo "Demo data already seeded, skipping."
+          exit 0
+        fi
+        echo "Seeding demo data..."
+        cd /app && python scripts/seed_viewer_demo.py
+        touch /seed-state/.done
+        echo "Demo seed complete."
+    volumes:
+      - ./endpoints.json:/app/endpoints.json:rw
+      - ./bssci_config.py:/app/bssci_config.py:rw
+      - ./.env:/app/.env:rw
+      - ./base_stations.json:/app/data/base_stations.json:rw
+      - ./coverage_positions.json:/app/coverage_positions.json:rw
+      - ./users.json:/app/users.json:rw
+      - ./alerts.json:/app/alerts.json:rw
+      - bssci_demo_seed_state:/seed-state
+    environment:
+      - TIMESCALE_ENABLED=true
+      - TIMESCALE_HOST=timescaledb
+      - TIMESCALE_PORT=${TIMESCALE_PORT:-5432}
+      - TIMESCALE_DB=${TIMESCALE_DB:-bssci}
+      - TIMESCALE_USER=${TIMESCALE_USER:-bssci_user}
+      - TIMESCALE_PASSWORD=${TIMESCALE_PASSWORD:-change_me}
+      - TIMESCALE_SSLMODE=${TIMESCALE_SSLMODE:-disable}
+      - BASE_STATION_CONFIG_FILE=/app/data/base_stations.json
+    depends_on:
+      init-config:
+        condition: service_completed_successfully
+      timescaledb:
+        condition: service_healthy
+    networks:
+      - bssci-network
+
   bssci-service-center:
     build: .
     container_name: bssci-service-center
@@ -45,6 +89,8 @@ services:
         condition: service_completed_successfully
       timescaledb:
         condition: service_healthy
+      seed-demo:
+        condition: service_completed_successfully
     ports:
       - "8000:8000"  # TLS Server port
       - "5056:5000"    # Web UI port
@@ -65,7 +111,7 @@ services:
       - PUID=1000
       - PGID=1000
       - BASE_STATION_CONFIG_FILE=/app/data/base_stations.json
-      - TIMESCALE_ENABLED=${TIMESCALE_ENABLED:-false}
+      - TIMESCALE_ENABLED=${TIMESCALE_ENABLED:-true}
       - TIMESCALE_HOST=${TIMESCALE_HOST:-timescaledb}
       - TIMESCALE_PORT=${TIMESCALE_PORT:-5432}
       - TIMESCALE_DB=${TIMESCALE_DB:-bssci}
@@ -160,3 +206,4 @@ networks:
 volumes:
   timescaledb_data:
   grafana_data:
+  bssci_demo_seed_state:
