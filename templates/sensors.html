@@ -2782,6 +2782,24 @@ function valueLine(s) {
     if (ago) parts.push(ago);
     return parts.join(' \u00b7 ');
 }
+function normalizeViewerSearchText(value) {
+    return String(value == null ? '' : value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+function sensorSearchHaystack(sensor) {
+    const tags = Array.isArray(sensor && sensor.tags)
+        ? sensor.tags.join(' ')
+        : String((sensor && sensor.tags) || '');
+    return normalizeViewerSearchText([
+        sensor && (sensor.name || sensor.eui || sensor.device_eui || sensor.sensor_id || ''),
+        sensor && (sensor.eui || sensor.device_eui || ''),
+        sensor && (sensor.sensor_profile_label || sensor.sensor_profile || ''),
+        tags
+    ].join(' '));
+}
 
 let allSensors = [];
 let currentFilter = 'all';
@@ -2796,14 +2814,12 @@ function svSetFilter(f) {
 window.svSetFilter = svSetFilter;
 
 function svRender() {
-    const q = (document.getElementById('svSearch') || {}).value || '';
-    const lq = q.toLowerCase();
+    const q = normalizeViewerSearchText((document.getElementById('svSearch') || {}).value || '');
     const filtered = allSensors.filter(function(s) {
         if (currentFilter !== 'all' && tier(s) !== currentFilter) return false;
-        if (lq) {
-            const name = String(s.name || s.eui || s.device_eui || s.sensor_id || '').toLowerCase();
-            const eui  = String(s.eui || s.device_eui || '').toLowerCase();
-            if (!name.includes(lq) && !eui.includes(lq)) return false;
+        if (q) {
+            const haystack = sensorSearchHaystack(s);
+            if (!haystack.includes(q)) return false;
         }
         return true;
     });

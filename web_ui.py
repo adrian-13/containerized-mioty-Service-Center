@@ -53,6 +53,12 @@ _timescale_uplink_queue = queue.Queue(maxsize=_TIMESCALE_UPLINK_QUEUE_MAXSIZE)
 _timescale_uplink_thread = None
 _timescale_uplink_stop = threading.Event()
 _timescale_uplink_lock = threading.Lock()
+_viewer_demo_seed_lock = threading.Lock()
+_viewer_demo_seed_state = {
+    "seeded": False,
+    "last_attempt_ts": 0.0,
+    "last_error": "",
+}
 _timescale_uplink_stats = {
     "queued": 0,
     "written": 0,
@@ -2914,6 +2920,109 @@ def _timescale_telemetry_enabled():
     return bool(getattr(bssci_config, "TIMESCALE_ENABLED", False)) and bool(
         getattr(bssci_config, "TIMESCALE_TELEMETRY_WRITE_ENABLED", True)
     )
+
+
+def _has_viewer_demo_inventory() -> bool:
+    try:
+        sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id="test")
+        return any(str((sensor or {}).get("demo_seed") or "").strip().lower() == "viewer_demo_test" for sensor in sensors)
+    except Exception:
+        return False
+
+
+def _ensure_viewer_demo_telemetry_seeded() -> bool:
+    if not _timescale_telemetry_enabled():
+        return False
+    if not _has_viewer_demo_inventory():
+        return False
+
+    now_ts = time.time()
+    last_attempt = float(_viewer_demo_seed_state.get("last_attempt_ts") or 0.0)
+    if _viewer_demo_seed_state.get("seeded") and not _viewer_demo_seed_state.get("last_error"):
+        return True
+    if last_attempt > 0 and (now_ts - last_attempt) < 15.0:
+        return bool(_viewer_demo_seed_state.get("seeded"))
+
+    with _viewer_demo_seed_lock:
+        now_ts = time.time()
+        last_attempt = float(_viewer_demo_seed_state.get("last_attempt_ts") or 0.0)
+        if _viewer_demo_seed_state.get("seeded") and not _viewer_demo_seed_state.get("last_error"):
+            return True
+        if last_attempt > 0 and (now_ts - last_attempt) < 15.0:
+            return bool(_viewer_demo_seed_state.get("seeded"))
+        _viewer_demo_seed_state["last_attempt_ts"] = now_ts
+
+        conn = None
+        try:
+            from viewer_demo_telemetry import TENANT_ID as demo_tenant_id, TENANT_NAME as demo_tenant_name, build_demo_telemetry_rows
+
+            conn, err = _timescale_connect()
+            if conn is None:
+                raise RuntimeError(err or "TimescaleDB not reachable")
+            _ensure_timescale_schema(conn)
+            with conn.cursor() as cur:
+                cur.execute("SELECT COUNT(*) FROM telemetry_uplink WHERE tenant_id = %s", (demo_tenant_id,))
+                existing = int((cur.fetchone() or [0])[0] or 0)
+                if existing <= 0:
+                    cur.execute(
+                        """
+                        INSERT INTO tenants (id, name)
+                        VALUES (%s, %s)
+                        ON CONFLICT (id)
+                        DO UPDATE SET name = EXCLUDED.name
+                        """,
+                        (demo_tenant_id, demo_tenant_name),
+                    )
+                    rows = build_demo_telemetry_rows()
+                    cur.executemany(
+                        """
+                        INSERT INTO telemetry_uplink
+                            (ts, tenant_id, sensor_eui, base_station_eui, snr, rssi, packet_loss_pct, packet_cnt, msg_type, payload)
+                        VALUES
+                            (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                        """,
+                        [
+                            (
+                                row["ts"],
+                                row["tenant_id"],
+                                row["sensor_eui"],
+                                row["base_station_eui"],
+                                row["snr"],
+                                row["rssi"],
+                                row.get("packet_loss_pct"),
+                                row["packet_cnt"],
+                                row.get("msg_type") or "ul",
+                                json.dumps(row.get("payload") or {}, separators=(",", ":"), ensure_ascii=True),
+                            )
+                            for row in rows
+                        ],
+                    )
+            try:
+                _sync_inventory_snapshot_to_timescale(trigger="viewer_demo_bootstrap")
+            except Exception as sync_exc:
+                logger.warning("Viewer demo inventory snapshot bootstrap failed: %s", sync_exc)
+            try:
+                _evaluate_triggered_alerts("test", persist_state=True)
+            except Exception as alert_exc:
+                logger.warning("Viewer demo alert bootstrap failed: %s", alert_exc)
+            try:
+                _build_current_incidents("test")
+            except Exception as incident_exc:
+                logger.warning("Viewer demo incident bootstrap failed: %s", incident_exc)
+            _viewer_demo_seed_state["seeded"] = True
+            _viewer_demo_seed_state["last_error"] = ""
+            return True
+        except Exception as exc:
+            _viewer_demo_seed_state["seeded"] = False
+            _viewer_demo_seed_state["last_error"] = str(exc)
+            logger.warning("Viewer demo telemetry bootstrap failed: %s", exc)
+            return False
+        finally:
+            try:
+                if conn is not None:
+                    conn.close()
+            except Exception:
+                pass
 
 def _note_timescale_uplink_stats(**kwargs):
     with _timescale_uplink_stats_lock:
@@ -7088,6 +7197,9 @@ def ensure_json_api():
 
     # Keep static and login assets outside auth timeout updates.
     is_static_like = endpoint == "static" or path.startswith("/static/")
+
+    if not is_static_like:
+        _ensure_viewer_demo_telemetry_seeded()
 
     # Session timeout enforcement.
     if not is_static_like and path not in ("/login",):

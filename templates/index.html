@@ -39,6 +39,32 @@
     border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
 }
+.mview-list-head-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1;
+}
+.mview-search {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #d9e3f2;
+    border-radius: 999px;
+    background: #f8fbff;
+    color: #1e293b;
+    padding: 0.42rem 0.78rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.mview-search::placeholder { color: #94a3b8; }
+.mview-search:focus {
+    outline: none;
+    border-color: #9fc2ef;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(59, 125, 216, 0.12);
+}
 .mview-user-menu {
     position: relative;
     display: flex;
@@ -614,7 +640,15 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     <div class="mview-split">
         <div class="mview-list-panel">
             <div class="mview-list-head">
-                <span>{{ t('nav.sensors', 'Senzory') }}</span>
+                <div class="mview-list-head-main">
+                    <span>{{ t('nav.sensors', 'Senzory') }}</span>
+                    <input type="text"
+                           id="mviewSearch"
+                           class="mview-search"
+                           placeholder="{{ t('common.search', 'Hľadať...') }}"
+                           oninput="mviewHandleSearchInput()"
+                           autocomplete="off">
+                </div>
             </div>
             <div class="mview-filters" id="mviewFilters">
                 <button class="mview-filter is-active" data-filter="all" onclick="mviewSetFilter('all')">
@@ -1985,6 +2019,7 @@ let mviewLayer = null;
 let sensorMarkers = {};   // id → L.circleMarker
 let allSensors = [];
 let currentFilter = 'all';
+let currentSearchQuery = '';
 let lastLoadTs = null;
 let tickTimer = null;
 let placementMode = null;
@@ -1999,6 +2034,24 @@ try {
 function dashboardTr(key, fallback, params) {
     if (typeof appTranslate === 'function') return appTranslate(key, fallback, params);
     return fallback || key;
+}
+function normalizeViewerSearchText(value) {
+    return String(value == null ? '' : value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+function sensorSearchHaystack(sensor) {
+    const tags = Array.isArray(sensor && sensor.tags)
+        ? sensor.tags.join(' ')
+        : String((sensor && sensor.tags) || '');
+    return normalizeViewerSearchText([
+        sensor && (sensor.name || sensor.eui || sensor.device_eui || sensor.sensor_id || ''),
+        sensor && (sensor.eui || sensor.device_eui || ''),
+        sensor && (sensor.sensor_profile_label || sensor.sensor_profile || ''),
+        tags
+    ].join(' '));
 }
 function getSensorById(id) {
     return allSensors.find(function(s) { return sensorId(s) === id; }) || null;
@@ -2481,9 +2534,11 @@ window.focusOnMap = focusOnMap;
 
 /* ── Filter ── */
 function applyFilter(sensors) {
-    return currentFilter === 'all'
-        ? sensors
-        : sensors.filter(function(s) { return SENSOR_TIER(s) === currentFilter; });
+    return sensors.filter(function(s) {
+        if (currentFilter !== 'all' && SENSOR_TIER(s) !== currentFilter) return false;
+        if (currentSearchQuery && !sensorSearchHaystack(s).includes(currentSearchQuery)) return false;
+        return true;
+    });
 }
 
 function setFilter(f) {
@@ -2496,6 +2551,14 @@ function setFilter(f) {
     updateMap(filtered);
 }
 window.mviewSetFilter = setFilter;
+function handleSearchInput() {
+    const input = document.getElementById('mviewSearch');
+    currentSearchQuery = normalizeViewerSearchText(input ? input.value : '');
+    const filtered = applyFilter(allSensors);
+    renderList(filtered);
+    updateMap(filtered);
+}
+window.mviewHandleSearchInput = handleSearchInput;
 
 /* ── Render list ── */
 function renderList(sensors) {
@@ -2503,7 +2566,7 @@ function renderList(sensors) {
     if (!el) return;
     if (!sensors.length) {
         el.innerHTML = '<div class="text-center text-muted py-4" style="font-size:0.85rem;">' +
-            (currentFilter === 'all' ? 'Žiadne senzory' : 'Žiadne výsledky') + '</div>';
+            (currentFilter === 'all' && !currentSearchQuery ? 'Žiadne senzory' : 'Žiadne výsledky') + '</div>';
         return;
     }
     const _listFirst = !el.dataset.initialized;
