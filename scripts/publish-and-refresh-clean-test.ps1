@@ -83,6 +83,57 @@ function Resolve-AbsolutePath {
     return [System.IO.Path]::GetFullPath($Path)
 }
 
+function Get-UnmergedFiles {
+    param([string]$WorkingDirectory)
+    return @(Invoke-External -Exe "git" -Arguments @("diff", "--name-only", "--diff-filter=U") -WorkingDirectory $WorkingDirectory -AllowFailure -ReadOnly |
+        ForEach-Object { ([string]$_).Trim() } |
+        Where-Object { $_ })
+}
+
+function Test-PathMatchesPrefix {
+    param(
+        [string]$Path,
+        [string[]]$Prefixes
+    )
+    $normalizedPath = (($Path -replace "\\", "/").TrimStart("./")).ToLowerInvariant()
+    foreach ($prefix in $Prefixes) {
+        if (-not $prefix) { continue }
+        $normalizedPrefix = (([string]$prefix -replace "\\", "/").TrimStart("./").TrimEnd("/")).ToLowerInvariant()
+        if (-not $normalizedPrefix) { continue }
+        if ($normalizedPath -eq $normalizedPrefix -or $normalizedPath.StartsWith($normalizedPrefix + "/")) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Resolve-CleanCloneExcludedChanges {
+    param(
+        [string]$WorkingDirectory,
+        [string[]]$ExcludedPrefixes
+    )
+
+    $unmerged = Get-UnmergedFiles -WorkingDirectory $WorkingDirectory
+    if (@($unmerged).Count -gt 0) {
+        $nonExcludedUnmerged = @($unmerged | Where-Object { -not (Test-PathMatchesPrefix -Path $_ -Prefixes $ExcludedPrefixes) })
+        if (@($nonExcludedUnmerged).Count -gt 0) {
+            throw ("Clean clone has unmerged non-excluded files: " + ($nonExcludedUnmerged -join ", "))
+        }
+        Write-Step ("Resolving excluded-path merge conflicts in clean clone: " + ($unmerged -join ", "))
+        Invoke-External -Exe "git" -Arguments @("merge", "--abort") -WorkingDirectory $WorkingDirectory -AllowFailure | Out-Null
+        Invoke-External -Exe "git" -Arguments @("rebase", "--abort") -WorkingDirectory $WorkingDirectory -AllowFailure | Out-Null
+    }
+
+    foreach ($exclude in $ExcludedPrefixes) {
+        $status = Invoke-External -Exe "git" -Arguments @("status", "--short", "--", $exclude) -WorkingDirectory $WorkingDirectory -AllowFailure -ReadOnly
+        if (@($status).Count -gt 0) {
+            Write-Step "Resetting excluded path in clean clone: $exclude"
+            Invoke-External -Exe "git" -Arguments @("restore", "--source=HEAD", "--staged", "--worktree", "--", $exclude) -WorkingDirectory $WorkingDirectory -AllowFailure | Out-Null
+            Invoke-External -Exe "git" -Arguments @("clean", "-fd", "--", $exclude) -WorkingDirectory $WorkingDirectory -AllowFailure | Out-Null
+        }
+    }
+}
+
 Assert-Command "git"
 Assert-Command "docker"
 
@@ -151,6 +202,7 @@ if ($hasStagedChanges) {
     Write-Step "No staged changes found after applying include/exclude filters. Skipping commit/push and refreshing clean clone only."
 }
 
+Resolve-CleanCloneExcludedChanges -WorkingDirectory $cleanRoot -ExcludedPrefixes $ExcludePaths
 Invoke-External -Exe "git" -Arguments @("pull", "--rebase", "--autostash", $Remote, $Branch) -WorkingDirectory $cleanRoot | Out-Null
 
 if (-not $SkipRebuild) {
