@@ -342,6 +342,9 @@
 .svd-ch-range-btn.is-active{background:var(--brand-500);border-color:var(--brand-600);color:#fff}
 .svd-ch-status{font-size:.66rem;color:#8a9ab0;font-weight:700}
 .svd-chart-wrap{position:relative;height:180px;padding:.2rem 1.2rem .9rem}
+.svd-resize-handle{height:10px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;opacity:.35;transition:opacity .15s;user-select:none;margin:.1rem 1.2rem .4rem}
+.svd-resize-handle:hover{opacity:.9}
+.svd-resize-handle::after{content:'';width:2.5rem;height:3px;border-radius:2px;background:#b0c4de}
 .svd-ch-empty{padding:.9rem 1.2rem;font-size:.76rem;color:#8a9ab0;text-align:center}
 /* Sensor info */
 .svd-info-head{padding:.76rem 1.2rem .1rem;font-size:.68rem;font-weight:800;color:#7a8fa8;text-transform:uppercase;letter-spacing:.09em}
@@ -838,7 +841,8 @@ function render(d){
       </div>
     </div>
     ${usingBlueprintMetrics?`<div class="svd-ch-empty" style="padding-top:.15rem;padding-bottom:0;">Graf sa začne vykresľovať po prijatí prvých dát pre metriku <strong>${esc(labelOf(_activeKey))}</strong>.</div>`:''}
-    <div class="svd-chart-wrap"><canvas id="svdChart"></canvas></div>
+    <div class="svd-chart-wrap" id="svdChartWrap"><canvas id="svdChart"></canvas></div>
+    <div class="svd-resize-handle" id="svdResizeHandle"></div>
   </section>`:'';
 
   document.getElementById('svdBody').innerHTML=metricsGridHtml+chartCardHtml+'<section class="svd-card" id="svdAlertsCard"><div class="svd-al-head"><span class="svd-al-title"><i class="fas fa-bell"></i> Alerty</span><button class="svd-al-add-btn" id="svdAlAddBtn"><i class="fas fa-plus"></i> Pridať alert</button></div><div id="svdAlList"><div class="svd-al-empty">Načítavam...</div></div></section>';
@@ -868,6 +872,32 @@ function render(d){
       });
     });
     loadTelemetryChart(_activeKey,1440);
+    // Drag-to-resize chart
+    (function(){
+      const wrap=document.getElementById('svdChartWrap');
+      const handle=document.getElementById('svdResizeHandle');
+      if(!wrap||!handle)return;
+      const K='svd_chart_h';
+      const saved=parseInt(localStorage.getItem(K));
+      if(saved>=100&&saved<=600)wrap.style.height=saved+'px';
+      handle.addEventListener('mousedown',function(e){
+        const startY=e.clientY,startH=wrap.offsetHeight;
+        e.preventDefault();
+        function onMove(mv){
+          const h=Math.min(600,Math.max(100,startH+(mv.clientY-startY)));
+          wrap.style.height=h+'px';
+          const ch=window.Chart&&Chart.getChart(document.getElementById('svdChart'));
+          if(ch)ch.resize();
+        }
+        function onUp(){
+          localStorage.setItem(K,wrap.offsetHeight);
+          document.removeEventListener('mousemove',onMove);
+          document.removeEventListener('mouseup',onUp);
+        }
+        document.addEventListener('mousemove',onMove);
+        document.addEventListener('mouseup',onUp);
+      });
+    })();
   }
 }
 

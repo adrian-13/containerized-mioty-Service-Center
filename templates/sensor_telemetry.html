@@ -258,6 +258,25 @@
     border-radius: 0.84rem;
     background: linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%);
 }
+.telemetry-resize-handle {
+    height: 10px;
+    cursor: ns-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: .35;
+    transition: opacity .15s;
+    user-select: none;
+    margin: .15rem 0 .4rem;
+}
+.telemetry-resize-handle:hover { opacity: .9; }
+.telemetry-resize-handle::after {
+    content: '';
+    width: 2.5rem;
+    height: 3px;
+    border-radius: 2px;
+    background: #b0c4de;
+}
 
 .telemetry-trend-empty {
     display: grid;
@@ -601,6 +620,7 @@
             </div>
             <div class="telemetry-trend-summary" id="telemetryTrendSummary" style="display:none;"></div>
             <canvas id="telemetryTrendCanvas" class="telemetry-trend-canvas" width="1200" height="190" style="display:none;"></canvas>
+            <div class="telemetry-resize-handle" id="telemetryResizeHandle" style="display:none;"></div>
             <div id="telemetryTrendEmpty" class="telemetry-trend-empty">{{ t('telemetry.select_one_sensor_for_trend', 'Select one sensor to render a compact trend of the primary decoded metric for its payload profile.') }}</div>
         </div>
     </section>
@@ -674,7 +694,8 @@
         trendMetricMeta: document.getElementById('telemetryTrendMetricMeta'),
         trendSummary: document.getElementById('telemetryTrendSummary'),
         trendCanvas: document.getElementById('telemetryTrendCanvas'),
-        trendEmpty: document.getElementById('telemetryTrendEmpty')
+        trendEmpty: document.getElementById('telemetryTrendEmpty'),
+        resizeHandle: document.getElementById('telemetryResizeHandle')
     };
 
     function formatAgo(value) {
@@ -986,6 +1007,7 @@
             els.trendSummary.style.display = 'none';
             els.trendSummary.innerHTML = '';
             els.trendCanvas.style.display = 'none';
+            els.resizeHandle.style.display = 'none';
             els.trendEmpty.style.display = '';
             els.trendEmpty.textContent = els.sensor.value
                 ? 'No numeric decoded values are available for the selected sensor in this filtered window.'
@@ -1029,6 +1051,7 @@
         `;
         els.trendEmpty.style.display = 'none';
         els.trendCanvas.style.display = '';
+        els.resizeHandle.style.display = '';
 
         const canvas = els.trendCanvas;
         const ctx = canvas.getContext('2d');
@@ -1192,6 +1215,32 @@
         state.offset += state.limit;
         loadTelemetryHistory();
     });
+
+    // Drag-to-resize trend chart
+    (function(){
+        const canvas = els.trendCanvas;
+        const handle = els.resizeHandle;
+        if (!canvas || !handle) return;
+        const K = 'telem_chart_h';
+        const saved = parseInt(localStorage.getItem(K));
+        if (saved >= 100 && saved <= 600) canvas.style.height = saved + 'px';
+        handle.addEventListener('mousedown', function(e) {
+            const startY = e.clientY, startH = canvas.clientHeight;
+            e.preventDefault();
+            function onMove(mv) {
+                const h = Math.min(600, Math.max(100, startH + (mv.clientY - startY)));
+                canvas.style.height = h + 'px';
+            }
+            function onUp() {
+                localStorage.setItem(K, canvas.clientHeight);
+                renderTrend(state.rows || []);
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+    })();
 
     loadTelemetryHistory();
 })();
