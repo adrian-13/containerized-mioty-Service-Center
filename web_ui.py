@@ -2963,6 +2963,7 @@ def _ensure_viewer_demo_telemetry_seeded() -> bool:
             with conn.cursor() as cur:
                 cur.execute("SELECT COUNT(*) FROM telemetry_uplink WHERE tenant_id = %s", (demo_tenant_id,))
                 existing = int((cur.fetchone() or [0])[0] or 0)
+                seeded_now = existing <= 0
                 if existing <= 0:
                     cur.execute(
                         """
@@ -2997,18 +2998,15 @@ def _ensure_viewer_demo_telemetry_seeded() -> bool:
                             for row in rows
                         ],
                     )
-            try:
-                _sync_inventory_snapshot_to_timescale(trigger="viewer_demo_bootstrap")
-            except Exception as sync_exc:
-                logger.warning("Viewer demo inventory snapshot bootstrap failed: %s", sync_exc)
-            try:
-                _evaluate_triggered_alerts("test", persist_state=True)
-            except Exception as alert_exc:
-                logger.warning("Viewer demo alert bootstrap failed: %s", alert_exc)
-            try:
-                _build_current_incidents("test")
-            except Exception as incident_exc:
-                logger.warning("Viewer demo incident bootstrap failed: %s", incident_exc)
+            if seeded_now:
+                try:
+                    _sync_inventory_snapshot_to_timescale(trigger="viewer_demo_bootstrap")
+                except Exception as sync_exc:
+                    logger.warning("Viewer demo inventory snapshot bootstrap failed: %s", sync_exc)
+                try:
+                    _evaluate_triggered_alerts("test", persist_state=True)
+                except Exception as alert_exc:
+                    logger.warning("Viewer demo alert bootstrap failed: %s", alert_exc)
             _viewer_demo_seed_state["seeded"] = True
             _viewer_demo_seed_state["last_error"] = ""
             return True
