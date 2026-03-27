@@ -724,7 +724,23 @@ function renderChart(canvasId,rows,key,color){
     yAxis.ticks={...yAxis.ticks,precision:0};
   }
 
+  const crosshairPlugin={
+    afterDraw(chart){
+      const active=chart.tooltip._active;
+      if(!active||!active.length)return;
+      const ctx=chart.ctx,x=active[0].element.x;
+      const {top,bottom}=chart.scales.y;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x,top);ctx.lineTo(x,bottom);
+      ctx.lineWidth=1;ctx.strokeStyle='rgba(100,140,180,.45)';
+      ctx.setLineDash([4,3]);ctx.stroke();
+      ctx.restore();
+    }
+  };
+
   new Chart(el,{
+    plugins:[crosshairPlugin],
     type:'line',
     data:{labels,datasets:[{
       data,
@@ -738,6 +754,7 @@ function renderChart(canvasId,rows,key,color){
     }]},
     options:{
       responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
       plugins:{
         legend:{display:false},
         tooltip:{
