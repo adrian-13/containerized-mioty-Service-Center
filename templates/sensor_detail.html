@@ -726,7 +726,7 @@ function renderChart(canvasId,rows,key,color){
 
   const crosshairPlugin={
     afterDraw(chart){
-      const active=chart.tooltip._active;
+      const active=chart.getActiveElements();
       if(!active||!active.length)return;
       const ctx=chart.ctx,x=active[0].element.x;
       const {top,bottom}=chart.scales.y;
@@ -758,6 +758,8 @@ function renderChart(canvasId,rows,key,color){
       plugins:{
         legend:{display:false},
         tooltip:{
+          mode:'index',
+          intersect:false,
           backgroundColor:'rgba(15,23,42,.88)',titleColor:'#94a3b8',bodyColor:'#f1f5f9',
           borderColor:'rgba(255,255,255,.1)',borderWidth:1,padding:8,
           callbacks:{label:c=>isBinary?' '+(c.parsed.y===1?'Áno':'Nie'):' '+fmtValue(key,c.parsed.y)}
