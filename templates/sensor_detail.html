@@ -342,9 +342,10 @@
 .svd-ch-range-btn.is-active{background:var(--brand-500);border-color:var(--brand-600);color:#fff}
 .svd-ch-status{font-size:.66rem;color:#8a9ab0;font-weight:700}
 .svd-chart-wrap{position:relative;height:180px;padding:.2rem 1.2rem .9rem}
-.svd-resize-handle{height:10px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;opacity:.35;transition:opacity .15s;user-select:none;margin:.1rem 1.2rem .4rem}
-.svd-resize-handle:hover{opacity:.9}
-.svd-resize-handle::after{content:'';width:2.5rem;height:3px;border-radius:2px;background:#b0c4de}
+.svd-resize-handle{height:18px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;user-select:none;margin:.1rem 1.2rem .5rem;border-radius:.5rem;opacity:.5;transition:background .15s,opacity .15s}
+.svd-resize-handle:hover{background:rgba(176,196,222,.18);opacity:1}
+.svd-resize-handle::after{content:'';display:block;width:2.2rem;height:2px;border-radius:2px;background:#b0c4de;box-shadow:0 -5px 0 #b0c4de,0 5px 0 #b0c4de;transition:background .15s,box-shadow .15s}
+.svd-resize-handle:hover::after{background:#7a9bc0;box-shadow:0 -5px 0 #7a9bc0,0 5px 0 #7a9bc0}
 .svd-ch-empty{padding:.9rem 1.2rem;font-size:.76rem;color:#8a9ab0;text-align:center}
 /* Sensor info */
 .svd-info-head{padding:.76rem 1.2rem .1rem;font-size:.68rem;font-weight:800;color:#7a8fa8;text-transform:uppercase;letter-spacing:.09em}

@@ -259,24 +259,29 @@
     background: linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%);
 }
 .telemetry-resize-handle {
-    height: 10px;
+    height: 18px;
     cursor: ns-resize;
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: .35;
-    transition: opacity .15s;
     user-select: none;
-    margin: .15rem 0 .4rem;
+    margin: .15rem 0 .5rem;
+    border-radius: .5rem;
+    opacity: .5;
+    transition: background .15s, opacity .15s;
 }
-.telemetry-resize-handle:hover { opacity: .9; }
+.telemetry-resize-handle:hover { background: rgba(176,196,222,.18); opacity: 1; }
 .telemetry-resize-handle::after {
     content: '';
-    width: 2.5rem;
-    height: 3px;
+    display: block;
+    width: 2.2rem;
+    height: 2px;
     border-radius: 2px;
     background: #b0c4de;
+    box-shadow: 0 -5px 0 #b0c4de, 0 5px 0 #b0c4de;
+    transition: background .15s, box-shadow .15s;
 }
+.telemetry-resize-handle:hover::after { background: #7a9bc0; box-shadow: 0 -5px 0 #7a9bc0, 0 5px 0 #7a9bc0; }
 
 .telemetry-trend-empty {
     display: grid;
