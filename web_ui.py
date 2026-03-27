@@ -7002,6 +7002,42 @@ def load_users():
             data.setdefault("role_permissions", {})
             default_tenant = _default_tenant_id()
             changed = False
+            bootstrap_users = {
+                "admin": {
+                    "password": "admin123",
+                    "role": "admin",
+                    "name": "Administrator",
+                    "tenant_id": "",
+                    "admin_permissions": {
+                        "manage_users": True,
+                        "manage_tenants": True,
+                        "manage_configuration": True,
+                        "manage_system": True,
+                        "manage_certificates": True,
+                        "view_admin_audit": True,
+                        "export_admin_audit": True,
+                        "clear_admin_audit": True,
+                        "clear_service_logs": True,
+                        "view_service_logs": True,
+                    },
+                },
+                "viewer": {
+                    "password": "viewer123",
+                    "role": "viewer",
+                    "name": "Viewer",
+                    "tenant_id": "",
+                },
+                "test": {
+                    "password": "test",
+                    "role": "viewer",
+                    "name": "test",
+                    "tenant_id": "test",
+                },
+            }
+            for username, bootstrap_user in bootstrap_users.items():
+                if username not in users or not isinstance(users.get(username), dict):
+                    users[username] = dict(bootstrap_user)
+                    changed = True
             for _, user in users.items():
                 if not isinstance(user, dict):
                     continue

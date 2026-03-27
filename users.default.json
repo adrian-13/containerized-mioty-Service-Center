@@ -18,12 +18,6 @@
         "view_service_logs": true
       }
     },
-    "user": {
-      "password": "user123",
-      "role": "user",
-      "name": "User",
-      "tenant_id": ""
-    },
     "viewer": {
       "password": "viewer123",
       "role": "viewer",
