@@ -136,18 +136,10 @@ GRAFANA_HEALTH_PANEL_MAP = os.getenv(
 ).strip()
 
 # Web auth/security hardening
-APP_DEPLOYMENT_MODE = os.getenv("APP_DEPLOYMENT_MODE", "demo").strip().lower()
-if APP_DEPLOYMENT_MODE == "dev":
-    APP_DEPLOYMENT_MODE = "development"
-elif APP_DEPLOYMENT_MODE == "prod":
-    APP_DEPLOYMENT_MODE = "production"
-if APP_DEPLOYMENT_MODE not in {"demo", "development", "production"}:
-    APP_DEPLOYMENT_MODE = "demo"
-
 AUTH_BOOTSTRAP_DEFAULT_USERS = os.getenv("AUTH_BOOTSTRAP_DEFAULT_USERS", "true").strip().lower() == "true"
 AUTH_BOOTSTRAP_DEMO_USERS = os.getenv(
     "AUTH_BOOTSTRAP_DEMO_USERS",
-    "false" if APP_DEPLOYMENT_MODE == "production" else "true",
+    "true",
 ).strip().lower() == "true"
 AUTH_FORCE_INITIAL_ADMIN_PASSWORD_CHANGE = os.getenv(
     "AUTH_FORCE_INITIAL_ADMIN_PASSWORD_CHANGE",

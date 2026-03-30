@@ -429,12 +429,13 @@
                                         <th>{{ t('admin.name', 'Name') }}</th>
                                         <th>{{ t('admin.role', 'Role') }}</th>
                                         <th>{{ t('admin.scope', 'Scope') }}</th>
+                                        <th>{{ t('admin.status', 'Status') }}</th>
                                         <th class="text-end">{{ t('admin.actions', 'Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tenantUserRows">
                                     <tr>
-                                        <td colspan="5" class="text-muted">{{ t('admin.no_users_loaded', 'No users loaded yet.') }}</td>
+                                        <td colspan="6" class="text-muted">{{ t('admin.no_users_loaded', 'No users loaded yet.') }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -551,6 +552,13 @@
                             <div class="col-12">
                                 <small class="tenant-meta-note" id="tenantUserTenantHint">{{ t('admin.user_restricted_to_tenant', 'User is restricted to this tenant.') }}</small>
                                 <div class="scope-badges" id="tenantUserScopeBadges"></div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch mt-1">
+                                    <input class="form-check-input" type="checkbox" id="tenantUserActive" checked>
+                                    <label class="form-check-label" for="tenantUserActive">{{ t('admin.account_active', 'Aktívny účet') }}</label>
+                                </div>
+                                <small class="tenant-meta-note" id="tenantUserActiveHint">{{ t('admin.account_active_hint', 'Deaktivovaný účet sa nebude môcť prihlásiť.') }}</small>
                             </div>
                         </div>
                     </section>
@@ -734,8 +742,10 @@ const TENANT_USER_FIELDS = [
     'tenantUserName',
     'tenantUserPassword',
     'tenantUserRole',
-    'tenantUserTenant'
+    'tenantUserTenant',
+    'tenantUserActive'
 ];
+const TENANT_PAGE_CURRENT_USERNAME = {{ (current_user.username if current_user else '')|tojson }};
 
 const TENANT_ENTITY_FIELDS = [
     'tenantEntityMode',
@@ -1119,26 +1129,45 @@ function renderTenantUsersTable() {
     }
 
     if (!filteredUsers.length) {
-        body.innerHTML = `<tr><td colspan="5" class="text-muted">${appTranslate('admin.no_users_match_filters', 'No users match current filters.')}</td></tr>`;
+        body.innerHTML = `<tr><td colspan="6" class="text-muted">${appTranslate('admin.no_users_match_filters', 'No users match current filters.')}</td></tr>`;
         return;
     }
 
     body.innerHTML = filteredUsers.map(user => {
         const encodedUsername = encodeURIComponent(String(user.username || ''));
         const role = String(user.role || 'customer').toLowerCase();
+        const isActive = user.active !== false;
+        const canDeactivate = user.can_deactivate !== false;
+        const canDelete = user.can_delete !== false;
         const tenantDisplay = role === 'admin'
             ? `<span class="tenant-chip tenant-chip-global">${appTranslate('common.super_admin', 'Super admin')}</span>
                <div class="tenant-meta-note mt-1">Scopes ${(Object.values(user.admin_permissions || {}).filter(Boolean).length)}/${Math.max(tenantAdminScopeDefinitions.length, 1)}</div>`
             : `<span class="tenant-chip">${tenantEscapeHtml(user.tenant_scope_label || tenantScopeLabel(user.tenant_id || tenantAdminDefaultTenant))}</span>`;
+        const statusBadge = `<span class="tenant-chip ${isActive ? '' : 'tenant-chip-global'}">${tenantEscapeHtml(isActive ? appTranslate('admin.user_active', 'Aktívny') : appTranslate('admin.user_inactive', 'Deaktivovaný'))}</span>`;
         return `
         <tr>
             <td><strong>${tenantEscapeHtml(user.username)}</strong></td>
             <td>${tenantEscapeHtml(user.name || '')}</td>
             <td><span class="tenant-role-badge ${roleBadgeClass(role)}">${tenantEscapeHtml(tenantDisplayRole(role))}</span></td>
             <td>${tenantDisplay}</td>
+            <td>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    ${statusBadge}
+                    <div class="form-check form-switch d-inline-flex align-items-center justify-content-end m-0">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            ${isActive ? 'checked' : ''}
+                            ${canDeactivate ? '' : 'disabled'}
+                            onchange="toggleTenantUserActive(decodeURIComponent('${encodedUsername}'), this.checked)"
+                        >
+                    </div>
+                </div>
+            </td>
             <td class="text-end">
                 <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editTenantUser(decodeURIComponent('${encodedUsername}'))">Edit</button>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTenantUser(decodeURIComponent('${encodedUsername}'))">Delete</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" ${canDelete ? '' : 'disabled'} onclick="deleteTenantUser(decodeURIComponent('${encodedUsername}'))">Delete</button>
             </td>
         </tr>
     `;
@@ -1303,6 +1332,9 @@ function syncUserTenantFieldState() {
     const role = String(document.getElementById('tenantUserRole')?.value || 'customer').toLowerCase();
     const tenantInput = document.getElementById('tenantUserTenant');
     const tenantHint = document.getElementById('tenantUserTenantHint');
+    const activeToggle = document.getElementById('tenantUserActive');
+    const activeHint = document.getElementById('tenantUserActiveHint');
+    const originalUsername = String(document.getElementById('tenantUserOriginalUsername')?.value || '').trim();
     if (!tenantInput) return;
     if (role === 'admin') {
         tenantInput.dataset.lastTenant = tenantInput.value || tenantAdminDefaultTenant;
@@ -1327,6 +1359,15 @@ function syncUserTenantFieldState() {
         }
         tenantInput.dataset.lastTenant = tenantInput.value || tenantAdminDefaultTenant;
         if (tenantHint) tenantHint.textContent = appTranslate('admin.user_restricted_to_tenant', 'User is restricted to this tenant.');
+    }
+    if (activeToggle) {
+        const isSelf = originalUsername && originalUsername === TENANT_PAGE_CURRENT_USERNAME;
+        activeToggle.disabled = !!isSelf;
+        if (activeHint) {
+            activeHint.textContent = isSelf
+                ? appTranslate('admin.cannot_deactivate_self', 'Vlastný účet nie je možné deaktivovať.')
+                : appTranslate('admin.account_active_hint', 'Deaktivovaný účet sa nebude môcť prihlásiť.');
+        }
     }
     renderAdminScopeEditor(tenantUserDraftAdminPermissions);
     updateUserScopeBadges();
@@ -1365,6 +1406,8 @@ function resetTenantUserForm() {
     document.getElementById('tenantUserPassword').value = '';
     document.getElementById('tenantUserRole').value = tenantAdminRoles.includes('customer') ? 'customer' : (tenantAdminRoles[0] || 'customer');
     document.getElementById('tenantUserTenant').value = tenantAdminDefaultTenant;
+    document.getElementById('tenantUserActive').checked = true;
+    document.getElementById('tenantUserActive').disabled = false;
     tenantUserDraftAdminPermissions = getDefaultAdminScopeMap();
     setUserFormMode('create');
     syncUserTenantFieldState();
@@ -1393,6 +1436,7 @@ function editTenantUser(username) {
     document.getElementById('tenantUserPassword').value = '';
     document.getElementById('tenantUserRole').value = user.role || 'customer';
     document.getElementById('tenantUserTenant').value = user.tenant_id || tenantAdminDefaultTenant;
+    document.getElementById('tenantUserActive').checked = user.active !== false;
     tenantUserDraftAdminPermissions = normalizeAdminScopeMap(user.admin_permissions || {});
     setUserFormMode('edit');
     syncUserTenantFieldState();
@@ -1410,6 +1454,7 @@ async function saveTenantUser() {
     const tenantId = role === 'admin'
         ? ''
         : tenantNormalize(document.getElementById('tenantUserTenant').value, tenantAdminDefaultTenant);
+    const active = !!document.getElementById('tenantUserActive').checked;
 
     if (!username) {
         showStatus('tenantAdminStatus', 'Username is required.', 'warning');
@@ -1424,7 +1469,8 @@ async function saveTenantUser() {
         username,
         name: name || username,
         role: role || 'customer',
-        tenant_id: tenantId
+        tenant_id: tenantId,
+        active
     };
     if (role === 'admin') {
         payload.admin_permissions = collectAdminScopePayload();
@@ -1455,6 +1501,10 @@ async function saveTenantUser() {
 }
 
 async function deleteTenantUser(username) {
+    if (username === TENANT_PAGE_CURRENT_USERNAME) {
+        showStatus('tenantAdminStatus', appTranslate('admin.cannot_delete_self', 'Vlastný účet nie je možné odstrániť.'), 'warning');
+        return;
+    }
     if (!confirm(`Delete user '${username}'?`)) return;
     try {
         showStatus('tenantAdminStatus', `Deleting user '${username}'...`, 'info');
@@ -1469,6 +1519,37 @@ async function deleteTenantUser(username) {
         showStatus('tenantAdminStatus', `User '${username}' deleted.`, 'success');
     } catch (error) {
         showStatus('tenantAdminStatus', `Delete failed: ${error.message}`, 'danger');
+    }
+}
+
+async function toggleTenantUserActive(username, nextActive) {
+    if (username === TENANT_PAGE_CURRENT_USERNAME && !nextActive) {
+        showStatus('tenantAdminStatus', appTranslate('admin.cannot_deactivate_self', 'Vlastný účet nie je možné deaktivovať.'), 'warning');
+        await fetchTenantAdminData();
+        return;
+    }
+    try {
+        showStatus(
+            'tenantAdminStatus',
+            nextActive ? `Activating user '${username}'...` : `Deactivating user '${username}'...`,
+            'info'
+        );
+        const response = await fetch('/api/users', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, active: !!nextActive })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || result.message || 'Update failed');
+        await fetchTenantAdminData();
+        showStatus(
+            'tenantAdminStatus',
+            appTranslate('admin.account_status_updated', "Stav účtu '{username}' bol aktualizovaný.", { username }),
+            'success'
+        );
+    } catch (error) {
+        await fetchTenantAdminData();
+        showStatus('tenantAdminStatus', `Update failed: ${error.message}`, 'danger');
     }
 }
 

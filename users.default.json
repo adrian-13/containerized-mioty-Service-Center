@@ -5,6 +5,7 @@
       "role": "admin",
       "name": "Administrator",
       "tenant_id": "",
+      "active": true,
       "admin_permissions": {
         "manage_users": true,
         "manage_tenants": true,
@@ -22,13 +23,15 @@
       "password": "customer123",
       "role": "customer",
       "name": "Customer",
-      "tenant_id": ""
+      "tenant_id": "",
+      "active": true
     },
     "test": {
       "password": "test",
       "role": "customer",
       "name": "test",
-      "tenant_id": "test"
+      "tenant_id": "test",
+      "active": true
     }
   },
   "role_permissions": {

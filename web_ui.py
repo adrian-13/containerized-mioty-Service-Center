@@ -1964,6 +1964,24 @@ _UI_TRANSLATIONS["sk"].update({
     "admin.admin_global_can_see_all": "Admin je globálny a vidí všetky tenanty.",
 })
 
+_UI_TRANSLATIONS["sk"].update({
+    "login.error.account_disabled": "Tento účet je deaktivovaný.",
+    "login.bootstrap_accounts_title": "Predvolené účty pre prvé prihlásenie",
+    "login.bootstrap_accounts_copy": "Tieto bootstrap účty sú pripravené na prvé spustenie aplikácie. Admin bude po prvom prihlásení vyzvaný na zmenu hesla.",
+    "login.account_test": "Test tenant",
+    "admin.status": "Stav",
+    "admin.account_active": "Aktívny účet",
+    "admin.account_active_hint": "Deaktivovaný účet sa nebude môcť prihlásiť.",
+    "admin.user_active": "Aktívny",
+    "admin.user_inactive": "Deaktivovaný",
+    "admin.activate_user": "Aktivovať",
+    "admin.deactivate_user": "Deaktivovať",
+    "admin.cannot_deactivate_self": "Vlastný účet nie je možné deaktivovať.",
+    "admin.cannot_delete_self": "Vlastný účet nie je možné odstrániť.",
+    "admin.account_status_updated": "Stav účtu '{username}' bol aktualizovaný.",
+    "common.active": "Aktívny",
+})
+
 
 def _normalize_app_language(value):
     raw = str(value or "").strip().lower()
@@ -2702,19 +2720,6 @@ def _display_user_role(role):
         return "customer"
     return normalized
 
-def _deployment_mode():
-    mode = str(getattr(bssci_config, "APP_DEPLOYMENT_MODE", "demo") or "demo").strip().lower()
-    if mode == "dev":
-        mode = "development"
-    elif mode == "prod":
-        mode = "production"
-    if mode not in {"demo", "development", "production"}:
-        mode = "demo"
-    return mode
-
-def _is_production_deployment():
-    return _deployment_mode() == "production"
-
 def _bootstrap_admin_default_password(seed_payload=None):
     payload = seed_payload if isinstance(seed_payload, dict) else _load_default_user_seed_payload()
     users = payload.get("users", {}) if isinstance(payload, dict) else {}
@@ -2723,8 +2728,6 @@ def _bootstrap_admin_default_password(seed_payload=None):
 
 def _should_force_initial_admin_password_change(user, bootstrap_admin_password=None):
     if not bool(getattr(bssci_config, "AUTH_FORCE_INITIAL_ADMIN_PASSWORD_CHANGE", True)):
-        return False
-    if not _is_production_deployment():
         return False
     if _normalize_user_role((user or {}).get("role", "viewer")) != "admin":
         return False
@@ -2735,8 +2738,6 @@ def _should_force_initial_admin_password_change(user, bootstrap_admin_password=N
 
 def _bootstrap_login_account_hints():
     if not bool(getattr(bssci_config, "AUTH_BOOTSTRAP_DEFAULT_USERS", True)):
-        return []
-    if _is_production_deployment():
         return []
 
     payload = _load_default_user_seed_payload()
@@ -2912,6 +2913,7 @@ def _load_default_user_seed_payload():
                 "role": "admin",
                 "name": "Administrator",
                 "tenant_id": "",
+                "active": True,
                 "admin_permissions": _normalize_admin_permissions({
                     "manage_users": True,
                     "manage_tenants": True,
@@ -2930,12 +2932,14 @@ def _load_default_user_seed_payload():
                 "role": "customer",
                 "name": "Customer",
                 "tenant_id": "",
+                "active": True,
             },
             "test": {
                 "password": "test",
                 "role": "customer",
                 "name": "test",
                 "tenant_id": "test",
+                "active": True,
             },
         },
         "role_permissions": _default_role_permissions_map(),
@@ -7374,6 +7378,10 @@ def load_users():
             if user.get("role") != normalized_role:
                 user["role"] = normalized_role
                 changed = True
+            normalized_active = bool(user.get("active", True))
+            if "active" not in user or bool(user.get("active", True)) != normalized_active:
+                user["active"] = normalized_active
+                changed = True
             if normalized_role == "admin":
                 normalized_admin_permissions = _normalize_admin_permissions(user.get("admin_permissions"))
                 if user.get("admin_permissions") != normalized_admin_permissions:
@@ -7441,6 +7449,7 @@ def get_current_user():
         else:
             user['admin_permissions'] = {}
         user['require_password_change'] = bool(user.get('require_password_change'))
+        user['active'] = bool(user.get('active', True))
         user['permissions'] = _resolve_role_permissions(users_data.get('role_permissions', {}), role)
         user['is_super_admin'] = _is_super_admin(user)
         return user
@@ -7617,6 +7626,14 @@ def ensure_json_api():
                 return redirect(url_for('login', reason='timeout'))
             session.permanent = True
             session['_last_activity_ts'] = now_ts
+
+    if not is_static_like and 'username' in session:
+        user = get_current_user()
+        if user and not bool(user.get('active', True)):
+            session.clear()
+            if is_api:
+                return jsonify({'error': 'Account disabled'}), 401
+            return redirect(url_for('login', reason='inactive'))
 
     if not is_static_like and 'username' in session:
         setup_path = '/auth/setup-admin-password'
@@ -7914,8 +7931,8 @@ def inject_user():
         'app_locale': app_locale,
         'app_languages': {key: dict(value) for key, value in _APP_LANGUAGE_OPTIONS.items()},
         'ui_translations': dict(_UI_TRANSLATIONS.get(app_language, {})),
-        'app_deployment_mode': _deployment_mode(),
-        'is_production_deployment': _is_production_deployment(),
+        'app_deployment_mode': 'production',
+        'is_production_deployment': True,
         'bootstrap_login_account_hints': _bootstrap_login_account_hints(),
         't': _ui_text,
         'translate_page_title': _translate_page_title,
@@ -7929,12 +7946,18 @@ def login():
         session['ui_language_override'] = requested_lang
     if request.method == 'GET' and request.args.get('reason') == 'timeout':
         error = _ui_text('login.error.timeout', 'Session expired due to inactivity. Please sign in again.')
+    if request.method == 'GET' and request.args.get('reason') == 'inactive':
+        error = _ui_text('login.error.account_disabled', 'This account is disabled.')
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         ip_addr = _current_request_ip()
         users_data = load_users()
         user = users_data.get('users', {}).get(username)
+        if user and not bool(user.get('active', True)):
+            _register_login_failure(ip_addr)
+            error = _ui_text('login.error.account_disabled', 'This account is disabled.')
+            return render_template('login.html', error=error)
         if user and user.get('password') == password:
             session['username'] = username
             session['role'] = _normalize_user_role(user.get('role', 'viewer'))
@@ -8050,6 +8073,9 @@ def api_users():
                 'name': data.get('name', ''),
                 'role': _visible_role_name(role),
                 'role_canonical': role,
+                'active': bool(data.get('active', True)),
+                'can_deactivate': username != session.get('username'),
+                'can_delete': username != session.get('username'),
                 'tenant_id': normalized_tenant,
                 'tenant_scope_label': (
                     "Super admin"
@@ -8116,6 +8142,7 @@ def api_users():
             'role': role,
             'name': data.get('name', username),
             'tenant_id': tenant_id,
+            'active': bool(data.get('active', True)),
         }
         if role == 'admin':
             users_data['users'][username]['admin_permissions'] = _apply_grantable_admin_permissions(
@@ -8152,6 +8179,11 @@ def api_users():
             user_row['role'] = _normalize_user_role(data['role'])
         if 'name' in data:
             user_row['name'] = data['name']
+        if 'active' in data:
+            next_active = bool(data.get('active'))
+            if username == session.get('username') and not next_active:
+                return jsonify({'success': False, 'error': _ui_text('admin.cannot_deactivate_self', 'You cannot deactivate your own account.')}), 400
+            user_row['active'] = next_active
         if 'tenant_id' in data or 'role' in data:
             tenant_source = data.get('tenant_id') if 'tenant_id' in data else user_row.get('tenant_id')
             tenant_id = _normalize_user_tenant_for_role(
@@ -8206,6 +8238,7 @@ def api_users():
                 'role': user_row.get('role', 'viewer'),
                 'tenant_id': user_row.get('tenant_id', _default_tenant_id()),
                 'name': user_row.get('name', ''),
+                'active': bool(user_row.get('active', True)),
                 'password_changed': bool(data.get('password')),
                 'admin_permissions': user_row.get('admin_permissions', {}) if _normalize_user_role(user_row.get('role', 'viewer')) == 'admin' else {},
             },
@@ -8216,7 +8249,7 @@ def api_users():
         data = request.get_json()
         username = data.get('username')
         if username == session.get('username'):
-            return jsonify({'success': False, 'error': 'Cannot delete your own user account'}), 400
+            return jsonify({'success': False, 'error': _ui_text('admin.cannot_delete_self', 'You cannot delete your own account.')}), 400
         if username in users_data.get('users', {}):
             del users_data['users'][username]
             save_users(users_data)
