@@ -553,39 +553,6 @@
             <h2 class="login-heading">{{ t('login.heading', 'Sign in') }}</h2>
             <p class="login-sub">{{ t('login.subtitle', 'Use your account credentials to continue.') }}</p>
 
-            <div class="login-mode-row">
-                <span class="login-mode-badge {% if app_deployment_mode == 'production' %}is-production{% elif app_deployment_mode == 'development' %}is-development{% else %}is-demo{% endif %}">
-                    <i class="fas {% if app_deployment_mode == 'production' %}fa-shield-halved{% elif app_deployment_mode == 'development' %}fa-screwdriver-wrench{% else %}fa-flask{% endif %}"></i>
-                    {% if app_deployment_mode == 'production' %}
-                        {{ t('login.mode_production', 'Produkčný režim') }}
-                    {% elif app_deployment_mode == 'development' %}
-                        {{ t('login.mode_development', 'Vývojový režim') }}
-                    {% else %}
-                        {{ t('login.mode_demo', 'Demo režim') }}
-                    {% endif %}
-                </span>
-            </div>
-
-            {% if bootstrap_login_account_hints %}
-            <div class="login-info-card">
-                <div class="login-info-title">{{ t('login.bootstrap_accounts_title', 'Predvolené účty pre rýchly štart') }}</div>
-                <p class="login-info-copy">{{ t('login.bootstrap_accounts_copy', 'Tieto bootstrap účty sú určené pre demo a lokálne testovanie.') }}</p>
-                <div class="login-account-list">
-                    {% for account in bootstrap_login_account_hints %}
-                    <div class="login-account-row">
-                        <span class="login-account-label">{{ account.label }}</span>
-                        <span class="login-account-creds">{{ account.username }} / {{ account.password }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% elif is_production_deployment %}
-            <div class="login-info-card">
-                <div class="login-info-title">{{ t('login.mode_production', 'Produkčný režim') }}</div>
-                <p class="login-info-copy">{{ t('login.production_notice', 'Produkčný režim má mať demo účty vypnuté a admin účet so zmeneným heslom.') }}</p>
-            </div>
-            {% endif %}
-
             {% if error %}
             <div class="login-error" role="alert">
                 <i class="fas fa-circle-exclamation"></i>

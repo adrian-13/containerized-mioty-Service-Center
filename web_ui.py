@@ -2672,6 +2672,27 @@ def _is_super_admin(user=None):
 def _is_global_tenant_scope(active_tenant):
     return not str(active_tenant or "").strip()
 
+def _resolve_read_tenant_id(requested_tenant=None, *, fallback=None):
+    default_fallback = _default_tenant_id() if fallback is None else str(fallback or "").strip()
+    default_fallback = default_fallback or _default_tenant_id()
+
+    if has_request_context():
+        current_role = _normalize_user_role(session.get("role", "viewer"))
+        active_tenant = _active_tenant_id()
+        if _is_customer_role(current_role):
+            if _is_global_tenant_scope(active_tenant):
+                return _default_tenant_id()
+            return _normalize_tenant_id(active_tenant, fallback=_default_tenant_id())
+        if str(requested_tenant or "").strip():
+            return _normalize_tenant_id(requested_tenant, fallback=default_fallback)
+        if _is_global_tenant_scope(active_tenant):
+            return default_fallback
+        return _normalize_tenant_id(active_tenant, fallback=default_fallback)
+
+    if str(requested_tenant or "").strip():
+        return _normalize_tenant_id(requested_tenant, fallback=default_fallback)
+    return _normalize_tenant_id(default_fallback, fallback=_default_tenant_id())
+
 def _resolve_write_tenant_id(requested_tenant=None, *, existing_tenant=None):
     # Customer-scoped writes are always pinned to the active tenant from session.
     if has_request_context():
@@ -2728,6 +2749,48 @@ def _display_user_role(role):
     if _is_customer_role(normalized):
         return "customer"
     return normalized
+
+def _is_customer_blocked_api_path(path: str) -> bool:
+    normalized = str(path or "").strip()
+    if not normalized.startswith("/api/"):
+        return False
+
+    exact_paths = {
+        "/api/grafana/dashboard-url",
+        "/api/health/grafana",
+        "/api/base-stations/certificates/status",
+        "/api/base-stations/uptime",
+        "/api/base_stations/status",
+        "/api/vm/log",
+        "/api/vm/capable",
+        "/api/service/restart",
+    }
+    if normalized in exact_paths:
+        return True
+
+    blocked_prefixes = (
+        "/api/users",
+        "/api/tenants",
+        "/api/config",
+        "/api/influx",
+        "/api/timescale",
+        "/api/oms",
+        "/api/logs",
+        "/api/mqtt",
+        "/api/system",
+        "/api/certificates",
+        "/api/container",
+        "/api/audit",
+        "/api/vm/activate",
+        "/api/vm/deactivate",
+        "/api/vm/send/",
+    )
+    if any(normalized.startswith(prefix) for prefix in blocked_prefixes):
+        return True
+
+    if normalized.startswith("/api/base-stations/") and "/certificate/" in normalized:
+        return True
+    return False
 
 def _bootstrap_admin_default_password(seed_payload=None):
     payload = seed_payload if isinstance(seed_payload, dict) else _load_default_user_seed_payload()
@@ -7479,6 +7542,12 @@ def login_required(f):
             if request.path.startswith('/api/'):
                 return jsonify({'error': 'Login required'}), 401
             return redirect(url_for('login'))
+        user = get_current_user()
+        if not user:
+            session.clear()
+            if request.path.startswith('/api/'):
+                return jsonify({'error': 'Login required'}), 401
+            return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -7643,6 +7712,8 @@ def ensure_json_api():
             if is_api:
                 return jsonify({'error': 'Account disabled'}), 401
             return redirect(url_for('login', reason='inactive'))
+        if user and is_api and _is_customer_role(user.get('role', 'viewer')) and _is_customer_blocked_api_path(path):
+            return jsonify({'error': 'Internal portal only'}), 403
 
     if not is_static_like and 'username' in session:
         setup_path = '/auth/setup-admin-password'
@@ -8689,7 +8760,7 @@ def api_tenants():
 @login_required
 @admin_scope_required('manage_tenants')
 def export_tenant_data():
-    tenant_id = _normalize_tenant_id(request.args.get("tenant_id"), fallback=_active_tenant_id())
+    tenant_id = _resolve_read_tenant_id(request.args.get("tenant_id"), fallback=_active_tenant_id())
     include_timescale = _parse_bool_arg(request.args.get("include_timescale"), default=True)
     telemetry_limit = max(1, min(int(request.args.get("telemetry_limit", 50000)), 250000))
     events_limit = max(1, min(int(request.args.get("events_limit", 50000)), 250000))
@@ -8779,7 +8850,7 @@ def export_tenant_data():
 @login_required
 @admin_scope_required('manage_tenants')
 def import_tenant_data():
-    target_tenant = _normalize_tenant_id(
+    target_tenant = _resolve_read_tenant_id(
         request.args.get("tenant_id") or (request.form.get("tenant_id") if request.form else None),
         fallback=_active_tenant_id()
     )
@@ -9168,11 +9239,7 @@ def _grafana_is_configured():
     return bool(str(base_url or "").strip()) and bool(str(_grafana_dashboard_uid() or "").strip())
 
 def _grafana_requested_tenant_id():
-    active_tenant = _active_tenant_id()
-    requested_tenant = request.args.get("tenant_id")
-    if requested_tenant and str(session.get("role", "")).strip().lower() == "admin":
-        return _normalize_tenant_id(requested_tenant, fallback=active_tenant)
-    return active_tenant
+    return _resolve_read_tenant_id(request.args.get("tenant_id"), fallback=_active_tenant_id())
 
 def _default_health_panel_map():
     return {
