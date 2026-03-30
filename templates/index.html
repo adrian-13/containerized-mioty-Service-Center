@@ -3199,23 +3199,17 @@ function applyDashboardPayload(payload, meta = {}) {
 
 function fetchDashboardPayload() {
     return Promise.all([
-        fetchJson('/api/bssci/status'),
-        fetchJson('/api/vm/status'),
-        fetchJson('/api/traffic/metrics'),
-        fetchJson('/api/health'),
-        fetchJson('/api/network'),
-        fetchJson('/api/base-stations'),
-        fetchJson('/api/coverage/positions'),
+        fetchJson('/api/customer/dashboard'),
         fetchJson('/api/sensors'),
         fetchJson('/api/incidents')
-    ]).then(([statusData, vmData, trafficData, healthData, topologyData, gatewaysData, coverageState, sensorsData, incidentsData]) => ({
-        statusData,
-        vmData,
-        trafficData,
-        healthData,
-        topologyData,
-        gatewaysData,
-        coverageState,
+    ]).then(([dashboardData, sensorsData, incidentsData]) => ({
+        statusData: dashboardData && dashboardData.statusData ? dashboardData.statusData : null,
+        vmData: dashboardData && dashboardData.vmData ? dashboardData.vmData : null,
+        trafficData: dashboardData && dashboardData.trafficData ? dashboardData.trafficData : null,
+        healthData: dashboardData && dashboardData.healthData ? dashboardData.healthData : null,
+        topologyData: dashboardData && dashboardData.topologyData ? dashboardData.topologyData : null,
+        gatewaysData: dashboardData && dashboardData.gatewaysData ? dashboardData.gatewaysData : null,
+        coverageState: dashboardData && dashboardData.coverageState ? dashboardData.coverageState : null,
         sensorsData,
         incidentsData
     }));

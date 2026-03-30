@@ -2314,10 +2314,10 @@
                         <h5 class="modal-title" id="viewerGuideModalLabel">Správa a prehľad zariadení</h5>
                         {% elif endpoint == 'sensor_detail_page' %}
                         <p class="viewer-guide-kicker mb-1"><i class="fas fa-microchip me-1"></i>Detail senzora</p>
-                        <h5 class="modal-title" id="viewerGuideModalLabel">Metriky, história a alerting</h5>
+                        <h5 class="modal-title" id="viewerGuideModalLabel">Merania a história senzora</h5>
                         {% elif endpoint == 'alerts_page' %}
                         <p class="viewer-guide-kicker mb-1"><i class="fas fa-bell me-1"></i>Upozornenia</p>
-                        <h5 class="modal-title" id="viewerGuideModalLabel">Incidenty, pravidlá a história</h5>
+                        <h5 class="modal-title" id="viewerGuideModalLabel">Upozornenia, pravidlá a história</h5>
                         {% else %}
                         <p class="viewer-guide-kicker mb-1"><i class="fas fa-circle-question me-1"></i>Rýchly sprievodca</p>
                         <h5 class="modal-title" id="viewerGuideModalLabel">{{ t('viewer.guide_title', 'Sprievodca portálom') }}</h5>
@@ -2329,7 +2329,7 @@
 
                     {% if endpoint == 'index' %}
                     {# ── DASHBOARD ── #}
-                    <p class="viewer-guide-copy mb-3">Táto stránka je váš každodenný rozcestník — jedným pohľadom vidíte kde sú senzory, aký majú stav a čo si práve žiada pozornosť.</p>
+                    <p class="viewer-guide-copy mb-3">Táto stránka je váš rýchly prehľad. Jedným pohľadom vidíte, kde sú senzory, v akom sú stave a ktoré upozornenia si vyžadujú pozornosť.</p>
                     <div class="viewer-guide-grid">
                         <section class="viewer-guide-card">
                             <div class="viewer-guide-head">
@@ -2348,11 +2348,11 @@
                                 <span class="viewer-guide-icon"><i class="fas fa-list-ul"></i></span>
                             </div>
                             <h6 class="viewer-guide-card-title">Zoznam senzorov</h6>
-                            <p class="viewer-guide-card-copy">Ľavý panel rýchlo filtruje zariadenia podľa prevádzkového stavu.</p>
+                            <p class="viewer-guide-card-copy">Ľavý panel rýchlo filtruje zariadenia podľa aktuálneho stavu.</p>
                             <ul class="viewer-guide-list">
                                 <li>Filtrovanie: Online / Upozornenie / Offline</li>
                                 <li>Kliknutie na riadok otvorí detail senzora</li>
-                                <li>Pravé tlačidlo → rýchle akcie (detail, alert)</li>
+                                <li>Pravé tlačidlo → rýchle akcie (detail, upozornenie)</li>
                                 <li>Tlačidlo Obnoviť načíta aktuálne dáta</li>
                             </ul>
                         </section>
@@ -2361,18 +2361,18 @@
                                 <span class="viewer-guide-icon"><i class="fas fa-bell"></i></span>
                             </div>
                             <h6 class="viewer-guide-card-title">Panel upozornení</h6>
-                            <p class="viewer-guide-card-copy">Spodná časť obrazovky zobrazuje všetky práve otvorené incidenty v reálnom čase.</p>
+                            <p class="viewer-guide-card-copy">Spodná časť obrazovky zobrazuje aktuálne upozornenia, ktoré si práve vyžadujú pozornosť.</p>
                             <ul class="viewer-guide-list">
                                 <li>Červená = chyba / nedostupnosť, oranžová = upozornenie</li>
                                 <li>Kliknutie → detail príslušného senzora</li>
-                                <li>Pravé tlačidlo → potvrdiť na 4 hod. alebo 24 hod.</li>
+                                <li>Pravé tlačidlo → odložiť upozornenie na 4 hod. alebo 24 hod.</li>
                             </ul>
                         </section>
                     </div>
 
                     {% elif endpoint == 'sensors' %}
                     {# ── SENZORY ── #}
-                    <p class="viewer-guide-copy mb-3">Kompletný zoznam všetkých zariadení vo vašej sieti. Odtiaľto filtrujete, hľadáte, upravujete a pristupujete na detail každého senzora.</p>
+                    <p class="viewer-guide-copy mb-3">Kompletný zoznam všetkých zariadení vo vašej sieti. Odtiaľto ich filtrujete, vyhľadávate, upravujete a otvárate detail každého senzora.</p>
                     <div class="viewer-guide-grid">
                         <section class="viewer-guide-card">
                             <div class="viewer-guide-head">
@@ -2403,7 +2403,7 @@
                                 <span class="viewer-guide-icon"><i class="fas fa-arrow-up-right-from-square"></i></span>
                             </div>
                             <h6 class="viewer-guide-card-title">Detail senzora</h6>
-                            <p class="viewer-guide-card-copy">Každý riadok je klikateľný — otvorí plný detail zariadenia.</p>
+                            <p class="viewer-guide-card-copy">Každý riadok je klikateľný a otvorí detail zariadenia s meraniami a históriou.</p>
                             <ul class="viewer-guide-list">
                                 <li>Aktuálne metriky, historické grafy a telemetria</li>
                                 <li>Nastavenie prahových alertov priamo pre daný senzor</li>
@@ -2414,7 +2414,7 @@
 
                     {% elif endpoint == 'sensor_detail_page' %}
                     {# ── DETAIL SENZORA ── #}
-                    <p class="viewer-guide-copy mb-3">Všetko o jednom senzore na jednom mieste — od aktuálnych hodnôt cez historické grafy až po nastavenie vlastných upozornení.</p>
+                    <p class="viewer-guide-copy mb-3">Všetko o jednom senzore na jednom mieste — od aktuálnych hodnôt cez históriu meraní až po vlastné upozornenia.</p>
                     <div class="viewer-guide-grid">
                         <section class="viewer-guide-card">
                             <div class="viewer-guide-head">
@@ -2433,7 +2433,7 @@
                                 <span class="viewer-guide-icon"><i class="fas fa-satellite-dish"></i></span>
                             </div>
                             <h6 class="viewer-guide-card-title">Záložka Telemetria</h6>
-                            <p class="viewer-guide-card-copy">Surový log všetkých prijatých správ zo senzora.</p>
+                            <p class="viewer-guide-card-copy">Prehľad prijatých správ a dekódovaných hodnôt zo senzora.</p>
                             <ul class="viewer-guide-list">
                                 <li>Každý riadok = jeden uplink s časom prijatia</li>
                                 <li>Sila signálu (RSSI) a počet gateway, cez ktoré správa prišla</li>
@@ -2444,7 +2444,7 @@
                             <div class="viewer-guide-head">
                                 <span class="viewer-guide-icon"><i class="fas fa-bell"></i></span>
                             </div>
-                            <h6 class="viewer-guide-card-title">Záložka Alerting</h6>
+                            <h6 class="viewer-guide-card-title">Záložka Upozornenia</h6>
                             <p class="viewer-guide-card-copy">Nastavte vlastné prahové upozornenie pre akúkoľvek metriku tohto senzora.</p>
                             <ul class="viewer-guide-list">
                                 <li>Vyberte metriku (napr. CO₂) a nastavte podmienku a prah</li>
@@ -2468,17 +2468,17 @@
 
                     {% elif endpoint == 'alerts_page' %}
                     {# ── UPOZORNENIA ── #}
-                    <p class="viewer-guide-copy mb-3">Centrálne miesto pre všetko čo súvisí s upozorneniami — sledujete aktívne incidenty, spravujete pravidlá a prezeráte históriu udalostí.</p>
+                    <p class="viewer-guide-copy mb-3">Centrálne miesto pre všetko, čo súvisí s upozorneniami — sledujete aktuálne upozornenia, spravujete pravidlá a prezeráte históriu udalostí.</p>
                     <div class="viewer-guide-grid">
                         <section class="viewer-guide-card">
                             <div class="viewer-guide-head">
                                 <span class="viewer-guide-icon"><i class="fas fa-circle-exclamation"></i></span>
                             </div>
                             <h6 class="viewer-guide-card-title">Záložka Aktívne</h6>
-                            <p class="viewer-guide-card-copy">Všetky práve otvorené incidenty — to čo potrebuje riešenie teraz.</p>
+                            <p class="viewer-guide-card-copy">Všetky aktuálne upozornenia — to, čo si práve vyžaduje pozornosť.</p>
                             <ul class="viewer-guide-list">
                                 <li>Červené = chyba / nedostupnosť, oranžové = varovanie</li>
-                                <li>Pravé tlačidlo → potvrdiť incident na 4 hod. alebo 24 hod.</li>
+                                <li>Pravé tlačidlo → odložiť upozornenie na 4 hod. alebo 24 hod.</li>
                                 <li>Kliknutie na riadok → detail príslušného senzora</li>
                             </ul>
                         </section>
@@ -2500,18 +2500,18 @@
                                 <span class="viewer-guide-icon"><i class="fas fa-clock-rotate-left"></i></span>
                             </div>
                             <h6 class="viewer-guide-card-title">Záložka História</h6>
-                            <p class="viewer-guide-card-copy">Kompletný log vzniku a uzavretia všetkých incidentov.</p>
+                            <p class="viewer-guide-card-copy">Kompletný log vzniku a uzavretia všetkých upozornení.</p>
                             <ul class="viewer-guide-list">
                                 <li>Filtrujte podľa senzora, zdroja, závažnosti alebo typu udalosti</li>
-                                <li>Vznik incidentu = <em>Vzniknuté</em>, koniec = <em>Vyriešené</em></li>
-                                <li>Vyhľadávanie v poli hore filtruje podľa senzora alebo dôvodu</li>
+                                <li>Vznik upozornenia = <em>Vzniknuté</em>, koniec = <em>Vyriešené</em></li>
+                                <li>Vyhľadávanie v poli hore filtruje podľa senzora alebo dôvodu upozornenia</li>
                             </ul>
                         </section>
                     </div>
 
                     {% else %}
                     {# ── FALLBACK ── #}
-                    <p class="viewer-guide-copy">Tento zákaznícky portál je zameraný na každodenný prehľad senzorov, upozornení a základných nastavení. Dashboard slúži na rýchly prehľad, Senzory na detail a Upozornenia na incidenty, pravidlá a históriu.</p>
+                    <p class="viewer-guide-copy">Tento zákaznícky portál slúži na každodenný prehľad senzorov, meraní, upozornení a základných nastavení. Dashboard slúži na rýchly prehľad, Senzory na detail a Upozornenia na aktívne upozornenia, pravidlá a históriu.</p>
                     {% endif %}
 
                 </div>
@@ -3418,7 +3418,7 @@
                 {
                     selector: '#viewerTopnav',
                     title: 'Hlavná navigácia',
-                    copy: 'Tu sa prepínate medzi hlavnými sekciami. Dashboard je pre rýchly prehľad, Senzory pre detail zariadení a Upozornenia pre incidenty, pravidlá a históriu.'
+                    copy: 'Tu sa prepínate medzi hlavnými sekciami. Dashboard je pre rýchly prehľad, Senzory pre detail zariadení a Upozornenia pre aktívne upozornenia, pravidlá a históriu.'
                 },
                 {
                     selector: '.viewer-nav-link.active',
@@ -3447,8 +3447,8 @@
                     },
                     {
                         selector: '#mviewAlerts',
-                        title: 'Live upozornenia',
-                        copy: 'Táto sekcia ukazuje aktuálne otvorené incidenty. Je to najrýchlejší operatívny prehľad toho, čo treba riešiť.'
+                        title: 'Aktuálne upozornenia',
+                        copy: 'Táto sekcia ukazuje upozornenia, ktoré si práve vyžadujú pozornosť.'
                     },
                     {
                         selector: '#mview-map',
@@ -3491,7 +3491,7 @@
                     {
                         selector: '#panel-alerts',
                         title: 'Aktívne upozornenia',
-                        copy: 'Tu vidíte otvorené incidenty a ich dôvod. Toto je live prevádzkový pohľad.',
+                        copy: 'Tu vidíte aktuálne upozornenia a ich dôvod.',
                         before: () => document.querySelector('.ap-nav-btn[data-tab=\"alerts\"]')?.click()
                     },
                     {
@@ -3503,7 +3503,7 @@
                     {
                         selector: '#panel-history .ap-toolbar',
                         title: 'Filtrovanie histórie',
-                        copy: 'Históriu viete filtrovať podľa senzora, zdroja, udalosti, závažnosti aj textu v dôvode incidentu.',
+                        copy: 'Históriu viete filtrovať podľa senzora, zdroja, udalosti, závažnosti aj textu v dôvode upozornenia.',
                         before: () => document.querySelector('.ap-nav-btn[data-tab=\"history\"]')?.click()
                     }
                 );

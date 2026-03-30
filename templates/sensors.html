@@ -4506,7 +4506,7 @@ function loadAttachBaseStationsForModal() {
     if (listNode) {
         listNode.innerHTML = `<div class="p-3 text-muted small">${escapeHtml(tr('runtime.loading_base_stations', 'Loading base stations...'))}</div>`;
     }
-    apiRequest('/api/base-stations', 'GET')
+    apiRequest('/api/customer/base-stations', 'GET')
         .then(data => {
             const allBaseStations = Array.isArray(data.base_stations) ? data.base_stations : [];
             renderAttachBaseStationOptions(allBaseStations);

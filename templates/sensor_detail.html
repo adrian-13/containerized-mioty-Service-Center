@@ -1728,7 +1728,7 @@ load();
   function sdLoadAttachBaseStations() {
     const listEl = document.getElementById('sdAttachBsList');
     if (listEl) listEl.innerHTML = '<div class="p-3 text-muted small">Načítavam základňové stanice...</div>';
-    fetch('/api/base-stations')
+    fetch('/api/customer/base-stations')
       .then(r => r.json())
       .then(data => {
         const bsList = Array.isArray(data.base_stations) ? data.base_stations : [];

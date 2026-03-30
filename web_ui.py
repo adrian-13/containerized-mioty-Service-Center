@@ -426,7 +426,7 @@ _UI_TRANSLATIONS = {
         "config.restart_container_notice": "Reštart kontajnera bol spustený. Stránka sa pripojí znova automaticky.",
         "login.brand_badge": "",
         "login.brand_title": "Kinet MIOTY Center",
-        "login.brand_subtitle": "Správa základňových staníc, senzorov a telemetrie v jednom rozhraní.",
+        "login.brand_subtitle": "Prehľad senzorov, meraní a upozornení na jednom mieste.",
         "login.brand_footer": "",
         "login.heading": "Prihlásenie",
         "login.subtitle": "Pokračujte pomocou prihlasovacích údajov svojho účtu.",
@@ -829,10 +829,10 @@ _UI_TRANSLATIONS = {
         "viewer.no_data": "Bez dát",
         "viewer.sensor_options": "Možnosti",
         "viewer.guide_title": "Sprievodca portálom",
-        "viewer.guide_settings_note": "Rýchly prehľad, kde sledovať senzory, pracovať s upozorneniami a čo môžete v zákazníckom portáli meniť.",
+        "viewer.guide_settings_note": "Rýchly prehľad, kde sledovať senzory, pracovať s upozorneniami a meniť základné nastavenia portálu.",
         "viewer.guide_open": "Otvoriť sprievodcu",
         "viewer.guide_kicker": "Rýchly sprievodca",
-        "viewer.guide_intro_copy": "Tento portál je zameraný na každodenný prehľad senzorov, upozornení a základných nastavení.",
+        "viewer.guide_intro_copy": "Tento portál slúži na každodenný prehľad senzorov, meraní, upozornení a základných nastavení.",
         "sensor_detail.delayed": "Oneskorené",
         "sensor_detail.quiet": "Pokojný",
     },
@@ -2756,6 +2756,20 @@ def _is_customer_blocked_api_path(path: str) -> bool:
         return False
 
     exact_paths = {
+        "/api/bssci/status",
+        "/api/service/status",
+        "/api/base-stations",
+        "/api/sensors/reload",
+        "/api/sensors/detach-all",
+        "/api/sensors/clear",
+        "/api/sensors/export",
+        "/api/sensors/import",
+        "/api/sensors/telemetry/history/export",
+        "/api/alerts/triggered",
+        "/api/vm/status",
+        "/api/traffic/metrics",
+        "/api/health",
+        "/api/network",
         "/api/grafana/dashboard-url",
         "/api/health/grafana",
         "/api/base-stations/certificates/status",
@@ -10579,6 +10593,7 @@ def get_sensor_telemetry_history():
 
 @app.route('/api/sensors/telemetry/history/export', methods=['GET'])
 @login_required
+@internal_portal_required
 def export_sensor_telemetry_history():
     try:
         active_tenant = _active_tenant_id()
@@ -10601,6 +10616,40 @@ def export_sensor_telemetry_history():
         return _telemetry_csv_response(result.get("rows") or [], filename=filename)
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
+
+
+def _sanitize_sensor_detail_for_customer(response: Dict[str, Any]) -> Dict[str, Any]:
+    sanitized = dict(response or {})
+
+    latest = sanitized.get("latest_uplink")
+    if isinstance(latest, dict):
+        latest_copy = dict(latest)
+        latest_copy.pop("raw_hex", None)
+        latest_copy.pop("raw_dec", None)
+        decoded = latest_copy.get("decoded")
+        if isinstance(decoded, dict):
+            decoded_copy = dict(decoded)
+            decoded_copy.pop("model_hint", None)
+            latest_copy["decoded"] = decoded_copy
+        sanitized["latest_uplink"] = latest_copy
+
+    history = []
+    for row in sanitized.get("uplink_history") or []:
+        if not isinstance(row, dict):
+            history.append(row)
+            continue
+        row_copy = dict(row)
+        row_copy.pop("raw_hex", None)
+        row_copy.pop("raw_dec", None)
+        decoded = row_copy.get("decoded")
+        if isinstance(decoded, dict):
+            decoded_copy = dict(decoded)
+            decoded_copy.pop("model_hint", None)
+            row_copy["decoded"] = decoded_copy
+        history.append(row_copy)
+    sanitized["uplink_history"] = history
+
+    return sanitized
 
 
 # ── Alert CRUD routes ────────────────────────────────────────────────────────
@@ -10797,6 +10846,7 @@ def api_alerts_delete(alert_id):
 
 @app.route('/api/alerts/triggered', methods=['GET'])
 @login_required
+@internal_portal_required
 def api_alerts_triggered():
     """Evaluate all enabled alerts against latest sensor values and return triggered ones."""
     try:
@@ -11338,7 +11388,10 @@ def get_sensor_details(eui):
             'latest_uplink': latest_uplink,
             'uplink_history': uplink_history,
         }
-        
+
+        if _is_customer_role(session.get('role', 'viewer')):
+            response = _sanitize_sensor_detail_for_customer(response)
+
         return jsonify(response)
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -11577,6 +11630,7 @@ def reload_sensors():
 
 @app.route('/api/sensors/export', methods=['GET'])
 @login_required
+@permission_required('can_edit_sensors')
 def export_sensors():
     """Export all sensors as CSV file"""
     try:
@@ -12398,155 +12452,148 @@ def oms():
 def health():
     return render_template('health.html')
 
+def _build_health_stats_payload():
+    """Build comprehensive health statistics for dashboard and health views."""
+    global tls_server_instance
+
+    result = {
+        "success": True,
+        "system": {
+            "uptime": 0,
+            "total_sensors": 0,
+            "active_sensors": 0,
+            "total_base_stations": 0,
+            "connected_base_stations": 0,
+            "total_packets_received": 0,
+            "total_packets_lost": 0,
+            "overall_packet_loss_rate": 0,
+            "avg_snr": 0,
+            "avg_rssi": 0
+        },
+        "base_stations": [],
+        "sensors": [],
+        "snr_rssi_history": []
+    }
+    timescale_summary = _timescale_fetch_telemetry_summary(window_minutes=24 * 60, bucket_seconds=300, top_limit=10)
+    result["timescale"] = timescale_summary
+
+    if tls_server_instance:
+        start_time = tls_server_instance.traffic_metrics.get('start_time', 0)
+        if start_time:
+            result["system"]["uptime"] = int(datetime.now(timezone.utc).timestamp() - start_time)
+
+        result["system"]["total_sensors"] = len(tls_server_instance.sensor_config)
+        result["system"]["active_sensors"] = len(tls_server_instance.active_sensors_hourly)
+        result["system"]["total_base_stations"] = len(tls_server_instance.connected_base_stations) + len(tls_server_instance.connecting_base_stations)
+        result["system"]["connected_base_stations"] = len(tls_server_instance.connected_base_stations)
+
+        total_received = 0
+        total_lost = 0
+        for eui, stats in tls_server_instance.sensor_packet_stats.items():
+            total_received += stats.get('packets_received', 0)
+            total_lost += stats.get('packets_lost', 0)
+
+        result["system"]["total_packets_received"] = total_received
+        result["system"]["total_packets_lost"] = total_lost
+        if total_received + total_lost > 0:
+            result["system"]["overall_packet_loss_rate"] = round(total_lost / (total_received + total_lost) * 100, 2)
+
+        bs_config = load_base_station_config().get("base_stations", {})
+        for writer, bs_eui in tls_server_instance.connected_base_stations.items():
+            eui_lower = bs_eui.lower()
+            health = tls_server_instance.base_station_health.get(eui_lower, {})
+            bs_info = bs_config.get(eui_lower, {})
+            result["base_stations"].append({
+                "eui": eui_lower,
+                "name": bs_info.get("name", ""),
+                "status": "connected",
+                "cpu": health.get("cpu", 0),
+                "memory": health.get("memory", 0),
+                "duty_cycle": health.get("duty_cycle", 0),
+                "uptime": health.get("uptime", 0)
+            })
+
+        for eui, stats in tls_server_instance.sensor_packet_stats.items():
+            received = stats.get('packets_received', 0)
+            lost = stats.get('packets_lost', 0)
+            snr_avg = stats.get('snr_sum', 0) / max(stats.get('snr_count', 1), 1)
+            rssi_avg = stats.get('rssi_sum', 0) / max(stats.get('rssi_count', 1), 1)
+            loss_rate = 0
+            if received + lost > 0:
+                loss_rate = round(lost / (received + lost) * 100, 2)
+
+            result["sensors"].append({
+                "eui": eui.lower(),
+                "packets_received": received,
+                "packets_lost": lost,
+                "packet_loss_rate": loss_rate,
+                "avg_snr": round(snr_avg, 2),
+                "avg_rssi": round(rssi_avg, 2)
+            })
+
+        result["sensors"].sort(key=lambda x: x["packet_loss_rate"], reverse=True)
+
+        total_snr = 0
+        total_rssi = 0
+        sensor_count = 0
+        for stats in tls_server_instance.sensor_packet_stats.values():
+            if stats.get('snr_count', 0) > 0:
+                total_snr += stats['snr_sum'] / stats['snr_count']
+                total_rssi += stats['rssi_sum'] / stats['rssi_count']
+                sensor_count += 1
+
+        if sensor_count > 0:
+            result["system"]["avg_snr"] = round(total_snr / sensor_count, 2)
+            result["system"]["avg_rssi"] = round(total_rssi / sensor_count, 2)
+
+        result["snr_rssi_history"] = tls_server_instance.snr_rssi_history
+
+        distribution = {"excellent": 0, "good": 0, "fair": 0, "poor": 0, "critical": 0}
+        for stats in tls_server_instance.sensor_packet_stats.values():
+            if stats.get('snr_count', 0) > 0:
+                avg_snr = stats['snr_sum'] / stats['snr_count']
+                if avg_snr >= 10:
+                    distribution["excellent"] += 1
+                elif avg_snr >= 5:
+                    distribution["good"] += 1
+                elif avg_snr >= 0:
+                    distribution["fair"] += 1
+                elif avg_snr >= -5:
+                    distribution["poor"] += 1
+                else:
+                    distribution["critical"] += 1
+        result["signal_distribution"] = distribution
+
+    if not result["sensors"] and timescale_summary.get("success"):
+        for sensor in timescale_summary.get("top_sensors", []):
+            result["sensors"].append({
+                "eui": str(sensor.get("sensor_eui", "")).lower(),
+                "packets_received": int(sensor.get("uplinks", 0) or 0),
+                "packets_lost": 0,
+                "packet_loss_rate": float(sensor.get("avg_packet_loss_pct", 0.0) or 0.0),
+                "avg_snr": round(float(sensor.get("avg_snr", 0.0) or 0.0), 2),
+                "avg_rssi": round(float(sensor.get("avg_rssi", 0.0) or 0.0), 2),
+            })
+        result["sensors"].sort(key=lambda x: x["packet_loss_rate"], reverse=True)
+
+    if not result["snr_rssi_history"] and timescale_summary.get("success"):
+        result["snr_rssi_history"] = [
+            {
+                "timestamp": point.get("timestamp"),
+                "avg_snr": point.get("avg_snr"),
+                "avg_rssi": point.get("avg_rssi"),
+            }
+            for point in (timescale_summary.get("series") or [])
+        ]
+
+    return result
+
 @app.route('/api/health', methods=['GET'])
 @login_required
 @internal_portal_required
 def get_health_stats():
-    """Get comprehensive health statistics for the system"""
     try:
-        global tls_server_instance
-        
-        result = {
-            "system": {
-                "uptime": 0,
-                "total_sensors": 0,
-                "active_sensors": 0,
-                "total_base_stations": 0,
-                "connected_base_stations": 0,
-                "total_packets_received": 0,
-                "total_packets_lost": 0,
-                "overall_packet_loss_rate": 0,
-                "avg_snr": 0,
-                "avg_rssi": 0
-            },
-            "base_stations": [],
-            "sensors": [],
-            "snr_rssi_history": []
-        }
-        timescale_summary = _timescale_fetch_telemetry_summary(window_minutes=24 * 60, bucket_seconds=300, top_limit=10)
-        result["timescale"] = timescale_summary
-        
-        if tls_server_instance:
-            # System stats
-            start_time = tls_server_instance.traffic_metrics.get('start_time', 0)
-            if start_time:
-                from datetime import datetime, timezone
-                result["system"]["uptime"] = int(datetime.now(timezone.utc).timestamp() - start_time)
-            
-            result["system"]["total_sensors"] = len(tls_server_instance.sensor_config)
-            result["system"]["active_sensors"] = len(tls_server_instance.active_sensors_hourly)
-            result["system"]["total_base_stations"] = len(tls_server_instance.connected_base_stations) + len(tls_server_instance.connecting_base_stations)
-            result["system"]["connected_base_stations"] = len(tls_server_instance.connected_base_stations)
-            
-            # Aggregate packet stats
-            total_received = 0
-            total_lost = 0
-            for eui, stats in tls_server_instance.sensor_packet_stats.items():
-                total_received += stats.get('packets_received', 0)
-                total_lost += stats.get('packets_lost', 0)
-            
-            result["system"]["total_packets_received"] = total_received
-            result["system"]["total_packets_lost"] = total_lost
-            if total_received + total_lost > 0:
-                result["system"]["overall_packet_loss_rate"] = round(total_lost / (total_received + total_lost) * 100, 2)
-            
-            # Base station health
-            bs_config = load_base_station_config().get("base_stations", {})
-            for writer, bs_eui in tls_server_instance.connected_base_stations.items():
-                eui_lower = bs_eui.lower()
-                health = tls_server_instance.base_station_health.get(eui_lower, {})
-                bs_info = bs_config.get(eui_lower, {})
-                result["base_stations"].append({
-                    "eui": eui_lower,
-                    "name": bs_info.get("name", ""),
-                    "status": "connected",
-                    "cpu": health.get("cpu", 0),
-                    "memory": health.get("memory", 0),
-                    "duty_cycle": health.get("duty_cycle", 0),
-                    "uptime": health.get("uptime", 0)
-                })
-            
-            # Sensor packet stats
-            for eui, stats in tls_server_instance.sensor_packet_stats.items():
-                received = stats.get('packets_received', 0)
-                lost = stats.get('packets_lost', 0)
-                snr_avg = stats.get('snr_sum', 0) / max(stats.get('snr_count', 1), 1)
-                rssi_avg = stats.get('rssi_sum', 0) / max(stats.get('rssi_count', 1), 1)
-                loss_rate = 0
-                if received + lost > 0:
-                    loss_rate = round(lost / (received + lost) * 100, 2)
-                
-                result["sensors"].append({
-                    "eui": eui.lower(),
-                    "packets_received": received,
-                    "packets_lost": lost,
-                    "packet_loss_rate": loss_rate,
-                    "avg_snr": round(snr_avg, 2),
-                    "avg_rssi": round(rssi_avg, 2)
-                })
-            
-            # Sort sensors by packet loss rate (worst first)
-            result["sensors"].sort(key=lambda x: x["packet_loss_rate"], reverse=True)
-            
-            # Calculate overall average SNR/RSSI
-            total_snr = 0
-            total_rssi = 0
-            sensor_count = 0
-            for stats in tls_server_instance.sensor_packet_stats.values():
-                if stats.get('snr_count', 0) > 0:
-                    total_snr += stats['snr_sum'] / stats['snr_count']
-                    total_rssi += stats['rssi_sum'] / stats['rssi_count']
-                    sensor_count += 1
-            
-            if sensor_count > 0:
-                result["system"]["avg_snr"] = round(total_snr / sensor_count, 2)
-                result["system"]["avg_rssi"] = round(total_rssi / sensor_count, 2)
-            
-            # Include SNR/RSSI history
-            result["snr_rssi_history"] = tls_server_instance.snr_rssi_history
-            
-            # Calculate signal score distribution based on SNR
-            # Excellent: >= 10 dB, Good: 5-10 dB, Fair: 0-5 dB, Poor: -5-0 dB, Critical: < -5 dB
-            distribution = {"excellent": 0, "good": 0, "fair": 0, "poor": 0, "critical": 0}
-            for stats in tls_server_instance.sensor_packet_stats.values():
-                if stats.get('snr_count', 0) > 0:
-                    avg_snr = stats['snr_sum'] / stats['snr_count']
-                    if avg_snr >= 10:
-                        distribution["excellent"] += 1
-                    elif avg_snr >= 5:
-                        distribution["good"] += 1
-                    elif avg_snr >= 0:
-                        distribution["fair"] += 1
-                    elif avg_snr >= -5:
-                        distribution["poor"] += 1
-                    else:
-                        distribution["critical"] += 1
-            result["signal_distribution"] = distribution
-
-        # Fallback to Timescale-derived sensor insights if runtime packet stats are unavailable
-        if not result["sensors"] and timescale_summary.get("success"):
-            for sensor in timescale_summary.get("top_sensors", []):
-                result["sensors"].append({
-                    "eui": str(sensor.get("sensor_eui", "")).lower(),
-                    "packets_received": int(sensor.get("uplinks", 0) or 0),
-                    "packets_lost": 0,
-                    "packet_loss_rate": float(sensor.get("avg_packet_loss_pct", 0.0) or 0.0),
-                    "avg_snr": round(float(sensor.get("avg_snr", 0.0) or 0.0), 2),
-                    "avg_rssi": round(float(sensor.get("avg_rssi", 0.0) or 0.0), 2),
-                })
-            result["sensors"].sort(key=lambda x: x["packet_loss_rate"], reverse=True)
-
-        if not result["snr_rssi_history"] and timescale_summary.get("success"):
-            result["snr_rssi_history"] = [
-                {
-                    "timestamp": point.get("timestamp"),
-                    "avg_snr": point.get("avg_snr"),
-                    "avg_rssi": point.get("avg_rssi"),
-                }
-                for point in (timescale_summary.get("series") or [])
-            ]
-        
-        return jsonify({"success": True, **result})
+        return jsonify(_build_health_stats_payload())
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -12933,6 +12980,16 @@ def _collect_network_snapshot() -> Dict[str, Any]:
         }
     }
 
+def _build_network_topology_payload() -> Dict[str, Any]:
+    """Build normalized topology payload for customer dashboard and internal network view."""
+    snapshot = _collect_network_snapshot()
+    return {
+        'success': True,
+        'nodes': snapshot["topology"]["nodes"],
+        'edges': snapshot["topology"]["edges"],
+        'meta': snapshot["meta"]
+    }
+
 @app.route('/api/coverage/topology')
 @login_required
 @internal_portal_required
@@ -12947,6 +13004,55 @@ def api_coverage_topology():
     except Exception as e:
         logger.exception("Failed to build coverage topology snapshot")
         return jsonify({'sensors': {}, 'base_stations': [], 'error': str(e)})
+
+def _build_coverage_positions_read_payload() -> Dict[str, Any]:
+    """Build tenant-filtered coverage positions payload for map-based customer views."""
+    positions_file = _coverage_positions_file()
+    active_tenant = _active_tenant_id()
+    tenant_sensor_keys = {
+        f"sensor_{str(sensor.get('eui', '')).strip().upper()}"
+        for sensor in _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
+    }
+    tenant_bs_keys = {
+        f"bs_{str(eui).strip().upper()}"
+        for eui in _filter_base_stations_for_tenant(
+            load_base_station_config().get("base_stations", {}),
+            tenant_id=active_tenant,
+        ).keys()
+    }
+    allowed_keys = tenant_sensor_keys | tenant_bs_keys
+
+    _sync_coverage_positions_to_inventory(
+        tenant_id=active_tenant,
+        only_missing=True,
+        state=_load_coverage_positions_state(),
+        allowed_keys=allowed_keys,
+    )
+
+    state = _sync_inventory_gps_to_coverage_positions()
+    if state:
+        filtered_state = dict(state)
+        positions = state.get("positions", {})
+        if isinstance(positions, dict):
+            filtered_state["positions"] = {
+                key: value for key, value in positions.items()
+                if key in allowed_keys
+            }
+        return filtered_state
+
+    if os.path.exists(positions_file):
+        with open(positions_file, 'r') as f:
+            raw_state = json.load(f)
+        if isinstance(raw_state, dict) and isinstance(raw_state.get("positions"), dict):
+            filtered_state = dict(raw_state)
+            filtered_state["positions"] = {
+                key: value for key, value in raw_state.get("positions", {}).items()
+                if key in allowed_keys
+            }
+            return filtered_state
+        return raw_state if isinstance(raw_state, dict) else {}
+
+    return {}
 
 @app.route('/api/coverage/positions', methods=['GET', 'POST'])
 @login_required
@@ -13022,50 +13128,7 @@ def api_coverage_positions():
             return jsonify({'success': False, 'error': str(e)}), 500
     else:
         try:
-            active_tenant = _active_tenant_id()
-            tenant_sensor_keys = {
-                f"sensor_{str(sensor.get('eui', '')).strip().upper()}"
-                for sensor in _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
-            }
-            tenant_bs_keys = {
-                f"bs_{str(eui).strip().upper()}"
-                for eui in _filter_base_stations_for_tenant(
-                    load_base_station_config().get("base_stations", {}),
-                    tenant_id=active_tenant,
-                ).keys()
-            }
-            allowed_keys = tenant_sensor_keys | tenant_bs_keys
-
-            # Self-heal older inconsistent data: map had GPS but inventory was empty.
-            _sync_coverage_positions_to_inventory(
-                tenant_id=active_tenant,
-                only_missing=True,
-                state=_load_coverage_positions_state(),
-                allowed_keys=allowed_keys,
-            )
-
-            state = _sync_inventory_gps_to_coverage_positions()
-            if state:
-                filtered_state = dict(state)
-                positions = state.get("positions", {})
-                if isinstance(positions, dict):
-                    filtered_state["positions"] = {
-                        key: value for key, value in positions.items()
-                        if key in allowed_keys
-                    }
-                return jsonify(filtered_state)
-            if os.path.exists(positions_file):
-                with open(positions_file, 'r') as f:
-                    raw_state = json.load(f)
-                if isinstance(raw_state, dict) and isinstance(raw_state.get("positions"), dict):
-                    filtered_state = dict(raw_state)
-                    filtered_state["positions"] = {
-                        key: value for key, value in raw_state.get("positions", {}).items()
-                        if key in allowed_keys
-                    }
-                    return jsonify(filtered_state)
-                return jsonify(raw_state)
-            return jsonify({})
+            return jsonify(_build_coverage_positions_read_payload())
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
@@ -13153,13 +13216,7 @@ def api_coverage_floorplan():
 def api_network():
     """Get network topology data for visualization"""
     try:
-        snapshot = _collect_network_snapshot()
-        return jsonify({
-            'success': True,
-            'nodes': snapshot["topology"]["nodes"],
-            'edges': snapshot["topology"]["edges"],
-            'meta': snapshot["meta"]
-        })
+        return jsonify(_build_network_topology_payload())
     except Exception as e:
         logger.exception("Failed to build network topology snapshot")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -13186,105 +13243,106 @@ def save_base_station_config(config):
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2)
 
+def _build_base_stations_runtime_payload() -> Dict[str, Any]:
+    """Build base station runtime summary for customer-safe dashboard aggregation."""
+    global tls_server_instance
+    config = load_base_station_config()
+    active_tenant = _active_tenant_id()
+    bs_config = _filter_base_stations_for_tenant(config.get("base_stations", {}), tenant_id=active_tenant)
+
+    connected_bs = {}
+    connecting_bs = {}
+    bs_health = {}
+    bs_sensors = {}
+
+    if tls_server_instance:
+        status = tls_server_instance.get_base_station_status()
+        for bs in status.get("connected", []):
+            eui = bs["eui"].lower()
+            connected_bs[eui] = bs
+        for bs in status.get("connecting", []):
+            eui = bs["eui"].lower()
+            connecting_bs[eui] = bs
+        if hasattr(tls_server_instance, 'base_station_health'):
+            bs_health = tls_server_instance.base_station_health
+        if hasattr(tls_server_instance, 'sensor_config'):
+            for sensor in tls_server_instance.sensor_config:
+                if not _tenant_matches(_tenant_id_from_sensor(sensor), active_tenant):
+                    continue
+                preferred = sensor.get('preferredDownlinkPath', {})
+                if isinstance(preferred, dict):
+                    bs_eui = preferred.get('baseStation', '').lower()
+                    if bs_eui:
+                        bs_sensors[bs_eui] = bs_sensors.get(bs_eui, 0) + 1
+
+    normalized_bs_config = {}
+    for raw_eui, raw_bs_data in (bs_config or {}).items():
+        eui_lower = str(raw_eui or "").strip().lower()
+        if not eui_lower:
+            continue
+        payload = dict(raw_bs_data) if isinstance(raw_bs_data, dict) else {}
+        existing = normalized_bs_config.get(eui_lower)
+        if existing is None:
+            normalized_bs_config[eui_lower] = payload
+        else:
+            merged = dict(existing)
+            merged.update({k: v for k, v in payload.items() if v not in (None, "", [], {})})
+            normalized_bs_config[eui_lower] = merged
+
+    result = []
+    for eui_lower, bs_data in normalized_bs_config.items():
+        if eui_lower in connected_bs:
+            status = "connected"
+        elif eui_lower in connecting_bs:
+            status = "connecting"
+        else:
+            status = "offline"
+
+        health = bs_health.get(eui_lower, {})
+        last_status_change = ""
+        last_status_event = ""
+        status_age_seconds = None
+        bs_events = bs_uptime_events.get(eui_lower, [])
+        if bs_events:
+            last = bs_events[-1]
+            last_status_change = last.get("timestamp", "")
+            last_status_event = last.get("event", "")
+            try:
+                ts = datetime.fromisoformat(last_status_change)
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=timezone.utc)
+                status_age_seconds = max(0, int((datetime.now(timezone.utc) - ts).total_seconds()))
+            except Exception:
+                status_age_seconds = None
+
+        result.append({
+            "eui": eui_lower,
+            "name": bs_data.get("name", ""),
+            "tags": bs_data.get("tags", []),
+            "tenant_id": bs_data.get("tenant_id", active_tenant),
+            "status": status,
+            "configured_ip": bs_data.get("ip", ""),
+            "gps_lat": bs_data.get("gps_lat"),
+            "gps_lng": bs_data.get("gps_lng"),
+            "health": health,
+            "connected_sensors": bs_sensors.get(eui_lower, 0),
+            "last_status_event": last_status_event,
+            "last_status_change": last_status_change,
+            "status_age_seconds": status_age_seconds
+        })
+
+    result.sort(key=lambda x: (x["status"] != "connected", x["status"] != "connecting", x["eui"]))
+    current_statuses = {bs["eui"]: bs["status"] for bs in result}
+    _track_bs_status_changes(current_statuses)
+    return {"success": True, "base_stations": result}
+
 @app.route('/api/base-stations', methods=['GET'])
 @login_required
 @internal_portal_required
 def get_base_stations():
     """Get all base stations with status and health data"""
     try:
-        global tls_server_instance
-        config = load_base_station_config()
-        active_tenant = _active_tenant_id()
-        bs_config = _filter_base_stations_for_tenant(config.get("base_stations", {}), tenant_id=active_tenant)
-        
-        connected_bs = {}
-        connecting_bs = {}
-        bs_health = {}
-        bs_sensors = {}
-        
-        if tls_server_instance:
-            status = tls_server_instance.get_base_station_status()
-            for bs in status.get("connected", []):
-                eui = bs["eui"].lower()
-                connected_bs[eui] = bs
-            for bs in status.get("connecting", []):
-                eui = bs["eui"].lower()
-                connecting_bs[eui] = bs
-            if hasattr(tls_server_instance, 'base_station_health'):
-                bs_health = tls_server_instance.base_station_health
-            if hasattr(tls_server_instance, 'sensor_config'):
-                for sensor in tls_server_instance.sensor_config:
-                    if not _tenant_matches(_tenant_id_from_sensor(sensor), active_tenant):
-                        continue
-                    preferred = sensor.get('preferredDownlinkPath', {})
-                    if isinstance(preferred, dict):
-                        bs_eui = preferred.get('baseStation', '').lower()
-                        if bs_eui:
-                            bs_sensors[bs_eui] = bs_sensors.get(bs_eui, 0) + 1
-        
-        normalized_bs_config = {}
-        for raw_eui, raw_bs_data in (bs_config or {}).items():
-            eui_lower = str(raw_eui or "").strip().lower()
-            if not eui_lower:
-                continue
-            payload = dict(raw_bs_data) if isinstance(raw_bs_data, dict) else {}
-            existing = normalized_bs_config.get(eui_lower)
-            if existing is None:
-                normalized_bs_config[eui_lower] = payload
-            else:
-                merged = dict(existing)
-                merged.update({k: v for k, v in payload.items() if v not in (None, "", [], {})})
-                normalized_bs_config[eui_lower] = merged
-
-        result = []
-        for eui_lower, bs_data in normalized_bs_config.items():
-            
-            if eui_lower in connected_bs:
-                status = "connected"
-            elif eui_lower in connecting_bs:
-                status = "connecting"
-            else:
-                status = "offline"
-            
-            health = bs_health.get(eui_lower, {})
-            last_status_change = ""
-            last_status_event = ""
-            status_age_seconds = None
-            bs_events = bs_uptime_events.get(eui_lower, [])
-            if bs_events:
-                last = bs_events[-1]
-                last_status_change = last.get("timestamp", "")
-                last_status_event = last.get("event", "")
-                try:
-                    ts = datetime.fromisoformat(last_status_change)
-                    if ts.tzinfo is None:
-                        ts = ts.replace(tzinfo=timezone.utc)
-                    status_age_seconds = max(0, int((datetime.now(timezone.utc) - ts).total_seconds()))
-                except:
-                    status_age_seconds = None
-            
-            result.append({
-                "eui": eui_lower,
-                "name": bs_data.get("name", ""),
-                "tags": bs_data.get("tags", []),
-                "tenant_id": bs_data.get("tenant_id", active_tenant),
-                "status": status,
-                "configured_ip": bs_data.get("ip", ""),
-                "gps_lat": bs_data.get("gps_lat"),
-                "gps_lng": bs_data.get("gps_lng"),
-                "health": health,
-                "connected_sensors": bs_sensors.get(eui_lower, 0),
-                "last_status_event": last_status_event,
-                "last_status_change": last_status_change,
-                "status_age_seconds": status_age_seconds
-            })
-        
-        result.sort(key=lambda x: (x["status"] != "connected", x["status"] != "connecting", x["eui"]))
-        
-        current_statuses = {bs["eui"]: bs["status"] for bs in result}
-        _track_bs_status_changes(current_statuses)
-        
-        return jsonify({"success": True, "base_stations": result})
+        return jsonify(_build_base_stations_runtime_payload())
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -13763,37 +13821,41 @@ def delete_base_station(eui):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+def _build_traffic_metrics_payload() -> Dict[str, Any]:
+    """Build traffic metrics payload used by customer dashboard and internal traffic view."""
+    global tls_server_instance
+    timescale_summary = _timescale_fetch_telemetry_summary(window_minutes=60, bucket_seconds=60, top_limit=10)
+    timescale_summary["telemetry_worker"] = get_timescale_uplink_runtime_stats()
+    if tls_server_instance and hasattr(tls_server_instance, 'get_traffic_metrics'):
+        data = tls_server_instance.get_traffic_metrics()
+        return {'success': True, **data, 'timescale': timescale_summary}
+    return {
+        'success': True,
+        'metrics': {
+            'messages_in': 0,
+            'messages_out': 0,
+            'messages_dropped': 0,
+            'bytes_in': 0,
+            'bytes_out': 0,
+            'vm_messages': 0,
+            'attach_requests': 0,
+            'detach_requests': 0,
+            'status_requests': 0,
+            'start_time': 0
+        },
+        'dedup_stats': {'total_messages': 0, 'duplicate_messages': 0, 'published_messages': 0},
+        'history': [],
+        'connections': 0,
+        'timescale': timescale_summary
+    }
+
 @app.route('/api/traffic/metrics')
 @login_required
 @internal_portal_required
 def get_traffic_metrics():
     """Get traffic metrics for visualization"""
     try:
-        global tls_server_instance
-        timescale_summary = _timescale_fetch_telemetry_summary(window_minutes=60, bucket_seconds=60, top_limit=10)
-        timescale_summary["telemetry_worker"] = get_timescale_uplink_runtime_stats()
-        if tls_server_instance and hasattr(tls_server_instance, 'get_traffic_metrics'):
-            data = tls_server_instance.get_traffic_metrics()
-            return jsonify({'success': True, **data, 'timescale': timescale_summary})
-        return jsonify({
-            'success': True,
-            'metrics': {
-                'messages_in': 0,
-                'messages_out': 0,
-                'messages_dropped': 0,
-                'bytes_in': 0,
-                'bytes_out': 0,
-                'vm_messages': 0,
-                'attach_requests': 0,
-                'detach_requests': 0,
-                'status_requests': 0,
-                'start_time': 0
-            },
-            'dedup_stats': {'total_messages': 0, 'duplicate_messages': 0, 'published_messages': 0},
-            'history': [],
-            'connections': 0,
-            'timescale': timescale_summary
-        })
+        return jsonify(_build_traffic_metrics_payload())
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -15184,6 +15246,39 @@ def bssci_status():
         }
         return jsonify(error_response), 500
 
+def _build_customer_dashboard_payload() -> Dict[str, Any]:
+    """Aggregate customer-safe dashboard data without exposing internal runtime API surface."""
+    return {
+        'success': True,
+        'statusData': get_bssci_service_status(),
+        'vmData': _build_vm_status_payload(),
+        'trafficData': _build_traffic_metrics_payload(),
+        'healthData': _build_health_stats_payload(),
+        'topologyData': _build_network_topology_payload(),
+        'gatewaysData': _build_base_stations_runtime_payload(),
+        'coverageState': _build_coverage_positions_read_payload(),
+    }
+
+@app.route('/api/customer/dashboard', methods=['GET'])
+@login_required
+def customer_dashboard_payload():
+    """Customer portal dashboard payload composed from customer-safe helpers."""
+    try:
+        return jsonify(_build_customer_dashboard_payload())
+    except Exception as exc:
+        logger.exception("Failed to build customer dashboard payload")
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+@app.route('/api/customer/base-stations', methods=['GET'])
+@login_required
+def customer_base_stations_payload():
+    """Customer-safe base station summary used by customer sensor attach flows."""
+    try:
+        return jsonify(_build_base_stations_runtime_payload())
+    except Exception as exc:
+        logger.exception("Failed to build customer base station payload")
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
 @app.route('/api/base_stations')
 @login_required
 def api_base_stations():
@@ -15345,16 +15440,20 @@ def get_base_stations_status():
 
 # ==================== Variable MAC (VM) Sub-Channel API ====================
 
+def _build_vm_status_payload() -> Dict[str, Any]:
+    """Build VM status payload used by dashboard and internal OMS tools."""
+    global tls_server_instance
+    if tls_server_instance and hasattr(tls_server_instance, 'get_vm_status'):
+        status = tls_server_instance.get_vm_status()
+        return {'success': True, **status}
+    return {'success': False, 'message': 'TLS server not available', 'active_sensors': {}}
+
 @app.route('/api/vm/status')
 @login_required
 def get_vm_status():
     """Get VM sub-channel status for all sensors"""
     try:
-        global tls_server_instance
-        if tls_server_instance and hasattr(tls_server_instance, 'get_vm_status'):
-            status = tls_server_instance.get_vm_status()
-            return jsonify({'success': True, **status})
-        return jsonify({'success': False, 'message': 'TLS server not available', 'active_sensors': {}})
+        return jsonify(_build_vm_status_payload())
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
