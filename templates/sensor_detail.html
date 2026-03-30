@@ -559,7 +559,7 @@ button:active {
 }
 </style>
 
-{% if current_user and current_user.role == 'viewer' %}
+{% if is_customer_user %}
 <div class="svd-page">
   <section class="svd-card svd-head">
     <div class="svd-head-left">

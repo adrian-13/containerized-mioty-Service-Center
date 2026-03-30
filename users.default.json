@@ -18,15 +18,15 @@
         "view_service_logs": true
       }
     },
-    "viewer": {
-      "password": "viewer123",
-      "role": "viewer",
-      "name": "Viewer",
+    "customer": {
+      "password": "customer123",
+      "role": "customer",
+      "name": "Customer",
       "tenant_id": ""
     },
     "test": {
       "password": "test",
-      "role": "viewer",
+      "role": "customer",
       "name": "test",
       "tenant_id": "test"
     }
@@ -83,7 +83,21 @@
       "visible_tabs": [
         "dashboard",
         "sensors",
-        "network"
+        "alerts"
+      ]
+    },
+    "customer": {
+      "can_view_all": false,
+      "can_add_sensors": true,
+      "can_edit_sensors": false,
+      "can_manage_alerts": true,
+      "can_edit_config": false,
+      "can_manage_certificates": false,
+      "can_update_system": false,
+      "visible_tabs": [
+        "dashboard",
+        "sensors",
+        "alerts"
       ]
     }
   }

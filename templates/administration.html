@@ -124,7 +124,7 @@
 }
 .tenant-role-admin { color: #7f1d1d; background: #fef2f2; border-color: #fecaca; }
 .tenant-role-user { color: #1e3a8a; background: #eff6ff; border-color: #bfdbfe; }
-.tenant-role-viewer { color: #334155; background: #f1f5f9; border-color: #cbd5e1; }
+.tenant-role-customer { color: #334155; background: #f1f5f9; border-color: #cbd5e1; }
 .tenant-chip {
     display: inline-flex;
     align-items: center;
@@ -695,7 +695,7 @@
 {% block scripts %}
 <script>
 let tenantAdminUsers = [];
-let tenantAdminRoles = ['admin', 'user', 'viewer'];
+let tenantAdminRoles = ['admin', 'user', 'customer'];
 let tenantAdminTenants = [];
 let tenantKnownTenantChoices = [];
 let tenantAdminDefaultTenant = 'default';
@@ -825,7 +825,14 @@ function roleBadgeClass(role) {
     const normalized = String(role || '').toLowerCase();
     if (normalized === 'admin') return 'tenant-role-admin';
     if (normalized === 'user') return 'tenant-role-user';
-    return 'tenant-role-viewer';
+    return 'tenant-role-customer';
+}
+
+function tenantDisplayRole(role) {
+    const normalized = String(role || '').toLowerCase();
+    if (normalized === 'admin') return appTranslate('admin.role_admin', 'Admin');
+    if (normalized === 'user') return appTranslate('admin.role_user', 'User');
+    return appTranslate('admin.role_customer', 'Customer');
 }
 
 function getDefaultAdminScopeMap() {
@@ -865,7 +872,7 @@ function collectAdminScopePayload() {
 function renderAdminScopeEditor(rawPermissions) {
     const section = document.getElementById('tenantAdminScopesSection');
     const editor = document.getElementById('tenantAdminScopeEditor');
-    const role = String(document.getElementById('tenantUserRole')?.value || 'viewer').toLowerCase();
+    const role = String(document.getElementById('tenantUserRole')?.value || 'customer').toLowerCase();
     if (!section || !editor) return;
 
     if (role !== 'admin') {
@@ -1021,7 +1028,7 @@ function getFilteredUsers() {
     return tenantAdminUsers.filter(user => {
         const username = String(user.username || '').toLowerCase();
         const name = String(user.name || '').toLowerCase();
-        const role = String(user.role || 'viewer').toLowerCase();
+        const role = String(user.role || 'customer').toLowerCase();
         const tenant = role === 'admin'
             ? '__global__'
             : String(user.tenant_id || tenantAdminDefaultTenant).toLowerCase();
@@ -1029,7 +1036,8 @@ function getFilteredUsers() {
         if (roleFilter !== 'all' && role !== roleFilter) return false;
         if (tenantFilter !== 'all' && tenant !== tenantFilter) return false;
         if (!search) return true;
-        return username.includes(search) || name.includes(search) || tenant.includes(search) || role.includes(search);
+        const roleLabel = tenantDisplayRole(role).toLowerCase();
+        return username.includes(search) || name.includes(search) || tenant.includes(search) || role.includes(search) || roleLabel.includes(search);
     });
 }
 
@@ -1081,16 +1089,16 @@ function populateRoleOptions() {
     const roleFilter = document.getElementById('tenantRoleFilter');
     if (!roleSelect) return;
 
-    const selectedRole = roleSelect.value || 'user';
+    const selectedRole = roleSelect.value || 'customer';
     roleSelect.innerHTML = tenantAdminRoles
-        .map(role => `<option value="${tenantEscapeHtml(role)}">${tenantEscapeHtml(role)}</option>`)
+        .map(role => `<option value="${tenantEscapeHtml(role)}">${tenantEscapeHtml(tenantDisplayRole(role))}</option>`)
         .join('');
-    roleSelect.value = tenantAdminRoles.includes(selectedRole) ? selectedRole : (tenantAdminRoles[0] || 'user');
+    roleSelect.value = tenantAdminRoles.includes(selectedRole) ? selectedRole : (tenantAdminRoles[0] || 'customer');
 
     if (roleFilter) {
         const selectedFilter = roleFilter.value || 'all';
         roleFilter.innerHTML = `<option value="all">${appTranslate('admin.all_roles', 'All roles')}</option>` + tenantAdminRoles
-            .map(role => `<option value="${tenantEscapeHtml(role)}">${tenantEscapeHtml(role)}</option>`)
+            .map(role => `<option value="${tenantEscapeHtml(role)}">${tenantEscapeHtml(tenantDisplayRole(role))}</option>`)
             .join('');
         if (selectedFilter === 'all' || tenantAdminRoles.includes(selectedFilter)) {
             roleFilter.value = selectedFilter;
@@ -1117,7 +1125,7 @@ function renderTenantUsersTable() {
 
     body.innerHTML = filteredUsers.map(user => {
         const encodedUsername = encodeURIComponent(String(user.username || ''));
-        const role = String(user.role || 'viewer').toLowerCase();
+        const role = String(user.role || 'customer').toLowerCase();
         const tenantDisplay = role === 'admin'
             ? `<span class="tenant-chip tenant-chip-global">${appTranslate('common.super_admin', 'Super admin')}</span>
                <div class="tenant-meta-note mt-1">Scopes ${(Object.values(user.admin_permissions || {}).filter(Boolean).length)}/${Math.max(tenantAdminScopeDefinitions.length, 1)}</div>`
@@ -1126,7 +1134,7 @@ function renderTenantUsersTable() {
         <tr>
             <td><strong>${tenantEscapeHtml(user.username)}</strong></td>
             <td>${tenantEscapeHtml(user.name || '')}</td>
-            <td><span class="tenant-role-badge ${roleBadgeClass(role)}">${tenantEscapeHtml(role)}</span></td>
+            <td><span class="tenant-role-badge ${roleBadgeClass(role)}">${tenantEscapeHtml(tenantDisplayRole(role))}</span></td>
             <td>${tenantDisplay}</td>
             <td class="text-end">
                 <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editTenantUser(decodeURIComponent('${encodedUsername}'))">Edit</button>
@@ -1292,7 +1300,7 @@ function setTenantEntityMode(mode) {
 }
 
 function syncUserTenantFieldState() {
-    const role = String(document.getElementById('tenantUserRole')?.value || 'viewer').toLowerCase();
+    const role = String(document.getElementById('tenantUserRole')?.value || 'customer').toLowerCase();
     const tenantInput = document.getElementById('tenantUserTenant');
     const tenantHint = document.getElementById('tenantUserTenantHint');
     if (!tenantInput) return;
@@ -1327,9 +1335,9 @@ function syncUserTenantFieldState() {
 function updateUserScopeBadges() {
     const badgesEl = document.getElementById('tenantUserScopeBadges');
     if (!badgesEl) return;
-    const role = String(document.getElementById('tenantUserRole')?.value || 'viewer').toLowerCase();
+    const role = String(document.getElementById('tenantUserRole')?.value || 'customer').toLowerCase();
     const tenantValue = String(document.getElementById('tenantUserTenant')?.value || '').trim();
-    const normalizedRole = role || 'viewer';
+    const normalizedRole = role || 'customer';
     const tenantLabel = normalizedRole === 'admin'
         ? appTranslate('common.super_admin', 'Super admin')
         : tenantScopeLabel(tenantValue || tenantAdminDefaultTenant || 'default');
@@ -1342,7 +1350,7 @@ function updateUserScopeBadges() {
         adminScopeBadge = `<span class="scope-badge scope-badge-role">Admin scopes: ${granted}/${total}</span>`;
     }
     badgesEl.innerHTML = `
-        <span class="scope-badge scope-badge-role">Role: ${tenantEscapeHtml(normalizedRole)}</span>
+        <span class="scope-badge scope-badge-role">Role: ${tenantEscapeHtml(tenantDisplayRole(normalizedRole))}</span>
         <span class="scope-badge ${tenantBadgeClass}">Scope: ${tenantEscapeHtml(tenantLabel)}</span>
         ${adminScopeBadge}
     `;
@@ -1355,7 +1363,7 @@ function resetTenantUserForm() {
     document.getElementById('tenantUserUsername').disabled = false;
     document.getElementById('tenantUserName').value = '';
     document.getElementById('tenantUserPassword').value = '';
-    document.getElementById('tenantUserRole').value = tenantAdminRoles.includes('user') ? 'user' : (tenantAdminRoles[0] || 'viewer');
+    document.getElementById('tenantUserRole').value = tenantAdminRoles.includes('customer') ? 'customer' : (tenantAdminRoles[0] || 'customer');
     document.getElementById('tenantUserTenant').value = tenantAdminDefaultTenant;
     tenantUserDraftAdminPermissions = getDefaultAdminScopeMap();
     setUserFormMode('create');
@@ -1383,7 +1391,7 @@ function editTenantUser(username) {
     document.getElementById('tenantUserUsername').disabled = true;
     document.getElementById('tenantUserName').value = user.name || '';
     document.getElementById('tenantUserPassword').value = '';
-    document.getElementById('tenantUserRole').value = user.role || 'viewer';
+    document.getElementById('tenantUserRole').value = user.role || 'customer';
     document.getElementById('tenantUserTenant').value = user.tenant_id || tenantAdminDefaultTenant;
     tenantUserDraftAdminPermissions = normalizeAdminScopeMap(user.admin_permissions || {});
     setUserFormMode('edit');
@@ -1398,7 +1406,7 @@ async function saveTenantUser() {
     const username = document.getElementById('tenantUserUsername').value.trim();
     const name = document.getElementById('tenantUserName').value.trim();
     const password = document.getElementById('tenantUserPassword').value;
-    const role = String(document.getElementById('tenantUserRole').value || 'viewer').toLowerCase();
+    const role = String(document.getElementById('tenantUserRole').value || 'customer').toLowerCase();
     const tenantId = role === 'admin'
         ? ''
         : tenantNormalize(document.getElementById('tenantUserTenant').value, tenantAdminDefaultTenant);
@@ -1415,7 +1423,7 @@ async function saveTenantUser() {
     const payload = {
         username,
         name: name || username,
-        role: role || 'viewer',
+        role: role || 'customer',
         tenant_id: tenantId
     };
     if (role === 'admin') {
@@ -1609,13 +1617,13 @@ async function fetchTenantAdminData() {
                 throw new Error(usersData.error || usersData.message || 'Failed to load users');
             }
             tenantAdminUsers = usersData.users || [];
-            tenantAdminRoles = usersData.roles || ['admin', 'user', 'viewer'];
+            tenantAdminRoles = usersData.roles || ['admin', 'user', 'customer'];
             tenantAdminScopeDefinitions = usersData.admin_scopes || [];
             tenantCurrentAdminPermissions = usersData.current_admin_permissions || {};
             tenantKnownTenantChoices = usersData.tenant_choices || [];
         } else {
             tenantAdminUsers = [];
-            tenantAdminRoles = ['admin', 'user', 'viewer'];
+            tenantAdminRoles = ['admin', 'user', 'customer'];
             tenantAdminScopeDefinitions = [];
             tenantCurrentAdminPermissions = {};
             tenantKnownTenantChoices = [];

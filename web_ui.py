@@ -140,6 +140,9 @@ _UI_TRANSLATIONS = {
         "nav.certificates": "Certifikáty",
         "nav.documentation": "Dokumentácia",
         "auth.log_out": "Odhlásiť sa",
+        "auth.role_admin": "Admin",
+        "auth.role_customer": "Zákazník",
+        "auth.role_user": "Používateľ",
         "brand.subtitle": "MIOTY operačné centrum",
         "topbar.workspace_subtitle": "Prevádzkové rozhranie MIOTY",
         "topbar.toggle_navigation": "Prepnúť navigáciu",
@@ -440,6 +443,27 @@ _UI_TRANSLATIONS = {
         "login.error.timeout": "Relácia vypršala z dôvodu neaktivity. Prihláste sa znova.",
         "login.error.invalid_credentials": "Neplatné používateľské meno alebo heslo",
         "login.language_switch": "Jazyk rozhrania",
+        "login.mode_demo": "Demo režim",
+        "login.mode_development": "Vývojový režim",
+        "login.mode_production": "Produkčný režim",
+        "login.bootstrap_accounts_title": "Predvolené účty pre rýchly štart",
+        "login.bootstrap_accounts_copy": "Tieto bootstrap účty sú určené pre demo a lokálne testovanie.",
+        "login.production_notice": "Produkčný režim má mať demo účty vypnuté a admin účet so zmeneným heslom.",
+        "login.account_admin": "Platform admin",
+        "login.account_customer": "Zákaznícky portál",
+        "login.account_test": "Demo tenant",
+        "auth.force_password_change_title": "Nastavte nové heslo admin účtu",
+        "auth.force_password_change_subtitle": "Pred pokračovaním zmeňte predvolené bootstrap heslo pre admin účet.",
+        "auth.new_password": "Nové heslo",
+        "auth.confirm_password": "Potvrdenie hesla",
+        "auth.password_change_submit": "Uložiť nové heslo",
+        "auth.password_change_required": "Pred pokračovaním nastavte nové heslo pre bootstrap admin účet.",
+        "auth.password_change_required_api": "Password change required before continuing.",
+        "auth.password_change_too_short": "Nové heslo musí mať aspoň 8 znakov.",
+        "auth.password_change_mismatch": "Zadané heslá sa nezhodujú.",
+        "auth.password_change_same_as_default": "Nové heslo sa musí líšiť od predvoleného bootstrap hesla.",
+        "auth.password_change_success": "Heslo admin účtu bolo aktualizované.",
+        "auth.password_change_save_failed": "Nové heslo sa nepodarilo uložiť. Skúste to znova.",
         "runtime.loading_sensor_detail": "Načítava sa detail senzora...",
         "runtime.loading_base_station_detail": "Načítava sa detail základňovej stanice...",
         "runtime.unable_load_sensor_detail": "Nepodarilo sa načítať detail senzora: {error}",
@@ -804,6 +828,11 @@ _UI_TRANSLATIONS = {
         "viewer.ago": "pred",
         "viewer.no_data": "Bez dát",
         "viewer.sensor_options": "Možnosti",
+        "viewer.guide_title": "Sprievodca portálom",
+        "viewer.guide_settings_note": "Rýchly prehľad, kde sledovať senzory, pracovať s upozorneniami a čo môžete v zákazníckom portáli meniť.",
+        "viewer.guide_open": "Otvoriť sprievodcu",
+        "viewer.guide_kicker": "Rýchly sprievodca",
+        "viewer.guide_intro_copy": "Tento portál je zameraný na každodenný prehľad senzorov, upozornení a základných nastavení.",
         "sensor_detail.delayed": "Oneskorené",
         "sensor_detail.quiet": "Pokojný",
     },
@@ -1295,8 +1324,11 @@ _UI_TRANSLATIONS["sk"].update({
     "admin.load_users_tenants_note": "Načítajte používateľov a tenantov z backendu.",
     "admin.search_username_name_tenant": "Hľadať podľa používateľa, mena alebo tenantu",
     "admin.name": "Názov",
-    "admin.role": "Rola",
-    "admin.scope": "Rozsah",
+        "admin.role": "Rola",
+        "admin.role_admin": "Admin",
+        "admin.role_user": "Používateľ",
+        "admin.role_customer": "Zákazník",
+        "admin.scope": "Rozsah",
     "admin.actions": "Akcie",
     "admin.no_users_loaded": "Zatiaľ nie sú načítaní žiadni používatelia.",
     "admin.tenant_registry": "Register tenantov",
@@ -2655,7 +2687,270 @@ def _active_tenant_id():
 
 def _normalize_user_role(role):
     normalized = str(role or "viewer").strip().lower()
+    if normalized == "customer":
+        normalized = "viewer"
     return normalized or "viewer"
+
+def _is_customer_role(role):
+    return _normalize_user_role(role) in {"viewer", "customer"}
+
+def _display_user_role(role):
+    normalized = _normalize_user_role(role)
+    if normalized == "admin":
+        return "admin"
+    if _is_customer_role(normalized):
+        return "customer"
+    return normalized
+
+def _deployment_mode():
+    mode = str(getattr(bssci_config, "APP_DEPLOYMENT_MODE", "demo") or "demo").strip().lower()
+    if mode == "dev":
+        mode = "development"
+    elif mode == "prod":
+        mode = "production"
+    if mode not in {"demo", "development", "production"}:
+        mode = "demo"
+    return mode
+
+def _is_production_deployment():
+    return _deployment_mode() == "production"
+
+def _bootstrap_admin_default_password(seed_payload=None):
+    payload = seed_payload if isinstance(seed_payload, dict) else _load_default_user_seed_payload()
+    users = payload.get("users", {}) if isinstance(payload, dict) else {}
+    admin = users.get("admin", {}) if isinstance(users, dict) else {}
+    return str((admin if isinstance(admin, dict) else {}).get("password") or "admin123")
+
+def _should_force_initial_admin_password_change(user, bootstrap_admin_password=None):
+    if not bool(getattr(bssci_config, "AUTH_FORCE_INITIAL_ADMIN_PASSWORD_CHANGE", True)):
+        return False
+    if not _is_production_deployment():
+        return False
+    if _normalize_user_role((user or {}).get("role", "viewer")) != "admin":
+        return False
+    if bool((user or {}).get("require_password_change")):
+        return True
+    default_password = str(bootstrap_admin_password or _bootstrap_admin_default_password())
+    return str((user or {}).get("password") or "") == default_password
+
+def _bootstrap_login_account_hints():
+    if not bool(getattr(bssci_config, "AUTH_BOOTSTRAP_DEFAULT_USERS", True)):
+        return []
+    if _is_production_deployment():
+        return []
+
+    payload = _load_default_user_seed_payload()
+    users = payload.get("users", {}) if isinstance(payload, dict) else {}
+    hints = []
+
+    def add_hint(username, label_key, fallback_label):
+        account = users.get(username)
+        if not isinstance(account, dict):
+            return
+        hints.append({
+            "username": username,
+            "password": str(account.get("password") or ""),
+            "label": _ui_text(label_key, fallback_label),
+        })
+
+    add_hint("admin", "login.account_admin", "Platform admin")
+    if bool(getattr(bssci_config, "AUTH_BOOTSTRAP_DEMO_USERS", True)):
+        add_hint("customer", "login.account_customer", "Customer portal")
+        add_hint("test", "login.account_test", "Demo tenant")
+    return hints
+
+def _default_role_permissions_map():
+    customer_permissions = {
+        "can_view_all": False,
+        "can_add_sensors": True,
+        "can_edit_sensors": False,
+        "can_manage_alerts": True,
+        "can_edit_config": False,
+        "can_manage_certificates": False,
+        "can_update_system": False,
+        "visible_tabs": [
+            "dashboard",
+            "sensors",
+            "alerts",
+        ],
+    }
+    return {
+        "admin": {
+            "can_view_all": True,
+            "can_add_sensors": True,
+            "can_edit_sensors": True,
+            "can_manage_alerts": True,
+            "can_edit_config": True,
+            "can_manage_certificates": True,
+            "can_update_system": True,
+            "visible_tabs": [
+                "dashboard",
+                "sensors",
+                "base_stations",
+                "health",
+                "network",
+                "traffic",
+                "oms",
+                "logs",
+                "config",
+                "certificates",
+            ],
+        },
+        "user": {
+            "can_view_all": True,
+            "can_add_sensors": True,
+            "can_edit_sensors": True,
+            "can_manage_alerts": True,
+            "can_edit_config": False,
+            "can_manage_certificates": False,
+            "can_update_system": False,
+            "visible_tabs": [
+                "dashboard",
+                "sensors",
+                "base_stations",
+                "health",
+                "network",
+                "traffic",
+                "oms",
+                "logs",
+            ],
+        },
+        "viewer": copy.deepcopy(customer_permissions),
+        "customer": copy.deepcopy(customer_permissions),
+    }
+
+def _normalize_role_permissions_map(role_permissions):
+    defaults = _default_role_permissions_map()
+    source = role_permissions if isinstance(role_permissions, dict) else {}
+    result = {}
+    changed = not isinstance(role_permissions, dict)
+
+    for role_name, default_permissions in defaults.items():
+        existing = source.get(role_name)
+        if not isinstance(existing, dict):
+            result[role_name] = copy.deepcopy(default_permissions)
+            changed = True
+            continue
+
+        merged = copy.deepcopy(default_permissions)
+        for key, value in existing.items():
+            if key == "visible_tabs":
+                continue
+            merged[key] = value
+
+        existing_tabs = existing.get("visible_tabs")
+        if isinstance(existing_tabs, list):
+            normalized_tabs = []
+            for tab in existing_tabs:
+                tab_name = str(tab or "").strip()
+                if not tab_name or tab_name in normalized_tabs:
+                    continue
+                if role_name in {"viewer", "customer"} and tab_name not in default_permissions["visible_tabs"]:
+                    changed = True
+                    continue
+                normalized_tabs.append(tab_name)
+            if role_name in {"viewer", "customer"}:
+                for required_tab in default_permissions["visible_tabs"]:
+                    if required_tab not in normalized_tabs:
+                        normalized_tabs.append(required_tab)
+                        changed = True
+            merged["visible_tabs"] = normalized_tabs
+        else:
+            merged["visible_tabs"] = copy.deepcopy(default_permissions["visible_tabs"])
+            changed = True
+
+        if merged != existing:
+            changed = True
+        result[role_name] = merged
+
+    for role_name, existing in source.items():
+        if role_name not in result and isinstance(existing, dict):
+            result[role_name] = existing
+
+    return result, changed
+
+def _resolve_role_permissions(role_permissions, role):
+    normalized_role = _normalize_user_role(role)
+    permissions_map = role_permissions if isinstance(role_permissions, dict) else {}
+    direct = permissions_map.get(normalized_role)
+    if isinstance(direct, dict):
+        return direct
+    if _is_customer_role(normalized_role):
+        for alias in ("customer", "viewer"):
+            alias_permissions = permissions_map.get(alias)
+            if isinstance(alias_permissions, dict):
+                return alias_permissions
+    return {}
+
+def _visible_role_name(role):
+    normalized = _normalize_user_role(role)
+    if normalized == "admin":
+        return "admin"
+    if normalized == "user":
+        return "user"
+    if _is_customer_role(normalized):
+        return "customer"
+    return normalized
+
+def _visible_role_choices(role_permissions):
+    permissions_map = role_permissions if isinstance(role_permissions, dict) else {}
+    visible_roles = []
+    for role_name in permissions_map.keys():
+        visible_name = _visible_role_name(role_name)
+        if visible_name not in visible_roles:
+            visible_roles.append(visible_name)
+    preferred_order = ["admin", "user", "customer"]
+    ordered = [role for role in preferred_order if role in visible_roles]
+    ordered.extend(role for role in visible_roles if role not in ordered)
+    return ordered
+
+def _load_default_user_seed_payload():
+    fallback_payload = {
+        "users": {
+            "admin": {
+                "password": "admin123",
+                "role": "admin",
+                "name": "Administrator",
+                "tenant_id": "",
+                "admin_permissions": _normalize_admin_permissions({
+                    "manage_users": True,
+                    "manage_tenants": True,
+                    "manage_configuration": True,
+                    "manage_system": True,
+                    "manage_certificates": True,
+                    "view_admin_audit": True,
+                    "export_admin_audit": True,
+                    "clear_admin_audit": True,
+                    "clear_service_logs": True,
+                    "view_service_logs": True,
+                }),
+            },
+            "customer": {
+                "password": "customer123",
+                "role": "customer",
+                "name": "Customer",
+                "tenant_id": "",
+            },
+            "test": {
+                "password": "test",
+                "role": "customer",
+                "name": "test",
+                "tenant_id": "test",
+            },
+        },
+        "role_permissions": _default_role_permissions_map(),
+    }
+
+    try:
+        with open('users.default.json', 'r', encoding='utf-8') as f:
+            payload = json.load(f)
+            if isinstance(payload, dict):
+                return payload
+    except FileNotFoundError:
+        return fallback_payload
+    except Exception as e:
+        logger.warning(f"Failed to read users.default.json, using fallback bootstrap users: {e}")
+    return fallback_payload
 
 def _normalize_user_tenant_for_role(role, tenant_id, fallback=None):
     if _normalize_user_role(role) == "admin":
@@ -7027,76 +7322,88 @@ def _upsert_tenant_registry_entry(tenant_id, name=None, description=None):
 def load_users():
     """Load users from users.json file"""
     try:
-        with open('users.json', 'r') as f:
-            data = json.load(f)
-            if not isinstance(data, dict):
-                data = {}
-            users = data.setdefault("users", {})
-            data.setdefault("role_permissions", {})
-            default_tenant = _default_tenant_id()
-            changed = False
-            bootstrap_users = {
-                "admin": {
-                    "password": "admin123",
-                    "role": "admin",
-                    "name": "Administrator",
-                    "tenant_id": "",
-                    "admin_permissions": {
-                        "manage_users": True,
-                        "manage_tenants": True,
-                        "manage_configuration": True,
-                        "manage_system": True,
-                        "manage_certificates": True,
-                        "view_admin_audit": True,
-                        "export_admin_audit": True,
-                        "clear_admin_audit": True,
-                        "clear_service_logs": True,
-                        "view_service_logs": True,
-                    },
-                },
-                "viewer": {
-                    "password": "viewer123",
-                    "role": "viewer",
-                    "name": "Viewer",
-                    "tenant_id": "",
-                },
-                "test": {
-                    "password": "test",
-                    "role": "viewer",
-                    "name": "test",
-                    "tenant_id": "test",
-                },
+        data = {}
+        changed = False
+        try:
+            with open('users.json', 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except FileNotFoundError:
+            data = {}
+            changed = True
+
+        if not isinstance(data, dict):
+            data = {}
+            changed = True
+
+        users = data.setdefault("users", {})
+        normalized_role_permissions, role_permissions_changed = _normalize_role_permissions_map(data.get("role_permissions"))
+        data["role_permissions"] = normalized_role_permissions
+        default_tenant = _default_tenant_id()
+        changed = changed or role_permissions_changed
+
+        bootstrap_defaults_enabled = bool(getattr(bssci_config, "AUTH_BOOTSTRAP_DEFAULT_USERS", True))
+        bootstrap_demo_enabled = bool(getattr(bssci_config, "AUTH_BOOTSTRAP_DEMO_USERS", True))
+        seed_payload = None
+        default_admin_password = "admin123"
+        if bootstrap_defaults_enabled:
+            seed_payload = _load_default_user_seed_payload()
+            default_admin_password = _bootstrap_admin_default_password(seed_payload)
+            seed_users = seed_payload.get("users", {}) if isinstance(seed_payload, dict) else {}
+            bootstrap_alias_map = {
+                "customer": ("viewer",),
+                "viewer": ("customer",),
             }
-            for username, bootstrap_user in bootstrap_users.items():
-                if username not in users or not isinstance(users.get(username), dict):
-                    users[username] = dict(bootstrap_user)
-                    changed = True
-            for _, user in users.items():
-                if not isinstance(user, dict):
+            for username, bootstrap_user in seed_users.items():
+                if not isinstance(bootstrap_user, dict):
                     continue
-                normalized_role = _normalize_user_role(user.get("role", "viewer"))
-                if user.get("role") != normalized_role:
-                    user["role"] = normalized_role
+                if username != "admin" and not bootstrap_demo_enabled:
+                    continue
+                aliases = bootstrap_alias_map.get(username, ())
+                if any(alias in users and isinstance(users.get(alias), dict) for alias in aliases):
+                    continue
+                if username not in users or not isinstance(users.get(username), dict):
+                    users[username] = copy.deepcopy(bootstrap_user)
                     changed = True
-                if normalized_role == "admin":
-                    normalized_admin_permissions = _normalize_admin_permissions(user.get("admin_permissions"))
-                    if user.get("admin_permissions") != normalized_admin_permissions:
-                        user["admin_permissions"] = normalized_admin_permissions
-                        changed = True
-                elif "admin_permissions" in user:
-                    user.pop("admin_permissions", None)
+
+        for username, user in list(users.items()):
+            if not isinstance(user, dict):
+                users.pop(username, None)
+                changed = True
+                continue
+            normalized_role = _normalize_user_role(user.get("role", "viewer"))
+            if user.get("role") != normalized_role:
+                user["role"] = normalized_role
+                changed = True
+            if normalized_role == "admin":
+                normalized_admin_permissions = _normalize_admin_permissions(user.get("admin_permissions"))
+                if user.get("admin_permissions") != normalized_admin_permissions:
+                    user["admin_permissions"] = normalized_admin_permissions
                     changed = True
-                normalized_tenant = _normalize_user_tenant_for_role(
-                    normalized_role,
-                    user.get("tenant_id"),
-                    fallback=default_tenant,
+                require_password_change = _should_force_initial_admin_password_change(
+                    user,
+                    bootstrap_admin_password=default_admin_password,
                 )
-                if user.get("tenant_id") != normalized_tenant:
-                    user["tenant_id"] = normalized_tenant
+                if bool(user.get("require_password_change")) != require_password_change:
+                    user["require_password_change"] = require_password_change
                     changed = True
-            if changed:
-                save_users(data)
-            return data
+            elif "admin_permissions" in user:
+                user.pop("admin_permissions", None)
+                changed = True
+            elif "require_password_change" in user:
+                user.pop("require_password_change", None)
+                changed = True
+            normalized_tenant = _normalize_user_tenant_for_role(
+                normalized_role,
+                user.get("tenant_id"),
+                fallback=default_tenant,
+            )
+            if user.get("tenant_id") != normalized_tenant:
+                user["tenant_id"] = normalized_tenant
+                changed = True
+
+        if changed:
+            save_users(data)
+        return data
     except Exception as e:
         logger.error(f"Failed to load users: {e}")
         return {"users": {}, "role_permissions": {}}
@@ -7122,6 +7429,8 @@ def get_current_user():
         user['username'] = username
         role = _normalize_user_role(user.get('role', 'viewer'))
         user['role'] = role
+        user['display_role'] = _display_user_role(role)
+        user['is_customer_user'] = _is_customer_role(role)
         user['tenant_id'] = _normalize_user_tenant_for_role(
             role,
             user.get('tenant_id'),
@@ -7131,7 +7440,8 @@ def get_current_user():
             user['admin_permissions'] = _normalize_admin_permissions(user.get("admin_permissions"))
         else:
             user['admin_permissions'] = {}
-        user['permissions'] = users_data.get('role_permissions', {}).get(role, {})
+        user['require_password_change'] = bool(user.get('require_password_change'))
+        user['permissions'] = _resolve_role_permissions(users_data.get('role_permissions', {}), role)
         user['is_super_admin'] = _is_super_admin(user)
         return user
     return None
@@ -7151,6 +7461,22 @@ def login_required(f):
             if request.path.startswith('/api/'):
                 return jsonify({'error': 'Login required'}), 401
             return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def internal_portal_required(f):
+    """Block customer portal users from internal technical pages and APIs."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user = get_current_user()
+        if not user:
+            if request.path.startswith('/api/'):
+                return jsonify({'error': 'Login required'}), 401
+            return redirect(url_for('login'))
+        if _is_customer_role(user.get('role', 'viewer')):
+            if request.path.startswith('/api/'):
+                return jsonify({'error': 'Internal portal only'}), 403
+            return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -7291,6 +7617,22 @@ def ensure_json_api():
                 return redirect(url_for('login', reason='timeout'))
             session.permanent = True
             session['_last_activity_ts'] = now_ts
+
+    if not is_static_like and 'username' in session:
+        setup_path = '/auth/setup-admin-password'
+        allowed_paths = {setup_path, '/logout'}
+        if path not in allowed_paths and not path.startswith('/ui/language/'):
+            user = get_current_user()
+            if user and bool(user.get('require_password_change')):
+                if is_api:
+                    return (
+                        jsonify({
+                            'error': _ui_text('auth.password_change_required_api', 'Password change required before continuing.'),
+                            'redirect': setup_path,
+                        }),
+                        403,
+                    )
+                return redirect(setup_path)
 
     # Login rate-limit (POST only).
     if path == '/login' and request.method == 'POST' and bool(getattr(bssci_config, "AUTH_RATE_LIMIT_ENABLED", True)):
@@ -7548,11 +7890,23 @@ def inject_user():
     user = get_current_user()
     app_language = _get_app_language()
     app_locale = _get_app_locale()
+    role_label = ''
+    role_slug = 'guest'
+    if user:
+        role_slug = 'customer' if user.get('is_customer_user') else user.get('role', 'guest')
+        role_label = (
+            _ui_text('auth.role_admin', 'Admin')
+            if user.get('display_role') == 'admin'
+            else _ui_text('auth.role_customer', 'Customer')
+        )
     return {
         'current_user': user,
         'user_permissions': user.get('permissions', {}) if user else {},
         'visible_tabs': user.get('permissions', {}).get('visible_tabs', []) if user else [],
         'active_tenant_id': _active_tenant_id() if user else _default_tenant_id(),
+        'is_customer_user': bool(user and user.get('is_customer_user')),
+        'current_user_role_slug': role_slug,
+        'current_user_role_label': role_label,
         'oms_enabled': bool(getattr(bssci_config, 'OMS_ENABLED', True)),
         'mqtt_ui_enabled': bool(getattr(bssci_config, 'MQTT_UI_ENABLED', True)),
         'app_timezone': str(getattr(bssci_config, 'TIMEZONE', 'Europe/Berlin') or 'Europe/Berlin'),
@@ -7560,6 +7914,9 @@ def inject_user():
         'app_locale': app_locale,
         'app_languages': {key: dict(value) for key, value in _APP_LANGUAGE_OPTIONS.items()},
         'ui_translations': dict(_UI_TRANSLATIONS.get(app_language, {})),
+        'app_deployment_mode': _deployment_mode(),
+        'is_production_deployment': _is_production_deployment(),
+        'bootstrap_login_account_hints': _bootstrap_login_account_hints(),
         't': _ui_text,
         'translate_page_title': _translate_page_title,
     }
@@ -7590,10 +7947,50 @@ def login():
             session['_last_activity_ts'] = time.time()
             _register_login_success(ip_addr)
             logger.info(f"User '{username}' logged in")
+            if _should_force_initial_admin_password_change(user):
+                return redirect(url_for('setup_admin_password'))
             return redirect(url_for('index'))
         _register_login_failure(ip_addr)
         error = _ui_text('login.error.invalid_credentials', 'Invalid username or password')
     return render_template('login.html', error=error)
+
+@app.route('/auth/setup-admin-password', methods=['GET', 'POST'])
+@login_required
+def setup_admin_password():
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('login'))
+    if not bool(user.get('require_password_change')):
+        return redirect(url_for('index'))
+    if _normalize_user_role(user.get('role', 'viewer')) != 'admin':
+        return redirect(url_for('index'))
+
+    error = None
+    if request.method == 'POST':
+        new_password = str(request.form.get('password') or '')
+        confirm_password = str(request.form.get('password_confirm') or '')
+        if len(new_password) < 8:
+            error = _ui_text('auth.password_change_too_short', 'Nové heslo musí mať aspoň 8 znakov.')
+        elif new_password != confirm_password:
+            error = _ui_text('auth.password_change_mismatch', 'Zadané heslá sa nezhodujú.')
+        elif new_password == _bootstrap_admin_default_password():
+            error = _ui_text('auth.password_change_same_as_default', 'Nové heslo sa musí líšiť od predvoleného bootstrap hesla.')
+        else:
+            users_data = load_users()
+            username = str(session.get('username') or '')
+            user_row = users_data.get('users', {}).get(username)
+            if not isinstance(user_row, dict):
+                session.clear()
+                return redirect(url_for('login'))
+            user_row['password'] = new_password
+            user_row['require_password_change'] = False
+            if not save_users(users_data):
+                error = _ui_text('auth.password_change_save_failed', 'Nové heslo sa nepodarilo uložiť. Skúste to znova.')
+            else:
+                session['_last_activity_ts'] = time.time()
+                return redirect(url_for('index'))
+
+    return render_template('force_password_change.html', error=error)
 
 
 @app.route('/ui/language/<lang>')
@@ -7651,7 +8048,8 @@ def api_users():
             users_list.append({
                 'username': username,
                 'name': data.get('name', ''),
-                'role': role,
+                'role': _visible_role_name(role),
+                'role_canonical': role,
                 'tenant_id': normalized_tenant,
                 'tenant_scope_label': (
                     "Super admin"
@@ -7683,7 +8081,7 @@ def api_users():
                 known_tenant_ids.add(normalized_tenant)
         return jsonify({
             'users': users_list,
-            'roles': list(users_data.get('role_permissions', {}).keys()),
+            'roles': _visible_role_choices(users_data.get('role_permissions', {})),
             'default_tenant': _default_tenant_id(),
             'default_tenant_label': 'Super admin',
             'legacy_default_user_present': legacy_default_user_present,
@@ -9084,6 +9482,7 @@ def grafana_dashboard_url():
 
 @app.route('/api/health/grafana', methods=['GET'])
 @login_required
+@internal_portal_required
 def health_grafana_urls():
     minutes = _safe_positive_int(request.args.get("minutes"), default=360, min_value=5, max_value=7 * 24 * 60)
     raw_refresh_seconds = str(request.args.get("refresh_seconds", "") or "").strip().lower()
@@ -9187,6 +9586,7 @@ def alerts_page():
 
 @app.route('/sensor-telemetry')
 @login_required
+@internal_portal_required
 def sensor_telemetry():
     return render_template('sensor_telemetry.html', telemetry_timezone=str(getattr(bssci_config, 'TIMEZONE', 'Europe/Berlin') or 'Europe/Berlin'))
 
@@ -9199,7 +9599,7 @@ def get_sensors():
         active_tenant = _active_tenant_id()
         current_role = _normalize_user_role(session.get('role', 'viewer'))
         force_refresh = str(request.args.get('refresh', '') or '').strip().lower() in {'1', 'true', 'yes'}
-        if current_role == 'viewer' and not force_refresh:
+        if _is_customer_role(current_role) and not force_refresh:
             cached_payload = _get_cached_viewer_sensor_list(active_tenant)
             if cached_payload is not None:
                 return jsonify(cached_payload)
@@ -9455,7 +9855,7 @@ def get_sensors():
                 })
                     
             print(f"Processed sensor status for {len(sensor_status)} sensors with registration data")
-            if current_role == 'viewer':
+            if _is_customer_role(current_role):
                 _store_cached_viewer_sensor_list(active_tenant, sensor_status)
             return jsonify(sensor_status)
         except FileNotFoundError:
@@ -11858,6 +12258,7 @@ def logs():
 
 @app.route('/mqtt')
 @login_required
+@internal_portal_required
 def mqtt():
     if not getattr(bssci_config, 'MQTT_UI_ENABLED', True):
         return redirect(url_for('index'))
@@ -11870,11 +12271,13 @@ def documentation():
 
 @app.route('/traffic')
 @login_required
+@internal_portal_required
 def traffic():
     return redirect(url_for('health'))
 
 @app.route('/oms')
 @login_required
+@internal_portal_required
 def oms():
     if not getattr(bssci_config, 'OMS_ENABLED', True):
         return redirect(url_for('index'))
@@ -11882,11 +12285,13 @@ def oms():
 
 @app.route('/health')
 @login_required
+@internal_portal_required
 def health():
     return render_template('health.html')
 
 @app.route('/api/health', methods=['GET'])
 @login_required
+@internal_portal_required
 def get_health_stats():
     """Get comprehensive health statistics for the system"""
     try:
@@ -12038,6 +12443,7 @@ def get_health_stats():
 
 @app.route('/base-stations')
 @login_required
+@internal_portal_required
 def base_stations():
     telemetry_source = (getattr(bssci_config, 'TELEMETRY_SOURCE', 'auto') or 'auto').strip().lower()
     if telemetry_source not in {'auto', 'runtime', 'influx'}:
@@ -12061,16 +12467,19 @@ def base_stations():
 
 @app.route('/base-stations/<eui>')
 @login_required
+@internal_portal_required
 def base_station_detail_page(eui):
     return render_template('base_station_detail.html', base_station_eui=str(eui or '').strip().upper())
 
 @app.route('/network')
 @login_required
+@internal_portal_required
 def network():
     return render_template('network.html')
 
 @app.route('/coverage')
 @login_required
+@internal_portal_required
 def coverage():
     return redirect(url_for('network'))
 
@@ -12417,6 +12826,7 @@ def _collect_network_snapshot() -> Dict[str, Any]:
 
 @app.route('/api/coverage/topology')
 @login_required
+@internal_portal_required
 def api_coverage_topology():
     """Get sensor topology with SNR/RSSI per base station for coverage heatmap"""
     try:
@@ -12630,6 +13040,7 @@ def api_coverage_floorplan():
 
 @app.route('/api/network')
 @login_required
+@internal_portal_required
 def api_network():
     """Get network topology data for visualization"""
     try:
@@ -12668,6 +13079,7 @@ def save_base_station_config(config):
 
 @app.route('/api/base-stations', methods=['GET'])
 @login_required
+@internal_portal_required
 def get_base_stations():
     """Get all base stations with status and health data"""
     try:
@@ -12769,6 +13181,7 @@ def get_base_stations():
 
 @app.route('/api/base-stations/certificates/status')
 @login_required
+@internal_portal_required
 def get_bs_certificates_status():
     """Get read-only certificate status for tenant-visible base stations."""
     try:
@@ -12812,6 +13225,7 @@ def get_bs_certificates_status():
 
 @app.route('/api/base-stations/uptime')
 @login_required
+@internal_portal_required
 def get_bs_uptime():
     """Get uptime data for all base stations"""
     try:
@@ -13032,6 +13446,7 @@ def timescale_telemetry_summary():
 
 @app.route('/api/base-stations/<eui>', methods=['GET'])
 @login_required
+@internal_portal_required
 def get_base_station(eui):
     """Get single base station details"""
     try:
@@ -13241,6 +13656,7 @@ def delete_base_station(eui):
 
 @app.route('/api/traffic/metrics')
 @login_required
+@internal_portal_required
 def get_traffic_metrics():
     """Get traffic metrics for visualization"""
     try:
@@ -13288,6 +13704,7 @@ def reset_traffic_metrics():
 
 @app.route('/api/oms/meters')
 @login_required
+@internal_portal_required
 def get_oms_meters():
     """Get all tracked OMS meters"""
     try:
@@ -13303,6 +13720,7 @@ def get_oms_meters():
 
 @app.route('/api/oms/stats')
 @login_required
+@internal_portal_required
 def get_oms_stats():
     """Get OMS statistics"""
     try:
@@ -13544,6 +13962,7 @@ def _build_mqtt_monitor_insights(runtime_status):
 
 @app.route('/api/mqtt/monitor')
 @login_required
+@internal_portal_required
 def get_mqtt_monitor():
     if not getattr(bssci_config, 'MQTT_UI_ENABLED', True):
         return jsonify({"success": False, "error": "MQTT module is disabled"}), 404

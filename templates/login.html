@@ -277,6 +277,98 @@
             margin-bottom: 2rem;
         }
 
+        .login-mode-row {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .login-mode-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.34rem 0.62rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            border: 1px solid var(--line);
+            background: rgba(255,255,255,0.8);
+            color: var(--text-700);
+        }
+
+        .login-mode-badge.is-demo {
+            background: #eefbf5;
+            color: #166534;
+            border-color: #b7ebc9;
+        }
+
+        .login-mode-badge.is-development {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
+
+        .login-mode-badge.is-production {
+            background: #fff7ed;
+            color: #c2410c;
+            border-color: #fed7aa;
+        }
+
+        .login-info-card {
+            border: 1px solid var(--line);
+            border-radius: 0.9rem;
+            background: rgba(255,255,255,0.78);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+            padding: 0.95rem 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .login-info-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-900);
+            margin-bottom: 0.3rem;
+        }
+
+        .login-info-copy {
+            font-size: 0.79rem;
+            line-height: 1.5;
+            color: var(--text-500);
+            margin-bottom: 0.7rem;
+        }
+
+        .login-account-list {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .login-account-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: 0.75rem;
+            background: #f8fbff;
+            border: 1px solid #dde6f2;
+        }
+
+        .login-account-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-700);
+        }
+
+        .login-account-creds {
+            font-size: 0.77rem;
+            font-weight: 800;
+            color: var(--text-900);
+            white-space: nowrap;
+        }
+
         /* Form */
         .field-group { margin-bottom: 1.1rem; }
         .field-group:last-of-type { margin-bottom: 1.6rem; }
@@ -460,6 +552,39 @@
             <div class="login-eyebrow">{{ t('login.eyebrow', 'Operations Console') }}</div>
             <h2 class="login-heading">{{ t('login.heading', 'Sign in') }}</h2>
             <p class="login-sub">{{ t('login.subtitle', 'Use your account credentials to continue.') }}</p>
+
+            <div class="login-mode-row">
+                <span class="login-mode-badge {% if app_deployment_mode == 'production' %}is-production{% elif app_deployment_mode == 'development' %}is-development{% else %}is-demo{% endif %}">
+                    <i class="fas {% if app_deployment_mode == 'production' %}fa-shield-halved{% elif app_deployment_mode == 'development' %}fa-screwdriver-wrench{% else %}fa-flask{% endif %}"></i>
+                    {% if app_deployment_mode == 'production' %}
+                        {{ t('login.mode_production', 'Produkčný režim') }}
+                    {% elif app_deployment_mode == 'development' %}
+                        {{ t('login.mode_development', 'Vývojový režim') }}
+                    {% else %}
+                        {{ t('login.mode_demo', 'Demo režim') }}
+                    {% endif %}
+                </span>
+            </div>
+
+            {% if bootstrap_login_account_hints %}
+            <div class="login-info-card">
+                <div class="login-info-title">{{ t('login.bootstrap_accounts_title', 'Predvolené účty pre rýchly štart') }}</div>
+                <p class="login-info-copy">{{ t('login.bootstrap_accounts_copy', 'Tieto bootstrap účty sú určené pre demo a lokálne testovanie.') }}</p>
+                <div class="login-account-list">
+                    {% for account in bootstrap_login_account_hints %}
+                    <div class="login-account-row">
+                        <span class="login-account-label">{{ account.label }}</span>
+                        <span class="login-account-creds">{{ account.username }} / {{ account.password }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% elif is_production_deployment %}
+            <div class="login-info-card">
+                <div class="login-info-title">{{ t('login.mode_production', 'Produkčný režim') }}</div>
+                <p class="login-info-copy">{{ t('login.production_notice', 'Produkčný režim má mať demo účty vypnuté a admin účet so zmeneným heslom.') }}</p>
+            </div>
+            {% endif %}
 
             {% if error %}
             <div class="login-error" role="alert">

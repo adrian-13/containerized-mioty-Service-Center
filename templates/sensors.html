@@ -2,7 +2,7 @@
 {% block title %}{{ t('page.sensors', 'Senzory') }}{% endblock %}
 
 {% block content %}
-{% if current_user and current_user.role == 'viewer' %}
+{% if is_customer_user %}
 <style>
 .sv-shell { display: grid; gap: 0.85rem; }
 .sv-toolbar {
@@ -2672,7 +2672,7 @@ button:active {
 {% endblock %}
 
 {% block scripts %}
-{% if current_user and current_user.role == 'viewer' %}
+{% if is_customer_user %}
 <script>
 (function() {
 

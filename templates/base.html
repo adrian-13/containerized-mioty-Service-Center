@@ -1806,13 +1806,16 @@
         }
 
         /* ── Role-based & advanced-mode visibility ────────────── */
-        [data-role="viewer"] .ui-editor-only { display: none !important; }
+        [data-role="viewer"] .ui-editor-only,
+        [data-role="customer"] .ui-editor-only { display: none !important; }
         [data-role="viewer"] .ui-manage-only,
+        [data-role="customer"] .ui-manage-only,
         [data-role="user"] .ui-manage-only { display: none !important; }
         body:not(.mode-advanced) .ui-advanced-only { display: none !important; }
 
         /* ── Viewer: no sidebar ─────────────────────────────────── */
-        [data-role="viewer"] .app-sidebar { display: none !important; }
+        [data-role="viewer"] .app-sidebar,
+        [data-role="customer"] .app-sidebar { display: none !important; }
         .topbar-viewer-shell {
             display: flex;
             align-items: center;
@@ -1971,7 +1974,7 @@
         }
     </style>
 </head>
-<body data-role="{{ current_user.role if current_user else 'guest' }}">
+<body data-role="{{ current_user_role_slug if current_user else 'guest' }}">
     {% set endpoint = request.endpoint if request is defined else '' %}
     {% set raw_page_title = self.title()|striptags|trim %}
     {% set page_title = translate_page_title(raw_page_title) %}
@@ -2058,7 +2061,7 @@
                 {% endif %}
             </div>
 
-            {% if not (current_user and current_user.role == 'viewer') %}
+            {% if not is_customer_user %}
             <div class="nav-group">
                 <p class="nav-group-title">{{ t('nav.monitoring', 'Monitoring') }}</p>
                 {% if 'health' in visible_tabs %}
@@ -2067,7 +2070,7 @@
                     <span>{{ t('nav.system_health', 'System Health') }}</span>
                 </a>
                 {% endif %}
-                {% if 'network' in visible_tabs and not (current_user and current_user.role == 'viewer') %}
+                {% if 'network' in visible_tabs and not is_customer_user %}
                 <a class="side-nav-link {% if endpoint == 'network' %}active{% endif %}" href="{{ url_for('network') }}">
                     <i class="fas fa-project-diagram"></i>
                     <span>{{ t('nav.network_topology', 'Network Topology') }}</span>
@@ -2085,7 +2088,7 @@
                     <span>{{ t('nav.mqtt', 'MQTT') }}</span>
                 </a>
                 {% endif %}
-                {% if 'sensors' in visible_tabs and not (current_user and current_user.role == 'viewer') %}
+                {% if 'sensors' in visible_tabs and not is_customer_user %}
                 <a class="side-nav-link {% if endpoint == 'sensor_telemetry' %}active{% endif %}" href="{{ url_for('sensor_telemetry') }}">
                     <i class="fas fa-wave-square"></i>
                     <span>{{ t('nav.sensor_telemetry', 'Sensor Telemetry') }}</span>
@@ -2100,7 +2103,7 @@
             </div>
             {% endif %}
 
-            {% if not (current_user and current_user.role == 'viewer') %}
+            {% if not is_customer_user %}
             <div class="nav-group">
                 <p class="nav-group-title">{{ t('nav.administration', 'Administration') }}</p>
                 {% if 'administration' in visible_tabs or (current_user and current_user.role == 'admin') %}
@@ -2134,7 +2137,7 @@
                     <span class="sidebar-avatar">{{ current_user.name[0]|upper if current_user.name else '?' }}</span>
                     <div class="sidebar-user-text">
                         <span class="sidebar-user-name">{{ current_user.name }}</span>
-                        <span class="sidebar-user-role">{{ current_user.role }}</span>
+                        <span class="sidebar-user-role">{{ current_user_role_label or current_user.role }}</span>
                     </div>
                     <a class="sidebar-logout-icon" href="{{ url_for('logout') }}" title="{{ t('auth.log_out', 'Log out') }}" aria-label="{{ t('auth.log_out', 'Log out') }}">
                         <i class="fas fa-sign-out-alt"></i>
@@ -2146,7 +2149,7 @@
 
         <main class="app-main">
             <header class="app-topbar">
-                {% if current_user and current_user.role == 'viewer' %}
+                {% if is_customer_user %}
                 <div class="topbar-viewer-shell">
                     <a href="{{ url_for('index') }}" class="viewer-brand">
                         <span class="viewer-brand-icon"><i class="fas fa-wave-square"></i></span>
@@ -2187,12 +2190,12 @@
                             <span class="topbar-clock-date" id="appTopbarClockDate">--.--.----</span>
                         </span>
                     </div>
-                    {% if current_user and current_user.role == 'viewer' %}
+                    {% if is_customer_user %}
                     <button class="topbar-tool" type="button" id="viewerGuideBtn" title="{{ t('viewer.guide_open', 'Otvoriť sprievodcu') }}" aria-label="{{ t('viewer.guide_open', 'Otvoriť sprievodcu') }}">
                         <i class="fas fa-circle-question"></i>
                     </button>
                     {% endif %}
-                    {% if not (current_user and current_user.role == 'viewer') %}
+                    {% if not is_customer_user %}
                     <button class="topbar-tool" type="button" id="advancedModeBtn" onclick="toggleAdvancedMode()" title="{{ t('display.advanced_mode', 'Pokročilý režim') }}" aria-label="{{ t('display.advanced_mode', 'Pokročilý režim') }}">
                         <i class="fas fa-flask"></i>
                     </button>
@@ -2260,12 +2263,12 @@
                         </select>
                         <p class="display-setting-note">{{ t('display.theme_note', 'Applies a light color palette variant across the interface.') }}</p>
                     </section>
-                    {% if current_user and current_user.role == 'viewer' %}
+                    {% if is_customer_user %}
                     <section class="display-setting-card">
                         <div class="viewer-guide-entry">
                             <div>
-                                <p class="display-setting-title">{{ t('viewer.guide_title', 'Sprievodca pre viewer') }}</p>
-                                <p class="display-setting-note">{{ t('viewer.guide_settings_note', 'Rýchly prehľad, kde sledovať senzory, pracovať s upozorneniami a čo v tejto roli môžete meniť.') }}</p>
+                                <p class="display-setting-title">{{ t('viewer.guide_title', 'Sprievodca portálom') }}</p>
+                                <p class="display-setting-note">{{ t('viewer.guide_settings_note', 'Rýchly prehľad, kde sledovať senzory, pracovať s upozorneniami a čo môžete v zákazníckom portáli meniť.') }}</p>
                             </div>
                             <button type="button" class="viewer-guide-open" id="viewerGuideSettingsBtn">
                                 <i class="fas fa-route"></i>
@@ -2297,7 +2300,7 @@
         </div>
     </div>
 
-    {% if current_user and current_user.role == 'viewer' %}
+    {% if is_customer_user %}
     <div class="modal fade" id="viewerGuideModal" tabindex="-1" aria-labelledby="viewerGuideModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
@@ -2317,7 +2320,7 @@
                         <h5 class="modal-title" id="viewerGuideModalLabel">Incidenty, pravidlá a história</h5>
                         {% else %}
                         <p class="viewer-guide-kicker mb-1"><i class="fas fa-circle-question me-1"></i>Rýchly sprievodca</p>
-                        <h5 class="modal-title" id="viewerGuideModalLabel">Sprievodca pre viewer</h5>
+                        <h5 class="modal-title" id="viewerGuideModalLabel">{{ t('viewer.guide_title', 'Sprievodca portálom') }}</h5>
                         {% endif %}
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
@@ -2508,7 +2511,7 @@
 
                     {% else %}
                     {# ── FALLBACK ── #}
-                    <p class="viewer-guide-copy">Táto rola je zameraná na každodennú prevádzku. Dashboard slúži na rýchly prehľad, Senzory na detail a základné nastavenia a Upozornenia na incidenty, pravidlá a históriu.</p>
+                    <p class="viewer-guide-copy">Tento zákaznícky portál je zameraný na každodenný prehľad senzorov, upozornení a základných nastavení. Dashboard slúži na rýchly prehľad, Senzory na detail a Upozornenia na incidenty, pravidlá a históriu.</p>
                     {% endif %}
 
                 </div>
@@ -2520,17 +2523,17 @@
     </div>
     <div id="appTourBackdrop" class="app-tour-backdrop" aria-hidden="true"></div>
     <div id="appTourSpotlight" class="app-tour-spotlight" aria-hidden="true"></div>
-    <div id="appTourCard" class="app-tour-card" role="dialog" aria-live="polite" aria-label="{{ t('viewer.guide_title', 'Sprievodca pre viewer') }}">
+    <div id="appTourCard" class="app-tour-card" role="dialog" aria-live="polite" aria-label="{{ t('viewer.guide_title', 'Sprievodca portálom') }}">
         <div class="app-tour-head">
             <div>
                 <p class="app-tour-kicker">{{ t('viewer.guide_kicker', 'Rýchly sprievodca') }}</p>
-                <h6 class="app-tour-title" id="appTourTitle">{{ t('viewer.guide_title', 'Sprievodca pre viewer') }}</h6>
+                <h6 class="app-tour-title" id="appTourTitle">{{ t('viewer.guide_title', 'Sprievodca portálom') }}</h6>
             </div>
             <button type="button" class="app-tour-close" id="appTourClose" aria-label="{{ t('common.close', 'Close') }}">
                 <i class="fas fa-xmark"></i>
             </button>
         </div>
-        <p class="app-tour-copy" id="appTourCopy">{{ t('viewer.guide_intro_copy', 'Táto rola je zameraná na každodennú prevádzku.') }}</p>
+        <p class="app-tour-copy" id="appTourCopy">{{ t('viewer.guide_intro_copy', 'Tento portál je zameraný na každodenný prehľad senzorov, upozornení a základných nastavení.') }}</p>
         <div class="app-tour-meta">
             <span class="app-tour-progress" id="appTourProgress">1 / 1</span>
         </div>
@@ -3248,7 +3251,8 @@
             });
         }
 
-        const APP_USER_ROLE = {{ (current_user.role)|tojson if current_user else '"guest"' }};
+        const APP_USER_ROLE = {{ (current_user_role_slug)|tojson if current_user else '"guest"' }};
+        const APP_IS_CUSTOMER = {{ 'true' if is_customer_user else 'false' }};
         const APP_ENDPOINT = {{ endpoint|tojson }};
         const ADVANCED_MODE_KEY = 'service-center.advanced-mode.v1';
         const VIEWER_GUIDE_KEY = 'service-center.viewer-guide.v1';
@@ -3265,7 +3269,7 @@
         }
 
         function initAdvancedMode() {
-            const defaultAdvanced = APP_USER_ROLE !== 'viewer';
+            const defaultAdvanced = !APP_IS_CUSTOMER;
             let isAdvanced = defaultAdvanced;
             try {
                 const stored = localStorage.getItem(ADVANCED_MODE_KEY + '.' + APP_USER_ROLE);
@@ -3324,7 +3328,7 @@
         }
 
         function openViewerGuide(options = {}) {
-            if (APP_USER_ROLE !== 'viewer' || typeof bootstrap === 'undefined') return;
+            if (!APP_IS_CUSTOMER || typeof bootstrap === 'undefined') return;
             const modalEl = document.getElementById('viewerGuideModal');
             if (!modalEl) return;
             const showGuide = () => {
@@ -3346,7 +3350,7 @@
         }
 
         function closeViewerGuideModal() {
-            if (APP_USER_ROLE !== 'viewer' || typeof bootstrap === 'undefined') return;
+            if (!APP_IS_CUSTOMER || typeof bootstrap === 'undefined') return;
             const modalEl = document.getElementById('viewerGuideModal');
             if (!modalEl) return;
             const modal = bootstrap.Modal.getInstance(modalEl);
@@ -3617,7 +3621,7 @@
         }
 
         function startViewerTour() {
-            if (APP_USER_ROLE !== 'viewer' || typeof bootstrap === 'undefined') return;
+            if (!APP_IS_CUSTOMER || typeof bootstrap === 'undefined') return;
             const steps = buildViewerTourSteps();
             if (!steps.length) return;
             if (viewerTourState.active) {
@@ -3639,7 +3643,7 @@
         }
 
         function initViewerGuide() {
-            if (APP_USER_ROLE !== 'viewer' || typeof bootstrap === 'undefined') return;
+            if (!APP_IS_CUSTOMER || typeof bootstrap === 'undefined') return;
             const prefs = loadViewerGuidePrefs();
             const modalEl = document.getElementById('viewerGuideModal');
             const openBtn = document.getElementById('viewerGuideBtn');

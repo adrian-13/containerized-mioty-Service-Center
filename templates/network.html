@@ -2,7 +2,7 @@
 {% block title %}Network{% endblock %}
 
 {% block content %}
-{% if current_user and current_user.role == 'viewer' %}
+{% if is_customer_user %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
 .nv-page {
@@ -1768,7 +1768,7 @@ body.map-fullscreen-active {
 {% endblock %}
 
 {% block scripts %}
-{% if current_user and current_user.role == 'viewer' %}
+{% if is_customer_user %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function() {
