@@ -3036,14 +3036,14 @@ def _load_default_user_seed_payload():
     }
 
     try:
-        with open('users.default.json', 'r', encoding='utf-8') as f:
+        with open(USER_SEED_FILE, 'r', encoding='utf-8') as f:
             payload = json.load(f)
             if isinstance(payload, dict):
                 return payload
     except FileNotFoundError:
         return fallback_payload
     except Exception as e:
-        logger.warning(f"Failed to read users.default.json, using fallback bootstrap users: {e}")
+        logger.warning(f"Failed to read {USER_SEED_FILE}, using fallback bootstrap users: {e}")
     return fallback_payload
 
 def _normalize_user_tenant_for_role(role, tenant_id, fallback=None):
@@ -3176,11 +3176,67 @@ def _ensure_timescale_schema(conn):
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 )
             """)
+            cur.execute("ALTER TABLE tenants ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT ''")
+            cur.execute("ALTER TABLE tenants ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()")
             cur.execute("""
                 INSERT INTO tenants (id, name)
                 VALUES (%s, %s)
                 ON CONFLICT (id) DO NOTHING
             """, ("default", "Default Tenant"))
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS tenant_registry_meta (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    description TEXT NOT NULL DEFAULT '',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_tenant_registry_meta_updated ON tenant_registry_meta (updated_at DESC)")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS app_users (
+                    username TEXT PRIMARY KEY,
+                    password TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    name TEXT NOT NULL DEFAULT '',
+                    tenant_id TEXT NOT NULL DEFAULT '',
+                    active BOOLEAN NOT NULL DEFAULT TRUE,
+                    require_password_change BOOLEAN NOT NULL DEFAULT FALSE,
+                    admin_permissions JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_app_users_role ON app_users (role)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_app_users_tenant ON app_users (tenant_id)")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS app_config_state (
+                    config_key TEXT PRIMARY KEY,
+                    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS admin_audit_log (
+                    ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    action TEXT NOT NULL,
+                    entity TEXT NOT NULL,
+                    target_id TEXT NOT NULL DEFAULT '',
+                    status TEXT NOT NULL DEFAULT 'success',
+                    actor TEXT NOT NULL DEFAULT 'system',
+                    role TEXT NOT NULL DEFAULT '',
+                    actor_tenant TEXT NOT NULL DEFAULT 'default',
+                    active_tenant TEXT NOT NULL DEFAULT 'default',
+                    method TEXT NOT NULL DEFAULT '',
+                    path TEXT NOT NULL DEFAULT '',
+                    ip TEXT NOT NULL DEFAULT '',
+                    user_agent TEXT NOT NULL DEFAULT '',
+                    details JSONB NOT NULL DEFAULT '{}'::jsonb
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_log_ts ON admin_audit_log (ts DESC)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_log_action_ts ON admin_audit_log (action, ts DESC)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_log_actor_ts ON admin_audit_log (actor, ts DESC)")
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS inventory_events (
                     ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -7277,26 +7333,903 @@ def _check_api_rate_limit(actor_key):
     return True, 0
 
 TENANT_REGISTRY_FILE = "tenants.json"
+USER_SEED_FILE = "users.default.json"
+_ROLE_PERMISSIONS_CONFIG_KEY = "role_permissions"
+_USERS_BOOTSTRAP_STATE_KEY = "bootstrap.users"
+_TENANTS_BOOTSTRAP_STATE_KEY = "bootstrap.tenants"
+
+
+def _db_first_config_enabled():
+    return bool(getattr(bssci_config, "TIMESCALE_ENABLED", False))
+
+
+def _db_json_value(raw_value, fallback):
+    if raw_value is None:
+        return copy.deepcopy(fallback)
+    if isinstance(raw_value, (dict, list)):
+        return copy.deepcopy(raw_value)
+    if isinstance(raw_value, str):
+        try:
+            parsed = json.loads(raw_value)
+            if isinstance(parsed, type(fallback)):
+                return parsed
+        except Exception:
+            return copy.deepcopy(fallback)
+    return copy.deepcopy(fallback)
+
+
+def _load_app_config_state_value_from_db(config_key, fallback=None):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return copy.deepcopy(fallback), err
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT payload FROM app_config_state WHERE config_key = %s",
+                (str(config_key or "").strip(),),
+            )
+            row = cur.fetchone()
+        if not row:
+            return copy.deepcopy(fallback), None
+        return _db_json_value(row[0], fallback if fallback is not None else {}), None
+    except Exception as exc:
+        return copy.deepcopy(fallback), str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _save_app_config_state_value_to_db(config_key, payload):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return False, err
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO app_config_state (config_key, payload, updated_at)
+                VALUES (%s, %s::jsonb, NOW())
+                ON CONFLICT (config_key) DO UPDATE SET
+                    payload = EXCLUDED.payload,
+                    updated_at = NOW()
+                """,
+                (
+                    str(config_key or "").strip(),
+                    json.dumps(payload or {}, separators=(",", ":"), ensure_ascii=True),
+                ),
+            )
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _load_tenant_registry_seed_payload():
+    fallback_payload = {
+        "tenants": [
+            {
+                "id": "test",
+                "name": "Testovaci tenant",
+                "description": "Testovaci tenant so seeded demo senzormi a telemetriou.",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+        ]
+    }
+    try:
+        with open(TENANT_REGISTRY_FILE, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+            if isinstance(payload, dict):
+                return payload
+    except FileNotFoundError:
+        return fallback_payload
+    except Exception as exc:
+        logger.warning("Failed to read tenant registry seed '%s': %s", TENANT_REGISTRY_FILE, exc)
+    return fallback_payload
+
+
+def _load_users_file_payload():
+    try:
+        with open('users.json', 'r', encoding='utf-8') as f:
+            payload = json.load(f)
+            if isinstance(payload, dict):
+                return payload
+    except FileNotFoundError:
+        return {}
+    except Exception as exc:
+        logger.warning("Failed to read users.json for DB migration seed: %s", exc)
+    return {}
+
+
+def _load_tenant_registry_file_payload():
+    try:
+        with open(TENANT_REGISTRY_FILE, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+            if isinstance(payload, dict):
+                return payload
+    except FileNotFoundError:
+        return {}
+    except Exception as exc:
+        logger.warning("Failed to read %s for DB migration seed: %s", TENANT_REGISTRY_FILE, exc)
+    return {}
+
+
+def _bootstrap_users_store_if_needed():
+    if not _db_first_config_enabled():
+        return {"used": False, "source": "json", "seeded": False}
+    loaded, err = _load_users_payload_from_db()
+    users_map = (loaded or {}).get("users", {}) if isinstance(loaded, dict) else {}
+    if isinstance(users_map, dict) and users_map:
+        state, _ = _load_app_config_state_value_from_db(_USERS_BOOTSTRAP_STATE_KEY, {})
+        if not isinstance(state, dict) or not state:
+            state = {
+                "seeded_at": datetime.now(timezone.utc).isoformat(),
+                "seed_source": "preexisting_db",
+                "seeded": False,
+            }
+            _save_app_config_state_value_to_db(_USERS_BOOTSTRAP_STATE_KEY, state)
+        return {
+            "used": True,
+            "source": "db",
+            "seeded": False,
+            "state": state if isinstance(state, dict) else {},
+        }
+
+    seed_source = "default_seed"
+    seed_payload = _load_users_file_payload()
+    if not isinstance(seed_payload, dict) or not isinstance(seed_payload.get("users"), dict) or not seed_payload.get("users"):
+        seed_payload = _load_default_user_seed_payload()
+        seed_source = "users.default.json"
+    else:
+        seed_source = "users.json"
+
+    ok, save_err = _save_users_payload_to_db(seed_payload)
+    if ok:
+        state_payload = {
+            "seeded_at": datetime.now(timezone.utc).isoformat(),
+            "seed_source": seed_source,
+            "seeded": True,
+        }
+        _save_app_config_state_value_to_db(_USERS_BOOTSTRAP_STATE_KEY, state_payload)
+        return {
+            "used": True,
+            "source": "db",
+            "seeded": True,
+            "state": state_payload,
+        }
+    return {
+        "used": False,
+        "source": "json-fallback",
+        "seeded": False,
+        "error": save_err or err,
+    }
+
+
+def _bootstrap_tenant_registry_store_if_needed():
+    if not _db_first_config_enabled():
+        return {"used": False, "source": "json", "seeded": False}
+    loaded, err = _load_tenant_registry_from_db()
+    tenants = (loaded or {}).get("tenants", []) if isinstance(loaded, dict) else []
+    if isinstance(tenants, list) and tenants:
+        state, _ = _load_app_config_state_value_from_db(_TENANTS_BOOTSTRAP_STATE_KEY, {})
+        if not isinstance(state, dict) or not state:
+            state = {
+                "seeded_at": datetime.now(timezone.utc).isoformat(),
+                "seed_source": "preexisting_db",
+                "seeded": False,
+            }
+            _save_app_config_state_value_to_db(_TENANTS_BOOTSTRAP_STATE_KEY, state)
+        return {
+            "used": True,
+            "source": "db",
+            "seeded": False,
+            "state": state if isinstance(state, dict) else {},
+        }
+
+    seed_source = TENANT_REGISTRY_FILE
+    seed_payload = _load_tenant_registry_file_payload()
+    if not isinstance(seed_payload, dict) or not isinstance(seed_payload.get("tenants"), list) or not seed_payload.get("tenants"):
+        seed_payload = _load_tenant_registry_seed_payload()
+        seed_source = "default_tenant_seed"
+
+    ok, save_err = _save_tenant_registry_to_db(seed_payload)
+    if ok:
+        state_payload = {
+            "seeded_at": datetime.now(timezone.utc).isoformat(),
+            "seed_source": seed_source,
+            "seeded": True,
+        }
+        _save_app_config_state_value_to_db(_TENANTS_BOOTSTRAP_STATE_KEY, state_payload)
+        return {
+            "used": True,
+            "source": "db",
+            "seeded": True,
+            "state": state_payload,
+        }
+    return {
+        "used": False,
+        "source": "json-fallback",
+        "seeded": False,
+        "error": save_err or err,
+    }
+
+
+def _users_storage_backend_meta():
+    if not _db_first_config_enabled():
+        return {"backend": "json", "db_enabled": False, "bootstrap_state": {}}
+    state, err = _load_app_config_state_value_from_db(_USERS_BOOTSTRAP_STATE_KEY, {})
+    return {
+        "backend": "db",
+        "db_enabled": True,
+        "bootstrap_state": state if isinstance(state, dict) else {},
+        "bootstrap_error": err or "",
+    }
+
+
+def _tenant_storage_backend_meta():
+    if not _db_first_config_enabled():
+        return {"backend": "json", "db_enabled": False, "bootstrap_state": {}}
+    state, err = _load_app_config_state_value_from_db(_TENANTS_BOOTSTRAP_STATE_KEY, {})
+    return {
+        "backend": "db",
+        "db_enabled": True,
+        "bootstrap_state": state if isinstance(state, dict) else {},
+        "bootstrap_error": err or "",
+    }
+
+
+def _load_users_payload_from_db():
+    conn, err = _timescale_connect()
+    if conn is None:
+        return None, err
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT username, password, role, name, tenant_id, active, require_password_change, admin_permissions
+                FROM app_users
+                ORDER BY username ASC
+            """)
+            users = {}
+            for row in (cur.fetchall() or []):
+                username = str(row[0] or "").strip()
+                if not username:
+                    continue
+                users[username] = {
+                    "password": str(row[1] or ""),
+                    "role": str(row[2] or "viewer"),
+                    "name": str(row[3] or username),
+                    "tenant_id": str(row[4] or ""),
+                    "active": bool(row[5]),
+                }
+                if bool(row[6]):
+                    users[username]["require_password_change"] = True
+                admin_permissions = _db_json_value(row[7], {})
+                if isinstance(admin_permissions, dict) and admin_permissions:
+                    users[username]["admin_permissions"] = admin_permissions
+
+            cur.execute(
+                "SELECT payload FROM app_config_state WHERE config_key = %s",
+                (_ROLE_PERMISSIONS_CONFIG_KEY,),
+            )
+            row = cur.fetchone()
+            role_permissions = _db_json_value(row[0] if row else None, _default_role_permissions_map())
+        return {
+            "users": users,
+            "role_permissions": role_permissions,
+        }, None
+    except Exception as exc:
+        return None, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _save_users_payload_to_db(users_data):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return False, err
+    try:
+        conn.autocommit = False
+        _ensure_timescale_schema(conn)
+        users_map = users_data.get("users", {}) if isinstance(users_data, dict) else {}
+        role_permissions = users_data.get("role_permissions", {}) if isinstance(users_data, dict) else {}
+        desired_usernames = {
+            str(username).strip()
+            for username, user in (users_map.items() if isinstance(users_map, dict) else [])
+            if str(username).strip() and isinstance(user, dict)
+        }
+        with conn.cursor() as cur:
+            cur.execute("SELECT username FROM app_users")
+            existing_usernames = {
+                str(row[0] or "").strip()
+                for row in (cur.fetchall() or [])
+                if str(row[0] or "").strip()
+            }
+            stale_usernames = sorted(existing_usernames - desired_usernames)
+            if stale_usernames:
+                cur.executemany(
+                    "DELETE FROM app_users WHERE username = %s",
+                    [(username,) for username in stale_usernames],
+                )
+
+            for username in sorted(desired_usernames):
+                user = users_map.get(username) or {}
+                cur.execute(
+                    """
+                    INSERT INTO app_users
+                        (username, password, role, name, tenant_id, active, require_password_change, admin_permissions, updated_at)
+                    VALUES
+                        (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, NOW())
+                    ON CONFLICT (username) DO UPDATE SET
+                        password = EXCLUDED.password,
+                        role = EXCLUDED.role,
+                        name = EXCLUDED.name,
+                        tenant_id = EXCLUDED.tenant_id,
+                        active = EXCLUDED.active,
+                        require_password_change = EXCLUDED.require_password_change,
+                        admin_permissions = EXCLUDED.admin_permissions,
+                        updated_at = NOW()
+                    """,
+                    (
+                        username,
+                        str(user.get("password") or ""),
+                        str(user.get("role") or "viewer"),
+                        str(user.get("name") or username),
+                        str(user.get("tenant_id") or ""),
+                        bool(user.get("active", True)),
+                        bool(user.get("require_password_change", False)),
+                        json.dumps(user.get("admin_permissions") or {}, separators=(",", ":"), ensure_ascii=True),
+                    ),
+                )
+
+            cur.execute(
+                """
+                INSERT INTO app_config_state (config_key, payload, updated_at)
+                VALUES (%s, %s::jsonb, NOW())
+                ON CONFLICT (config_key) DO UPDATE SET
+                    payload = EXCLUDED.payload,
+                    updated_at = NOW()
+                """,
+                (
+                    _ROLE_PERMISSIONS_CONFIG_KEY,
+                    json.dumps(role_permissions or {}, separators=(",", ":"), ensure_ascii=True),
+                ),
+            )
+        conn.commit()
+        return True, None
+    except Exception as exc:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        return False, str(exc)
+    finally:
+        try:
+            conn.autocommit = True
+        except Exception:
+            pass
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _load_tenant_registry_from_db():
+    conn, err = _timescale_connect()
+    if conn is None:
+        return None, err
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, name, description, created_at
+                FROM tenant_registry_meta
+                ORDER BY id ASC
+            """)
+            tenants = []
+            for row in (cur.fetchall() or []):
+                tenant_id = _sanitize_tenant_id(row[0])
+                if not tenant_id:
+                    continue
+                tenants.append({
+                    "id": tenant_id,
+                    "name": str(row[1] or tenant_id).strip() or tenant_id,
+                    "description": str(row[2] or "").strip(),
+                    "created_at": str(row[3]) if row[3] else datetime.now(timezone.utc).isoformat(),
+                })
+        return {"tenants": tenants}, None
+    except Exception as exc:
+        return None, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _save_tenant_registry_to_db(registry_data):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return False, err
+    try:
+        conn.autocommit = False
+        _ensure_timescale_schema(conn)
+        tenants_raw = registry_data.get("tenants", []) if isinstance(registry_data, dict) else []
+        normalized_rows = []
+        for item in tenants_raw:
+            if not isinstance(item, dict):
+                continue
+            tenant_id = _sanitize_tenant_id(item.get("id") or item.get("tenant_id"))
+            if not tenant_id or _is_reserved_default_tenant(tenant_id):
+                continue
+            normalized_rows.append((
+                tenant_id,
+                str(item.get("name") or tenant_id).strip()[:120] or tenant_id,
+                str(item.get("description") or "").strip()[:240],
+                str(item.get("created_at") or datetime.now(timezone.utc).isoformat()),
+            ))
+
+        desired_ids = {row[0] for row in normalized_rows}
+        with conn.cursor() as cur:
+            cur.execute("SELECT id FROM tenant_registry_meta")
+            existing_ids = {
+                _sanitize_tenant_id(row[0])
+                for row in (cur.fetchall() or [])
+                if _sanitize_tenant_id(row[0])
+            }
+            stale_ids = sorted(existing_ids - desired_ids)
+            if stale_ids:
+                cur.executemany(
+                    "DELETE FROM tenant_registry_meta WHERE id = %s",
+                    [(tenant_id,) for tenant_id in stale_ids],
+                )
+            for tenant_id, name, description, created_at in normalized_rows:
+                cur.execute(
+                    """
+                    INSERT INTO tenant_registry_meta (id, name, description, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s::timestamptz, NOW())
+                    ON CONFLICT (id) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        description = EXCLUDED.description,
+                        updated_at = NOW()
+                    """,
+                    (tenant_id, name, description, created_at),
+                )
+                cur.execute(
+                    """
+                    INSERT INTO tenants (id, name, description, updated_at)
+                    VALUES (%s, %s, %s, NOW())
+                    ON CONFLICT (id) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        description = EXCLUDED.description,
+                        updated_at = NOW()
+                    """,
+                    (tenant_id, name, description),
+                )
+        conn.commit()
+        return True, None
+    except Exception as exc:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        return False, str(exc)
+    finally:
+        try:
+            conn.autocommit = True
+        except Exception:
+            pass
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _append_admin_audit_entry_to_db(entry):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return False, err
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO admin_audit_log
+                    (ts, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, details)
+                VALUES
+                    (%s::timestamptz, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                """,
+                (
+                    str(entry.get("timestamp") or datetime.now(timezone.utc).isoformat()),
+                    str(entry.get("action") or "unknown"),
+                    str(entry.get("entity") or "unknown"),
+                    str(entry.get("target_id") or ""),
+                    str(entry.get("status") or "success"),
+                    str(entry.get("actor") or "system"),
+                    str(entry.get("role") or ""),
+                    str(entry.get("actor_tenant") or _default_tenant_id()),
+                    str(entry.get("active_tenant") or _default_tenant_id()),
+                    str(entry.get("method") or ""),
+                    str(entry.get("path") or ""),
+                    str(entry.get("ip") or ""),
+                    str(entry.get("user_agent") or ""),
+                    json.dumps(entry.get("details") or {}, separators=(",", ":"), ensure_ascii=True),
+                ),
+            )
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _load_admin_audit_entries_from_db(limit=None):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return None, err
+    try:
+        _ensure_timescale_schema(conn)
+        max_rows = max_admin_audit_entries if limit is None else max(1, int(limit))
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT ts, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, details
+                FROM admin_audit_log
+                ORDER BY ts DESC
+                LIMIT %s
+                """,
+                (max_rows,),
+            )
+            rows = cur.fetchall() or []
+        entries = []
+        for row in reversed(rows):
+            entries.append({
+                "timestamp": str(row[0].isoformat(timespec="milliseconds") if hasattr(row[0], "isoformat") else row[0]),
+                "action": str(row[1] or "").strip(),
+                "entity": str(row[2] or "").strip(),
+                "target_id": str(row[3] or "").strip(),
+                "status": str(row[4] or "").strip().lower() or "success",
+                "actor": str(row[5] or "").strip(),
+                "role": str(row[6] or "").strip(),
+                "actor_tenant": str(row[7] or "").strip(),
+                "active_tenant": str(row[8] or "").strip(),
+                "method": str(row[9] or "").strip(),
+                "path": str(row[10] or "").strip(),
+                "ip": str(row[11] or "").strip(),
+                "user_agent": str(row[12] or "").strip(),
+                "details": _db_json_value(row[13], {}),
+            })
+        return entries, None
+    except Exception as exc:
+        return None, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _clear_admin_audit_entries_in_db():
+    conn, err = _timescale_connect()
+    if conn is None:
+        return False, err
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("TRUNCATE TABLE admin_audit_log")
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _load_tenant_usage_meta_from_db():
+    conn, err = _timescale_connect()
+    if conn is None:
+        return None, err
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    ids.id,
+                    COALESCE(NULLIF(trm.name, ''), NULLIF(t.name, ''), ids.id) AS display_name,
+                    COALESCE(trm.description, t.description, '') AS description,
+                    COALESCE(trm.created_at, t.created_at) AS created_at,
+                    COALESCE(u.user_count, 0)::BIGINT AS user_count,
+                    COALESCE(ev.event_count, 0)::BIGINT AS inventory_events,
+                    COALESCE(te.telemetry_count, 0)::BIGINT AS telemetry_points
+                FROM (
+                    SELECT id FROM tenant_registry_meta
+                    UNION
+                    SELECT id FROM tenants
+                    UNION
+                    SELECT DISTINCT tenant_id AS id
+                    FROM app_users
+                    WHERE tenant_id IS NOT NULL AND tenant_id <> ''
+                ) ids
+                LEFT JOIN tenant_registry_meta trm ON trm.id = ids.id
+                LEFT JOIN tenants t ON t.id = ids.id
+                LEFT JOIN (
+                    SELECT tenant_id, COUNT(*) AS user_count
+                    FROM app_users
+                    WHERE tenant_id IS NOT NULL AND tenant_id <> ''
+                    GROUP BY tenant_id
+                ) u ON u.tenant_id = ids.id
+                LEFT JOIN (
+                    SELECT tenant_id, COUNT(*) AS event_count
+                    FROM inventory_events
+                    GROUP BY tenant_id
+                ) ev ON ev.tenant_id = ids.id
+                LEFT JOIN (
+                    SELECT tenant_id, COUNT(*) AS telemetry_count
+                    FROM telemetry_uplink
+                    GROUP BY tenant_id
+                ) te ON te.tenant_id = ids.id
+                ORDER BY ids.id ASC
+            """)
+            rows = cur.fetchall() or []
+        tenant_meta = {}
+        for row in rows:
+            tenant_id = _sanitize_tenant_id(row[0])
+            if not tenant_id:
+                continue
+            tenant_meta[tenant_id] = {
+                "id": tenant_id,
+                "name": str(row[1] or tenant_id).strip() or tenant_id,
+                "description": str(row[2] or "").strip(),
+                "created_at": str(row[3]) if row[3] else None,
+                "user_count": int(row[4] or 0),
+                "inventory_events": int(row[5] or 0),
+                "telemetry_points": int(row[6] or 0),
+            }
+        return tenant_meta, None
+    except Exception as exc:
+        return None, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _admin_audit_where_sql(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter='', target_filter=''):
+    clauses = []
+    params = []
+    if action_filter != 'all':
+        clauses.append("LOWER(action) = %s")
+        params.append(action_filter)
+    if entity_filter != 'all':
+        clauses.append("LOWER(entity) = %s")
+        params.append(entity_filter)
+    if actor_filter != 'all':
+        clauses.append("LOWER(actor) = %s")
+        params.append(actor_filter)
+    if status_filter != 'all':
+        clauses.append("LOWER(status) = %s")
+        params.append(status_filter)
+    if target_filter:
+        clauses.append("LOWER(target_id) = %s")
+        params.append(target_filter)
+    if text_filter:
+        clauses.append("""
+            LOWER(
+                COALESCE(action, '') || ' ' ||
+                COALESCE(entity, '') || ' ' ||
+                COALESCE(target_id, '') || ' ' ||
+                COALESCE(actor, '') || ' ' ||
+                COALESCE(status, '') || ' ' ||
+                COALESCE(path, '') || ' ' ||
+                COALESCE(details::text, '')
+            ) LIKE %s
+        """)
+        params.append(f"%{text_filter}%")
+    where_sql = ""
+    if clauses:
+        where_sql = " WHERE " + " AND ".join(f"({clause.strip()})" for clause in clauses)
+    return where_sql, params
+
+
+def _fetch_admin_audit_entries_from_db(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter='', target_filter='', limit=None, newest_first=True):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return None, err
+    try:
+        _ensure_timescale_schema(conn)
+        where_sql, params = _admin_audit_where_sql(
+            action_filter=action_filter,
+            entity_filter=entity_filter,
+            actor_filter=actor_filter,
+            status_filter=status_filter,
+            text_filter=text_filter,
+            target_filter=target_filter,
+        )
+        order_sql = "DESC" if newest_first else "ASC"
+        limit_sql = ""
+        query_params = list(params)
+        if limit is not None:
+            limit_sql = " LIMIT %s"
+            query_params.append(max(1, int(limit)))
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                SELECT ts, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, details
+                FROM admin_audit_log
+                {where_sql}
+                ORDER BY ts {order_sql}
+                {limit_sql}
+                """,
+                query_params,
+            )
+            rows = cur.fetchall() or []
+        entries = []
+        for row in rows:
+            entries.append({
+                "timestamp": str(row[0].isoformat(timespec="milliseconds") if hasattr(row[0], "isoformat") else row[0]),
+                "action": str(row[1] or "").strip(),
+                "entity": str(row[2] or "").strip(),
+                "target_id": str(row[3] or "").strip(),
+                "status": str(row[4] or "").strip().lower() or "success",
+                "actor": str(row[5] or "").strip(),
+                "role": str(row[6] or "").strip(),
+                "actor_tenant": str(row[7] or "").strip(),
+                "active_tenant": str(row[8] or "").strip(),
+                "method": str(row[9] or "").strip(),
+                "path": str(row[10] or "").strip(),
+                "ip": str(row[11] or "").strip(),
+                "user_agent": str(row[12] or "").strip(),
+                "details": _db_json_value(row[13], {}),
+            })
+        return entries, None
+    except Exception as exc:
+        return None, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _fetch_admin_audit_summary_from_db(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter='', target_filter='', limit=200):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return None, err
+    try:
+        _ensure_timescale_schema(conn)
+        where_sql, params = _admin_audit_where_sql(
+            action_filter=action_filter,
+            entity_filter=entity_filter,
+            actor_filter=actor_filter,
+            status_filter=status_filter,
+            text_filter=text_filter,
+            target_filter=target_filter,
+        )
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM admin_audit_log")
+            total = int((cur.fetchone() or [0])[0] or 0)
+
+            cur.execute(f"SELECT COUNT(*) FROM admin_audit_log {where_sql}", params)
+            filtered_total = int((cur.fetchone() or [0])[0] or 0)
+
+            cur.execute(
+                f"""
+                SELECT ts, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, details
+                FROM admin_audit_log
+                {where_sql}
+                ORDER BY ts DESC
+                LIMIT %s
+                """,
+                [*params, max(1, int(limit))],
+            )
+            rows = cur.fetchall() or []
+
+            cur.execute("SELECT DISTINCT action FROM admin_audit_log WHERE action <> '' ORDER BY action ASC")
+            actions = [str(row[0] or "").strip() for row in (cur.fetchall() or []) if str(row[0] or "").strip()]
+
+            cur.execute("SELECT DISTINCT entity FROM admin_audit_log WHERE entity <> '' ORDER BY entity ASC")
+            entities = [str(row[0] or "").strip() for row in (cur.fetchall() or []) if str(row[0] or "").strip()]
+
+            cur.execute("SELECT DISTINCT actor FROM admin_audit_log WHERE actor <> '' ORDER BY actor ASC")
+            actors = [str(row[0] or "").strip() for row in (cur.fetchall() or []) if str(row[0] or "").strip()]
+
+            cur.execute(
+                f"""
+                SELECT LOWER(status) AS normalized_status, COUNT(*)
+                FROM admin_audit_log
+                {where_sql}
+                GROUP BY LOWER(status)
+                """,
+                params,
+            )
+            status_counts = {'success': 0, 'warning': 0, 'error': 0}
+            for row in (cur.fetchall() or []):
+                key = str(row[0] or '').strip().lower()
+                if not key:
+                    continue
+                status_counts[key] = int(row[1] or 0)
+        entries = []
+        for row in rows:
+            entries.append({
+                "timestamp": str(row[0].isoformat(timespec="milliseconds") if hasattr(row[0], "isoformat") else row[0]),
+                "action": str(row[1] or "").strip(),
+                "entity": str(row[2] or "").strip(),
+                "target_id": str(row[3] or "").strip(),
+                "status": str(row[4] or "").strip().lower() or "success",
+                "actor": str(row[5] or "").strip(),
+                "role": str(row[6] or "").strip(),
+                "actor_tenant": str(row[7] or "").strip(),
+                "active_tenant": str(row[8] or "").strip(),
+                "method": str(row[9] or "").strip(),
+                "path": str(row[10] or "").strip(),
+                "ip": str(row[11] or "").strip(),
+                "user_agent": str(row[12] or "").strip(),
+                "details": _db_json_value(row[13], {}),
+            })
+        return {
+            'entries': entries,
+            'total': total,
+            'filtered_total': filtered_total,
+            'actions': actions,
+            'entities': entities,
+            'actors': actors,
+            'status_counts': status_counts,
+        }, None
+    except Exception as exc:
+        return None, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 def load_tenant_registry():
-    """Load tenant metadata from local registry file."""
+    """Load tenant metadata from DB-first registry with file fallback."""
     default_tenant = _default_tenant_id()
     payload = {"tenants": []}
     changed = False
 
-    try:
-        if os.path.exists(TENANT_REGISTRY_FILE):
-            with open(TENANT_REGISTRY_FILE, "r", encoding="utf-8") as f:
-                raw = json.load(f)
-            if isinstance(raw, dict):
-                payload = raw
-            else:
+    if _db_first_config_enabled():
+        bootstrap_state = _bootstrap_tenant_registry_store_if_needed()
+        raw, err = _load_tenant_registry_from_db()
+        if isinstance(raw, dict):
+            payload = raw
+            if bootstrap_state.get("seeded"):
                 changed = True
         else:
+            logger.warning("Failed to load tenant registry from DB, falling back to file: %s", err)
             changed = True
-    except Exception as exc:
-        logger.warning(f"Failed to load tenant registry '{TENANT_REGISTRY_FILE}': {exc}")
-        changed = True
+
+    if not isinstance(payload, dict) or (not payload.get("tenants") and not _db_first_config_enabled()):
+        try:
+            if os.path.exists(TENANT_REGISTRY_FILE):
+                with open(TENANT_REGISTRY_FILE, "r", encoding="utf-8") as f:
+                    raw = json.load(f)
+                if isinstance(raw, dict):
+                    payload = raw
+                else:
+                    changed = True
+            else:
+                changed = True
+        except Exception as exc:
+            logger.warning(f"Failed to load tenant registry '{TENANT_REGISTRY_FILE}': {exc}")
+            changed = True
 
     tenants_raw = payload.get("tenants", [])
     if not isinstance(tenants_raw, list):
@@ -7343,7 +8276,12 @@ def load_tenant_registry():
     return normalized_payload
 
 def save_tenant_registry(registry_data):
-    """Persist tenant registry metadata to disk."""
+    """Persist tenant registry metadata to DB-first registry with file fallback."""
+    if _db_first_config_enabled():
+        ok, err = _save_tenant_registry_to_db(registry_data)
+        if ok:
+            return True
+        logger.error("Failed to save tenant registry to DB, falling back to file: %s", err)
     try:
         with open(TENANT_REGISTRY_FILE, "w", encoding="utf-8") as f:
             json.dump(registry_data, f, indent=2, ensure_ascii=True)
@@ -7414,16 +8352,27 @@ def _upsert_tenant_registry_entry(tenant_id, name=None, description=None):
 
 # User management functions
 def load_users():
-    """Load users from users.json file"""
+    """Load users from DB-first store with JSON fallback."""
     try:
         data = {}
         changed = False
-        try:
-            with open('users.json', 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        except FileNotFoundError:
-            data = {}
-            changed = True
+        if _db_first_config_enabled():
+            bootstrap_state = _bootstrap_users_store_if_needed()
+            loaded, err = _load_users_payload_from_db()
+            if isinstance(loaded, dict):
+                data = loaded
+                if bootstrap_state.get("seeded"):
+                    changed = True
+            else:
+                logger.warning("Failed to load users from DB, falling back to JSON: %s", err)
+                changed = True
+        if not isinstance(data, dict) or not data:
+            try:
+                with open('users.json', 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            except FileNotFoundError:
+                data = {}
+                changed = True
 
         if not isinstance(data, dict):
             data = {}
@@ -7507,7 +8456,12 @@ def load_users():
         return {"users": {}, "role_permissions": {}}
 
 def save_users(users_data):
-    """Save users to users.json file"""
+    """Save users to DB-first store with JSON fallback."""
+    if _db_first_config_enabled():
+        ok, err = _save_users_payload_to_db(users_data)
+        if ok:
+            return True
+        logger.error("Failed to save users to DB, falling back to JSON: %s", err)
     try:
         with open('users.json', 'w') as f:
             json.dump(users_data, f, indent=2)
@@ -7834,16 +8788,46 @@ def _append_admin_audit_entry(entry):
         admin_audit_entries.append(entry)
         if len(admin_audit_entries) > max_admin_audit_entries:
             admin_audit_entries = admin_audit_entries[-max_admin_audit_entries:]
-        try:
-            os.makedirs(os.path.dirname(admin_audit_log_file), exist_ok=True)
-            with open(admin_audit_log_file, "a", encoding="utf-8") as f:
-                f.write(json.dumps(entry, ensure_ascii=True) + "\n")
-        except Exception as exc:
-            logger.warning("Failed to persist admin audit entry: %s", exc)
+    if _db_first_config_enabled():
+        ok, err = _append_admin_audit_entry_to_db(entry)
+        if ok:
+            return
+        logger.warning("Failed to persist admin audit entry to DB, falling back to file: %s", err)
+    try:
+        os.makedirs(os.path.dirname(admin_audit_log_file), exist_ok=True)
+        with open(admin_audit_log_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=True) + "\n")
+    except Exception as exc:
+        logger.warning("Failed to persist admin audit entry: %s", exc)
 
 
 def _load_admin_audit_entries():
     global admin_audit_entries
+    if _db_first_config_enabled():
+        loaded, err = _load_admin_audit_entries_from_db(limit=max_admin_audit_entries)
+        if isinstance(loaded, list):
+            if not loaded and os.path.exists(admin_audit_log_file):
+                legacy_loaded = []
+                try:
+                    with open(admin_audit_log_file, "r", encoding="utf-8") as f:
+                        for raw_line in f:
+                            line = raw_line.strip()
+                            if not line:
+                                continue
+                            try:
+                                item = json.loads(line)
+                            except Exception:
+                                continue
+                            if isinstance(item, dict):
+                                legacy_loaded.append(item)
+                    for item in legacy_loaded[-max_admin_audit_entries:]:
+                        _append_admin_audit_entry_to_db(item)
+                    loaded, _ = _load_admin_audit_entries_from_db(limit=max_admin_audit_entries)
+                except Exception as legacy_exc:
+                    logger.warning("Failed to migrate legacy admin audit log into DB: %s", legacy_exc)
+            admin_audit_entries = loaded[-max_admin_audit_entries:]
+            return
+        logger.warning("Failed to load admin audit log from DB, falling back to file: %s", err)
     if not os.path.exists(admin_audit_log_file):
         admin_audit_entries = []
         return
@@ -8153,6 +9137,7 @@ def api_users():
     if request.method == 'GET':
         users_list = []
         legacy_default_user_present = False
+        storage_meta = _users_storage_backend_meta()
         for username, data in users_data.get('users', {}).items():
             role = _normalize_user_role(data.get('role', 'viewer'))
             normalized_tenant = _normalize_user_tenant_for_role(
@@ -8210,6 +9195,9 @@ def api_users():
             'default_tenant_label': 'Super admin',
             'legacy_default_user_present': legacy_default_user_present,
             'tenant_choices': sorted(known_tenant_ids),
+            'storage_backend': storage_meta.get('backend', 'json'),
+            'storage_db_enabled': bool(storage_meta.get('db_enabled', False)),
+            'bootstrap_state': storage_meta.get('bootstrap_state', {}),
             'admin_scopes': [
                 {
                     'id': scope_id,
@@ -8370,7 +9358,24 @@ def api_tenants():
     tenant_ids.add(default_tenant)
     all_sensors = _load_all_sensors()
     registry_map = _tenant_registry_map()
+    tenant_storage_meta = _tenant_storage_backend_meta()
     tenant_ids.update(registry_map.keys())
+    db_tenant_meta = {}
+    db_tenant_meta_error = None
+    if _db_first_config_enabled():
+        db_tenant_meta, db_tenant_meta_error = _load_tenant_usage_meta_from_db()
+        if isinstance(db_tenant_meta, dict):
+            tenant_ids.update(db_tenant_meta.keys())
+            for tenant_id, meta in db_tenant_meta.items():
+                existing = registry_map.get(tenant_id, {})
+                registry_map[tenant_id] = {
+                    "id": tenant_id,
+                    "name": str(existing.get("name") or meta.get("name") or tenant_id).strip() or tenant_id,
+                    "description": str(existing.get("description") or meta.get("description") or "").strip(),
+                    "created_at": existing.get("created_at") or meta.get("created_at") or "",
+                }
+        else:
+            db_tenant_meta = {}
 
     users_data = load_users()
     users_map = users_data.get("users", {}) if isinstance(users_data, dict) else {}
@@ -8654,52 +9659,19 @@ def api_tenants():
 
     timescale = {"enabled": bool(getattr(bssci_config, "TIMESCALE_ENABLED", False)), "tenants": []}
     timescale_meta = {}
-    conn, err = _timescale_connect()
-    if conn is not None:
-        try:
-            _ensure_timescale_schema(conn)
-            with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT
-                        t.id,
-                        t.name,
-                        t.created_at,
-                        COALESCE(ev.cnt, 0)::BIGINT AS event_count,
-                        COALESCE(te.cnt, 0)::BIGINT AS telemetry_count
-                    FROM tenants t
-                    LEFT JOIN (
-                        SELECT tenant_id, COUNT(*) AS cnt
-                        FROM inventory_events
-                        GROUP BY tenant_id
-                    ) ev ON ev.tenant_id = t.id
-                    LEFT JOIN (
-                        SELECT tenant_id, COUNT(*) AS cnt
-                        FROM telemetry_uplink
-                        GROUP BY tenant_id
-                    ) te ON te.tenant_id = t.id
-                    ORDER BY t.id ASC
-                """)
-                for row in (cur.fetchall() or []):
-                    tenant_ids.add(_normalize_tenant_id(row[0], fallback=default_tenant))
-                    normalized_id = _normalize_tenant_id(row[0], fallback=default_tenant)
-                    meta_entry = {
-                        "id": normalized_id,
-                        "name": str(row[1] or row[0] or "").strip() or normalized_id,
-                        "created_at": str(row[2]) if row[2] else None,
-                        "inventory_events": int(row[3] or 0),
-                        "telemetry_points": int(row[4] or 0),
-                    }
-                    timescale_meta[normalized_id] = meta_entry
-                    timescale["tenants"].append(meta_entry)
-        except Exception as exc:
-            timescale["error"] = str(exc)
-        finally:
-            try:
-                conn.close()
-            except Exception:
-                pass
-    else:
-        timescale["error"] = err
+    if isinstance(db_tenant_meta, dict) and db_tenant_meta:
+        for tenant_id, meta_entry in sorted(db_tenant_meta.items()):
+            timescale_meta[tenant_id] = {
+                "id": tenant_id,
+                "name": str(meta_entry.get("name") or tenant_id).strip() or tenant_id,
+                "created_at": meta_entry.get("created_at"),
+                "inventory_events": int(meta_entry.get("inventory_events") or 0),
+                "telemetry_points": int(meta_entry.get("telemetry_points") or 0),
+                "user_count": int(meta_entry.get("user_count") or 0),
+            }
+            timescale["tenants"].append(timescale_meta[tenant_id])
+    elif db_tenant_meta_error:
+        timescale["error"] = db_tenant_meta_error
 
     tenant_summaries = []
     sorted_tenants = sorted(tenant_ids)
@@ -8710,11 +9682,13 @@ def api_tenants():
             for _, bs_data in (bs_config or {}).items()
             if isinstance(bs_data, dict) and _tenant_matches(_tenant_id_from_base_station(bs_data), tenant_id)
         )
-        user_count = sum(
-            1
-            for _, user in users_data.get("users", {}).items()
-            if _user_belongs_to_tenant(user, tenant_id, fallback=default_tenant)
-        )
+        user_count = int((timescale_meta.get(tenant_id) or {}).get("user_count") or 0)
+        if not user_count:
+            user_count = sum(
+                1
+                for _, user in users_data.get("users", {}).items()
+                if _user_belongs_to_tenant(user, tenant_id, fallback=default_tenant)
+            )
         registry_entry = registry_map.get(tenant_id, {})
         ts_entry = timescale_meta.get(tenant_id, {})
         tenant_name = str(
@@ -8759,6 +9733,9 @@ def api_tenants():
         "success": True,
         "default_tenant": default_tenant,
         "default_tenant_label": "Super admin",
+        "storage_backend": tenant_storage_meta.get("backend", "json"),
+        "storage_db_enabled": bool(tenant_storage_meta.get("db_enabled", False)),
+        "bootstrap_state": tenant_storage_meta.get("bootstrap_state", {}),
         "tenants": tenant_summaries,
         "base_stations_catalog": [
             {
@@ -15024,31 +16001,78 @@ def get_admin_audit_logs():
         limit = 200
     limit = max(20, min(limit, 2000))
 
-    filtered, source_entries = _filter_admin_audit_entries(
-        action_filter=action_filter,
-        entity_filter=entity_filter,
-        actor_filter=actor_filter,
-        status_filter=status_filter,
-        text_filter=text_filter,
-        target_filter=target_filter,
-    )
-    with _admin_audit_lock:
-        total = len(admin_audit_entries)
-    filtered_total = len(filtered)
-    recent = filtered[-limit:] if filtered_total > limit else filtered
-    recent = list(reversed(recent))
+    if _db_first_config_enabled():
+        summary, err = _fetch_admin_audit_summary_from_db(
+            action_filter=action_filter,
+            entity_filter=entity_filter,
+            actor_filter=actor_filter,
+            status_filter=status_filter,
+            text_filter=text_filter,
+            target_filter=target_filter,
+            limit=limit,
+        )
+        if summary is not None:
+            recent = summary.get('entries', [])
+            total = int(summary.get('total', 0) or 0)
+            filtered_total = int(summary.get('filtered_total', 0) or 0)
+            actions = list(summary.get('actions', []))
+            entities = list(summary.get('entities', []))
+            actors = list(summary.get('actors', []))
+            status_counts = dict(summary.get('status_counts', {'success': 0, 'warning': 0, 'error': 0}))
+            source_label = 'db'
+        else:
+            logger.warning("Falling back to in-memory admin audit filtering: %s", err)
+            filtered, source_entries = _filter_admin_audit_entries(
+                action_filter=action_filter,
+                entity_filter=entity_filter,
+                actor_filter=actor_filter,
+                status_filter=status_filter,
+                text_filter=text_filter,
+                target_filter=target_filter,
+            )
+            with _admin_audit_lock:
+                total = len(admin_audit_entries)
+            filtered_total = len(filtered)
+            recent = filtered[-limit:] if filtered_total > limit else filtered
+            recent = list(reversed(recent))
+            actions = sorted({str(item.get('action', '')).strip() for item in source_entries if str(item.get('action', '')).strip()})
+            entities = sorted({str(item.get('entity', '')).strip() for item in source_entries if str(item.get('entity', '')).strip()})
+            actors = sorted({str(item.get('actor', '')).strip() for item in source_entries if str(item.get('actor', '')).strip()})
+            status_counts = {'success': 0, 'warning': 0, 'error': 0}
+            for item in filtered:
+                normalized = str(item.get('status', 'success')).strip().lower()
+                if normalized in status_counts:
+                    status_counts[normalized] += 1
+                elif normalized:
+                    status_counts[normalized] = status_counts.get(normalized, 0) + 1
+            source_label = 'memory+file'
+    else:
+        filtered, source_entries = _filter_admin_audit_entries(
+            action_filter=action_filter,
+            entity_filter=entity_filter,
+            actor_filter=actor_filter,
+            status_filter=status_filter,
+            text_filter=text_filter,
+            target_filter=target_filter,
+        )
+        with _admin_audit_lock:
+            total = len(admin_audit_entries)
+        filtered_total = len(filtered)
+        recent = filtered[-limit:] if filtered_total > limit else filtered
+        recent = list(reversed(recent))
 
-    actions = sorted({str(item.get('action', '')).strip() for item in source_entries if str(item.get('action', '')).strip()})
-    entities = sorted({str(item.get('entity', '')).strip() for item in source_entries if str(item.get('entity', '')).strip()})
-    actors = sorted({str(item.get('actor', '')).strip() for item in source_entries if str(item.get('actor', '')).strip()})
+        actions = sorted({str(item.get('action', '')).strip() for item in source_entries if str(item.get('action', '')).strip()})
+        entities = sorted({str(item.get('entity', '')).strip() for item in source_entries if str(item.get('entity', '')).strip()})
+        actors = sorted({str(item.get('actor', '')).strip() for item in source_entries if str(item.get('actor', '')).strip()})
 
-    status_counts = {'success': 0, 'warning': 0, 'error': 0}
-    for item in filtered:
-        normalized = str(item.get('status', 'success')).strip().lower()
-        if normalized in status_counts:
-            status_counts[normalized] += 1
-        elif normalized:
-            status_counts[normalized] = status_counts.get(normalized, 0) + 1
+        status_counts = {'success': 0, 'warning': 0, 'error': 0}
+        for item in filtered:
+            normalized = str(item.get('status', 'success')).strip().lower()
+            if normalized in status_counts:
+                status_counts[normalized] += 1
+            elif normalized:
+                status_counts[normalized] = status_counts.get(normalized, 0) + 1
+        source_label = 'memory+file'
 
     return jsonify({
         'success': True,
@@ -15060,7 +16084,7 @@ def get_admin_audit_logs():
         'entities': entities,
         'actors': actors,
         'status_counts': status_counts,
-        'source': 'memory+file',
+        'source': source_label,
     })
 
 
@@ -15126,16 +16150,53 @@ def export_admin_audit_logs():
     max_rows = max(100, int(getattr(bssci_config, "ADMIN_AUDIT_EXPORT_MAX_ROWS", 50000) or 50000))
     limit = max(1, min(requested_limit, max_rows))
 
-    filtered, _ = _filter_admin_audit_entries(
-        action_filter=action_filter,
-        entity_filter=entity_filter,
-        actor_filter=actor_filter,
-        status_filter=status_filter,
-        text_filter=text_filter,
-        target_filter=target_filter,
-    )
-    exported_rows = filtered[-limit:] if len(filtered) > limit else filtered
-    exported_rows = list(reversed(exported_rows))
+    if _db_first_config_enabled():
+        exported_rows, err = _fetch_admin_audit_entries_from_db(
+            action_filter=action_filter,
+            entity_filter=entity_filter,
+            actor_filter=actor_filter,
+            status_filter=status_filter,
+            text_filter=text_filter,
+            target_filter=target_filter,
+            limit=limit,
+            newest_first=True,
+        )
+        if exported_rows is None:
+            logger.warning("Falling back to in-memory admin audit export: %s", err)
+            filtered, _ = _filter_admin_audit_entries(
+                action_filter=action_filter,
+                entity_filter=entity_filter,
+                actor_filter=actor_filter,
+                status_filter=status_filter,
+                text_filter=text_filter,
+                target_filter=target_filter,
+            )
+            filtered_total = len(filtered)
+            exported_rows = filtered[-limit:] if filtered_total > limit else filtered
+            exported_rows = list(reversed(exported_rows))
+        else:
+            filtered_total_payload, _ = _fetch_admin_audit_summary_from_db(
+                action_filter=action_filter,
+                entity_filter=entity_filter,
+                actor_filter=actor_filter,
+                status_filter=status_filter,
+                text_filter=text_filter,
+                target_filter=target_filter,
+                limit=1,
+            )
+            filtered_total = int((filtered_total_payload or {}).get('filtered_total', len(exported_rows)) or 0)
+    else:
+        filtered, _ = _filter_admin_audit_entries(
+            action_filter=action_filter,
+            entity_filter=entity_filter,
+            actor_filter=actor_filter,
+            status_filter=status_filter,
+            text_filter=text_filter,
+            target_filter=target_filter,
+        )
+        filtered_total = len(filtered)
+        exported_rows = filtered[-limit:] if filtered_total > limit else filtered
+        exported_rows = list(reversed(exported_rows))
 
     _record_admin_audit(
         action='audit.export',
@@ -15145,7 +16206,7 @@ def export_admin_audit_logs():
         details={
             'format': export_format,
             'limit': limit,
-            'filtered_total': len(filtered),
+            'filtered_total': filtered_total,
             'exported_total': len(exported_rows),
             'filters': {
                 'action': action_filter,
@@ -15201,7 +16262,7 @@ def export_admin_audit_logs():
             'target_id': target_filter,
             'q': text_filter,
         },
-        'total_filtered': len(filtered),
+        'total_filtered': filtered_total,
         'exported': len(exported_rows),
         'entries': exported_rows,
     }
@@ -15220,6 +16281,11 @@ def clear_admin_audit_logs():
     global admin_audit_entries
     with _admin_audit_lock:
         admin_audit_entries = []
+    if _db_first_config_enabled():
+        ok, err = _clear_admin_audit_entries_in_db()
+        if not ok:
+            return jsonify({'success': False, 'message': f'Failed to clear admin audit log: {err}'}), 500
+    else:
         try:
             os.makedirs(os.path.dirname(admin_audit_log_file), exist_ok=True)
             with open(admin_audit_log_file, "w", encoding="utf-8") as f:
