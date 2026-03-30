@@ -1229,7 +1229,7 @@ load();
     <div class="sensor-detail-head-actions">
       <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('sensors') }}"><i class="fas fa-arrow-left me-1"></i>{{ t('sensor_detail.back_to_sensors', 'Späť na senzory') }}</a>
       <button type="button" class="btn btn-outline-primary btn-sm ui-editor-only" id="sensorDetailEditBtn"><i class="fas fa-pen me-1"></i>{{ t('sensor_detail.edit_sensor', 'Upraviť senzor') }}</button>
-      <button type="button" class="btn btn-outline-primary btn-sm ui-editor-only" id="sensorDetailAttachBtn"><i class="fas fa-link me-1"></i>{{ t('sensor_detail.manage_attach', 'Správa priradenia') }}</button>
+      <button type="button" class="btn btn-outline-primary btn-sm ui-editor-only" id="sensorDetailAttachBtn"><i class="fas fa-link me-1"></i>{{ t('sensor_detail.manage_attach', 'Prepojenie so základňovými stanicami') }}</button>
       <a class="btn btn-outline-primary btn-sm" id="sensorDetailTelemetryLink" href="{{ url_for('sensor_telemetry') }}?sensor_eui={{ sensor_eui }}"><i class="fas fa-wave-square me-1"></i>{{ t('sensor_detail.telemetry_history', 'História telemetrie') }}</a>
       <button type="button" class="btn btn-primary btn-sm" id="sensorDetailRefreshBtn"><i class="fas fa-rotate-right me-1"></i>{{ t('common.refresh', 'Obnoviť') }}</button>
     </div>
@@ -1718,8 +1718,8 @@ load();
     const hintEl = document.getElementById('sdAttachStateHint');
     if (hintEl) {
       hintEl.innerHTML = detailAttachPresenceMap.size > 0
-        ? `Aktuálne priradenie: <strong>${detailAttachPresenceMap.size}</strong> základňových staníc. Zrušte všetky výbery a uložte pre odpojenie.`
-        : 'Senzor je momentálne odpojený. Vyberte jednu alebo viac základňových staníc a uložte.';
+        ? `Aktuálne prepojenie: <strong>${detailAttachPresenceMap.size}</strong> základňových staníc. Zrušte všetky výbery a uložte pre odpojenie.`
+        : 'Senzor je momentálne odpojený. Vyberte jednu alebo viac základňových staníc a uložte prepojenie.';
     }
     detailAttachModalInstance.show();
     sdLoadAttachBaseStations();
@@ -1755,7 +1755,7 @@ load();
       const rawStatus = String(bs.status || '').toLowerCase();
       const statusText = rawStatus === 'connected' ? 'Pripojená' : rawStatus === 'connecting' ? 'Pripája sa' : rawStatus === 'offline' ? 'Offline' : escapeHtml(bs.status || 'neznámy');
       const isAttached = detailAttachPresenceMap.has(eui);
-      const mappingState = isAttached ? 'Priradená' : 'Nepriradená';
+      const mappingState = isAttached ? 'Prepojená' : 'Bez prepojenia';
       return `<label class="attach-bs-item ${isAttached ? 'attach-bs-item--attached' : ''}">
         <input class="form-check-input sdAttachCheck" type="checkbox" value="${escapeHtml(eui)}" ${isAttached ? 'checked' : ''} onchange="sdUpdateAttachState()">
         <div class="attach-bs-main">
@@ -1771,12 +1771,12 @@ load();
     const selected = Array.from(document.querySelectorAll('#sdAttachBsList .sdAttachCheck:checked')).map(i => i.value);
     const countEl = document.getElementById('sdAttachCount');
     const confirmBtn = document.getElementById('sdAttachConfirmBtn');
-    if (countEl) countEl.textContent = `${selected.length} vybraných · ${detailAttachPresenceMap.size} aktuálne priradených`;
+    if (countEl) countEl.textContent = `${selected.length} vybraných · ${detailAttachPresenceMap.size} už prepojených`;
     if (confirmBtn) {
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = selected.length === 0
         ? '<i class="fas fa-unlink me-1"></i>Uložiť ako odpojený'
-        : '<i class="fas fa-save me-1"></i>Uložiť priradenie';
+        : '<i class="fas fa-save me-1"></i>Uložiť prepojenie';
     }
   }
   window.sdUpdateAttachState = sdUpdateAttachState;
@@ -1802,7 +1802,7 @@ load();
       .then(result => {
         if (!result.success) throw new Error(result.message || 'Chyba pri ukladaní');
         if (detailAttachModalInstance) detailAttachModalInstance.hide();
-        window.AppUI?.toast(result.message || 'Priradenie uložené.', 'success');
+        window.AppUI?.toast(result.message || 'Prepojenie bolo uložené.', 'success');
         loadDetail();
       })
       .catch(err => {
@@ -1955,14 +1955,14 @@ load();
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="fas fa-link me-2"></i>{{ t('sensors.manage_attachments','Správa priradenia') }}</h5>
+        <h5 class="modal-title"><i class="fas fa-link me-2"></i>{{ t('sensors.manage_attachments','Prepojenie senzora so základňovými stanicami') }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="attach-modal-meta">
-          <div class="attach-modal-label">{{ t('common.sensor','Sensor') }}</div>
+          <div class="attach-modal-label">{{ t('common.sensor','Senzor') }}</div>
           <div id="sdAttachTargetLabel" class="attach-modal-sensor">-</div>
-          <div id="sdAttachStateHint" class="small text-muted mt-1">{{ t('sensors.loading_attachment_state','Načítavam stav priradenia...') }}</div>
+          <div id="sdAttachStateHint" class="small text-muted mt-1">{{ t('sensors.loading_attachment_state','Načítava sa stav prepojenia...') }}</div>
         </div>
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
           <div class="btn-group btn-group-sm" role="group">
@@ -1978,7 +1978,7 @@ load();
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('common.cancel','Cancel') }}</button>
         <button type="button" class="btn btn-success" id="sdAttachConfirmBtn" onclick="sdSubmitAttach()" disabled>
-          <i class="fas fa-save me-1"></i>{{ t('sensors.save_mapping','Uložiť priradenie') }}
+          <i class="fas fa-save me-1"></i>{{ t('sensors.save_mapping','Uložiť prepojenie') }}
         </button>
       </div>
     </div>

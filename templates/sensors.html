@@ -2488,8 +2488,8 @@ button:active {
                             </div>
                             <section class="sensor-config-section sensor-config-tabpanel active" data-sensor-config-panel="identity">
                                 <div class="sensor-config-section-head">
-                                    <h6 class="sensor-config-section-title"><i class="fas fa-id-badge"></i>{{ t('sensors.identity_registration', 'Identity and registration') }}</h6>
-                                    <p class="sensor-config-section-note">{{ t('sensors.identity_registration_note', 'Core registration values used for endpoint identification and protocol binding.') }}</p>
+                                    <h6 class="sensor-config-section-title"><i class="fas fa-id-badge"></i>{{ t('sensors.identity_registration', 'Identifikačné údaje') }}</h6>
+                                    <p class="sensor-config-section-note">{{ t('sensors.identity_registration_note', 'Základné údaje potrebné na rozpoznanie a komunikáciu senzora.') }}</p>
                                 </div>
                                 <div class="sensor-config-field-grid">
                                     <div class="sensor-config-field-span-2">
@@ -2525,8 +2525,8 @@ button:active {
                             </section>
                             <section class="sensor-config-section sensor-config-tabpanel" data-sensor-config-panel="telemetry">
                                 <div class="sensor-config-section-head">
-                                    <h6 class="sensor-config-section-title"><i class="fas fa-sliders-h"></i>{{ t('sensors.telemetry_behavior', 'Telemetry behavior') }}</h6>
-                                    <p class="sensor-config-section-note">{{ t('sensors.telemetry_behavior_note', 'Profile, decoder and timing controls that drive interpretation, stale state and UI thresholds.') }}</p>
+                                    <h6 class="sensor-config-section-title"><i class="fas fa-sliders-h"></i>{{ t('sensors.telemetry_behavior', 'Merania a hlásenie') }}</h6>
+                                    <p class="sensor-config-section-note">{{ t('sensors.telemetry_behavior_note', 'Profil senzora, spôsob hlásenia a časovanie ovplyvňujú zobrazenie hodnôt a stav senzora.') }}</p>
                                 </div>
                                 <div class="sensor-config-field-grid">
                                     <div class="sensor-config-field-span-2">
@@ -2536,7 +2536,7 @@ button:active {
                                             <option value="{{ profile.id }}">{{ t('sensor_profiles.' ~ profile.id ~ '.label', profile.label) }}</option>
                                             {% endfor %}
                                         </select>
-                                        <div class="form-text" id="sensorProfileHelp">{{ t('sensors.sensor_profile_help', 'Choose a preset to apply decoder, reporting mode and timing defaults.') }}</div>
+                                        <div class="form-text" id="sensorProfileHelp">{{ t('sensors.sensor_profile_help', 'Vyberte profil, ktorý nastaví dekóder, režim hlásenia a predvolené časovanie.') }}</div>
                                     </div>
                                     <div>
                                         <label for="sensorPayloadDecoder" class="form-label">{{ t('sensors.payload_decoder', 'Payload Decoder') }}</label>
@@ -2544,16 +2544,16 @@ button:active {
                                             <option value="auto" selected>{{ t('sensors.decoder_auto', 'Auto (infer by name/tags)') }}</option>
                                             <option value="raw">{{ t('sensors.raw_only', 'Raw only (no decoding)') }}</option>
                                         </select>
-                                        <div class="form-text" id="sensorPayloadDecoderHelp">{{ t('sensors.payload_decoder_help', 'Select explicit decoding profile for this sensor type.') }}</div>
+                                        <div class="form-text" id="sensorPayloadDecoderHelp">{{ t('sensors.payload_decoder_help', 'Vyberte spôsob spracovania dát pre tento typ senzora.') }}</div>
                                     </div>
                                     <div>
-                                        <label for="sensorEnvironment" class="form-label">{{ t('sensors.deployment_context', 'Deployment Context') }}</label>
+                                        <label for="sensorEnvironment" class="form-label">{{ t('sensors.deployment_context', 'Prostredie nasadenia') }}</label>
                                         <select class="form-select" id="sensorEnvironment">
                                             <option value="auto" selected>{{ t('common.auto_unknown', 'Auto / unknown') }}</option>
                                             <option value="indoor">{{ t('common.indoor', 'Indoor') }}</option>
                                             <option value="outdoor">{{ t('common.outdoor', 'Outdoor') }}</option>
                                         </select>
-                                        <div class="form-text" id="sensorEnvironmentHelp">{{ t('sensors.deployment_context_help', 'Used for context-aware interpretation of CO2 and comfort levels.') }}</div>
+                                        <div class="form-text" id="sensorEnvironmentHelp">{{ t('sensors.deployment_context_help', 'Používa sa pri kontextovom vyhodnocovaní CO2 a komfortných metrík.') }}</div>
                                     </div>
                                     <div>
                                         <label for="sensorReportingMode" class="form-label">{{ t('sensors.reporting_mode', 'Reporting Mode') }}</label>
@@ -2565,7 +2565,7 @@ button:active {
                                         <div class="form-text" id="sensorReportingModeHelp">{{ t('sensors.reporting_mode_help', 'Use event-driven for door/window/alarm sensors that do not send at fixed intervals.') }}</div>
                                     </div>
                                     <div id="sensorExpectedIntervalGroup">
-                                        <label for="sensorExpectedInterval" class="form-label">{{ t('sensors.expected_uplink_interval', 'Expected Uplink Interval (seconds)') }}</label>
+                                        <label for="sensorExpectedInterval" class="form-label">{{ t('sensors.expected_uplink_interval', 'Očakávaný interval hlásenia (sekundy)') }}</label>
                                         <input type="number" class="form-control" id="sensorExpectedInterval" min="10" max="86400" step="1" placeholder="{{ t('sensors.expected_interval_placeholder', 'Auto by device type') }}">
                                         <div class="form-text" id="sensorExpectedIntervalHelp">{{ t('sensors.expected_interval_help', 'For periodic sensors only. Leave empty to infer by device type/profile and adapt to observed traffic.') }}</div>
                                     </div>
@@ -2578,8 +2578,8 @@ button:active {
                             </section>
                             <section class="sensor-config-section sensor-config-tabpanel" data-sensor-config-panel="placement">
                                 <div class="sensor-config-section-head">
-                                    <h6 class="sensor-config-section-title"><i class="fas fa-location-dot"></i>{{ t('sensors.placement_mapping', 'Placement and mapping') }}</h6>
-                                    <p class="sensor-config-section-note">{{ t('sensors.placement_mapping_note', 'Optional GPS placement data used for coverage view, topology context and map placement.') }}</p>
+                                    <h6 class="sensor-config-section-title"><i class="fas fa-location-dot"></i>{{ t('sensors.placement_mapping', 'Umiestnenie na mape') }}</h6>
+                                    <p class="sensor-config-section-note">{{ t('sensors.placement_mapping_note', 'Voliteľné GPS údaje pre zobrazenie senzora na mape.') }}</p>
                                 </div>
                                 <div class="sensor-config-field-grid">
                                     <div>
@@ -2591,14 +2591,14 @@ button:active {
                                         <input type="number" class="form-control" id="sensorGpsLng" step="0.000001" placeholder="{{ t('common.longitude', 'Longitude') }}">
                                     </div>
                                     <div class="sensor-config-field-span-2">
-                                        <div class="form-text mt-1">{{ t('sensors.gps_set_both_note', 'Set both fields to place this sensor automatically in Coverage map.') }}</div>
+                                        <div class="form-text mt-1">{{ t('sensors.gps_set_both_note', 'Ak chcete senzor umiestniť na mape automaticky, vyplňte obe GPS polia.') }}</div>
                                     </div>
                                 </div>
                             </section>
                         </div>
                         <aside class="sensor-config-sidebar">
-                            <h6 class="sensor-config-sidebar-title">{{ t('common.live_summary', 'Live summary') }}</h6>
-                            <p class="sensor-config-sidebar-note">{{ t('sensors.live_summary_note', 'This panel mirrors the currently selected profile, reporting mode and placement while you edit the sensor.') }}</p>
+                            <h6 class="sensor-config-sidebar-title">{{ t('common.live_summary', 'Aktuálny súhrn') }}</h6>
+                            <p class="sensor-config-sidebar-note">{{ t('sensors.live_summary_note', 'Panel vpravo priebežne zobrazuje vybraný profil, spôsob hlásenia a umiestnenie.') }}</p>
                             <div id="sensorConfigSidebar" class="sensor-config-summary-list"></div>
                         </aside>
                     </div>
@@ -2618,30 +2618,30 @@ button:active {
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-link me-2"></i>{{ t('sensors.manage_attachments', 'Manage Sensor Attachments') }}</h5>
+                <h5 class="modal-title"><i class="fas fa-link me-2"></i>{{ t('sensors.manage_attachments', 'Prepojenie senzora so základňovými stanicami') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="attach-modal-meta">
-                    <div class="attach-modal-label">{{ t('common.sensor', 'Sensor') }}</div>
+                    <div class="attach-modal-label">{{ t('common.sensor', 'Senzor') }}</div>
                     <div id="attachSensorTargetLabel" class="attach-modal-sensor">-</div>
-                    <div id="attachSensorStateHint" class="small text-muted mt-1">{{ t('sensors.loading_attachment_state', 'Loading current attachment state...') }}</div>
+                    <div id="attachSensorStateHint" class="small text-muted mt-1">{{ t('sensors.loading_attachment_state', 'Načítava sa stav prepojenia...') }}</div>
                 </div>
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                     <div class="btn-group btn-group-sm" role="group">
                         <button type="button" class="btn btn-primary" onclick="setAllAttachTargets(true)">
-                            <i class="fas fa-check-double me-1"></i>{{ t('sensors.all_base_stations', 'All base stations') }}
+                            <i class="fas fa-check-double me-1"></i>{{ t('sensors.all_base_stations', 'Všetky základňové stanice') }}
                         </button>
                         <button type="button" class="btn btn-outline-secondary" onclick="setAllAttachTargets(false)">{{ t('sensors.clear_selection_detach', 'Zrušiť výber a odpojiť') }}</button>
                     </div>
-                    <span id="attachSelectionCount" class="sensor-meta-note">{{ t('common.selected_count', '0 selected') }}</span>
+                    <span id="attachSelectionCount" class="sensor-meta-note">{{ t('common.selected_count', '0 vybraných') }}</span>
                 </div>
-                <div id="attachBaseStationList" class="attach-bs-list p-3 text-muted small">{{ t('runtime.loading_base_stations', 'Loading base stations...') }}</div>
+                <div id="attachBaseStationList" class="attach-bs-list p-3 text-muted small">{{ t('runtime.loading_base_stations', 'Načítavajú sa základňové stanice...') }}</div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('common.cancel', 'Cancel') }}</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('common.cancel', 'Zrušiť') }}</button>
                 <button type="button" class="btn btn-success" id="attachConfirmBtn" onclick="submitAttachSelection()" disabled>
-                    <i class="fas fa-save me-1"></i>{{ t('sensors.save_mapping', 'Save mapping') }}
+                    <i class="fas fa-save me-1"></i>{{ t('sensors.save_mapping', 'Uložiť prepojenie') }}
                 </button>
             </div>
         </div>
@@ -3929,9 +3929,9 @@ function renderSensors(filteredSensors) {
             ? `<span class="sensor-tenant-chip"><i class="fas fa-building"></i>${escapeHtml(tr('admin.tenant', 'Tenant'))} ${escapeHtml(tenantScopeLabel)}</span>`
             : '';
         const registrationNote = runtimeBases.length > 0
-            ? tr('sensors.active_paths_count', 'Active paths: {count}').replace('{count}', String(runtimeBases.length))
+            ? tr('sensors.active_paths_count', 'Aktívne spojenia: {count}').replace('{count}', String(runtimeBases.length))
             : (attachedBases.length > 0
-                ? tr('sensors.configured_paths_count', 'Nakonfigurované: {count}').replace('{count}', String(attachedBases.length))
+                ? tr('sensors.configured_paths_count', 'Nastavené stanice: {count}').replace('{count}', String(attachedBases.length))
                 : tr('sensors.no_path', 'Bez trasy'));
         const compactSublineParts = [`${escapeHtml(tr('common.address', 'Adresa'))} ${escapeHtml(sensor.shortAddr)}`, bidiIcon];
                         if (gpsText && !sensorViewPrefs.compact) compactSublineParts.push(`<span title="${escapeHtml(gpsText)}" style="cursor:default;"><i class="fas fa-location-dot" style="color:#e35d6a;font-size:0.72rem;"></i></span>`);
@@ -4036,7 +4036,7 @@ function renderSensors(filteredSensors) {
                                 <i class="fas fa-ellipsis-h"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                ${CAN_EDIT_SENSORS ? `<li><button class="dropdown-item" onclick="openAttachSensorModal('${escapeHtml(sensor.eui)}')"><i class="fas fa-link me-2"></i>${appTranslate('sensors.manage_attach_natural', 'Spravovať priradenie')}</button></li>` : ''}
+                                ${CAN_EDIT_SENSORS ? `<li><button class="dropdown-item" onclick="openAttachSensorModal('${escapeHtml(sensor.eui)}')"><i class="fas fa-link me-2"></i>${appTranslate('sensors.manage_attach_natural', 'Spravovať prepojenie')}</button></li>` : ''}
                                 ${(CAN_EDIT_SENSORS && CAN_DELETE_SENSORS) ? '<li><hr class="dropdown-divider"></li>' : ''}
                                 ${CAN_DELETE_SENSORS ? `<li><button class="dropdown-item text-danger" onclick="deleteSensor('${escapeHtml(sensor.eui)}')"><i class="fas fa-trash me-2"></i>${appTranslate('common.delete', 'Vymazať')}</button></li>` : ''}
                             </ul>
@@ -4389,7 +4389,7 @@ function setAttachTargetSensors(targets) {
             const sensorName = sensor && sensor.name ? ` (${sensor.name})` : '';
             labelNode.textContent = `${targetEui}${sensorName}`;
         } else if (normalizedTargets.length > 1) {
-            labelNode.textContent = `${normalizedTargets.length} selected sensors`;
+            labelNode.textContent = `${normalizedTargets.length} vybraných senzorov`;
         } else {
             labelNode.textContent = '-';
         }
@@ -4400,12 +4400,12 @@ function setAttachTargetSensors(targets) {
         if (normalizedTargets.length === 1) {
             const mappedCount = Array.from(attachPresenceMap.values()).filter(count => count > 0).length;
             hintNode.innerHTML = mappedCount > 0
-                ? tr('sensors.current_mapping_summary', 'Aktuálne priradenie: <strong>{count}</strong> základňových staníc. Zrušte všetky výbery a uložte pre odpojenie.', { count: mappedCount })
-                : tr('sensors.currently_detached_prompt', 'Senzor je momentálne odpojený. Vyberte jednu alebo viac základňových staníc a uložte.');
+                ? tr('sensors.current_mapping_summary', 'Aktuálne prepojenie: <strong>{count}</strong> základňových staníc. Zrušte všetky výbery a uložte pre odpojenie.', { count: mappedCount })
+                : tr('sensors.currently_detached_prompt', 'Senzor je momentálne odpojený. Vyberte jednu alebo viac základňových staníc a uložte prepojenie.');
         } else if (normalizedTargets.length > 1) {
-            hintNode.innerHTML = tr('sensors.bulk_mapping_summary', 'Hromadná úprava pre <strong>{count}</strong> senzorov. Označené položky predstavujú spoločné priradenie.', { count: normalizedTargets.length });
+            hintNode.innerHTML = tr('sensors.bulk_mapping_summary', 'Hromadná úprava pre <strong>{count}</strong> senzorov. Označené položky predstavujú spoločné prepojenie.', { count: normalizedTargets.length });
         } else {
-            hintNode.textContent = tr('runtime.select_sensor_first', 'Select at least one sensor first.');
+            hintNode.textContent = tr('runtime.select_sensor_first', 'Najprv vyberte aspoň jeden senzor.');
         }
     }
 }
@@ -4458,7 +4458,7 @@ function renderAttachBaseStationOptions(baseStations) {
     const targetCount = attachTargetSensorEuis.length;
 
     if (!Array.isArray(baseStations) || baseStations.length === 0) {
-        listNode.innerHTML = `<div class="p-3 text-warning small">${escapeHtml(tr('runtime.no_base_stations_found_tenant', 'No base stations found in active tenant.'))}</div>`;
+        listNode.innerHTML = `<div class="p-3 text-warning small">${escapeHtml(tr('runtime.no_base_stations_found_tenant', 'V tomto priestore sa nenašli žiadne základňové stanice.'))}</div>`;
         updateAttachModalSelectionState();
         return;
     }
@@ -4469,23 +4469,23 @@ function renderAttachBaseStationOptions(baseStations) {
         const label = name ? escapeHtml(name) : `<code>${escapeHtml(eui)}</code>`;
         const rawStatus = String(bs.status || '').toLowerCase();
         const statusText = rawStatus === 'connected'
-            ? tr('common.connected', 'Connected')
+            ? tr('common.connected', 'Pripojené')
             : rawStatus === 'connecting'
-                ? tr('common.connecting', 'Connecting')
+                ? tr('common.connecting', 'Pripája sa')
                 : rawStatus === 'offline'
-                    ? tr('sensors.base_station_offline_pending_assignment', 'Offline (assignment pending)')
-                    : escapeHtml(bs.status || tr('common.unknown', 'unknown'));
+                    ? tr('sensors.base_station_offline_pending_assignment', 'Offline')
+                    : escapeHtml(bs.status || tr('common.unknown', 'Neznáme'));
         const attachedCount = attachPresenceMap.get(eui) || 0;
         const attachedAllTargets = targetCount > 0 && attachedCount === targetCount;
         const attachedSomeTargets = attachedCount > 0 && attachedCount < targetCount;
         const defaultChecked = attachedAllTargets;
-        let mappingState = tr('sensors.not_assigned', 'Not assigned');
+        let mappingState = tr('sensors.not_assigned', 'Bez prepojenia');
         if (attachedAllTargets) {
             mappingState = targetCount > 1
-                ? tr('sensors.assigned_all_selected', 'Assigned (all selected)')
-                : tr('sensors.assigned', 'Assigned');
+                ? tr('sensors.assigned_all_selected', 'Prepojené (všetky vybrané)')
+                : tr('sensors.assigned', 'Prepojené');
         } else if (attachedSomeTargets) {
-            mappingState = tr('sensors.assigned_partial', 'Assigned ({count}/{total})', { count: attachedCount, total: targetCount });
+            mappingState = tr('sensors.assigned_partial', 'Prepojené ({count}/{total})', { count: attachedCount, total: targetCount });
         }
         return `
             <label class=\"attach-bs-item ${attachedCount > 0 ? 'attach-bs-item--attached' : ''}\">
@@ -4504,7 +4504,7 @@ function renderAttachBaseStationOptions(baseStations) {
 function loadAttachBaseStationsForModal() {
     const listNode = document.getElementById('attachBaseStationList');
     if (listNode) {
-        listNode.innerHTML = `<div class="p-3 text-muted small">${escapeHtml(tr('runtime.loading_base_stations', 'Loading base stations...'))}</div>`;
+        listNode.innerHTML = `<div class="p-3 text-muted small">${escapeHtml(tr('runtime.loading_base_stations', 'Načítavajú sa základňové stanice...'))}</div>`;
     }
     apiRequest('/api/customer/base-stations', 'GET')
         .then(data => {
@@ -4539,7 +4539,7 @@ function updateAttachModalSelectionState() {
     const targetCount = attachTargetSensorEuis.length;
     const mappedCount = Array.from(attachPresenceMap.values()).filter(count => count === targetCount && targetCount > 0).length;
     if (countNode) {
-        countNode.textContent = tr('sensors.assignment_selection_summary', '{selected} selected · {mapped} currently assigned', {
+        countNode.textContent = tr('sensors.assignment_selection_summary', '{selected} vybraných · {mapped} už prepojených', {
             selected: selected.length,
             mapped: mappedCount
         });
@@ -4548,12 +4548,12 @@ function updateAttachModalSelectionState() {
         confirmBtn.disabled = targetCount === 0;
         if (selected.length === 0) {
             confirmBtn.innerHTML = targetCount > 1
-                ? `<i class="fas fa-unlink me-1"></i>${tr('sensors.save_detached_selected', 'Save as detached for selected sensors')}`
-                : `<i class="fas fa-unlink me-1"></i>${tr('runtime.save_as_detached', 'Save as detached')}`;
+                ? `<i class="fas fa-unlink me-1"></i>${tr('sensors.save_detached_selected', 'Uložiť ako odpojené pre vybrané senzory')}`
+                : `<i class="fas fa-unlink me-1"></i>${tr('runtime.save_as_detached', 'Uložiť ako odpojené')}`;
         } else {
             confirmBtn.innerHTML = targetCount > 1
-                ? `<i class="fas fa-save me-1"></i>${tr('sensors.save_assignment_selected', 'Save assignment for selected sensors')}`
-                : `<i class="fas fa-save me-1"></i>${tr('sensors.save_mapping', 'Save mapping')}`;
+                ? `<i class="fas fa-save me-1"></i>${tr('sensors.save_assignment_selected', 'Uložiť prepojenie pre vybrané senzory')}`
+                : `<i class="fas fa-save me-1"></i>${tr('sensors.save_mapping', 'Uložiť prepojenie')}`;
         }
     }
 }
@@ -4561,17 +4561,17 @@ function updateAttachModalSelectionState() {
 async function submitAttachSelection() {
     const targetEuis = Array.isArray(attachTargetSensorEuis) ? [...attachTargetSensorEuis] : [];
     if (targetEuis.length === 0) {
-        showAlert('warning', tr('runtime.no_sensor_selected_for_attach', 'No sensor selected for attach.'));
+        showAlert('warning', tr('runtime.no_sensor_selected_for_attach', 'Nie je vybraný žiadny senzor na prepojenie.'));
         return;
     }
     const selectedTargets = getSelectedAttachTargets();
     if (selectedTargets.length === 0) {
         const confirmedDetach = await confirmWithModal({
-            title: tr('runtime.save_as_detached', 'Save as detached'),
+            title: tr('runtime.save_as_detached', 'Uložiť ako odpojené'),
             message: targetEuis.length > 1
-                ? tr('sensors.confirm_save_detached_selected', 'Uložiť vybrané senzory ako odpojené? Tým sa odstráni ich priradenie k základňovým staniciam.', { count: targetEuis.length })
-                : tr('sensors.confirm_save_detached_single', 'Uložiť senzor <code>{eui}</code> ako odpojený bez priradenia k základňovej stanici?', { eui: escapeHtml(targetEuis[0]) }),
-            confirmText: tr('runtime.save_as_detached', 'Save as detached'),
+                ? tr('sensors.confirm_save_detached_selected', 'Uložiť <strong>{count}</strong> vybraných senzorov ako odpojené? Tým sa odstráni ich prepojenie so základňovými stanicami.', { count: targetEuis.length })
+                : tr('sensors.confirm_save_detached_single', 'Uložiť senzor <code>{eui}</code> ako odpojený bez prepojenia so základňovou stanicou?', { eui: escapeHtml(targetEuis[0]) }),
+            confirmText: tr('runtime.save_as_detached', 'Uložiť ako odpojené'),
             confirmClass: 'btn-warning'
         });
         if (!confirmedDetach) return;
@@ -4596,7 +4596,7 @@ async function submitAttachSelection() {
     }
 
     if (success > 0) {
-        showAlert('success', tr('runtime.attach_mapping_saved', 'Attachment mapping saved for {success}/{total} sensor(s).', { success, total: targetEuis.length }));
+        showAlert('success', tr('runtime.attach_mapping_saved', 'Prepojenie bolo uložené pre {success}/{total} senzorov.', { success, total: targetEuis.length }));
         loadSensors(true);
     }
     if (failures.length > 0) {
@@ -4621,14 +4621,14 @@ async function attachSensor(eui, selectedBaseStations = null, options = {}) {
     return apiRequest(`/api/sensors/${eui}/attach`, 'POST', payload)
         .then(data => {
             if (!quiet) {
-                showAlert('success', data.message || tr('runtime.attachment_mapping_updated', 'Attachment mapping updated for {eui}.', { eui }));
+                showAlert('success', data.message || tr('runtime.attachment_mapping_updated', 'Prepojenie bolo upravené pre senzor {eui}.', { eui }));
                 loadSensors(true);
             }
             return data;
         })
         .catch(error => {
             if (!quiet) {
-                showAlert('danger', tr('runtime.attachment_mapping_update_failed', 'Error updating mapping: {error}', { error: error.message }));
+                showAlert('danger', tr('runtime.attachment_mapping_update_failed', 'Aktualizácia prepojenia zlyhala: {error}', { error: error.message }));
             }
             throw error;
         });
@@ -5041,7 +5041,7 @@ if (attachModalEl) {
         }
         const hintNode = document.getElementById('attachSensorStateHint');
         if (hintNode) {
-            hintNode.textContent = tr('sensors.loading_attachment_state', 'Loading current attachment state...');
+            hintNode.textContent = tr('sensors.loading_attachment_state', 'Načítava sa stav prepojenia...');
         }
         const listNode = document.getElementById('attachBaseStationList');
         if (listNode) {
