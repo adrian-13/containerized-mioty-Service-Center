@@ -2963,16 +2963,16 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-function initContextMenus() {
-    function buildNewAlertRuleUrl(sensorEui) {
-        const params = new URLSearchParams();
-        params.set('tab', 'rules');
-        params.set('new_rule', '1');
-        if (sensorEui) params.set('sensor', String(sensorEui).toUpperCase());
-        params.set('return_to', window.location.pathname + window.location.search + window.location.hash);
-        return '/alerts?' + params.toString();
-    }
+function buildNewAlertRuleUrl(sensorEui) {
+    const params = new URLSearchParams();
+    params.set('tab', 'rules');
+    params.set('new_rule', '1');
+    if (sensorEui) params.set('sensor', String(sensorEui).toUpperCase());
+    params.set('return_to', window.location.pathname + window.location.search + window.location.hash);
+    return '/alerts?' + params.toString();
+}
 
+function initContextMenus() {
     // Right-click on sensor list panel (rows + empty space)
     const sensorList = document.getElementById('mviewSensorList');
     if (sensorList) {
