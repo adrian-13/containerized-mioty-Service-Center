@@ -1946,8 +1946,8 @@ function SENSOR_TIER(sensor) {
     return STATUS_TIER_RAW(sensor && (sensor.activity_status || sensor.status));
 }
 const STATUS_LABELS = {
-    active: 'Aktívny', online: 'Online', connected: 'Online', quiet: 'Pokojný',
-    warning: 'Upozornenie', warn: 'Upozornenie', degraded: 'Upozornenie', stale: 'Stagnujúci', auto_detach_pending: 'Odpája sa',
+    active: 'Aktívny', online: 'Online', connected: 'Online', quiet: 'Pokojový stav',
+    warning: 'Upozornenie', warn: 'Upozornenie', degraded: 'Upozornenie', stale: 'Bez udalosti dlhšie', auto_detach_pending: 'Odpája sa',
     offline: 'Offline', disconnected: 'Offline', inactive: 'Offline', auto_detached: 'Odpojený',
     no_data: 'Bez dát', unknown: 'Neznámy'
 };
@@ -4114,8 +4114,8 @@ function renderIncidents(incidents) {
         rail.innerHTML =
             '<li class="all-clear-state">' +
             '<span class="all-clear-icon"><i class="fas fa-shield-halved"></i></span>' +
-            '<p class="all-clear-title">' + appTranslate('dashboard.all_clear_title', 'All systems operational') + '</p>' +
-            '<p class="all-clear-note">' + appTranslate('dashboard.all_clear_note', 'No incidents across monitored components.') + '</p>' +
+            '<p class="all-clear-title">' + appTranslate('dashboard.all_clear_title', 'Všetko je v poriadku') + '</p>' +
+            '<p class="all-clear-note">' + appTranslate('dashboard.all_clear_note', 'Momentálne nie sú zistené žiadne upozornenia.') + '</p>' +
             '</li>';
         return;
     }

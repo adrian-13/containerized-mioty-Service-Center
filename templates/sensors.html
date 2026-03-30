@@ -4441,7 +4441,7 @@ function openAttachSensorModal(eui) {
 function openBulkAttachSensorModal() {
     const targets = [...selectedSensors];
     if (targets.length === 0) {
-        showAlert('warning', tr('runtime.select_sensor_first', 'Select at least one sensor first.'));
+        showAlert('warning', tr('runtime.select_sensor_first', 'Najprv vyberte aspoň jeden senzor.'));
         return;
     }
     setAttachTargetSensors(targets);
@@ -4513,7 +4513,7 @@ function loadAttachBaseStationsForModal() {
         })
         .catch(error => {
             if (listNode) {
-                listNode.innerHTML = `<div class="p-3 text-danger small">${escapeHtml(tr('runtime.failed_load_base_stations_inline', 'Failed to load base stations: {error}', { error: error.message }))}</div>`;
+                listNode.innerHTML = `<div class="p-3 text-danger small">${escapeHtml(tr('runtime.failed_load_base_stations_inline', 'Nepodarilo sa načítať základňové stanice: {error}', { error: error.message }))}</div>`;
             }
             updateAttachModalSelectionState();
         });
@@ -4581,7 +4581,7 @@ async function submitAttachSelection() {
     const originalContent = confirmBtn ? confirmBtn.innerHTML : '';
     if (confirmBtn) {
         confirmBtn.disabled = true;
-        confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${escapeHtml(tr('runtime.saving', 'Saving...'))}`;
+        confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${escapeHtml(tr('runtime.saving', 'Ukladá sa...'))}`;
     }
 
     let success = 0;
@@ -4600,7 +4600,7 @@ async function submitAttachSelection() {
         loadSensors(true);
     }
     if (failures.length > 0) {
-        showAlert('warning', `${escapeHtml(tr('runtime.save_finished_with_issues', 'Save finished with issues.'))}<br><small>${escapeHtml(failures.join(' | '))}</small>`);
+        showAlert('warning', `${escapeHtml(tr('runtime.save_finished_with_issues', 'Uloženie skončilo s problémami.'))}<br><small>${escapeHtml(failures.join(' | '))}</small>`);
     }
     if (success === targetEuis.length && attachModalInstance) {
         attachModalInstance.hide();
@@ -4614,7 +4614,7 @@ async function submitAttachSelection() {
 
 async function attachSensor(eui, selectedBaseStations = null, options = {}) {
     if (!Array.isArray(selectedBaseStations)) {
-        throw new Error(tr('runtime.invalid_mapping_payload', 'Invalid mapping payload.'));
+        throw new Error(tr('runtime.invalid_mapping_payload', 'Neplatné údaje prepojenia.'));
     }
     const payload = { base_stations: selectedBaseStations };
     const quiet = Boolean(options && options.quiet);
@@ -4636,19 +4636,19 @@ async function attachSensor(eui, selectedBaseStations = null, options = {}) {
 
 async function detachSensor(eui) {
     const confirmed = await confirmWithModal({
-        title: 'Detach sensor',
-        message: `Odpojiť senzor <code>${escapeHtml(eui)}</code> od všetkých base stations?`,
-        confirmText: tr('sensor_detail.audit_detach', 'Detach'),
+        title: tr('runtime.detach_sensor_title', 'Odpojiť senzor'),
+        message: `Odpojiť senzor <code>${escapeHtml(eui)}</code> od všetkých základňových staníc?`,
+        confirmText: tr('common.confirm', 'Potvrdiť'),
         confirmClass: 'btn-warning'
     });
     if (!confirmed) return;
 
     apiRequest(`/api/sensors/${eui}/detach`, 'POST')
         .then(data => {
-            showAlert('success', data.message || tr('runtime.sensor_detached', 'Sensor {eui} detached.', { eui }));
+            showAlert('success', data.message || tr('runtime.sensor_detached', 'Senzor {eui} bol odpojený.', { eui }));
             loadSensors(true);
         })
-        .catch(error => showAlert('danger', tr('runtime.sensor_detach_failed', 'Error detaching sensor: {error}', { error: error.message })));
+        .catch(error => showAlert('danger', tr('runtime.sensor_detach_failed', 'Odpojenie senzora zlyhalo: {error}', { error: error.message })));
 }
 
 async function deleteSensor(eui) {
@@ -4672,10 +4672,10 @@ async function deleteSensor(eui) {
                 editingEui = null;
             }
             selectedSensors.delete(eui);
-            showAlert('success', data.message || tr('runtime.sensor_deleted', 'Sensor {eui} deleted.', { eui }));
+            showAlert('success', data.message || tr('runtime.sensor_deleted', 'Senzor {eui} bol vymazaný.', { eui }));
             loadSensors(true);
         })
-        .catch(error => showAlert('danger', tr('runtime.sensor_delete_failed', 'Error deleting sensor: {error}', { error: error.message })));
+        .catch(error => showAlert('danger', tr('runtime.sensor_delete_failed', 'Vymazanie senzora zlyhalo: {error}', { error: error.message })));
 }
 
 function reloadSensors() {
@@ -4689,19 +4689,19 @@ function reloadSensors() {
 
 async function detachAllSensors() {
     const confirmed = await confirmWithModal({
-        title: 'Detach all sensors',
-        message: 'Odpojiť všetky senzory od všetkých base stations?',
-        confirmText: 'Detach all',
+        title: 'Odpojiť všetky senzory',
+        message: 'Odpojiť všetky senzory od všetkých základňových staníc?',
+        confirmText: 'Odpojiť všetky',
         confirmClass: 'btn-warning'
     });
     if (!confirmed) return;
 
     apiRequest('/api/sensors/detach-all', 'POST')
         .then(data => {
-            showAlert('success', data.message || tr('runtime.detach_all_requested', 'Detach-all requested.'));
+            showAlert('success', data.message || tr('runtime.detach_all_requested', 'Odpojenie všetkých senzorov bolo odoslané.'));
             loadSensors(true);
         })
-        .catch(error => showAlert('danger', tr('runtime.detach_sensors_failed', 'Error detaching sensors: {error}', { error: error.message })));
+        .catch(error => showAlert('danger', tr('runtime.detach_sensors_failed', 'Odpojenie senzorov zlyhalo: {error}', { error: error.message })));
 }
 
 async function clearAllSensors() {
@@ -4761,18 +4761,18 @@ function setSensorSelected(eui, selected) {
 
 function copySensorEui(eui) {
     if (!navigator.clipboard || !navigator.clipboard.writeText) {
-        showAlert('warning', tr('runtime.clipboard_unavailable', 'Clipboard API is not available in this browser context.'));
+        showAlert('warning', tr('runtime.clipboard_unavailable', 'Schránka nie je v tomto prehliadači dostupná.'));
         return;
     }
     navigator.clipboard.writeText(eui)
-        .then(() => showAlert('info', tr('runtime.sn_copied', 'SN copied: {eui}', { eui: `<code>${escapeHtml(eui)}</code>` })))
-        .catch(() => showAlert('warning', tr('runtime.clipboard_copy_failed', 'Could not copy SN to clipboard.')));
+        .then(() => showAlert('info', tr('runtime.sn_copied', 'SN skopírované: {eui}', { eui: `<code>${escapeHtml(eui)}</code>` })))
+        .catch(() => showAlert('warning', tr('runtime.clipboard_copy_failed', 'SN sa nepodarilo skopírovať do schránky.')));
 }
 
 async function runBulkAction(actionName, actionFn) {
     const targets = [...selectedSensors];
     if (targets.length === 0) {
-        showAlert('warning', tr('runtime.select_sensor_first', 'Select at least one sensor first.'));
+        showAlert('warning', tr('runtime.select_sensor_first', 'Najprv vyberte aspoň jeden senzor.'));
         return;
     }
     const confirmClassByAction = {
@@ -4801,9 +4801,9 @@ async function runBulkAction(actionName, actionFn) {
     }
 
     if (failures.length === 0) {
-        showAlert('success', tr('runtime.bulk_action_completed', '{action} completed for {count} sensor(s).', { action: actionName, count: success }));
+        showAlert('success', tr('runtime.bulk_action_completed', '{action} bolo dokončené pre {count} senzor(y).', { action: actionName, count: success }));
     } else {
-        showAlert('warning', `${escapeHtml(tr('runtime.bulk_action_completed_with_issues', '{action} completed with issues ({success}/{total} success).', { action: actionName, success, total: targets.length }))}<br><small>${escapeHtml(failures.join(' | '))}</small>`);
+        showAlert('warning', `${escapeHtml(tr('runtime.bulk_action_completed_with_issues', '{action} skončilo s problémami ({success}/{total} úspešne).', { action: actionName, success, total: targets.length }))}<br><small>${escapeHtml(failures.join(' | '))}</small>`);
     }
     loadSensors(true);
 }
@@ -4983,9 +4983,9 @@ function initSensorUnsavedChangesGuards() {
             if (!isSensorFormDirty()) return;
             event.preventDefault();
             const confirmed = await confirmWithModal({
-                title: tr('runtime.discard_sensor_changes_title', 'Discard sensor changes'),
-                message: tr('runtime.discard_sensor_changes_message', 'You have unsaved sensor changes. Close this form without saving?'),
-                confirmText: tr('runtime.discard', 'Discard'),
+                title: tr('runtime.discard_sensor_changes_title', 'Zahodiť zmeny senzora'),
+                message: tr('runtime.discard_sensor_changes_message', 'Máte neuložené zmeny senzora. Zavrieť formulár bez uloženia?'),
+                confirmText: tr('runtime.discard', 'Zahodiť'),
                 confirmClass: 'btn-warning'
             });
             if (!confirmed) return;
@@ -5000,10 +5000,10 @@ function initSensorUnsavedChangesGuards() {
 
     if (window.AppUI && typeof window.AppUI.unsavedGuard === 'function') {
         window.AppUI.unsavedGuard({
-            title: tr('guard.unsaved_changes_title', 'Unsaved sensor changes'),
-            message: tr('runtime.leave_page_sensor_changes', 'You have unsaved sensor form changes. Leave this page without saving?'),
-            confirmText: tr('guard.leave_page', 'Leave page'),
-            cancelText: tr('guard.stay', 'Stay'),
+            title: tr('guard.unsaved_changes_title', 'Neuložené zmeny'),
+            message: tr('runtime.leave_page_sensor_changes', 'Máte neuložené zmeny formulára senzora. Opustiť stránku bez uloženia?'),
+            confirmText: tr('guard.leave_page', 'Opustiť stránku'),
+            cancelText: tr('guard.stay', 'Zostať'),
             variant: 'warning',
             isDirty: () => {
                 const isModalOpen = sensorModalEl && sensorModalEl.classList.contains('show');
@@ -5045,7 +5045,7 @@ if (attachModalEl) {
         }
         const listNode = document.getElementById('attachBaseStationList');
         if (listNode) {
-            listNode.innerHTML = `<div class="p-3 text-muted small">${escapeHtml(tr('runtime.loading_base_stations', 'Loading base stations...'))}</div>`;
+            listNode.innerHTML = `<div class="p-3 text-muted small">${escapeHtml(tr('runtime.loading_base_stations', 'Načítavajú sa základňové stanice...'))}</div>`;
         }
         updateAttachModalSelectionState();
     });
@@ -5080,18 +5080,18 @@ function renderSensorQuickView(data, eui) {
         if (reportingMode === 'event') {
             if (hasTelemetry && timeSinceLastSeenSec !== null) {
                 const recentEventWindowSec = Math.min(Math.max((staleThresholdSec || 7200) * 0.08, 1800), 14400);
-                if (timeSinceLastSeenSec <= recentEventWindowSec) return { label: 'Recent event', klass: 'sensor-status-chip--recent', note: `Recent event received ${formatDurationShort(timeSinceLastSeenSec)} ago.` };
-                if (timeSinceLastSeenSec <= staleThresholdSec) return { label: 'Quiet', klass: 'sensor-status-chip--quiet', note: 'No recent event, but sensor remains within its service window.' };
-                return { label: 'Stale', klass: 'sensor-status-chip--warning', note: `No event observed for ${formatDurationShort(timeSinceLastSeenSec)}.` };
+                if (timeSinceLastSeenSec <= recentEventWindowSec) return { label: 'Nedávna udalosť', klass: 'sensor-status-chip--recent', note: `Posledná udalosť prišla ${formatDurationShort(timeSinceLastSeenSec)} dozadu.` };
+                if (timeSinceLastSeenSec <= staleThresholdSec) return { label: 'Pokojový stav', klass: 'sensor-status-chip--quiet', note: 'Senzor nehlásil novú udalosť, ale stále je v očakávanom servisnom okne.' };
+                return { label: 'Bez udalosti dlhšie', klass: 'sensor-status-chip--warning', note: `Nebola zaznamenaná žiadna udalosť už ${formatDurationShort(timeSinceLastSeenSec)}.` };
             }
-            return { label: 'No events', klass: 'sensor-status-chip--unknown', note: 'No event telemetry received yet.' };
+            return { label: 'Bez udalostí', klass: 'sensor-status-chip--unknown', note: 'Zatiaľ neprišla žiadna udalosť zo senzora.' };
         }
         if (hasTelemetry && timeSinceLastSeenSec !== null) {
-            if (timeSinceLastSeenSec <= delayedThresholdSec) return { label: 'Online', klass: 'sensor-status-chip--online', note: 'Sensor is sending within expected interval.' };
-            if (timeSinceLastSeenSec <= offlineThresholdSec) return { label: 'Delayed', klass: 'sensor-status-chip--warning', note: `Last uplink is outside the expected window (${formatDurationShort(timeSinceLastSeenSec)} ago).` };
-            return { label: 'Offline', klass: 'sensor-status-chip--offline', note: `No recent uplink for ${formatDurationShort(timeSinceLastSeenSec)}.` };
+            if (timeSinceLastSeenSec <= delayedThresholdSec) return { label: 'Online', klass: 'sensor-status-chip--online', note: 'Senzor hlási dáta v očakávanom intervale.' };
+            if (timeSinceLastSeenSec <= offlineThresholdSec) return { label: 'Oneskorené', klass: 'sensor-status-chip--warning', note: `Posledný uplink je mimo očakávaného okna (${formatDurationShort(timeSinceLastSeenSec)} dozadu).` };
+            return { label: 'Offline', klass: 'sensor-status-chip--offline', note: `Zo senzora neprišli nové dáta už ${formatDurationShort(timeSinceLastSeenSec)}.` };
         }
-        return { label: 'No telemetry', klass: 'sensor-status-chip--unknown', note: 'No uplink traffic received from this sensor yet.' };
+        return { label: 'Bez telemetrie', klass: 'sensor-status-chip--unknown', note: 'Zo senzora zatiaľ neprišli žiadne dáta.' };
     })();
 
     const sensorConfig = data.config && typeof data.config === 'object' ? data.config : {};
@@ -5131,13 +5131,13 @@ function renderSensorQuickView(data, eui) {
             quickKpis.push({
                 label: 'CO2',
                 value: `${Math.round(Number(latestDecodedValues.co2_1_ppm)).toLocaleString()} ppm`,
-                note: 'Latest decoded reading'
+                note: 'Posledná dekódovaná hodnota'
             });
         } else if (hasTelemetry && Number.isFinite(Number(data.avg_snr))) {
             quickKpis.push({
-                label: 'Avg SNR',
+                label: 'Priemerné SNR',
                 value: formatMetric(data.avg_snr, 1, ' dB'),
-                note: 'Signal quality'
+                note: 'Kvalita signálu'
             });
         }
     } else if (latestProfile === 'lansen_m2_v1') {
@@ -5148,16 +5148,16 @@ function renderSensorQuickView(data, eui) {
         });
         if (hasTelemetry && Number.isFinite(Number(latestDecodedValues.total_openings))) {
             quickKpis.push({
-                label: 'Openings',
+                label: 'Otvorenia',
                 value: Math.round(Number(latestDecodedValues.total_openings)).toLocaleString(),
-                note: 'Openings since startup'
+                note: 'Počet otvorení od spustenia'
             });
         }
         if (hasTelemetry) {
             quickKpis.push({
-                label: 'Alarm state',
-                value: latestDecodedValues.any_alarm_active ? 'Active' : 'Normal',
-                note: latestDecodedValues.last_alarm_input ? `Last ${String(latestDecodedValues.last_alarm_input)}` : 'No alarm source recorded'
+                label: 'Stav alarmu',
+                value: latestDecodedValues.any_alarm_active ? 'Aktívny' : 'Normálny',
+                note: latestDecodedValues.last_alarm_input ? `Posledný vstup: ${String(latestDecodedValues.last_alarm_input)}` : 'Zdroj alarmu zatiaľ nebol zaznamenaný'
             });
         }
     } else {
@@ -5168,16 +5168,16 @@ function renderSensorQuickView(data, eui) {
         });
         if (hasTelemetry && Number.isFinite(Number(data.avg_snr))) {
             quickKpis.push({
-                label: 'Avg SNR',
+                label: 'Priemerné SNR',
                 value: formatMetric(data.avg_snr, 1, ' dB'),
-                note: 'Signal quality'
+                note: 'Kvalita signálu'
             });
         }
         if (hasTelemetry && (Number(data.packets_lost || 0) > 0 || Number(data.packet_loss_rate || 0) > 0)) {
             quickKpis.push({
-                label: 'Counter gap loss',
+                label: 'Strata paketov',
                 value: formatMetric(data.packet_loss_rate, 2, '%'),
-                note: `${Number(data.packets_lost || 0).toLocaleString()} missing packetCnt values`
+                note: `${Number(data.packets_lost || 0).toLocaleString()} chýbajúcich hodnôt packetCnt`
             });
         }
     }
