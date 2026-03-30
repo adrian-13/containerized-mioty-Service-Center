@@ -2673,6 +2673,15 @@ def _is_global_tenant_scope(active_tenant):
     return not str(active_tenant or "").strip()
 
 def _resolve_write_tenant_id(requested_tenant=None, *, existing_tenant=None):
+    # Customer-scoped writes are always pinned to the active tenant from session.
+    if has_request_context():
+        current_role = _normalize_user_role(session.get("role", "viewer"))
+        if _is_customer_role(current_role):
+            active_tenant = _active_tenant_id()
+            if _is_global_tenant_scope(active_tenant):
+                return _default_tenant_id()
+            return _normalize_tenant_id(active_tenant, fallback=_default_tenant_id())
+
     if str(requested_tenant or "").strip():
         return _normalize_tenant_id(requested_tenant, fallback=_default_tenant_id())
     if str(existing_tenant or "").strip():
