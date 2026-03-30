@@ -3824,7 +3824,7 @@ function updateStatusCards(data) {
     );
     document.getElementById('bs-note').textContent = bsCount > 0
         ? appTranslate('dashboard.base_station_route_live', 'Live routes are available')
-        : appTranslate('dashboard.no_connected_base_stations', 'No connected base stations');
+        : appTranslate('dashboard.no_connected_base_stations', 'Žiadne pripojené základňové stanice');
     previousSnapshot.connectedBs = bsCount;
 
     const sensorCard = document.getElementById('sensor-card');
@@ -4059,7 +4059,7 @@ function buildIncidents(status, healthPacketLoss, vmCapable, trafficInfo) {
 
     if (!tlsActive) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_tls_offline', 'TLS server is offline.') });
     if (mqttEnabled && !mqttActive) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_mqtt_disconnected', 'MQTT broker is disconnected.') });
-    if (connectedBs === 0) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_no_connected_bs', 'No connected base stations.') });
+    if (connectedBs === 0) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_no_connected_bs', 'Nie je pripojená žiadna základňová stanica.') });
     if (totalSensors > 0 && registeredSensors / totalSensors < 0.5) incidents.push({
         level: 'warn',
         text: appTranslate('dashboard.incident_only_sensors_active', `Only ${Math.round((registeredSensors / totalSensors) * 100)}% sensors are active.`, {

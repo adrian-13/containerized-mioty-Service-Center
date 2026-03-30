@@ -10129,7 +10129,7 @@ def add_sensor():
                 tls_server.reload_sensor_config()
 
                 if not should_trigger_runtime_attach:
-                    return jsonify({'success': True, 'message': 'Sensor saved. Runtime attach unchanged (metadata-only update).'})
+                    return jsonify({'success': True, 'message': 'Senzor bol uložený. Nastavenia prepojenia zostali bez zmeny.'})
 
                 # Force attach only for new sensor or when protocol fields changed
                 if hasattr(tls_server, 'connected_base_stations') and tls_server.connected_base_stations:
@@ -10143,16 +10143,16 @@ def add_sensor():
                             attach_targets_after_save or None,
                         )
                         if attached_count > 0:
-                            return jsonify({'success': True, 'message': f'Sensor saved and attach requests sent to {attached_count} base stations'})
-                        return jsonify({'success': True, 'message': 'Sensor saved. Runtime attach will continue when base stations are reachable.'})
-                    return jsonify({'success': True, 'message': 'Sensor saved. Attach API is not available in runtime.'})
+                            return jsonify({'success': True, 'message': f'Senzor bol uložený a prepojený s {attached_count} základňovými stanicami.'})
+                        return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí, keď budú základňové stanice dostupné.'})
+                    return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí po obnovení spojenia.'})
 
-                return jsonify({'success': True, 'message': 'Sensor saved. No connected base stations now; attach will run after reconnect.'})
+                return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí po opätovnom pripojení základňových staníc.'})
             except Exception as e:
                 print(f"Error notifying TLS server: {e}")
-                return jsonify({'success': True, 'message': 'Sensor saved but failed to notify TLS server'})
+                return jsonify({'success': True, 'message': 'Senzor bol uložený. Dokončenie prepojenia sa oneskorilo.'})
         else:
-            return jsonify({'success': True, 'message': 'Sensor saved (TLS server not available for attach)'})
+            return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí neskôr.'})
                 
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
@@ -10269,7 +10269,7 @@ def update_sensor(eui):
                 tls_server.reload_sensor_config()
 
                 if not should_trigger_runtime_attach:
-                    return jsonify({'success': True, 'message': 'Sensor saved. Runtime attach unchanged (metadata-only update).'})
+                    return jsonify({'success': True, 'message': 'Senzor bol uložený. Nastavenia prepojenia zostali bez zmeny.'})
 
                 if hasattr(tls_server, 'connected_base_stations') and tls_server.connected_base_stations:
                     if hasattr(tls_server, 'attach_sensor_sync'):
@@ -10278,16 +10278,16 @@ def update_sensor(eui):
                             attach_targets_after_save or None,
                         )
                         if attached_count > 0:
-                            return jsonify({'success': True, 'message': f'Sensor saved and attach requests sent to {attached_count} base stations'})
-                        return jsonify({'success': True, 'message': 'Sensor saved. Runtime attach will continue when base stations are reachable.'})
-                    return jsonify({'success': True, 'message': 'Sensor saved. Attach API is not available in runtime.'})
+                            return jsonify({'success': True, 'message': f'Senzor bol uložený a prepojený s {attached_count} základňovými stanicami.'})
+                        return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí, keď budú základňové stanice dostupné.'})
+                    return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí po obnovení spojenia.'})
 
-                return jsonify({'success': True, 'message': 'Sensor saved. No connected base stations now; attach will run after reconnect.'})
+                return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí po opätovnom pripojení základňových staníc.'})
             except Exception as e:
                 print(f"Error notifying TLS server: {e}")
-                return jsonify({'success': True, 'message': 'Sensor saved but failed to notify TLS server'})
+                return jsonify({'success': True, 'message': 'Senzor bol uložený. Dokončenie prepojenia sa oneskorilo.'})
 
-        return jsonify({'success': True, 'message': 'Sensor saved (TLS server not available for attach)'})
+            return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí neskôr.'})
     except ValueError as e:
         return jsonify({'success': False, 'message': str(e)}), 400
     except Exception as e:
@@ -10402,21 +10402,21 @@ def attach_sensor(eui):
             and _tenant_matches(_tenant_id_from_sensor(s), active_tenant)
             for s in _load_all_sensors()
         ):
-            return jsonify({'success': False, 'message': 'Sensor not found in active tenant'}), 404
+            return jsonify({'success': False, 'message': 'Senzor sa nenašiel v aktuálnom priestore.'}), 404
 
         payload = request.get_json(silent=True) or {}
         requested_bases = payload.get('base_stations')
         if requested_bases is None:
-            return jsonify({'success': False, 'message': 'Select one or more base stations for attach'}), 400
+            return jsonify({'success': False, 'message': 'Vyberte jednu alebo viac základňových staníc na prepojenie.'}), 400
 
         if isinstance(requested_bases, str):
             requested_bases = [part.strip() for part in requested_bases.split(',') if part and part.strip()]
         if not isinstance(requested_bases, list):
-            return jsonify({'success': False, 'message': 'base_stations must be an array of EUI strings'}), 400
+            return jsonify({'success': False, 'message': 'Zoznam základňových staníc musí byť vo forme poľa EUI identifikátorov.'}), 400
 
         selected_base_stations = _normalize_base_station_route_list(requested_bases)
         if requested_bases and not selected_base_stations:
-            return jsonify({'success': False, 'message': 'No valid base stations selected'}), 400
+            return jsonify({'success': False, 'message': 'Nebola vybraná žiadna platná základňová stanica.'}), 400
 
         global tls_server_instance
         tls_server = tls_server_instance
@@ -10439,13 +10439,13 @@ def attach_sensor(eui):
                 except Exception:
                     pass
 
-            message = f'Sensor {eui} set to detached (no base station mapping).'
+            message = f'Senzor {eui} bol odpojený od všetkých základňových staníc.'
             if runtime_detached is True:
-                message = f'{message} Detached from online base stations.'
+                message = f'{message} Zmena sa prejavila aj na aktuálne pripojených staniciach.'
             elif runtime_detached is False:
-                message = f'{message} Runtime detach will complete when base stations are reachable.'
+                message = f'{message} Dokončenie odpojenia prebehne po obnovení spojenia so stanicami.'
             if runtime_error:
-                message = f'{message} Runtime warning: {runtime_error}'
+                message = f'{message} Poznámka: {runtime_error}'
 
             _record_admin_audit(
                 action='sensor.detach',
@@ -10495,7 +10495,7 @@ def attach_sensor(eui):
         if unknown_targets:
             return jsonify({
                 'success': False,
-                'message': f"Unknown base stations for active tenant: {', '.join(unknown_targets)}"
+                'message': f"Niektoré vybrané základňové stanice nie sú dostupné v tomto priestore: {', '.join(unknown_targets)}"
             }), 400
 
         # Always persist desired attach mapping, even if target BS is offline.
@@ -10529,7 +10529,7 @@ def attach_sensor(eui):
             if attached_count > 0 and pending_count > 0:
                 return jsonify({
                     'success': True,
-                    'message': f'Sensor {eui} saved. Attached to {attached_count} online base stations; {pending_count} pending until reconnect.',
+                    'message': f'Senzor {eui} bol uložený. {attached_count} základňových staníc je už prepojených, ďalších {pending_count} sa doplní po obnovení spojenia.',
                     'attached_count': attached_count,
                     'pending_count': pending_count,
                     'requested_base_stations': selected_base_stations,
@@ -10539,7 +10539,7 @@ def attach_sensor(eui):
             if attached_count > 0:
                 return jsonify({
                     'success': True,
-                    'message': f'Sensor {eui} attached to {attached_count} base stations.',
+                    'message': f'Senzor {eui} je prepojený s {attached_count} základňovými stanicami.',
                     'attached_count': attached_count,
                     'pending_count': 0,
                     'requested_base_stations': selected_base_stations,
@@ -10549,7 +10549,7 @@ def attach_sensor(eui):
 
             return jsonify({
                 'success': True,
-                'message': f'Sensor {eui} mapping saved. No selected base station is online now; attach will run after reconnect.',
+                'message': f'Prepojenie senzora {eui} bolo uložené. Dokončí sa po opätovnom pripojení základňových staníc.',
                 'attached_count': 0,
                 'pending_count': len(selected_base_stations),
                 'requested_base_stations': selected_base_stations,
@@ -10559,7 +10559,7 @@ def attach_sensor(eui):
 
         return jsonify({
             'success': True,
-            'message': f'Sensor {eui} mapping saved. Attach will run when TLS/base stations are available.',
+            'message': f'Prepojenie senzora {eui} bolo uložené. Dokončí sa, keď budú základňové stanice dostupné.',
             'attached_count': 0,
             'pending_count': len(selected_base_stations),
             'requested_base_stations': selected_base_stations,
@@ -10726,7 +10726,7 @@ def api_alerts_create():
         sensor_config = visible_sensors.get(sensor_eui)
 
         if not sensor_config:
-            return jsonify({"success": False, "message": "Sensor not found or not visible in current tenant scope."}), 404
+            return jsonify({"success": False, "message": "Senzor sa nenašiel alebo k nemu nemáte prístup."}), 404
         if severity not in ('warning', 'critical'):
             severity = 'warning'
         if kind != 'threshold':
@@ -10788,9 +10788,9 @@ def api_alerts_update(alert_id):
         alerts = _load_alerts()
         target = next((a for a in alerts if a.get('id') == alert_id), None)
         if target and str(target.get('sensor_eui', '')).strip().upper() not in visible_sensors:
-            return jsonify({"success": False, "message": "Alert is outside the active tenant scope."}), 404
+            return jsonify({"success": False, "message": "K tomuto upozorneniu nemáte prístup."}), 404
         if not target:
-            return jsonify({"success": False, "message": "Alert nenájdený"}), 404
+            return jsonify({"success": False, "message": "Upozornenie sa nenašlo."}), 404
         body = request.get_json(force=True) or {}
         target['kind'] = _normalize_alert_kind(target.get('kind'))
         for field in ('name', 'severity'):
@@ -10834,12 +10834,12 @@ def api_alerts_delete(alert_id):
     alerts = _load_alerts()
     target = next((a for a in alerts if a.get('id') == alert_id), None)
     if not target:
-        return jsonify({"success": False, "message": "Alert not found"}), 404
+        return jsonify({"success": False, "message": "Upozornenie sa nenašlo."}), 404
     if str(target.get('sensor_eui', '')).strip().upper() not in visible_sensors:
-        return jsonify({"success": False, "message": "Alert is outside the active tenant scope."}), 404
+        return jsonify({"success": False, "message": "K tomuto upozorneniu nemáte prístup."}), 404
     new_list = [a for a in alerts if a.get('id') != alert_id]
     if len(new_list) == len(alerts):
-        return jsonify({"success": False, "message": "Alert nenájdený"}), 404
+        return jsonify({"success": False, "message": "Upozornenie sa nenašlo."}), 404
     _save_alerts(new_list)
     return jsonify({"success": True})
 
@@ -11086,7 +11086,7 @@ def detach_sensor(eui):
             and _tenant_matches(_tenant_id_from_sensor(s), active_tenant)
             for s in _load_all_sensors()
         ):
-            return jsonify({'success': False, 'message': 'Sensor not found in active tenant'}), 404
+            return jsonify({'success': False, 'message': 'Senzor sa nenašiel v aktuálnom priestore.'}), 404
 
         # Always clear desired attach mapping first (works even if no online BS).
         _update_sensor_attached_base_stations(eui_upper, [], tenant_id=active_tenant)
@@ -11109,14 +11109,14 @@ def detach_sensor(eui):
                 pass
 
         if runtime_detached is True:
-            message = f'Sensor {eui} detached from online base stations and mapping cleared.'
+            message = f'Senzor {eui} bol odpojený a prepojenie bolo vymazané.'
         elif runtime_detached is False:
-            message = f'Sensor {eui} mapping cleared. Runtime detach will complete when base stations are reachable.'
+            message = f'Prepojenie senzora {eui} bolo vymazané. Dokončenie odpojenia prebehne po obnovení spojenia so stanicami.'
         else:
-            message = f'Sensor {eui} mapping cleared.'
+            message = f'Prepojenie senzora {eui} bolo vymazané.'
 
         if runtime_error:
-            message = f'{message} Runtime warning: {runtime_error}'
+            message = f'{message} Poznámka: {runtime_error}'
 
         _record_admin_audit(
             action='sensor.detach',
@@ -11503,13 +11503,13 @@ def detach_all_sensors():
             except Exception:
                 pass
 
-        message = f'Cleared attach mapping for all sensors in tenant "{active_tenant}".'
+        message = f'Prepojenie so základňovými stanicami bolo vymazané pre všetky senzory v priestore "{active_tenant}".'
         if detached_count > 0:
-            message = f'{message} Detached {detached_count} runtime sensor bindings.'
+            message = f'{message} Zmena sa už prejavila pri {detached_count} senzoroch.'
         elif tls_server and hasattr(tls_server, 'detach_all_sensors_sync'):
-            message = f'{message} No runtime bindings were detached (likely no online base stations).'
+            message = f'{message} Dokončenie odpojenia prebehne po obnovení spojenia so stanicami.'
         if runtime_error:
-            message = f'{message} Runtime warning: {runtime_error}'
+            message = f'{message} Poznámka: {runtime_error}'
 
         _record_admin_audit(
             action='sensor.detach_all',
@@ -13622,7 +13622,7 @@ def get_base_station(eui):
         if not bs_data:
             return jsonify({"success": False, "error": "Base station not found"}), 404
         if not _tenant_matches(_tenant_id_from_base_station(bs_data), _active_tenant_id()):
-            return jsonify({"success": False, "error": "Base station not found in active tenant"}), 404
+            return jsonify({"success": False, "error": "Základňová stanica sa nenašla v aktuálnom priestore."}), 404
         return jsonify({"eui": eui.lower(), **bs_data})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -13718,7 +13718,7 @@ def update_base_station(eui):
         if eui in config["base_stations"]:
             existing_tenant = _tenant_id_from_base_station(config["base_stations"].get(eui, {}))
             if not _tenant_matches(existing_tenant, _active_tenant_id()):
-                return jsonify({"success": False, "error": "Base station not found in active tenant"}), 404
+                return jsonify({"success": False, "error": "Základňová stanica sa nenašla v aktuálnom priestore."}), 404
         
         previous_data = dict(config["base_stations"].get(eui, {}))
         config["base_stations"][eui] = {
@@ -13785,7 +13785,7 @@ def delete_base_station(eui):
         
         removed = config.get("base_stations", {}).get(eui, {})
         if removed and not _tenant_matches(_tenant_id_from_base_station(removed), _active_tenant_id()):
-            return jsonify({"success": False, "error": "Base station not found in active tenant"}), 404
+            return jsonify({"success": False, "error": "Základňová stanica sa nenašla v aktuálnom priestore."}), 404
         if eui in config.get("base_stations", {}):
             del config["base_stations"][eui]
             save_base_station_config(config)
