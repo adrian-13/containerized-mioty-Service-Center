@@ -3106,9 +3106,18 @@
             if (!IS_ADMIN_PORTAL) return nextValue;
             adminDemoDataPref = nextValue;
             if (options.persist !== false) {
-                persistAdminDemoDataPref(nextValue).catch((error) => {
+                persistAdminDemoDataPref(nextValue).then((resolvedValue) => {
+                    if (options.reloadOnPersist) {
+                        window.location.reload();
+                        return;
+                    }
+                    if (options.emit !== false) {
+                        document.dispatchEvent(new CustomEvent('app:admin-demo-data-changed', { detail: { enabled: resolvedValue } }));
+                    }
+                }).catch((error) => {
                     console.error('Failed to persist admin demo data preference', error);
                 });
+                return nextValue;
             }
             if (options.emit !== false) {
                 document.dispatchEvent(new CustomEvent('app:admin-demo-data-changed', { detail: { enabled: nextValue } }));
@@ -3265,7 +3274,7 @@
 
             if (adminDemoToggle) {
                 adminDemoToggle.addEventListener('change', (event) => {
-                    writeAdminDemoDataPref(Boolean(event.target.checked));
+                    writeAdminDemoDataPref(Boolean(event.target.checked), { emit: false, reloadOnPersist: true });
                 });
             }
 
