@@ -69,6 +69,12 @@ _viewer_demo_seed_state = {
 _viewer_sensor_list_cache_lock = threading.Lock()
 _viewer_sensor_list_cache = {}
 _VIEWER_SENSOR_LIST_CACHE_TTL_SECONDS = 15.0
+_customer_dashboard_cache_lock = threading.Lock()
+_customer_dashboard_cache = {}
+_CUSTOMER_DASHBOARD_CACHE_TTL_SECONDS = 5.0
+_incident_feed_cache_lock = threading.Lock()
+_incident_feed_cache = {}
+_INCIDENT_FEED_CACHE_TTL_SECONDS = 5.0
 _timescale_uplink_stats = {
     "queued": 0,
     "written": 0,
@@ -5375,10 +5381,14 @@ def _save_all_sensors(sensors):
             logger.warning("Falling back to %s for sensors save: %s", SENSORS_RECOVERY_FILE, err)
         else:
             _invalidate_viewer_sensor_list_cache()
+            _invalidate_customer_dashboard_cache()
+            _invalidate_incident_feed_cache()
             return
     with open(bssci_config.SENSOR_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(list(sensors or []), f, indent=4, ensure_ascii=False)
     _invalidate_viewer_sensor_list_cache()
+    _invalidate_customer_dashboard_cache()
+    _invalidate_incident_feed_cache()
 
 
 def _invalidate_viewer_sensor_list_cache(tenant_id: Optional[str] = None):
@@ -5387,6 +5397,60 @@ def _invalidate_viewer_sensor_list_cache(tenant_id: Optional[str] = None):
             _viewer_sensor_list_cache.clear()
             return
         _viewer_sensor_list_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
+
+def _invalidate_customer_dashboard_cache(tenant_id: Optional[str] = None):
+    with _customer_dashboard_cache_lock:
+        if tenant_id is None:
+            _customer_dashboard_cache.clear()
+            return
+        _customer_dashboard_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
+
+def _get_cached_customer_dashboard_payload(tenant_id: str):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _customer_dashboard_cache_lock:
+        entry = _customer_dashboard_cache.get(tenant_key)
+        if not entry:
+            return None
+        age = time.time() - float(entry.get("ts") or 0.0)
+        if age > _CUSTOMER_DASHBOARD_CACHE_TTL_SECONDS:
+            _customer_dashboard_cache.pop(tenant_key, None)
+            return None
+        return copy.deepcopy(entry.get("payload") or {})
+
+def _store_cached_customer_dashboard_payload(tenant_id: str, payload: Dict[str, Any]):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _customer_dashboard_cache_lock:
+        _customer_dashboard_cache[tenant_key] = {
+            "ts": time.time(),
+            "payload": copy.deepcopy(payload or {}),
+        }
+
+def _invalidate_incident_feed_cache(tenant_id: Optional[str] = None):
+    with _incident_feed_cache_lock:
+        if tenant_id is None:
+            _incident_feed_cache.clear()
+            return
+        _incident_feed_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
+
+def _get_cached_incident_feed_payload(tenant_id: str):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _incident_feed_cache_lock:
+        entry = _incident_feed_cache.get(tenant_key)
+        if not entry:
+            return None
+        age = time.time() - float(entry.get("ts") or 0.0)
+        if age > _INCIDENT_FEED_CACHE_TTL_SECONDS:
+            _incident_feed_cache.pop(tenant_key, None)
+            return None
+        return copy.deepcopy(entry.get("payload") or {})
+
+def _store_cached_incident_feed_payload(tenant_id: str, payload: Dict[str, Any]):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _incident_feed_cache_lock:
+        _incident_feed_cache[tenant_key] = {
+            "ts": time.time(),
+            "payload": copy.deepcopy(payload or {}),
+        }
 
 
 def _get_cached_viewer_sensor_list(tenant_id: str):
@@ -5622,6 +5686,7 @@ def _save_alerts(alerts: list) -> None:
             except Exception:
                 pass
         _save_alerts_to_file(normalized_alerts)
+    _invalidate_incident_feed_cache()
 
 _ALERT_EVENTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alert_events.json")
 _ALERT_STATE_FILE  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alert_state.json")
@@ -12757,8 +12822,11 @@ def api_incidents():
     """Return current operational incidents from sensor state and alert rules."""
     try:
         active_tenant = _active_tenant_id()
+        cached_payload = _get_cached_incident_feed_payload(active_tenant)
+        if cached_payload:
+            return jsonify(cached_payload)
         incidents = _build_current_incidents(active_tenant)
-        return jsonify({
+        payload = {
             "success": True,
             "incidents": incidents,
             "summary": {
@@ -12766,7 +12834,9 @@ def api_incidents():
                 "critical": sum(1 for item in incidents if item.get("tier") == "error"),
                 "warning": sum(1 for item in incidents if item.get("tier") != "error"),
             },
-        })
+        }
+        _store_cached_incident_feed_payload(active_tenant, payload)
+        return jsonify(payload)
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc), "incidents": [], "summary": {"total": 0, "critical": 0, "warning": 0}}), 500
 
@@ -15274,6 +15344,7 @@ def save_base_station_config(config):
     if _db_first_config_enabled():
         ok, err = _save_base_station_payload_to_db(config)
         if ok:
+            _invalidate_customer_dashboard_cache()
             return
         logger.warning("Falling back to %s for base station save: %s", BASE_STATIONS_RECOVERY_FILE, err)
     import os
@@ -15286,6 +15357,7 @@ def save_base_station_config(config):
         pass
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
+    _invalidate_customer_dashboard_cache()
 
 def _build_base_stations_runtime_payload() -> Dict[str, Any]:
     """Build base station runtime summary for customer-safe dashboard aggregation."""
@@ -17563,7 +17635,13 @@ def _build_customer_dashboard_payload() -> Dict[str, Any]:
 def customer_dashboard_payload():
     """Customer portal dashboard payload composed from customer-safe helpers."""
     try:
-        return jsonify(_build_customer_dashboard_payload())
+        active_tenant = _active_tenant_id()
+        cached_payload = _get_cached_customer_dashboard_payload(active_tenant)
+        if cached_payload:
+            return jsonify(cached_payload)
+        payload = _build_customer_dashboard_payload()
+        _store_cached_customer_dashboard_payload(active_tenant, payload)
+        return jsonify(payload)
     except Exception as exc:
         logger.exception("Failed to build customer dashboard payload")
         return jsonify({'success': False, 'error': str(exc)}), 500
