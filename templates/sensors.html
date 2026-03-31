@@ -2324,7 +2324,6 @@ button:active {
             <button class="btn btn-primary ui-editor-only" data-bs-toggle="modal" data-bs-target="#sensorModal" onclick="openSensorModal()">
                 <i class="fas fa-plus"></i> {{ t('sensors.add_new_sensor', 'Pridať senzor') }}
             </button>
-            <small id="sensorStorageMeta" class="sensor-meta-note ui-admin-only"></small>
             <div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-ellipsis-h"></i> {{ t('common.more', 'Viac') }}
@@ -3179,7 +3178,7 @@ let sensorCache = [];
 let activeQuickFilter = 'all';
 let selectedSensors = new Set();
 let sensorRefreshTimer = null;
-let sensorStorageMeta = null;
+const SENSOR_INCLUDE_DEMO_PREF_KEY = 'sc_admin_include_demo_data';
 let sensorCurrentPage = 1;
 let sensorPageSize = 20;
 let currentPageSensors = [];
@@ -4063,21 +4062,20 @@ function refreshSensorView() {
     renderSensors(getFilteredSensors());
 }
 
-function formatSensorStorageMeta(meta) {
-    if (!meta || typeof meta !== 'object') return '';
-    const backend = String(meta.storage_backend || '').toLowerCase() === 'db'
-        ? tr('common.database', 'Databáza')
-        : tr('common.recovery_file', 'Recovery súbor');
-    const seeded = meta.bootstrap_state && meta.bootstrap_state.seeded
-        ? tr('common.seeded', 'bootstrap')
-        : tr('common.live', 'live');
-    return `${backend} · ${seeded}`;
+function getSensorIncludeDemoData() {
+    if (!SENSOR_IS_ADMIN) return false;
+    if (window.AdminDemoDataPrefs && typeof window.AdminDemoDataPrefs.get === 'function') {
+        return Boolean(window.AdminDemoDataPrefs.get());
+    }
+    try { return localStorage.getItem(SENSOR_INCLUDE_DEMO_PREF_KEY) === '1'; } catch (error) { return false; }
 }
 
-function updateSensorStorageMeta() {
-    const metaEl = document.getElementById('sensorStorageMeta');
-    if (!metaEl) return;
-    metaEl.textContent = formatSensorStorageMeta(sensorStorageMeta);
+function setSensorIncludeDemoData(enabled) {
+    if (window.AdminDemoDataPrefs && typeof window.AdminDemoDataPrefs.set === 'function') {
+        window.AdminDemoDataPrefs.set(enabled);
+        return;
+    }
+    try { localStorage.setItem(SENSOR_INCLUDE_DEMO_PREF_KEY, enabled ? '1' : '0'); } catch (error) {}
 }
 
 async function apiRequest(url, method = 'POST', body = null) {
@@ -4108,22 +4106,13 @@ function setAutoRefresh(enabled) {
 }
 
 function loadSensors(silent = false) {
-    const requests = [fetch('/api/sensors').then(response => response.json())];
-    if (SENSOR_IS_ADMIN) {
-        requests.push(
-            fetch('/api/sensors/storage-meta')
-                .then(response => response.json())
-                .catch(() => null)
-        );
-    }
-
-    return Promise.all(requests)
-        .then(([sensorStatus, storageMeta]) => {
+    const includeDemo = SENSOR_IS_ADMIN && getSensorIncludeDemoData();
+    const sensorUrl = includeDemo ? '/api/sensors?include_demo=1' : '/api/sensors';
+    return Promise.all([fetch(sensorUrl).then(response => response.json())])
+        .then(([sensorStatus]) => {
             sensorCache = Object.values(sensorStatus || {}).sort((a, b) => String(a.eui).localeCompare(String(b.eui)));
-            sensorStorageMeta = storageMeta && storageMeta.success ? storageMeta : null;
             selectedSensors = new Set([...selectedSensors].filter(eui => sensorCache.some(sensor => sensor.eui === eui)));
             updateSensorOverview(sensorCache);
-            updateSensorStorageMeta();
             refreshSensorView();
             updateLastRefreshNote();
             maybeOpenSensorActionFromQuery();
@@ -5048,6 +5037,9 @@ if (legacyDetailTarget) {
 } else {
     loadSensorViewPrefs();
     applySensorViewPrefs();
+    if (SENSOR_IS_ADMIN) {
+        document.addEventListener('app:admin-demo-data-changed', () => loadSensors(true));
+    }
     const activePageSizeBtn = document.querySelector('#sensorPageSizePill .sensor-pagesize-btn.is-active');
     sensorPageSize = Math.max(1, Number(activePageSizeBtn?.dataset.size) || 20);
     setAutoRefresh(true);

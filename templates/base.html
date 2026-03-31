@@ -2263,6 +2263,19 @@
                         </select>
                         <p class="display-setting-note">{{ t('display.theme_note', 'Applies a light color palette variant across the interface.') }}</p>
                     </section>
+                    {% if current_user and current_user.role == 'admin' %}
+                    <section class="display-setting-card">
+                        <div class="d-flex align-items-center justify-content-between gap-3">
+                            <div>
+                                <p class="display-setting-title">{{ t('admin.show_demo_data', 'Zobraziť demo dáta') }}</p>
+                                <p class="display-setting-note">{{ t('admin.show_demo_data_note', 'Zapne alebo skryje demo tenant v administrátorských prehľadoch zariadení, staníc a upozornení.') }}</p>
+                            </div>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input" type="checkbox" id="display-admin-demo-toggle" role="switch" aria-label="{{ t('admin.show_demo_data', 'Zobraziť demo dáta') }}">
+                            </div>
+                        </div>
+                    </section>
+                    {% endif %}
                     {% if is_customer_user %}
                     <section class="display-setting-card">
                         <div class="viewer-guide-entry">
@@ -3061,6 +3074,53 @@
             swr: appPerfSWR
         };
 
+        const IS_ADMIN_PORTAL = {{ 'true' if current_user and current_user.role == 'admin' else 'false' }};
+        const SERVER_UI_PREFERENCES = {{ (((current_user.ui_preferences if current_user else {}) or {}))|tojson|safe }};
+        let adminDemoDataPref = Boolean(SERVER_UI_PREFERENCES.admin_include_demo_data);
+
+        function readAdminDemoDataPref() {
+            return IS_ADMIN_PORTAL ? adminDemoDataPref : false;
+        }
+
+        async function persistAdminDemoDataPref(nextValue) {
+            if (!IS_ADMIN_PORTAL) return nextValue;
+            const response = await fetch('/api/me/preferences', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ui_preferences: {
+                        admin_include_demo_data: Boolean(nextValue)
+                    }
+                })
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.success === false) {
+                throw new Error(payload.message || payload.error || `Request failed (${response.status})`);
+            }
+            adminDemoDataPref = Boolean((payload.ui_preferences || {}).admin_include_demo_data);
+            return adminDemoDataPref;
+        }
+
+        function writeAdminDemoDataPref(enabled, options = {}) {
+            const nextValue = Boolean(enabled);
+            if (!IS_ADMIN_PORTAL) return nextValue;
+            adminDemoDataPref = nextValue;
+            if (options.persist !== false) {
+                persistAdminDemoDataPref(nextValue).catch((error) => {
+                    console.error('Failed to persist admin demo data preference', error);
+                });
+            }
+            if (options.emit !== false) {
+                document.dispatchEvent(new CustomEvent('app:admin-demo-data-changed', { detail: { enabled: nextValue } }));
+            }
+            return nextValue;
+        }
+
+        window.AdminDemoDataPrefs = {
+            get: readAdminDemoDataPref,
+            set: writeAdminDemoDataPref
+        };
+
         function clamp(value, min, max, fallback) {
             const num = Number(value);
             if (!Number.isFinite(num)) return fallback;
@@ -3125,10 +3185,12 @@
             const zoomValue = document.getElementById('display-zoom-value');
             const densitySelect = document.getElementById('display-density-select');
             const themeSelect = document.getElementById('display-theme-select');
+            const adminDemoToggle = document.getElementById('display-admin-demo-toggle');
             if (zoomRange) zoomRange.value = String(displayPrefs.scale);
             if (zoomValue) zoomValue.textContent = `${displayPrefs.scale}%`;
             if (densitySelect) densitySelect.value = displayPrefs.density;
             if (themeSelect) themeSelect.value = displayPrefs.theme;
+            if (adminDemoToggle) adminDemoToggle.checked = readAdminDemoDataPref();
         }
 
         function applyColorTheme() {
@@ -3160,6 +3222,7 @@
             const densitySelect = document.getElementById('display-density-select');
             const themeSelect = document.getElementById('display-theme-select');
             const resetBtn = document.getElementById('display-settings-reset');
+            const adminDemoToggle = document.getElementById('display-admin-demo-toggle');
 
             if (zoomRange) {
                 zoomRange.addEventListener('input', (event) => {
@@ -3192,8 +3255,17 @@
                     displayPrefs.scale = DISPLAY_DEFAULTS.scale;
                     displayPrefs.density = DISPLAY_DEFAULTS.density;
                     displayPrefs.theme = DISPLAY_DEFAULTS.theme;
+                    if (adminDemoToggle) {
+                        writeAdminDemoDataPref(false);
+                    }
                     applyDisplayPrefs();
                     saveDisplayPrefs(displayPrefs);
+                });
+            }
+
+            if (adminDemoToggle) {
+                adminDemoToggle.addEventListener('change', (event) => {
+                    writeAdminDemoDataPref(Boolean(event.target.checked));
                 });
             }
 

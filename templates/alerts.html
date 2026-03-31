@@ -582,7 +582,6 @@
       {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('manage_tenants') %}
       <div class="ap-toolbar" style="padding-top:0;padding-bottom:.5rem;border-top:1px solid rgba(var(--brand-rgb),.04);">
         <div class="ap-toolbar-spacer"></div>
-        <div class="ap-storage-meta" id="alpStorageMeta" title=""></div>
         <input type="file" id="alpImportFile" accept=".json,application/json" hidden>
         <button type="button" class="ap-chip" id="alpImportBtn"><i class="fas fa-upload"></i> Import</button>
         <button type="button" class="ap-chip" id="alpExportBtn"><i class="fas fa-download"></i> Export</button>
@@ -635,7 +634,6 @@
 (function(){
 var CAN_MANAGE_ALERTS={{ user_permissions.get('can_manage_alerts', False)|tojson }};
 var ALERTS_IS_ADMIN={{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('manage_tenants') else 'false' }};
-var _alertsStorageMeta=null;
 
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -767,6 +765,7 @@ var _historyFilterEvent='';
 var _historyFilterSeverity='';
 var _historySearch='';
 var _historySearchTimer=null;
+var ALERTS_INCLUDE_DEMO_PREF_KEY='sc_admin_include_demo_data';
 
 var _ctxMenu=null;
 function closeCtx(){if(_ctxMenu){_ctxMenu.remove();_ctxMenu=null;}}
@@ -780,6 +779,21 @@ function isAcked(key){var now=Date.now();return _loadAcks().some(function(a){ret
 function alertKind(rule){return String((rule&&rule.kind)||'threshold');}
 function metricName(m){if(!m)return'';return METRIC_NAMES[m]||String(m).replace(/_/g,' ');}
 function metricUnit(m){return METRIC_UNIT[m]||'';}
+
+function getAlertsIncludeDemoData(){
+    if(!ALERTS_IS_ADMIN)return false;
+    if(window.AdminDemoDataPrefs&&typeof window.AdminDemoDataPrefs.get==='function'){
+        return Boolean(window.AdminDemoDataPrefs.get());
+    }
+    try{return localStorage.getItem(ALERTS_INCLUDE_DEMO_PREF_KEY)==='1';}catch(e){return false;}
+}
+function setAlertsIncludeDemoData(enabled){
+    if(window.AdminDemoDataPrefs&&typeof window.AdminDemoDataPrefs.set==='function'){
+        window.AdminDemoDataPrefs.set(enabled);
+        return;
+    }
+    try{localStorage.setItem(ALERTS_INCLUDE_DEMO_PREF_KEY,enabled?'1':'0');}catch(e){}
+}
 
 function formatMetricValue(metric,value){
     var num=Number(value);if(!Number.isFinite(num))return'';
@@ -859,7 +873,8 @@ async function fetchAlertOptions(sensorEui,force){
     var key=String(sensorEui||'').toUpperCase();
     if(!key)return{metrics:[]};
     if(!force&&_alertOptionsCache.has(key))return _alertOptionsCache.get(key);
-    var r=await fetch('/api/alerts/options?sensor_eui='+encodeURIComponent(key));
+    var optionsUrl='/api/alerts/options?sensor_eui='+encodeURIComponent(key)+(getAlertsIncludeDemoData()?'&include_demo=1':'');
+    var r=await fetch(optionsUrl);
     var d=await r.json();
     if(!r.ok||!d.success)throw new Error(d.message||'Nepodarilo sa načítať metriky');
     _alertOptionsCache.set(key,d);
@@ -874,7 +889,8 @@ async function fetchAlertOptions(sensorEui,force){
 /* ── Load sensors ── */
 async function loadSensors(){
     try{
-        var r=await fetch('/api/sensors');var d=await r.json();
+        var sensorUrl=getAlertsIncludeDemoData()?'/api/sensors?include_demo=1':'/api/sensors';
+        var r=await fetch(sensorUrl);var d=await r.json();
         _allSensors=Array.isArray(d)?d:(Array.isArray(d.sensors)?d.sensors:Object.values(d||{}));
     }catch(e){_allSensors=[];}
     function fillSensorSelect(selectId,currentValue){
@@ -917,7 +933,8 @@ function sensorUiTier(sensor){
 async function loadTriggered(){
     var body=document.getElementById('alpTriggeredBody');
     try{
-        var incidentsRes=await fetch('/api/incidents').then(function(r){return r.ok?r.json():{incidents:[]};}).catch(function(){return{incidents:[]};});
+        var incidentUrl=getAlertsIncludeDemoData()?'/api/incidents?include_demo=1':'/api/incidents';
+        var incidentsRes=await fetch(incidentUrl).then(function(r){return r.ok?r.json():{incidents:[]};}).catch(function(){return{incidents:[]};});
         var combined=Array.isArray(incidentsRes.incidents)?incidentsRes.incidents:[];
 
         combined.sort(function(a,b){return a.tier==='error'&&b.tier!=='error'?-1:1;});
@@ -1028,31 +1045,13 @@ async function loadTriggered(){
 }
 
 /* ── Rules ── */
-function updateAlertsStorageMeta(){
-    var metaEl=document.getElementById('alpStorageMeta');
-    if(!metaEl)return;
-    if(!_alertsStorageMeta||typeof _alertsStorageMeta!=='object'){
-        metaEl.textContent='';
-        metaEl.removeAttribute('title');
-        return;
-    }
-    var backend=String(_alertsStorageMeta.storage_backend||'').toLowerCase()==='db'?'Databáza':'Recovery súbor';
-    var seeded=_alertsStorageMeta.bootstrap_state&&_alertsStorageMeta.bootstrap_state.seeded?'bootstrap':'live';
-    metaEl.innerHTML='<i class="fas fa-database"></i><span>'+backend+' · '+seeded+'</span>';
-    metaEl.title='Seed: '+String(_alertsStorageMeta.seed_defaults_file||'')+' | Recovery: '+String(_alertsStorageMeta.recovery_file||'');
-}
 async function loadRules(){
     try{
-        var requests=[fetch('/api/alerts').then(function(r){return r.json();})];
-        if(ALERTS_IS_ADMIN){
-            requests.push(fetch('/api/alerts/storage-meta').then(function(r){return r.json();}).catch(function(){return null;}));
-        }
-        var results=await Promise.all(requests);
+        var rulesUrl=getAlertsIncludeDemoData()?'/api/alerts?include_demo=1':'/api/alerts';
+        var results=await Promise.all([fetch(rulesUrl).then(function(r){return r.json();})]);
         var d=results[0]||{};
         _allRules=d.alerts||[];
-        _alertsStorageMeta=ALERTS_IS_ADMIN&&results[1]&&results[1].success?results[1]:null;
-        updateAlertsStorageMeta();
-    }catch(e){_allRules=[];_alertsStorageMeta=null;updateAlertsStorageMeta();}
+    }catch(e){_allRules=[];}
     renderRules();
 }
 function exportAlertRules(){window.location.href='/api/alerts/export';}
@@ -1387,6 +1386,7 @@ async function loadHistory(){
         if(_historyFilterEvent)qs.set('event_type',_historyFilterEvent);
         if(_historyFilterSeverity)qs.set('severity',_historyFilterSeverity);
         if(String(_historySearch||'').trim())qs.set('q',String(_historySearch||'').trim());
+        if(getAlertsIncludeDemoData())qs.set('include_demo','1');
         var r=await fetch('/api/alerts/history?'+qs.toString());var d=await r.json();var events=d.events||[];
         var tb=document.getElementById('alpTabHistory');
         if(tb)tb.textContent=events.length?String(events.length):'';
@@ -1424,6 +1424,13 @@ async function loadHistory(){
 }
 
 /* ?? Init ?? */
+if(ALERTS_IS_ADMIN){
+    document.addEventListener('app:admin-demo-data-changed',function(){
+        Promise.all([loadSensors(),loadRules(),loadTriggered(),loadHistory()]).then(function(){
+            handleEntryIntent();
+        });
+    });
+}
 Promise.all([loadSensors(),loadRules(),loadTriggered(),loadHistory()]).then(function(){
     handleEntryIntent();
 });

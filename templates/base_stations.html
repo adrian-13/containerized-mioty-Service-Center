@@ -777,7 +777,6 @@
                 <div class="bs-inventory-tools">
                     <input id="bsSearch" type="text" class="form-control form-control-sm bs-search" placeholder="{{ t('base_stations.search_placeholder', 'Search by EUI, name, IP, GPS, tag...') }}">
                     <small id="bsTableMeta" class="text-muted fw-semibold">{{ t('base_stations.live_gateway_inventory', 'Live base station inventory') }}</small>
-                    <small id="bsStorageMeta" class="text-muted fw-semibold"></small>
                     <div class="ms-auto d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('bsImportFile').click()">
                             <i class="fas fa-upload me-1"></i>{{ t('common.import', 'Importovať') }}
@@ -1006,7 +1005,7 @@ let editingEui = null;
 let refreshInterval;
 let uptimeChart = null;
 let baseStationCache = [];
-let baseStationStorageMeta = null;
+const BS_INCLUDE_DEMO_PREF_KEY = 'sc_admin_include_demo_data';
 let bsActiveFilter = 'all';
 let bsCurrentPage = 1;
 let bsPageSize = 20;
@@ -1480,31 +1479,31 @@ function renderBaseStationTable() {
     initBsActionDropdowns();
 }
 
-function updateBaseStationStorageMeta() {
-    const metaEl = document.getElementById('bsStorageMeta');
-    if (!metaEl) return;
-    if (!baseStationStorageMeta || typeof baseStationStorageMeta !== 'object') {
-        metaEl.textContent = '';
+function getBaseStationIncludeDemoData() {
+    if (window.AdminDemoDataPrefs && typeof window.AdminDemoDataPrefs.get === 'function') {
+        return Boolean(window.AdminDemoDataPrefs.get());
+    }
+    try { return localStorage.getItem(BS_INCLUDE_DEMO_PREF_KEY) === '1'; } catch (error) { return false; }
+}
+
+function setBaseStationIncludeDemoData(enabled) {
+    if (window.AdminDemoDataPrefs && typeof window.AdminDemoDataPrefs.set === 'function') {
+        window.AdminDemoDataPrefs.set(enabled);
         return;
     }
-    const backend = String(baseStationStorageMeta.storage_backend || '').toLowerCase() === 'db'
-        ? tr('common.database', 'Databáza')
-        : tr('common.recovery_file', 'Recovery súbor');
-    const seeded = baseStationStorageMeta.bootstrap_state && baseStationStorageMeta.bootstrap_state.seeded
-        ? tr('common.seeded', 'bootstrap')
-        : tr('common.live', 'live');
-    metaEl.textContent = `${backend} · ${seeded}`;
+    try { localStorage.setItem(BS_INCLUDE_DEMO_PREF_KEY, enabled ? '1' : '0'); } catch (error) {}
 }
 
 function loadBaseStations() {
+    const includeDemo = getBaseStationIncludeDemoData();
+    const baseStationUrl = includeDemo ? '/api/base-stations?include_demo=1' : '/api/base-stations';
+    const certStatusUrl = includeDemo ? '/api/base-stations/certificates/status?include_demo=1' : '/api/base-stations/certificates/status';
     Promise.all([
-        fetch('/api/base-stations').then(r => r.json()),
-        fetch('/api/base-stations/certificates/status').then(r => r.json()).catch(() => ({success: false, certificates: []})),
-        fetch('/api/base-stations/storage-meta').then(r => r.json()).catch(() => null)
-    ]).then(([data, certData, storageMeta]) => {
+        fetch(baseStationUrl).then(r => r.json()),
+        fetch(certStatusUrl).then(r => r.json()).catch(() => ({success: false, certificates: []}))
+    ]).then(([data, certData]) => {
         let connected = 0, connecting = 0, offline = 0;
         const allBs = data.base_stations || [];
-        baseStationStorageMeta = storageMeta && storageMeta.success ? storageMeta : null;
 
         const certMap = {};
         if (certData.success) {
@@ -1527,7 +1526,6 @@ function loadBaseStations() {
         document.getElementById('totalOffline').textContent = offline;
 
         refreshBsFilterChips();
-        updateBaseStationStorageMeta();
         renderBaseStationTable();
         maybeOpenBaseStationEditFromQuery();
     }).catch(err => {
@@ -1613,7 +1611,8 @@ function loadUptimeChart() {
     if (!BS_UPTIME_PANEL_ENABLED) return;
 
     const sourceQuery = encodeURIComponent(bsUptimeSource || 'auto');
-    fetch(`/api/base-stations/uptime?source=${sourceQuery}`)
+    const includeDemoQuery = getBaseStationIncludeDemoData() ? '&include_demo=1' : '';
+    fetch(`/api/base-stations/uptime?source=${sourceQuery}${includeDemoQuery}`)
         .then(r => r.json())
         .then(data => {
             const sourceLabel = document.getElementById('uptimeSourceLabel');
@@ -2042,6 +2041,7 @@ if (BS_UPTIME_PANEL_ENABLED) {
 document.addEventListener('DOMContentLoaded', () => {
     loadBsViewPrefs();
     applyBsViewPrefs();
+    document.addEventListener('app:admin-demo-data-changed', () => refreshAll());
     if (BS_UPTIME_PANEL_ENABLED) {
         applyUptimeSourceMode();
         const sourceSelect = document.getElementById('uptimeSourceSelect');

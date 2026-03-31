@@ -2663,6 +2663,17 @@ def _sanitize_tenant_id(value):
         return ""
     return candidate[:64]
 
+
+def _normalize_demo_tenant_flag(value, tenant_id=None):
+    if isinstance(value, bool):
+        explicit = value
+    else:
+        explicit = str(value or "").strip().lower() in {"1", "true", "yes", "on", "demo"}
+    normalized_tenant = _sanitize_tenant_id(tenant_id)
+    if not explicit and normalized_tenant == "test":
+        return True
+    return explicit
+
 def _normalize_tenant_id(value, fallback=None):
     base = _default_tenant_id() if fallback is None else str(fallback or "").strip().lower()
     base = base or _default_tenant_id()
@@ -2691,6 +2702,63 @@ def _tenant_scope_display_description(tenant_id, description=None):
     if _is_reserved_default_tenant(tenant_id):
         return "Reserved global scope for super admin inventory and system-owned data."
     return str(description or "").strip()
+
+
+def _normalize_tenant_registry_entry(entry, fallback_tenant_id=None):
+    if not isinstance(entry, dict):
+        return None
+    tenant_id = _sanitize_tenant_id(entry.get("id") or entry.get("tenant_id") or fallback_tenant_id)
+    if not tenant_id:
+        return None
+    now_iso = datetime.now(timezone.utc).isoformat()
+    return {
+        "id": tenant_id,
+        "name": _tenant_scope_display_name(tenant_id, entry.get("name")),
+        "description": _tenant_scope_display_description(tenant_id, entry.get("description")),
+        "created_at": str(entry.get("created_at") or now_iso),
+        "is_demo": _normalize_demo_tenant_flag(entry.get("is_demo"), tenant_id),
+    }
+
+
+def _demo_tenant_ids() -> set[str]:
+    try:
+        return {
+            tenant_id
+            for tenant_id, entry in _tenant_registry_map().items()
+            if _normalize_demo_tenant_flag((entry or {}).get("is_demo"), tenant_id)
+        }
+    except Exception:
+        return {"test"}
+
+
+def _is_demo_tenant_id(tenant_id) -> bool:
+    return _normalize_tenant_id(tenant_id, fallback=_default_tenant_id()) in _demo_tenant_ids()
+
+
+def _include_demo_data_requested() -> bool:
+    if _is_customer_role(session.get("role", "viewer")):
+        return True
+    return str(request.args.get("include_demo", "") or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _exclude_demo_sensors_for_admin(sensors):
+    if _is_customer_role(session.get("role", "viewer")) or _include_demo_data_requested():
+        return list(sensors or [])
+    return [
+        sensor
+        for sensor in (sensors or [])
+        if not _is_demo_tenant_id(_tenant_id_from_sensor(sensor))
+    ]
+
+
+def _exclude_demo_base_stations_for_admin(base_stations):
+    if _is_customer_role(session.get("role", "viewer")) or _include_demo_data_requested():
+        return dict(base_stations or {})
+    return {
+        eui: payload
+        for eui, payload in (base_stations or {}).items()
+        if not _is_demo_tenant_id(_tenant_id_from_base_station(payload))
+    }
 
 def _is_super_admin(user=None):
     if isinstance(user, dict):
@@ -2959,6 +3027,9 @@ def _serialize_user_for_export(username, user):
     }
     if role == "admin":
         record["admin_permissions"] = _normalize_admin_permissions(user.get("admin_permissions"))
+    ui_preferences = _normalize_user_ui_preferences(user.get("ui_preferences"))
+    if ui_preferences:
+        record["ui_preferences"] = ui_preferences
     return record if record["username"] else None
 
 
@@ -3361,11 +3432,13 @@ def _ensure_timescale_schema(conn):
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
                     description TEXT NOT NULL DEFAULT '',
+                    is_demo BOOLEAN NOT NULL DEFAULT FALSE,
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 )
             """)
             cur.execute("CREATE INDEX IF NOT EXISTS idx_tenant_registry_meta_updated ON tenant_registry_meta (updated_at DESC)")
+            cur.execute("ALTER TABLE tenant_registry_meta ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE")
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS app_users (
                     username TEXT PRIMARY KEY,
@@ -3376,12 +3449,14 @@ def _ensure_timescale_schema(conn):
                     active BOOLEAN NOT NULL DEFAULT TRUE,
                     require_password_change BOOLEAN NOT NULL DEFAULT FALSE,
                     admin_permissions JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    ui_preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 )
             """)
             cur.execute("CREATE INDEX IF NOT EXISTS idx_app_users_role ON app_users (role)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_app_users_tenant ON app_users (tenant_id)")
+            cur.execute("ALTER TABLE app_users ADD COLUMN IF NOT EXISTS ui_preferences JSONB NOT NULL DEFAULT '{}'::jsonb")
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS app_sensors (
                     eui TEXT PRIMARY KEY,
@@ -6641,6 +6716,7 @@ def _build_visible_sensor_lookup(active_tenant: str) -> Dict[str, Dict[str, Any]
         sensors = _load_all_sensors()
     except Exception:
         sensors = []
+    sensors = _exclude_demo_sensors_for_admin(sensors)
     for sensor in sensors or []:
         if not isinstance(sensor, dict):
             continue
@@ -8499,6 +8575,7 @@ def _load_tenant_registry_seed_payload():
                 "id": "test",
                 "name": "Testovaci tenant",
                 "description": "Testovaci tenant so seeded demo senzormi a telemetriou.",
+                "is_demo": True,
                 "created_at": datetime.now(timezone.utc).isoformat(),
             }
         ]
@@ -9010,7 +9087,7 @@ def _load_users_payload_from_db():
         _ensure_timescale_schema(conn)
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT username, password, role, name, tenant_id, active, require_password_change, admin_permissions
+                SELECT username, password, role, name, tenant_id, active, require_password_change, admin_permissions, ui_preferences
                 FROM app_users
                 ORDER BY username ASC
             """)
@@ -9031,6 +9108,9 @@ def _load_users_payload_from_db():
                 admin_permissions = _db_json_value(row[7], {})
                 if isinstance(admin_permissions, dict) and admin_permissions:
                     users[username]["admin_permissions"] = admin_permissions
+                ui_preferences = _normalize_user_ui_preferences(_db_json_value(row[8], {}))
+                if ui_preferences:
+                    users[username]["ui_preferences"] = ui_preferences
 
             cur.execute(
                 "SELECT payload FROM app_config_state WHERE config_key = %s",
@@ -9084,9 +9164,9 @@ def _save_users_payload_to_db(users_data):
                 cur.execute(
                     """
                     INSERT INTO app_users
-                        (username, password, role, name, tenant_id, active, require_password_change, admin_permissions, updated_at)
+                        (username, password, role, name, tenant_id, active, require_password_change, admin_permissions, ui_preferences, updated_at)
                     VALUES
-                        (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, NOW())
+                        (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, NOW())
                     ON CONFLICT (username) DO UPDATE SET
                         password = EXCLUDED.password,
                         role = EXCLUDED.role,
@@ -9095,6 +9175,7 @@ def _save_users_payload_to_db(users_data):
                         active = EXCLUDED.active,
                         require_password_change = EXCLUDED.require_password_change,
                         admin_permissions = EXCLUDED.admin_permissions,
+                        ui_preferences = EXCLUDED.ui_preferences,
                         updated_at = NOW()
                     """,
                     (
@@ -9106,6 +9187,7 @@ def _save_users_payload_to_db(users_data):
                         bool(user.get("active", True)),
                         bool(user.get("require_password_change", False)),
                         json.dumps(user.get("admin_permissions") or {}, separators=(",", ":"), ensure_ascii=True),
+                        json.dumps(_normalize_user_ui_preferences(user.get("ui_preferences")), separators=(",", ":"), ensure_ascii=True),
                     ),
                 )
 
@@ -9149,21 +9231,23 @@ def _load_tenant_registry_from_db():
         _ensure_timescale_schema(conn)
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT id, name, description, created_at
+                SELECT id, name, description, is_demo, created_at
                 FROM tenant_registry_meta
                 ORDER BY id ASC
             """)
             tenants = []
             for row in (cur.fetchall() or []):
-                tenant_id = _sanitize_tenant_id(row[0])
-                if not tenant_id:
-                    continue
-                tenants.append({
-                    "id": tenant_id,
-                    "name": str(row[1] or tenant_id).strip() or tenant_id,
-                    "description": str(row[2] or "").strip(),
-                    "created_at": str(row[3]) if row[3] else datetime.now(timezone.utc).isoformat(),
-                })
+                normalized = _normalize_tenant_registry_entry(
+                    {
+                        "id": row[0],
+                        "name": row[1],
+                        "description": row[2],
+                        "is_demo": row[3],
+                        "created_at": row[4],
+                    }
+                )
+                if normalized:
+                    tenants.append(normalized)
         return {"tenants": tenants}, None
     except Exception as exc:
         return None, str(exc)
@@ -9184,16 +9268,15 @@ def _save_tenant_registry_to_db(registry_data):
         tenants_raw = registry_data.get("tenants", []) if isinstance(registry_data, dict) else []
         normalized_rows = []
         for item in tenants_raw:
-            if not isinstance(item, dict):
-                continue
-            tenant_id = _sanitize_tenant_id(item.get("id") or item.get("tenant_id"))
-            if not tenant_id or _is_reserved_default_tenant(tenant_id):
+            normalized = _normalize_tenant_registry_entry(item)
+            if not normalized or _is_reserved_default_tenant(normalized.get("id")):
                 continue
             normalized_rows.append((
-                tenant_id,
-                str(item.get("name") or tenant_id).strip()[:120] or tenant_id,
-                str(item.get("description") or "").strip()[:240],
-                str(item.get("created_at") or datetime.now(timezone.utc).isoformat()),
+                normalized["id"],
+                str(normalized.get("name") or normalized["id"]).strip()[:120] or normalized["id"],
+                str(normalized.get("description") or "").strip()[:240],
+                bool(normalized.get("is_demo", False)),
+                str(normalized.get("created_at") or datetime.now(timezone.utc).isoformat()),
             ))
 
         desired_ids = {row[0] for row in normalized_rows}
@@ -9210,17 +9293,18 @@ def _save_tenant_registry_to_db(registry_data):
                     "DELETE FROM tenant_registry_meta WHERE id = %s",
                     [(tenant_id,) for tenant_id in stale_ids],
                 )
-            for tenant_id, name, description, created_at in normalized_rows:
+            for tenant_id, name, description, is_demo, created_at in normalized_rows:
                 cur.execute(
                     """
-                    INSERT INTO tenant_registry_meta (id, name, description, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s::timestamptz, NOW())
+                    INSERT INTO tenant_registry_meta (id, name, description, is_demo, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s::timestamptz, NOW())
                     ON CONFLICT (id) DO UPDATE SET
                         name = EXCLUDED.name,
                         description = EXCLUDED.description,
+                        is_demo = EXCLUDED.is_demo,
                         updated_at = NOW()
                     """,
-                    (tenant_id, name, description, created_at),
+                    (tenant_id, name, description, is_demo, created_at),
                 )
                 cur.execute(
                     """
@@ -9739,26 +9823,15 @@ def load_tenant_registry():
 
     normalized_map = {}
     for item in tenants_raw:
-        if not isinstance(item, dict):
+        normalized = _normalize_tenant_registry_entry(item)
+        if not normalized:
             changed = True
             continue
-        tenant_id = _sanitize_tenant_id(item.get("id") or item.get("tenant_id"))
-        if not tenant_id:
-            changed = True
-            continue
+        tenant_id = normalized["id"]
         if tenant_id in normalized_map:
             changed = True
             continue
-        name = str(item.get("name") or tenant_id).strip()
-        name = name[:120] if name else tenant_id
-        description = str(item.get("description") or "").strip()[:240]
-        created_at = str(item.get("created_at") or datetime.now(timezone.utc).isoformat())
-        normalized_map[tenant_id] = {
-            "id": tenant_id,
-            "name": name,
-            "description": description,
-            "created_at": created_at,
-        }
+        normalized_map[tenant_id] = normalized
 
     if default_tenant not in normalized_map:
         normalized_map[default_tenant] = {
@@ -9766,6 +9839,7 @@ def load_tenant_registry():
             "name": "Super admin",
             "description": "Reserved global scope for super admin inventory and system-owned data.",
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "is_demo": False,
         }
         changed = True
 
@@ -9797,20 +9871,12 @@ def _tenant_registry_map():
     registry = load_tenant_registry()
     tenant_map = {}
     for entry in registry.get("tenants", []):
-        if not isinstance(entry, dict):
-            continue
-        tenant_id = _sanitize_tenant_id(entry.get("id"))
-        if not tenant_id:
-            continue
-        tenant_map[tenant_id] = {
-            "id": tenant_id,
-            "name": _tenant_scope_display_name(tenant_id, entry.get("name")),
-            "description": _tenant_scope_display_description(tenant_id, entry.get("description")),
-            "created_at": str(entry.get("created_at") or ""),
-        }
+        normalized = _normalize_tenant_registry_entry(entry)
+        if normalized:
+            tenant_map[normalized["id"]] = normalized
     return tenant_map
 
-def _upsert_tenant_registry_entry(tenant_id, name=None, description=None):
+def _upsert_tenant_registry_entry(tenant_id, name=None, description=None, is_demo=None):
     tenant_id = _sanitize_tenant_id(tenant_id)
     if not tenant_id:
         return False, "Invalid tenant id", None
@@ -9832,6 +9898,7 @@ def _upsert_tenant_registry_entry(tenant_id, name=None, description=None):
             "name": str(name or tenant_id).strip() or tenant_id,
             "description": str(description or "").strip(),
             "created_at": now_iso,
+            "is_demo": _normalize_demo_tenant_flag(is_demo, tenant_id),
         }
     else:
         if name is not None:
@@ -9843,6 +9910,10 @@ def _upsert_tenant_registry_entry(tenant_id, name=None, description=None):
         else:
             existing["description"] = str(existing.get("description") or "").strip()
         existing["created_at"] = str(existing.get("created_at") or now_iso)
+        if is_demo is not None:
+            existing["is_demo"] = _normalize_demo_tenant_flag(is_demo, tenant_id)
+        else:
+            existing["is_demo"] = _normalize_demo_tenant_flag(existing.get("is_demo"), tenant_id)
 
     existing["name"] = existing["name"][:120]
     existing["description"] = existing["description"][:240]
@@ -9946,6 +10017,10 @@ def load_users():
             elif "require_password_change" in user:
                 user.pop("require_password_change", None)
                 changed = True
+            normalized_ui_preferences = _normalize_user_ui_preferences(user.get("ui_preferences"))
+            if user.get("ui_preferences") != normalized_ui_preferences:
+                user["ui_preferences"] = normalized_ui_preferences
+                changed = True
             if normalized_role != "admin" and "bootstrap_password_state" in user:
                 user.pop("bootstrap_password_state", None)
                 changed = True
@@ -10011,6 +10086,7 @@ def get_current_user():
             user['admin_permissions'] = {}
         user['require_password_change'] = bool(user.get('require_password_change'))
         user['active'] = bool(user.get('active', True))
+        user['ui_preferences'] = _normalize_user_ui_preferences(user.get('ui_preferences'))
         user['permissions'] = _resolve_role_permissions(users_data.get('role_permissions', {}), role)
         user['is_super_admin'] = _is_super_admin(user)
         resolved_user = user
@@ -10330,6 +10406,31 @@ def _normalize_admin_audit_entry(entry):
     normalized["details"] = _audit_scrub_value(normalized.get("details") or {})
     normalized["summary"] = str(normalized.get("summary") or _build_admin_audit_summary(normalized["action"], normalized["entity"], normalized["target_id"], normalized["details"])).strip()[:240]
     return normalized
+
+
+def _default_user_ui_preferences():
+    return {
+        "admin_include_demo_data": False,
+    }
+
+
+def _normalize_user_ui_preferences(raw_preferences):
+    defaults = _default_user_ui_preferences()
+    if not isinstance(raw_preferences, dict):
+        return dict(defaults)
+    normalized = dict(defaults)
+    if "admin_include_demo_data" in raw_preferences:
+        normalized["admin_include_demo_data"] = bool(raw_preferences.get("admin_include_demo_data"))
+    return normalized
+
+
+def _merge_user_ui_preferences(existing_preferences, incoming_preferences):
+    merged = _normalize_user_ui_preferences(existing_preferences)
+    if not isinstance(incoming_preferences, dict):
+        return merged
+    if "admin_include_demo_data" in incoming_preferences:
+        merged["admin_include_demo_data"] = bool(incoming_preferences.get("admin_include_demo_data"))
+    return merged
 
 
 def _load_admin_audit_file_entries_payload(limit=None):
@@ -10707,6 +10808,62 @@ def setup_admin_password():
     return render_template('force_password_change.html', error=error)
 
 
+@app.route('/api/me/preferences', methods=['GET', 'PUT'])
+@login_required
+def api_me_preferences():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "message": "Login required"}), 401
+
+    username = str(user.get('username') or session.get('username') or '').strip()
+    if not username:
+        return jsonify({"success": False, "message": "Login required"}), 401
+
+    if request.method == 'GET':
+        return jsonify({
+            "success": True,
+            "ui_preferences": _normalize_user_ui_preferences(user.get('ui_preferences')),
+        })
+
+    body = request.get_json(silent=True) or {}
+    incoming_ui_preferences = body.get('ui_preferences')
+    if not isinstance(incoming_ui_preferences, dict):
+        return jsonify({"success": False, "message": "ui_preferences must be an object"}), 400
+
+    users_data = load_users()
+    user_row = (users_data.get('users', {}) or {}).get(username)
+    if not isinstance(user_row, dict):
+        session.clear()
+        return jsonify({"success": False, "message": "User not found"}), 404
+
+    before_snapshot = _normalize_user_ui_preferences(user_row.get('ui_preferences'))
+    after_snapshot = _merge_user_ui_preferences(before_snapshot, incoming_ui_preferences)
+    user_row['ui_preferences'] = after_snapshot
+
+    if not save_users(users_data):
+        return jsonify({"success": False, "message": "Failed to save user preferences"}), 500
+
+    if has_request_context() and hasattr(g, '_cached_current_user'):
+        cached_user = getattr(g, '_cached_current_user')
+        if isinstance(cached_user, dict):
+            cached_user['ui_preferences'] = dict(after_snapshot)
+            setattr(g, '_cached_current_user', cached_user)
+
+    _record_admin_audit(
+        action='user.preferences.update',
+        entity='user',
+        target_id=username,
+        status='success',
+        details={
+            'changed_fields': _audit_changed_fields(before_snapshot, after_snapshot),
+            'before': before_snapshot,
+            'after': after_snapshot,
+        },
+    )
+
+    return jsonify({"success": True, "ui_preferences": after_snapshot})
+
+
 @app.route('/ui/language/<lang>')
 def set_ui_language(lang):
     normalized = _normalize_app_language(lang)
@@ -10851,6 +11008,7 @@ def api_users():
             'name': data.get('name', username),
             'tenant_id': tenant_id,
             'active': bool(data.get('active', True)),
+            'ui_preferences': _normalize_user_ui_preferences(data.get('ui_preferences')),
         }
         if role == 'admin':
             users_data['users'][username]['admin_permissions'] = _apply_grantable_admin_permissions(
@@ -10892,6 +11050,8 @@ def api_users():
             if username == session.get('username') and not next_active:
                 return jsonify({'success': False, 'error': _ui_text('admin.cannot_deactivate_self', 'You cannot deactivate your own account.')}), 400
             user_row['active'] = next_active
+        if 'ui_preferences' in data:
+            user_row['ui_preferences'] = _merge_user_ui_preferences(user_row.get('ui_preferences'), data.get('ui_preferences'))
         if 'tenant_id' in data or 'role' in data:
             tenant_source = data.get('tenant_id') if 'tenant_id' in data else user_row.get('tenant_id')
             tenant_id = _normalize_user_tenant_for_role(
@@ -11074,6 +11234,7 @@ def import_users_admin():
             'name': str(entry.get('name') or (existing or {}).get('name') or username).strip() or username,
             'tenant_id': tenant_id,
             'active': bool(entry.get('active', (existing or {}).get('active', True))),
+            'ui_preferences': _merge_user_ui_preferences((existing or {}).get('ui_preferences'), entry.get('ui_preferences')),
         }
         if role == 'admin':
             user_row['admin_permissions'] = _apply_grantable_admin_permissions(
@@ -11156,6 +11317,7 @@ def api_tenants():
                     "name": str(existing.get("name") or meta.get("name") or tenant_id).strip() or tenant_id,
                     "description": str(existing.get("description") or meta.get("description") or "").strip(),
                     "created_at": existing.get("created_at") or meta.get("created_at") or "",
+                    "is_demo": _normalize_demo_tenant_flag(existing.get("is_demo"), tenant_id),
                 }
         else:
             db_tenant_meta = {}
@@ -11190,11 +11352,13 @@ def api_tenants():
 
         tenant_name = str(data.get("name") or tenant_id).strip()[:120]
         tenant_description = str(data.get("description") or "").strip()[:240]
+        tenant_is_demo = _normalize_demo_tenant_flag(data.get("is_demo"), tenant_id)
         requested_base_stations = _normalize_base_station_route_list(data.get("base_station_euis", []))
         ok, err, tenant_entry = _upsert_tenant_registry_entry(
             tenant_id=tenant_id,
             name=tenant_name,
             description=tenant_description,
+            is_demo=tenant_is_demo,
         )
         if not ok:
             return jsonify({"success": False, "error": err or "Failed to create tenant"}), 500
@@ -11232,6 +11396,7 @@ def api_tenants():
             details={
                 'name': tenant_name,
                 'description': tenant_description,
+                'is_demo': tenant_is_demo,
                 'base_station_count': len(bs_assignment.get('assigned', [])),
                 'base_stations_assigned': bs_assignment.get('assigned', []),
                 'timescale_synced': bool(timescale_result.get('synced')),
@@ -11255,11 +11420,13 @@ def api_tenants():
 
         tenant_name = str(data.get("name") or tenant_id).strip()[:120]
         tenant_description = str(data.get("description") or "").strip()[:240]
+        tenant_is_demo = _normalize_demo_tenant_flag(data.get("is_demo"), tenant_id)
         requested_base_stations = _normalize_base_station_route_list(data.get("base_station_euis", []))
         ok, err, tenant_entry = _upsert_tenant_registry_entry(
             tenant_id=tenant_id,
             name=tenant_name,
             description=tenant_description,
+            is_demo=tenant_is_demo,
         )
         if not ok:
             return jsonify({"success": False, "error": err or "Failed to update tenant"}), 500
@@ -11297,6 +11464,7 @@ def api_tenants():
             details={
                 'name': tenant_name,
                 'description': tenant_description,
+                'is_demo': tenant_is_demo,
                 'base_station_count': len(bs_assignment.get('assigned', [])),
                 'base_stations_assigned': bs_assignment.get('assigned', []),
                 'base_stations_released': bs_assignment.get('released', []),
@@ -11491,6 +11659,7 @@ def api_tenants():
             "display_name": tenant_name,
             "name": tenant_name,
             "description": tenant_description,
+            "is_demo": _normalize_demo_tenant_flag(registry_entry.get("is_demo"), tenant_id),
             "created_at": created_at,
             "sensor_count": sensor_count,
             "base_station_count": base_station_count,
@@ -11624,6 +11793,7 @@ def import_tenant_metadata():
             tenant_id=tenant_id,
             name=str(entry.get('name') or tenant_id).strip(),
             description=str(entry.get('description') or '').strip(),
+            is_demo=entry.get('is_demo'),
         )
         if not ok:
             skipped.append({'tenant_id': tenant_id, 'reason': err or 'save_failed'})
@@ -12632,6 +12802,7 @@ def get_sensors():
         sensor_status = {}
         try:
             sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
+            sensors = _exclude_demo_sensors_for_admin(sensors)
             print(f"Loaded {len(sensors)} configured sensors for tenant '{active_tenant}'")
                 
             # Initialize sensor status from configured inventory
@@ -13951,10 +14122,19 @@ def api_incidents():
     """Return current operational incidents from sensor state and alert rules."""
     try:
         active_tenant = _active_tenant_id()
-        cached_payload = _get_cached_incident_feed_payload(active_tenant)
+        current_role = _normalize_user_role(session.get('role', 'viewer'))
+        cache_key = active_tenant
+        if not _is_customer_role(current_role):
+            cache_key = f"{active_tenant}:demo:{1 if _include_demo_data_requested() else 0}"
+        cached_payload = _get_cached_incident_feed_payload(cache_key)
         if cached_payload:
             return jsonify(cached_payload)
         incidents = _build_current_incidents(active_tenant)
+        if not _is_customer_role(current_role) and not _include_demo_data_requested():
+            incidents = [
+                item for item in incidents
+                if not _is_demo_tenant_id(item.get('tenant_id') or item.get('active_tenant'))
+            ]
         payload = {
             "success": True,
             "incidents": incidents,
@@ -13964,7 +14144,7 @@ def api_incidents():
                 "warning": sum(1 for item in incidents if item.get("tier") != "error"),
             },
         }
-        _store_cached_incident_feed_payload(active_tenant, payload)
+        _store_cached_incident_feed_payload(cache_key, payload)
         return jsonify(payload)
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc), "incidents": [], "summary": {"total": 0, "critical": 0, "warning": 0}}), 500
@@ -13984,7 +14164,9 @@ def api_alerts_history():
         search_filter = str(request.args.get('q') or '').strip().lower()
 
         # Build sensor name lookup
-        sensors = _filter_sensors_for_tenant(_load_all_sensors(), active_tenant)
+        filter_demo_events = not _is_customer_role(session.get('role', 'viewer')) and not _include_demo_data_requested()
+        sensors = _exclude_demo_sensors_for_admin(_filter_sensors_for_tenant(_load_all_sensors(), active_tenant))
+        visible_sensor_euis = {str(s.get('eui', '')).upper() for s in sensors}
         sensor_names = {str(s.get('eui', '')).upper(): s.get('name') or str(s.get('eui', '')) for s in sensors}
 
         # Build alert rule name lookup
@@ -14025,6 +14207,8 @@ def api_alerts_history():
             }
 
         def _history_event_matches(event: Dict[str, Any]) -> bool:
+            if filter_demo_events and str(event.get('sensor_eui') or '').upper() not in visible_sensor_euis:
+                return False
             if sensor_filter and str(event.get('sensor_eui') or '').upper() != sensor_filter:
                 return False
             if event_filter and str(event.get('event_type') or '').lower() != event_filter:
@@ -16462,6 +16646,7 @@ def _build_base_stations_runtime_payload() -> Dict[str, Any]:
     config = load_base_station_config()
     active_tenant = _active_tenant_id()
     bs_config = _filter_base_stations_for_tenant(config.get("base_stations", {}), tenant_id=active_tenant)
+    bs_config = _exclude_demo_base_stations_for_admin(bs_config)
 
     connected_bs = {}
     connecting_bs = {}
@@ -16735,6 +16920,7 @@ def get_bs_certificates_status():
     try:
         config = load_base_station_config()
         bs_config = _filter_base_stations_for_tenant(config.get("base_stations", {}), tenant_id=_active_tenant_id())
+        bs_config = _exclude_demo_base_stations_for_admin(bs_config)
         result = []
         for eui_key, bs_data in bs_config.items():
             eui_lower = eui_key.lower()
@@ -16778,12 +16964,14 @@ def get_bs_uptime():
     """Get uptime data for all base stations"""
     try:
         active_tenant = _active_tenant_id()
+        base_station_map = _filter_base_stations_for_tenant(
+            load_base_station_config().get("base_stations", {}),
+            tenant_id=active_tenant,
+        )
+        base_station_map = _exclude_demo_base_stations_for_admin(base_station_map)
         allowed_bs = {
             str(eui).strip().upper()
-            for eui in _filter_base_stations_for_tenant(
-                load_base_station_config().get("base_stations", {}),
-                tenant_id=active_tenant,
-            ).keys()
+            for eui in base_station_map.keys()
         }
         requested_source = (request.args.get("source") or bssci_config.TELEMETRY_SOURCE or "auto").strip().lower()
         if requested_source not in {"auto", "runtime", "influx"}:
