@@ -21,7 +21,7 @@ import urllib.error
 import urllib.request
 import ssl
 from datetime import datetime, timezone, timedelta
-from flask import Flask, render_template, request, jsonify, redirect, url_for, Response, session, send_file, has_request_context, make_response
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Response, session, send_file, has_request_context, make_response, g
 from functools import wraps
 from typing import List, Dict, Any, Optional
 import bssci_config
@@ -2885,6 +2885,20 @@ def _prepare_users_payload_for_persistence(users_data):
     return changed
 
 
+def _resolve_bootstrap_password_state(user, bootstrap_admin_password=None):
+    if _normalize_user_role((user or {}).get("role", "viewer")) != "admin":
+        return None
+    explicit = str((user or {}).get("bootstrap_password_state") or "").strip().lower()
+    if explicit in {"pending", "rotated"}:
+        return "pending" if explicit == "pending" or bool((user or {}).get("require_password_change")) else "rotated"
+    if bool((user or {}).get("require_password_change")):
+        return "pending"
+    default_password = str(bootstrap_admin_password or _bootstrap_admin_default_password())
+    if _verify_password_value((user or {}).get("password"), default_password):
+        return "pending"
+    return "rotated"
+
+
 def _maybe_upgrade_legacy_password_after_login(users_data, username, raw_password):
     if not isinstance(users_data, dict):
         return False
@@ -2959,10 +2973,7 @@ def _should_force_initial_admin_password_change(user, bootstrap_admin_password=N
         return False
     if _normalize_user_role((user or {}).get("role", "viewer")) != "admin":
         return False
-    if bool((user or {}).get("require_password_change")):
-        return True
-    default_password = str(bootstrap_admin_password or _bootstrap_admin_default_password())
-    return _verify_password_value((user or {}).get("password"), default_password)
+    return _resolve_bootstrap_password_state(user, bootstrap_admin_password) == "pending"
 
 def _bootstrap_login_account_hints():
     if not bool(getattr(bssci_config, "AUTH_BOOTSTRAP_DEFAULT_USERS", True)):
@@ -9143,10 +9154,14 @@ def load_users():
                 if user.get("admin_permissions") != normalized_admin_permissions:
                     user["admin_permissions"] = normalized_admin_permissions
                     changed = True
-                require_password_change = _should_force_initial_admin_password_change(
+                bootstrap_password_state = _resolve_bootstrap_password_state(
                     user,
                     bootstrap_admin_password=default_admin_password,
                 )
+                if user.get("bootstrap_password_state") != bootstrap_password_state:
+                    user["bootstrap_password_state"] = bootstrap_password_state
+                    changed = True
+                require_password_change = bootstrap_password_state == "pending"
                 if bool(user.get("require_password_change")) != require_password_change:
                     user["require_password_change"] = require_password_change
                     changed = True
@@ -9155,6 +9170,9 @@ def load_users():
                 changed = True
             elif "require_password_change" in user:
                 user.pop("require_password_change", None)
+                changed = True
+            if normalized_role != "admin" and "bootstrap_password_state" in user:
+                user.pop("bootstrap_password_state", None)
                 changed = True
             normalized_tenant = _normalize_user_tenant_for_role(
                 normalized_role,
@@ -9192,8 +9210,12 @@ def get_current_user():
     """Get current logged in user info"""
     if 'username' not in session:
         return None
+    if has_request_context() and hasattr(g, '_cached_current_user'):
+        cached = getattr(g, '_cached_current_user')
+        return copy.deepcopy(cached) if isinstance(cached, dict) else None
     users_data = load_users()
     username = session.get('username')
+    resolved_user = None
     if username in users_data.get('users', {}):
         user = users_data['users'][username].copy()
         user['username'] = username
@@ -9214,8 +9236,10 @@ def get_current_user():
         user['active'] = bool(user.get('active', True))
         user['permissions'] = _resolve_role_permissions(users_data.get('role_permissions', {}), role)
         user['is_super_admin'] = _is_super_admin(user)
-        return user
-    return None
+        resolved_user = user
+    if has_request_context():
+        setattr(g, '_cached_current_user', copy.deepcopy(resolved_user) if isinstance(resolved_user, dict) else None)
+    return resolved_user
 
 def get_user_permissions():
     """Get permissions for current user"""
@@ -9808,6 +9832,7 @@ def setup_admin_password():
                 return redirect(url_for('login'))
             user_row['password'] = new_password
             user_row['require_password_change'] = False
+            user_row['bootstrap_password_state'] = 'rotated'
             if not save_users(users_data):
                 error = _ui_text('auth.password_change_save_failed', 'Nové heslo sa nepodarilo uložiť. Skúste to znova.')
             else:
