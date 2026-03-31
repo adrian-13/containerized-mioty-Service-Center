@@ -1,5 +1,6 @@
 import csv
 import copy
+import secrets
 import io
 import json
 import logging
@@ -28,6 +29,11 @@ try:
     import psycopg
 except Exception:
     psycopg = None
+try:
+    from werkzeug.security import check_password_hash, generate_password_hash
+except Exception:
+    check_password_hash = None
+    generate_password_hash = None
 
 # Global service instance references
 tls_server_instance = None
@@ -2816,6 +2822,80 @@ def _bootstrap_admin_default_password(seed_payload=None):
     admin = users.get("admin", {}) if isinstance(users, dict) else {}
     return str((admin if isinstance(admin, dict) else {}).get("password") or "admin123")
 
+
+def _password_storage_looks_hashed(value):
+    stored = str(value or "").strip()
+    return stored.startswith(("pbkdf2:", "scrypt:", "argon2:"))
+
+
+def _hash_password_value(raw_password):
+    password = str(raw_password or "")
+    if not password:
+        return ""
+    if _password_storage_looks_hashed(password):
+        return password
+    if generate_password_hash is None:
+        return password
+    return generate_password_hash(password, method="pbkdf2:sha256:600000")
+
+
+def _verify_password_value(stored_password, candidate_password):
+    stored = str(stored_password or "")
+    candidate = str(candidate_password or "")
+    if not stored or not candidate:
+        return False
+    if _password_storage_looks_hashed(stored):
+        if check_password_hash is None:
+            return False
+        try:
+            return bool(check_password_hash(stored, candidate))
+        except Exception:
+            return False
+    return secrets.compare_digest(stored, candidate)
+
+
+def _password_needs_storage_upgrade(stored_password):
+    stored = str(stored_password or "").strip()
+    return bool(stored) and not _password_storage_looks_hashed(stored)
+
+
+def _prepare_users_payload_for_persistence(users_data):
+    changed = False
+    if not isinstance(users_data, dict):
+        return changed
+    users_map = users_data.get("users", {})
+    if not isinstance(users_map, dict):
+        return changed
+    for _, user in users_map.items():
+        if not isinstance(user, dict):
+            continue
+        password = str(user.get("password") or "")
+        if not password:
+            continue
+        hashed_password = _hash_password_value(password)
+        if hashed_password and hashed_password != password:
+            user["password"] = hashed_password
+            changed = True
+    return changed
+
+
+def _maybe_upgrade_legacy_password_after_login(users_data, username, raw_password):
+    if not isinstance(users_data, dict):
+        return False
+    users_map = users_data.get("users", {})
+    if not isinstance(users_map, dict):
+        return False
+    user = users_map.get(username)
+    if not isinstance(user, dict):
+        return False
+    stored_password = str(user.get("password") or "")
+    if not _password_needs_storage_upgrade(stored_password):
+        return False
+    if not _verify_password_value(stored_password, raw_password):
+        return False
+    user["password"] = _hash_password_value(raw_password)
+    return bool(save_users(users_data))
+
 def _should_force_initial_admin_password_change(user, bootstrap_admin_password=None):
     if not bool(getattr(bssci_config, "AUTH_FORCE_INITIAL_ADMIN_PASSWORD_CHANGE", True)):
         return False
@@ -2824,7 +2904,7 @@ def _should_force_initial_admin_password_change(user, bootstrap_admin_password=N
     if bool((user or {}).get("require_password_change")):
         return True
     default_password = str(bootstrap_admin_password or _bootstrap_admin_default_password())
-    return str((user or {}).get("password") or "") == default_password
+    return _verify_password_value((user or {}).get("password"), default_password)
 
 def _bootstrap_login_account_hints():
     if not bool(getattr(bssci_config, "AUTH_BOOTSTRAP_DEFAULT_USERS", True)):
@@ -8457,6 +8537,7 @@ def load_users():
 
 def save_users(users_data):
     """Save users to DB-first store with JSON fallback."""
+    _prepare_users_payload_for_persistence(users_data)
     if _db_first_config_enabled():
         ok, err = _save_users_payload_to_db(users_data)
         if ok:
@@ -9040,7 +9121,8 @@ def login():
             _register_login_failure(ip_addr)
             error = _ui_text('login.error.account_disabled', 'This account is disabled.')
             return render_template('login.html', error=error)
-        if user and user.get('password') == password:
+        if user and _verify_password_value(user.get('password'), password):
+            _maybe_upgrade_legacy_password_after_login(users_data, username, password)
             session['username'] = username
             session['role'] = _normalize_user_role(user.get('role', 'viewer'))
             session['tenant_id'] = _normalize_user_tenant_for_role(
