@@ -462,7 +462,10 @@
                 </div>
                 <div class="workspace-panel-body">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                        <small class="text-muted">{{ t('logs.admin_audit_subtitle', 'Who and when changed sensors, base stations, tenants, configuration and MQTT test publish.') }}</small>
+                        <div class="d-flex flex-column gap-1">
+                            <small class="text-muted">{{ t('logs.admin_audit_subtitle', 'Who and when changed sensors, base stations, tenants, configuration and MQTT test publish.') }}</small>
+                            <small class="text-muted" id="auditStorageNote">{{ t('admin.audit_storage_note_default', 'Audit log uses the active storage backend.') }}</small>
+                        </div>
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <button class="btn btn-outline-secondary btn-sm" id="btnRefreshAudit" type="button"><i class="fas fa-sync me-1"></i>{{ t('common.refresh', 'Refresh') }}</button>
                         {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('export_admin_audit') %}
@@ -480,6 +483,14 @@
                             <input id="auditSearchFilter" class="form-control form-control-sm" type="text" placeholder="{{ t('logs.audit_search_placeholder', 'Search action, entity, actor, target...') }}">
                         </div>
                         <div class="logs-control-item">
+                            <label class="form-label" for="auditDateFrom">{{ t('common.from', 'From') }}</label>
+                            <input id="auditDateFrom" class="form-control form-control-sm" type="date">
+                        </div>
+                        <div class="logs-control-item">
+                            <label class="form-label" for="auditDateTo">{{ t('common.to', 'To') }}</label>
+                            <input id="auditDateTo" class="form-control form-control-sm" type="date">
+                        </div>
+                        <div class="logs-control-item">
                             <label class="form-label" for="auditActionFilter">{{ t('common.action', 'Action') }}</label>
                             <select id="auditActionFilter" class="form-select form-select-sm">
                                 <option value="all">{{ t('logs.all_actions', 'All actions') }}</option>
@@ -495,6 +506,28 @@
                             <label class="form-label" for="auditActorFilter">{{ t('common.actor', 'Actor') }}</label>
                             <select id="auditActorFilter" class="form-select form-select-sm">
                                 <option value="all">{{ t('logs.all_actors', 'All actors') }}</option>
+                            </select>
+                        </div>
+                        <div class="logs-control-item">
+                            <label class="form-label" for="auditTargetFilter">{{ t('common.target', 'Target') }}</label>
+                            <input id="auditTargetFilter" class="form-control form-control-sm" type="text" placeholder="sensor_eui / tenant / EUI">
+                        </div>
+                        <div class="logs-control-item">
+                            <label class="form-label" for="auditTenantFilter">{{ t('admin.tenant', 'Tenant') }}</label>
+                            <select id="auditTenantFilter" class="form-select form-select-sm">
+                                <option value="all">{{ t('common.all', 'All') }}</option>
+                            </select>
+                        </div>
+                        <div class="logs-control-item">
+                            <label class="form-label" for="auditSourceFilter">{{ t('common.source', 'Source') }}</label>
+                            <select id="auditSourceFilter" class="form-select form-select-sm">
+                                <option value="all">{{ t('common.all', 'All') }}</option>
+                            </select>
+                        </div>
+                        <div class="logs-control-item">
+                            <label class="form-label" for="auditChangedFieldFilter">{{ t('common.field', 'Field') }}</label>
+                            <select id="auditChangedFieldFilter" class="form-select form-select-sm">
+                                <option value="all">{{ t('common.all', 'All') }}</option>
                             </select>
                         </div>
                         <div class="logs-control-item narrow">
@@ -539,6 +572,7 @@ let refreshInFlight = false;
 let auditRefreshInFlight = false;
 let searchDebounceTimer = null;
 let auditSearchDebounceTimer = null;
+let auditStorageMetaLoaded = false;
 const CAN_VIEW_AUDIT = {{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('view_admin_audit') else 'false' }};
 const CAN_EXPORT_AUDIT = {{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('export_admin_audit') else 'false' }};
 const CAN_CLEAR_AUDIT = {{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('clear_admin_audit') else 'false' }};
@@ -768,23 +802,38 @@ function renderAuditOptions(payload) {
     const actionSelect = document.getElementById('auditActionFilter');
     const entitySelect = document.getElementById('auditEntityFilter');
     const actorSelect = document.getElementById('auditActorFilter');
-    if (!actionSelect || !entitySelect || !actorSelect) return;
+    const tenantSelect = document.getElementById('auditTenantFilter');
+    const sourceSelect = document.getElementById('auditSourceFilter');
+    const changedFieldSelect = document.getElementById('auditChangedFieldFilter');
+    if (!actionSelect || !entitySelect || !actorSelect || !tenantSelect || !sourceSelect || !changedFieldSelect) return;
 
     const actionCurrent = actionSelect.value || 'all';
     const entityCurrent = entitySelect.value || 'all';
     const actorCurrent = actorSelect.value || 'all';
+    const tenantCurrent = tenantSelect.value || 'all';
+    const sourceCurrent = sourceSelect.value || 'all';
+    const changedFieldCurrent = changedFieldSelect.value || 'all';
 
     const actions = Array.isArray(payload && payload.actions) ? payload.actions : [];
     const entities = Array.isArray(payload && payload.entities) ? payload.entities : [];
     const actors = Array.isArray(payload && payload.actors) ? payload.actors : [];
+    const tenants = Array.isArray(payload && payload.tenants) ? payload.tenants : [];
+    const sources = Array.isArray(payload && payload.sources) ? payload.sources : [];
+    const changedFields = Array.isArray(payload && payload.changed_fields) ? payload.changed_fields : [];
 
     actionSelect.innerHTML = [`<option value="all">${appTranslate('logs.all_actions', 'All actions')}</option>`, ...actions.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
     entitySelect.innerHTML = [`<option value="all">${appTranslate('logs.all_entities', 'All entities')}</option>`, ...entities.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
     actorSelect.innerHTML = [`<option value="all">${appTranslate('logs.all_actors', 'All actors')}</option>`, ...actors.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
+    tenantSelect.innerHTML = [`<option value="all">${appTranslate('common.all', 'All')}</option>`, ...tenants.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
+    sourceSelect.innerHTML = [`<option value="all">${appTranslate('common.all', 'All')}</option>`, ...sources.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
+    changedFieldSelect.innerHTML = [`<option value="all">${appTranslate('common.all', 'All')}</option>`, ...changedFields.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
 
     actionSelect.value = ['all', ...actions].includes(actionCurrent) ? actionCurrent : 'all';
     entitySelect.value = ['all', ...entities].includes(entityCurrent) ? entityCurrent : 'all';
     actorSelect.value = ['all', ...actors].includes(actorCurrent) ? actorCurrent : 'all';
+    tenantSelect.value = ['all', ...tenants].includes(tenantCurrent) ? tenantCurrent : 'all';
+    sourceSelect.value = ['all', ...sources].includes(sourceCurrent) ? sourceCurrent : 'all';
+    changedFieldSelect.value = ['all', ...changedFields].includes(changedFieldCurrent) ? changedFieldCurrent : 'all';
 }
 
 function renderAuditStats(payload) {
@@ -798,6 +847,7 @@ function renderAuditStats(payload) {
     const filtered = Number((payload && payload.filtered_total) || 0);
     const shown = Number((payload && payload.shown) || 0);
     const counts = (payload && payload.status_counts) || {};
+    const kpis = (payload && payload.kpis) || {};
 
     updated.textContent = `${appTranslate('common.updated', 'Updated')} ${getNowStamp()}`;
     text.textContent = `${appTranslate('common.source', 'Source')}: ${escapeHtml((payload && payload.source) || appTranslate('logs.memory_source', 'memory'))}`;
@@ -805,11 +855,45 @@ function renderAuditStats(payload) {
         <span class="log-chip">${appTranslate('common.total', 'Total')} ${total}</span>
         <span class="log-chip">${appTranslate('common.filtered', 'Filtered')} ${filtered}</span>
         <span class="log-chip">${appTranslate('common.shown', 'Shown')} ${shown}</span>
+        <span class="log-chip">${appTranslate('common.targets', 'Targets')} ${Number(kpis.targets || 0)}</span>
+        <span class="log-chip">${appTranslate('common.actors', 'Actors')} ${Number(kpis.actors || 0)}</span>
+        <span class="log-chip">${appTranslate('admin.tenants', 'Tenants')} ${Number(kpis.tenants || 0)}</span>
+        <span class="log-chip">${appTranslate('common.last_24h', 'Last 24h')} ${Number(kpis.recent_24h || 0)}</span>
         <span class="log-chip">${appTranslate('common.success', 'Success')} ${Number(counts.success || 0)}</span>
         <span class="log-chip warning">${appTranslate('common.warning', 'Warning')} ${Number(counts.warning || 0)}</span>
         <span class="log-chip critical">${appTranslate('common.error', 'Error')} ${Number(counts.error || 0)}</span>
     `;
     updateTabBadge('adminAuditCountBadge', filtered);
+}
+
+function renderAuditStorageMeta(meta) {
+    const note = document.getElementById('auditStorageNote');
+    if (!note) return;
+    const backend = String(meta?.backend || 'memory');
+    const recoveryFile = String(meta?.recovery_file || '').trim();
+    const bootstrap = meta?.bootstrap_state || {};
+    const seedSource = String(bootstrap?.seed_source || '').trim();
+    const runtimeTotal = Number(meta?.runtime_total || 0);
+    const parts = [
+        `${appTranslate('common.source', 'Source')}: ${backend.toUpperCase()}`,
+        `${appTranslate('common.total', 'Total')}: ${runtimeTotal}`
+    ];
+    if (seedSource) parts.push(`Bootstrap: ${seedSource}`);
+    if (recoveryFile) parts.push(`Recovery: ${recoveryFile}`);
+    note.textContent = parts.join(' · ');
+}
+
+async function ensureAuditStorageMeta() {
+    if (!CAN_VIEW_AUDIT || auditStorageMetaLoaded) return;
+    try {
+        const response = await fetch('/api/audit/storage-meta');
+        const payload = await response.json();
+        if (!response.ok || !payload.success) return;
+        renderAuditStorageMeta(payload.storage_backend || {});
+        auditStorageMetaLoaded = true;
+    } catch (error) {
+        // Keep default note on failure.
+    }
 }
 
 function renderAuditLogs(entries, query) {
@@ -837,7 +921,7 @@ function renderAuditLogs(entries, query) {
         const path = escapeHtml(item && item.path ? item.path : '');
         const detailsRaw = JSON.stringify((item && item.details) || {}, null, 2);
         const details = highlightMatch(detailsRaw, query);
-        const summary = highlightMatch(`${action} ${entity} ${target}`.trim(), query);
+        const summary = highlightMatch((item && item.summary ? item.summary : `${action} ${entity} ${target}`.trim()), query);
         return `
             <article class="audit-line status-${safeStatus}">
                 <div class="log-meta">
@@ -876,6 +960,12 @@ function collectAuditFilters() {
         action: document.getElementById('auditActionFilter').value,
         entity: document.getElementById('auditEntityFilter').value,
         actor: document.getElementById('auditActorFilter').value,
+        target_id: document.getElementById('auditTargetFilter').value.trim(),
+        date_from: document.getElementById('auditDateFrom').value,
+        date_to: document.getElementById('auditDateTo').value,
+        tenant: document.getElementById('auditTenantFilter').value,
+        source: document.getElementById('auditSourceFilter').value,
+        changed_field: document.getElementById('auditChangedFieldFilter').value,
         status: document.getElementById('auditStatusFilter').value,
         limit: document.getElementById('auditLimitFilter').value,
         q: document.getElementById('auditSearchFilter').value.trim(),
@@ -933,6 +1023,7 @@ async function refreshAuditLogs() {
     if (!CAN_VIEW_AUDIT || auditRefreshInFlight) return;
     auditRefreshInFlight = true;
     try {
+        await ensureAuditStorageMeta();
         const params = new URLSearchParams(collectAuditFilters());
         const response = await fetch(`/api/audit/logs?${params.toString()}`);
         const payload = await response.json();
@@ -1164,8 +1255,15 @@ function bindEvents() {
         if (CAN_CLEAR_AUDIT) {
             document.getElementById('btnClearAudit')?.addEventListener('click', clearAuditLogs);
         }
-        ['auditActionFilter', 'auditEntityFilter', 'auditActorFilter', 'auditStatusFilter', 'auditLimitFilter'].forEach(id => {
+        ['auditActionFilter', 'auditEntityFilter', 'auditActorFilter', 'auditTenantFilter', 'auditSourceFilter', 'auditChangedFieldFilter', 'auditStatusFilter', 'auditLimitFilter'].forEach(id => {
             document.getElementById(id)?.addEventListener('change', refreshAuditLogs);
+        });
+        ['auditDateFrom', 'auditDateTo'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', refreshAuditLogs);
+        });
+        document.getElementById('auditTargetFilter')?.addEventListener('input', () => {
+            if (auditSearchDebounceTimer) clearTimeout(auditSearchDebounceTimer);
+            auditSearchDebounceTimer = setTimeout(refreshAuditLogs, 220);
         });
         document.getElementById('auditSearchFilter')?.addEventListener('input', () => {
             if (auditSearchDebounceTimer) clearTimeout(auditSearchDebounceTimer);

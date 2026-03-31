@@ -148,6 +148,13 @@
     border-radius:999px; padding:.01rem .24rem;
 }
 .ap-chip.is-active .ap-chip-n { background:rgba(var(--brand-rgb),.12); color:var(--brand-600); }
+.ap-toolbar-spacer { flex:1 1 auto; }
+.ap-storage-meta {
+    display:flex; align-items:center; gap:.4rem;
+    font-size:.67rem; font-weight:700; color:var(--text-500);
+    white-space:nowrap;
+}
+.ap-storage-meta i { color:var(--brand-500); opacity:.9; }
 
 /* ── Alert rows (triggered) ── */
 .ap-alerts { display:flex; flex-direction:column; flex:1; }
@@ -572,6 +579,15 @@
           <button type="button" class="ap-chip" data-rule-filter="critical">Kritické<span class="ap-chip-n" id="alpRuleCountCritical">0</span></button>
         </div>
       </div>
+      {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('manage_tenants') %}
+      <div class="ap-toolbar" style="padding-top:0;padding-bottom:.5rem;border-top:1px solid rgba(var(--brand-rgb),.04);">
+        <div class="ap-toolbar-spacer"></div>
+        <div class="ap-storage-meta" id="alpStorageMeta" title=""></div>
+        <input type="file" id="alpImportFile" accept=".json,application/json" hidden>
+        <button type="button" class="ap-chip" id="alpImportBtn"><i class="fas fa-upload"></i> Import</button>
+        <button type="button" class="ap-chip" id="alpExportBtn"><i class="fas fa-download"></i> Export</button>
+      </div>
+      {% endif %}
       <div id="alpRulesBody">
         <div class="ap-empty">
           <div class="ap-empty-ico"><i class="fas fa-spinner fa-spin"></i></div>
@@ -618,6 +634,8 @@
 <script>
 (function(){
 var CAN_MANAGE_ALERTS={{ user_permissions.get('can_manage_alerts', False)|tojson }};
+var ALERTS_IS_ADMIN={{ 'true' if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('manage_tenants') else 'false' }};
+var _alertsStorageMeta=null;
 
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -1010,9 +1028,49 @@ async function loadTriggered(){
 }
 
 /* ── Rules ── */
+function updateAlertsStorageMeta(){
+    var metaEl=document.getElementById('alpStorageMeta');
+    if(!metaEl)return;
+    if(!_alertsStorageMeta||typeof _alertsStorageMeta!=='object'){
+        metaEl.textContent='';
+        metaEl.removeAttribute('title');
+        return;
+    }
+    var backend=String(_alertsStorageMeta.storage_backend||'').toLowerCase()==='db'?'Databáza':'Recovery súbor';
+    var seeded=_alertsStorageMeta.bootstrap_state&&_alertsStorageMeta.bootstrap_state.seeded?'bootstrap':'live';
+    metaEl.innerHTML='<i class="fas fa-database"></i><span>'+backend+' · '+seeded+'</span>';
+    metaEl.title='Seed: '+String(_alertsStorageMeta.seed_defaults_file||'')+' | Recovery: '+String(_alertsStorageMeta.recovery_file||'');
+}
 async function loadRules(){
-    try{var r=await fetch('/api/alerts');var d=await r.json();_allRules=d.alerts||[];}catch(e){_allRules=[];}
+    try{
+        var requests=[fetch('/api/alerts').then(function(r){return r.json();})];
+        if(ALERTS_IS_ADMIN){
+            requests.push(fetch('/api/alerts/storage-meta').then(function(r){return r.json();}).catch(function(){return null;}));
+        }
+        var results=await Promise.all(requests);
+        var d=results[0]||{};
+        _allRules=d.alerts||[];
+        _alertsStorageMeta=ALERTS_IS_ADMIN&&results[1]&&results[1].success?results[1]:null;
+        updateAlertsStorageMeta();
+    }catch(e){_allRules=[];_alertsStorageMeta=null;updateAlertsStorageMeta();}
     renderRules();
+}
+function exportAlertRules(){window.location.href='/api/alerts/export';}
+function importAlertRules(input){
+    if(!input||!input.files||!input.files.length)return;
+    var formData=new FormData();
+    formData.append('file',input.files[0]);
+    fetch('/api/alerts/import',{method:'POST',body:formData})
+        .then(async function(response){
+            var data=await response.json().catch(function(){return {};});
+            if(!response.ok||data.success===false)throw new Error(data.message||data.error||('Request failed ('+response.status+')'));
+            apToast('Import pravidiel je hotový.','success');
+            return Promise.all([loadRules(),loadTriggered(),loadHistory()]);
+        })
+        .catch(function(error){
+            apToast('Import pravidiel zlyhal: '+(error.message||'neznáma chyba'),'error');
+        })
+        .finally(function(){input.value='';});
 }
 function renderRules(){
     var body=document.getElementById('alpRulesBody');if(!body)return;
@@ -1276,6 +1334,12 @@ document.querySelectorAll('[data-rule-filter]').forEach(function(btn){
 
 var addBtn=document.getElementById('alpAddBtn');
 if(addBtn)addBtn.onclick=function(){switchTab('rules');openModal(_filterEui||'');};
+var importBtn=document.getElementById('alpImportBtn');
+var importFile=document.getElementById('alpImportFile');
+var exportBtn=document.getElementById('alpExportBtn');
+if(importBtn&&importFile)importBtn.onclick=function(){importFile.click();};
+if(importFile)importFile.addEventListener('change',function(){importAlertRules(importFile);});
+if(exportBtn)exportBtn.onclick=function(){exportAlertRules();};
 
 /* ── History ── */
 function fmtTs(iso){

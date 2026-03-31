@@ -218,7 +218,7 @@
 
   function renderAudit(entries) {
     if (!entries?.length) return `<div class="bs-empty-state">{{ t('base_station_detail.no_audit_yet', 'No audit entries for this base station yet.') }}</div>`;
-    return `<div class="bs-audit-list">${entries.map((entry) => { const actor = entry.actor_username || entry.actor || 'system'; const timestamp = entry.ts || entry.timestamp || entry.created_at; const meta = [actor, entry.category || 'admin', timestamp ? formatDateTime(timestamp) : null].filter(Boolean); return `<article class="bs-audit-entry"><div class="bs-audit-entry-head"><div class="bs-audit-entry-action">${escapeHtml(entry.action || 'unknown_action')}</div><div class="bs-audit-entry-meta">${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}</div></div><p class="bs-audit-entry-summary">${escapeHtml(summarizeAuditDetails(entry))}</p></article>`; }).join('')}</div>`;
+    return `<div class="bs-audit-list">${entries.map((entry) => { const actor = entry.actor_username || entry.actor || 'system'; const timestamp = entry.ts || entry.timestamp || entry.created_at; const meta = [actor, entry.active_tenant || '', entry.source || '', timestamp ? formatDateTime(timestamp) : null].filter(Boolean); return `<article class="bs-audit-entry"><div class="bs-audit-entry-head"><div class="bs-audit-entry-action">${escapeHtml(entry.action || 'unknown_action')}</div><div class="bs-audit-entry-meta">${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}</div></div><p class="bs-audit-entry-summary">${escapeHtml(entry.summary || summarizeAuditDetails(entry))}</p></article>`; }).join('')}</div>`;
   }
 
   async function ensureAuditLoaded() {

@@ -81,6 +81,12 @@ _CUSTOMER_DASHBOARD_RUNTIME_CACHE_TTL_SECONDS = 10.0
 _incident_feed_cache_lock = threading.Lock()
 _incident_feed_cache = {}
 _INCIDENT_FEED_CACHE_TTL_SECONDS = 5.0
+_alert_runtime_state_cache_lock = threading.Lock()
+_alert_runtime_state_cache = {}
+_ALERT_RUNTIME_STATE_CACHE_TTL_SECONDS = 5.0
+_alert_history_cache_lock = threading.Lock()
+_alert_history_cache = {}
+_ALERT_HISTORY_CACHE_TTL_SECONDS = 5.0
 _admin_users_cache_lock = threading.Lock()
 _admin_users_cache = {}
 _ADMIN_USERS_CACHE_TTL_SECONDS = 5.0
@@ -2796,6 +2802,9 @@ def _is_customer_blocked_api_path(path: str) -> bool:
         "/api/sensors/export",
         "/api/sensors/import",
         "/api/sensors/telemetry/history/export",
+        "/api/alerts/storage-meta",
+        "/api/alerts/export",
+        "/api/alerts/import",
         "/api/alerts/triggered",
         "/api/vm/status",
         "/api/traffic/metrics",
@@ -3405,6 +3414,7 @@ def _ensure_timescale_schema(conn):
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS admin_audit_log (
                     ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    audit_id TEXT,
                     action TEXT NOT NULL,
                     entity TEXT NOT NULL,
                     target_id TEXT NOT NULL DEFAULT '',
@@ -3417,10 +3427,16 @@ def _ensure_timescale_schema(conn):
                     path TEXT NOT NULL DEFAULT '',
                     ip TEXT NOT NULL DEFAULT '',
                     user_agent TEXT NOT NULL DEFAULT '',
+                    source TEXT NOT NULL DEFAULT 'service_center_ui',
+                    summary TEXT NOT NULL DEFAULT '',
                     details JSONB NOT NULL DEFAULT '{}'::jsonb
                 )
             """)
+            cur.execute("ALTER TABLE admin_audit_log ADD COLUMN IF NOT EXISTS audit_id TEXT")
+            cur.execute("ALTER TABLE admin_audit_log ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'service_center_ui'")
+            cur.execute("ALTER TABLE admin_audit_log ADD COLUMN IF NOT EXISTS summary TEXT NOT NULL DEFAULT ''")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_log_ts ON admin_audit_log (ts DESC)")
+            cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_audit_log_audit_id ON admin_audit_log (audit_id) WHERE audit_id IS NOT NULL")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_log_action_ts ON admin_audit_log (action, ts DESC)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_log_actor_ts ON admin_audit_log (actor, ts DESC)")
             cur.execute("""
@@ -5359,6 +5375,23 @@ def _sensor_audit_snapshot(sensor: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def _alert_audit_snapshot(alert: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    alert = dict(alert or {})
+    return {
+        "id": str(alert.get("id") or "").strip(),
+        "tenant_id": _normalize_tenant_id(alert.get("tenant_id"), fallback=_default_tenant_id()),
+        "sensor_eui": _normalize_eui_upper(alert.get("sensor_eui")),
+        "kind": _normalize_alert_kind(alert.get("kind")),
+        "name": str(alert.get("name") or "").strip(),
+        "metric": str(alert.get("metric") or "").strip(),
+        "condition": str(alert.get("condition") or "").strip(),
+        "threshold": alert.get("threshold"),
+        "severity": str(alert.get("severity") or "warning").strip().lower(),
+        "enabled": bool(alert.get("enabled", True)),
+        "created_at": str(alert.get("created_at") or "").strip(),
+    }
+
+
 def _base_station_audit_snapshot(eui: Any, base_station: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     base_station = dict(base_station or {})
     return {
@@ -5510,6 +5543,22 @@ def _invalidate_incident_feed_cache(tenant_id: Optional[str] = None):
             return
         _incident_feed_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
 
+
+def _invalidate_alert_runtime_cache(tenant_id: Optional[str] = None):
+    if tenant_id is None:
+        with _alert_runtime_state_cache_lock:
+            _alert_runtime_state_cache.clear()
+        with _alert_history_cache_lock:
+            _alert_history_cache.clear()
+        return
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _alert_runtime_state_cache_lock:
+        _alert_runtime_state_cache.pop(tenant_key, None)
+    with _alert_history_cache_lock:
+        stale_keys = [key for key in _alert_history_cache.keys() if str(key).startswith(tenant_key + "|")]
+        for key in stale_keys:
+            _alert_history_cache.pop(key, None)
+
 def _get_cached_incident_feed_payload(tenant_id: str):
     tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
     with _incident_feed_cache_lock:
@@ -5597,6 +5646,30 @@ def _load_alerts_from_file() -> list:
 def _save_alerts_to_file(alerts: list) -> None:
     with open(_ALERTS_FILE, "w", encoding="utf-8") as f:
         json.dump(list(alerts or []), f, indent=4, ensure_ascii=False)
+
+
+def _load_alerts_file_payload() -> list:
+    try:
+        with open(ALERTS_RECOVERY_FILE, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+        return payload if isinstance(payload, list) else []
+    except FileNotFoundError:
+        return []
+    except Exception as exc:
+        logger.warning("Failed to read %s for DB migration seed: %s", ALERTS_RECOVERY_FILE, exc)
+        return []
+
+
+def _load_default_alert_seed_payload() -> list:
+    try:
+        with open(ALERTS_SEED_FILE, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+        return payload if isinstance(payload, list) else []
+    except FileNotFoundError:
+        return []
+    except Exception as exc:
+        logger.warning("Failed to read alert seed '%s': %s", ALERTS_SEED_FILE, exc)
+        return []
 
 def _resolve_alert_tenant_id(alert: Optional[Dict[str, Any]]) -> str:
     if isinstance(alert, dict) and str(alert.get("tenant_id") or "").strip():
@@ -5748,12 +5821,85 @@ def _migrate_alerts_file_to_db(conn) -> None:
     except Exception:
         return
 
+
+def _bootstrap_alerts_store_if_needed():
+    if not _db_first_config_enabled():
+        return {"used": False, "source": "json", "seeded": False}
+    conn, err = _timescale_connect()
+    if conn is None:
+        return {"used": False, "source": "json-fallback", "seeded": False, "error": err}
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM alert_rules")
+            row = cur.fetchone()
+            existing_count = int((row or [0])[0] or 0)
+        if existing_count > 0:
+            state, state_err = _load_app_config_state_value_from_db(_ALERTS_BOOTSTRAP_STATE_KEY, {})
+            if not isinstance(state, dict) or not state:
+                state_payload = {
+                    "seeded_at": datetime.now(timezone.utc).isoformat(),
+                    "seed_source": "preexisting_db",
+                    "seeded": False,
+                }
+                _save_app_config_state_value_to_db(_ALERTS_BOOTSTRAP_STATE_KEY, state_payload)
+                state = state_payload
+            return {"used": False, "source": "db", "seeded": False, "state": state, "error": state_err or err}
+
+        seed_payload = _load_alerts_file_payload()
+        seed_source = ALERTS_RECOVERY_FILE
+        if not seed_payload:
+            seed_payload = _load_default_alert_seed_payload()
+            seed_source = ALERTS_SEED_FILE if seed_payload else "empty_seed"
+        ok = False
+        save_err = None
+        try:
+            _save_alerts_to_db(conn, seed_payload)
+            ok = True
+        except Exception as exc:
+            save_err = str(exc)
+        if ok:
+            state_payload = {
+                "seeded_at": datetime.now(timezone.utc).isoformat(),
+                "seed_source": seed_source,
+                "seeded": bool(seed_payload),
+            }
+            _save_app_config_state_value_to_db(_ALERTS_BOOTSTRAP_STATE_KEY, state_payload)
+            return {"used": True, "source": seed_source, "seeded": bool(seed_payload), "state": state_payload}
+        return {"used": False, "source": "json-fallback", "seeded": False, "error": save_err or err}
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _alerts_storage_backend_meta():
+    if not _db_first_config_enabled():
+        return {
+            "backend": "json",
+            "db_enabled": False,
+            "bootstrap_state": {},
+            "seed_defaults_file": ALERTS_SEED_FILE,
+            "recovery_file": ALERTS_RECOVERY_FILE,
+        }
+    state, err = _load_app_config_state_value_from_db(_ALERTS_BOOTSTRAP_STATE_KEY, {})
+    return {
+        "backend": "db",
+        "db_enabled": True,
+        "bootstrap_state": state if isinstance(state, dict) else {},
+        "bootstrap_error": err or "",
+        "seed_defaults_file": ALERTS_SEED_FILE,
+        "recovery_file": ALERTS_RECOVERY_FILE,
+    }
+
+
 def _load_alerts() -> list:
     conn = None
     try:
         conn, err = _timescale_connect()
         if conn is not None:
-            _migrate_alerts_file_to_db(conn)
+            _bootstrap_alerts_store_if_needed()
             return _load_alerts_from_db(conn)
     except Exception:
         pass
@@ -5793,7 +5939,10 @@ def _save_alerts(alerts: list) -> None:
             except Exception:
                 pass
         _save_alerts_to_file(normalized_alerts)
+    _invalidate_alert_runtime_cache()
+    _invalidate_customer_dashboard_cache()
     _invalidate_incident_feed_cache()
+    _invalidate_admin_management_cache()
 
 _ALERT_EVENTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alert_events.json")
 _ALERT_STATE_FILE  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alert_state.json")
@@ -5836,6 +5985,269 @@ def _save_alert_state_file(state: dict) -> None:
                 json.dump(state, f, indent=2, ensure_ascii=False)
         except Exception:
             pass
+
+
+def _migrate_alert_runtime_files_to_db(conn) -> None:
+    _ensure_timescale_schema(conn)
+    with conn.cursor() as cur:
+        cur.execute("SELECT COUNT(*) FROM alert_events")
+        events_count_row = cur.fetchone()
+        events_count = int((events_count_row or [0])[0] or 0)
+        cur.execute("SELECT COUNT(*) FROM alert_state_current")
+        state_count_row = cur.fetchone()
+        state_count = int((state_count_row or [0])[0] or 0)
+
+    if events_count <= 0:
+        legacy_events = _load_alert_events_file()
+        rows = []
+        for event in legacy_events or []:
+            if not isinstance(event, dict):
+                continue
+            tenant_id = _normalize_tenant_id(event.get("tenant_id"), fallback=_default_tenant_id())
+            alert_id = str(event.get("alert_id") or event.get("id") or "").strip()
+            sensor_eui = _normalize_eui_upper(event.get("sensor_eui") or event.get("eui"))
+            event_type = str(event.get("event_type") or "").strip().lower()
+            if not alert_id or not sensor_eui or event_type not in {"triggered", "resolved"}:
+                continue
+            payload = dict(event)
+            ts_value = _iso_timestamp_value(event.get("ts")) or datetime.now(timezone.utc).isoformat()
+            severity = "critical" if str(event.get("severity") or "").strip().lower() == "critical" else "warning"
+            rows.append((ts_value, tenant_id, alert_id, sensor_eui, event_type, severity, json.dumps(payload, separators=(",", ":"), ensure_ascii=True)))
+        if rows:
+            with conn.cursor() as cur:
+                cur.executemany(
+                    """
+                    INSERT INTO alert_events
+                        (ts, tenant_id, alert_id, sensor_eui, event_type, severity, payload)
+                    VALUES
+                        (%s::timestamptz, %s, %s, %s, %s, %s, %s::jsonb)
+                    """,
+                    rows,
+                )
+
+    if state_count <= 0:
+        legacy_state = _load_alert_state_file()
+        rows = []
+        for state_key, state_value in (legacy_state or {}).items():
+            if not isinstance(state_value, dict):
+                continue
+            tenant_part = ""
+            alert_part = ""
+            if isinstance(state_key, str) and "::" in state_key:
+                tenant_part, alert_part = state_key.split("::", 1)
+            payload = dict(state_value.get("payload") or {})
+            tenant_id = _normalize_tenant_id(state_value.get("tenant_id") or tenant_part, fallback=_default_tenant_id())
+            alert_id = str(state_value.get("alert_id") or alert_part or payload.get("id") or "").strip()
+            sensor_eui = _normalize_eui_upper(state_value.get("sensor_eui") or payload.get("sensor_eui"))
+            if not alert_id or not sensor_eui:
+                continue
+            is_active = bool(state_value.get("is_active", False))
+            severity = "critical" if str(payload.get("severity") or state_value.get("severity") or "").strip().lower() == "critical" else "warning"
+            last_triggered_at = _iso_timestamp_value(state_value.get("triggered_at") or state_value.get("last_triggered_at"))
+            last_resolved_at = _iso_timestamp_value(state_value.get("resolved_at") or state_value.get("last_resolved_at"))
+            rows.append((
+                tenant_id,
+                alert_id,
+                sensor_eui,
+                is_active,
+                severity,
+                json.dumps(payload, separators=(",", ":"), ensure_ascii=True),
+                last_triggered_at,
+                last_resolved_at,
+            ))
+        if rows:
+            with conn.cursor() as cur:
+                cur.executemany(
+                    """
+                    INSERT INTO alert_state_current
+                        (tenant_id, alert_id, sensor_eui, is_active, severity, payload, last_triggered_at, last_resolved_at, updated_at)
+                    VALUES
+                        (%s, %s, %s, %s, %s, %s::jsonb, %s::timestamptz, %s::timestamptz, NOW())
+                    ON CONFLICT (tenant_id, alert_id) DO NOTHING
+                    """,
+                    rows,
+                )
+
+
+def _bootstrap_alert_runtime_store_if_needed():
+    if not _db_first_config_enabled():
+        return {"used": False, "source": "json", "seeded": False}
+    conn, err = _timescale_connect()
+    if conn is None:
+        return {"used": False, "source": "json-fallback", "seeded": False, "error": err}
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM alert_events")
+            events_count_row = cur.fetchone()
+            events_count = int((events_count_row or [0])[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM alert_state_current")
+            state_count_row = cur.fetchone()
+            state_count = int((state_count_row or [0])[0] or 0)
+        if events_count > 0 or state_count > 0:
+            state, state_err = _load_app_config_state_value_from_db(_ALERT_RUNTIME_BOOTSTRAP_STATE_KEY, {})
+            if not isinstance(state, dict) or not state:
+                state_payload = {
+                    "seeded_at": datetime.now(timezone.utc).isoformat(),
+                    "seed_source": "preexisting_db",
+                    "seeded": False,
+                }
+                _save_app_config_state_value_to_db(_ALERT_RUNTIME_BOOTSTRAP_STATE_KEY, state_payload)
+                state = state_payload
+            return {"used": False, "source": "db", "seeded": False, "state": state, "error": state_err or err}
+        _migrate_alert_runtime_files_to_db(conn)
+        state_payload = {
+            "seeded_at": datetime.now(timezone.utc).isoformat(),
+            "seed_source": "alert_events.json + alert_state.json",
+            "seeded": True,
+        }
+        _save_app_config_state_value_to_db(_ALERT_RUNTIME_BOOTSTRAP_STATE_KEY, state_payload)
+        return {"used": True, "source": "alert_runtime_files", "seeded": True, "state": state_payload}
+    except Exception as exc:
+        return {"used": False, "source": "json-fallback", "seeded": False, "error": str(exc) or err}
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _load_alert_history_events(active_tenant: str, fetch_limit: int = 500) -> list[tuple[Any, Any, Any, Any, Any, Any]]:
+    tenant_key = _normalize_tenant_id(active_tenant, fallback=_default_tenant_id())
+    cache_key = f"{tenant_key}|{int(fetch_limit or 500)}"
+    cached_rows = _get_ttl_cached_payload(
+        _alert_history_cache,
+        _alert_history_cache_lock,
+        cache_key,
+        _ALERT_HISTORY_CACHE_TTL_SECONDS,
+    )
+    if isinstance(cached_rows, list):
+        return cached_rows
+    conn = None
+    try:
+        conn, err = _timescale_connect()
+        if conn is not None:
+            _bootstrap_alert_runtime_store_if_needed()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT ts, alert_id, sensor_eui, event_type, severity, payload
+                    FROM alert_events
+                    WHERE tenant_id = %s
+                    ORDER BY ts DESC
+                    LIMIT %s
+                    """,
+                    (tenant_key, int(fetch_limit or 500)),
+                )
+                rows = cur.fetchall() or []
+                _store_ttl_cached_payload(_alert_history_cache, _alert_history_cache_lock, cache_key, rows)
+                return rows
+    except Exception:
+        pass
+    finally:
+        try:
+            if conn is not None:
+                conn.close()
+        except Exception:
+            pass
+    fallback_rows = []
+    for event in sorted(_load_alert_events_file(), key=lambda x: x.get('ts', ''), reverse=True)[:fetch_limit]:
+        if not isinstance(event, dict):
+            continue
+        if not _tenant_matches(_normalize_tenant_id(event.get("tenant_id"), fallback=_default_tenant_id()), active_tenant):
+            continue
+        fallback_rows.append((
+            event.get('ts', ''),
+            event.get('alert_id', ''),
+            event.get('sensor_eui', ''),
+            event.get('event_type', ''),
+            event.get('severity', 'warning'),
+            event,
+        ))
+    _store_ttl_cached_payload(_alert_history_cache, _alert_history_cache_lock, cache_key, fallback_rows)
+    return fallback_rows
+
+
+def _load_alert_runtime_state(active_tenant: str) -> Dict[tuple[str, str], Dict[str, Any]]:
+    normalized_tenant = _normalize_tenant_id(active_tenant, fallback=_default_tenant_id())
+    cached_state = _get_ttl_cached_payload(
+        _alert_runtime_state_cache,
+        _alert_runtime_state_cache_lock,
+        normalized_tenant,
+        _ALERT_RUNTIME_STATE_CACHE_TTL_SECONDS,
+    )
+    if isinstance(cached_state, dict):
+        return cached_state
+    conn = None
+    try:
+        conn, err = _timescale_connect()
+        if conn is not None:
+            _bootstrap_alert_runtime_store_if_needed()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT tenant_id, alert_id, sensor_eui, is_active, severity, payload, last_triggered_at, last_resolved_at, updated_at
+                    FROM alert_state_current
+                    WHERE tenant_id = %s
+                    """,
+                    (normalized_tenant,),
+                )
+                rows = cur.fetchall() or []
+            result: Dict[tuple[str, str], Dict[str, Any]] = {}
+            for tenant_id, alert_id, sensor_eui, is_active, severity, payload, last_triggered_at, last_resolved_at, updated_at in rows:
+                key = (str(tenant_id), str(alert_id))
+                result[key] = {
+                    "tenant_id": str(tenant_id),
+                    "alert_id": str(alert_id),
+                    "sensor_eui": _normalize_eui_upper(sensor_eui),
+                    "is_active": bool(is_active),
+                    "severity": "critical" if str(severity or "").strip().lower() == "critical" else "warning",
+                    "payload": payload if isinstance(payload, dict) else {},
+                    "last_triggered_at": _iso_timestamp_value(last_triggered_at),
+                    "last_resolved_at": _iso_timestamp_value(last_resolved_at),
+                    "updated_at": _iso_timestamp_value(updated_at),
+                }
+            _store_ttl_cached_payload(_alert_runtime_state_cache, _alert_runtime_state_cache_lock, normalized_tenant, result)
+            return result
+    except Exception:
+        pass
+    finally:
+        try:
+            if conn is not None:
+                conn.close()
+        except Exception:
+            pass
+
+    state = _load_alert_state_file()
+    result: Dict[tuple[str, str], Dict[str, Any]] = {}
+    for state_key, state_value in (state or {}).items():
+        if not isinstance(state_value, dict):
+            continue
+        tenant_part = normalized_tenant
+        alert_part = ""
+        if isinstance(state_key, str) and "::" in state_key:
+            tenant_part, alert_part = state_key.split("::", 1)
+        tenant_id = _normalize_tenant_id(state_value.get("tenant_id") or tenant_part, fallback=normalized_tenant)
+        if not _tenant_matches(tenant_id, normalized_tenant):
+            continue
+        payload = dict(state_value.get("payload") or {})
+        alert_id = str(state_value.get("alert_id") or alert_part or payload.get("id") or "").strip()
+        sensor_eui = _normalize_eui_upper(state_value.get("sensor_eui") or payload.get("sensor_eui"))
+        if not alert_id:
+            continue
+        result[(tenant_id, alert_id)] = {
+            "tenant_id": tenant_id,
+            "alert_id": alert_id,
+            "sensor_eui": sensor_eui,
+            "is_active": bool(state_value.get("is_active", False)),
+            "severity": "critical" if str(payload.get("severity") or state_value.get("severity") or "").strip().lower() == "critical" else "warning",
+            "payload": payload,
+            "last_triggered_at": _iso_timestamp_value(state_value.get("triggered_at") or state_value.get("last_triggered_at")),
+            "last_resolved_at": _iso_timestamp_value(state_value.get("resolved_at") or state_value.get("last_resolved_at")),
+            "updated_at": None,
+        }
+    _store_ttl_cached_payload(_alert_runtime_state_cache, _alert_runtime_state_cache_lock, normalized_tenant, result)
+    return result
 
 def _iso_timestamp_value(value: Any) -> Optional[str]:
     if value in (None, ""):
@@ -5941,6 +6353,7 @@ def _persist_runtime_history_state(known_records: list, active_records: list) ->
         conn, err = _timescale_connect()
         if conn is None:
             raise RuntimeError("db unavailable")
+        _bootstrap_alert_runtime_store_if_needed()
         _ensure_timescale_schema(conn)
         with conn.cursor() as cur:
             cur.execute("""
@@ -6102,6 +6515,13 @@ def _persist_runtime_history_state(known_records: list, active_records: list) ->
                 conn.close()
         except Exception:
             pass
+    tenant_ids = {
+        _normalize_tenant_id(item.get("tenant_id"), fallback=_default_tenant_id())
+        for item in normalized_known
+        if isinstance(item, dict)
+    }
+    for tenant_id in tenant_ids:
+        _invalidate_alert_runtime_cache(tenant_id)
 
 def _persist_alert_runtime_state(alerts: list, triggered: list) -> None:
     normalized_alerts = [a for a in (_normalize_stored_alert(alert) for alert in alerts or []) if a]
@@ -6698,6 +7118,7 @@ def _evaluate_triggered_alerts(
     ]
     if not alerts:
         return []
+    runtime_state_by_key = _load_alert_runtime_state(active_tenant)
 
     from collections import defaultdict
 
@@ -6742,12 +7163,22 @@ def _evaluate_triggered_alerts(
                     "current_value": num_val,
                 })
 
-    if persist_state:
-        _persist_alert_runtime_state(alerts, triggered)
     now_iso = datetime.now(timezone.utc).isoformat()
     for item in triggered:
+        key = (
+            _normalize_tenant_id(item.get("tenant_id"), fallback=active_tenant),
+            str(item.get("id") or "").strip(),
+        )
+        previous_state = runtime_state_by_key.get(key) or {}
+        previous_payload = previous_state.get("payload") if isinstance(previous_state.get("payload"), dict) else {}
         if not item.get("triggered_at"):
-            item["triggered_at"] = now_iso
+            item["triggered_at"] = (
+                _iso_timestamp_value(previous_payload.get("triggered_at"))
+                or _iso_timestamp_value(previous_state.get("last_triggered_at"))
+                or now_iso
+            )
+    if persist_state:
+        _persist_alert_runtime_state(alerts, triggered)
     triggered.sort(key=lambda a: 0 if a.get('severity') == 'critical' else 1)
     return triggered
 
@@ -7899,11 +8330,16 @@ USER_SEED_FILE = "users.default.json"
 USERS_RECOVERY_FILE = "users.json"
 SENSORS_RECOVERY_FILE = getattr(bssci_config, "SENSOR_CONFIG_FILE", "endpoints.json")
 BASE_STATIONS_RECOVERY_FILE = getattr(bssci_config, "BASE_STATION_CONFIG_FILE", "base_stations.json")
+ALERTS_SEED_FILE = "alerts.default.json"
+ALERTS_RECOVERY_FILE = "alerts.json"
 _ROLE_PERMISSIONS_CONFIG_KEY = "role_permissions"
 _USERS_BOOTSTRAP_STATE_KEY = "bootstrap.users"
 _TENANTS_BOOTSTRAP_STATE_KEY = "bootstrap.tenants"
 _SENSORS_BOOTSTRAP_STATE_KEY = "bootstrap.sensors"
 _BASE_STATIONS_BOOTSTRAP_STATE_KEY = "bootstrap.base_stations"
+_ALERTS_BOOTSTRAP_STATE_KEY = "bootstrap.alerts"
+_ALERT_RUNTIME_BOOTSTRAP_STATE_KEY = "bootstrap.alert_runtime"
+_ADMIN_AUDIT_BOOTSTRAP_STATE_KEY = "bootstrap.admin_audit"
 
 
 def _db_first_config_enabled():
@@ -8826,12 +9262,13 @@ def _append_admin_audit_entry_to_db(entry):
             cur.execute(
                 """
                 INSERT INTO admin_audit_log
-                    (ts, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, details)
+                    (ts, audit_id, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, source, summary, details)
                 VALUES
-                    (%s::timestamptz, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                    (%s::timestamptz, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
                 """,
                 (
                     str(entry.get("timestamp") or datetime.now(timezone.utc).isoformat()),
+                    str(entry.get("audit_id") or "").strip() or None,
                     str(entry.get("action") or "unknown"),
                     str(entry.get("entity") or "unknown"),
                     str(entry.get("target_id") or ""),
@@ -8844,6 +9281,8 @@ def _append_admin_audit_entry_to_db(entry):
                     str(entry.get("path") or ""),
                     str(entry.get("ip") or ""),
                     str(entry.get("user_agent") or ""),
+                    str(entry.get("source") or "service_center_ui"),
+                    str(entry.get("summary") or ""),
                     json.dumps(entry.get("details") or {}, separators=(",", ":"), ensure_ascii=True),
                 ),
             )
@@ -8858,6 +9297,28 @@ def _append_admin_audit_entry_to_db(entry):
             pass
 
 
+def _serialize_admin_audit_db_row(row):
+    return {
+        "timestamp": str(row[0].isoformat(timespec="milliseconds") if hasattr(row[0], "isoformat") else row[0]),
+        "audit_id": str(row[1] or "").strip(),
+        "action": str(row[2] or "").strip(),
+        "entity": str(row[3] or "").strip(),
+        "target_id": str(row[4] or "").strip(),
+        "status": str(row[5] or "").strip().lower() or "success",
+        "actor": str(row[6] or "").strip(),
+        "role": str(row[7] or "").strip(),
+        "actor_tenant": str(row[8] or "").strip(),
+        "active_tenant": str(row[9] or "").strip(),
+        "method": str(row[10] or "").strip(),
+        "path": str(row[11] or "").strip(),
+        "ip": str(row[12] or "").strip(),
+        "user_agent": str(row[13] or "").strip(),
+        "source": str(row[14] or "").strip() or "service_center_ui",
+        "summary": str(row[15] or "").strip(),
+        "details": _db_json_value(row[16], {}),
+    }
+
+
 def _load_admin_audit_entries_from_db(limit=None):
     conn, err = _timescale_connect()
     if conn is None:
@@ -8868,7 +9329,7 @@ def _load_admin_audit_entries_from_db(limit=None):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT ts, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, details
+                SELECT ts, audit_id, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, source, summary, details
                 FROM admin_audit_log
                 ORDER BY ts DESC
                 LIMIT %s
@@ -8876,24 +9337,7 @@ def _load_admin_audit_entries_from_db(limit=None):
                 (max_rows,),
             )
             rows = cur.fetchall() or []
-        entries = []
-        for row in reversed(rows):
-            entries.append({
-                "timestamp": str(row[0].isoformat(timespec="milliseconds") if hasattr(row[0], "isoformat") else row[0]),
-                "action": str(row[1] or "").strip(),
-                "entity": str(row[2] or "").strip(),
-                "target_id": str(row[3] or "").strip(),
-                "status": str(row[4] or "").strip().lower() or "success",
-                "actor": str(row[5] or "").strip(),
-                "role": str(row[6] or "").strip(),
-                "actor_tenant": str(row[7] or "").strip(),
-                "active_tenant": str(row[8] or "").strip(),
-                "method": str(row[9] or "").strip(),
-                "path": str(row[10] or "").strip(),
-                "ip": str(row[11] or "").strip(),
-                "user_agent": str(row[12] or "").strip(),
-                "details": _db_json_value(row[13], {}),
-            })
+        entries = [_serialize_admin_audit_db_row(row) for row in reversed(rows)]
         return entries, None
     except Exception as exc:
         return None, str(exc)
@@ -8993,9 +9437,52 @@ def _load_tenant_usage_meta_from_db():
             pass
 
 
-def _admin_audit_where_sql(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter='', target_filter=''):
+def _parse_audit_filter_datetime(raw_value, end_of_day=False):
+    text = str(raw_value or "").strip()
+    if not text:
+        return None
+    try:
+        normalized = text.replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(normalized)
+    except Exception:
+        try:
+            parsed = datetime.strptime(text, "%Y-%m-%d")
+        except Exception:
+            return None
+        if end_of_day:
+            parsed = parsed + timedelta(days=1)
+    else:
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        if end_of_day and len(text) <= 10:
+            parsed = parsed + timedelta(days=1)
+    return parsed.astimezone(timezone.utc)
+
+
+def _admin_audit_entry_timestamp(entry):
+    raw = str((entry or {}).get('timestamp') or '').strip()
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.replace('Z', '+00:00'))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    except Exception:
+        return None
+
+
+def _admin_audit_where_sql(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter='', target_filter='', tenant_filter='all', source_filter='all', changed_field_filter='all', date_from='', date_to=''):
     clauses = []
     params = []
+    parsed_from = _parse_audit_filter_datetime(date_from, end_of_day=False)
+    parsed_to = _parse_audit_filter_datetime(date_to, end_of_day=True)
+    if parsed_from is not None:
+        clauses.append("ts >= %s::timestamptz")
+        params.append(parsed_from.isoformat())
+    if parsed_to is not None:
+        clauses.append("ts < %s::timestamptz")
+        params.append(parsed_to.isoformat())
     if action_filter != 'all':
         clauses.append("LOWER(action) = %s")
         params.append(action_filter)
@@ -9011,14 +9498,32 @@ def _admin_audit_where_sql(action_filter='all', entity_filter='all', actor_filte
     if target_filter:
         clauses.append("LOWER(target_id) = %s")
         params.append(target_filter)
+    if tenant_filter != 'all':
+        clauses.append("LOWER(active_tenant) = %s")
+        params.append(tenant_filter)
+    if source_filter != 'all':
+        clauses.append("LOWER(source) = %s")
+        params.append(source_filter)
+    if changed_field_filter != 'all':
+        clauses.append("""
+            EXISTS (
+                SELECT 1
+                FROM jsonb_array_elements_text(COALESCE(details->'changed_fields', '[]'::jsonb)) AS changed_field(value)
+                WHERE LOWER(changed_field.value) = %s
+            )
+        """)
+        params.append(changed_field_filter)
     if text_filter:
         clauses.append("""
             LOWER(
                 COALESCE(action, '') || ' ' ||
                 COALESCE(entity, '') || ' ' ||
                 COALESCE(target_id, '') || ' ' ||
+                COALESCE(active_tenant, '') || ' ' ||
                 COALESCE(actor, '') || ' ' ||
                 COALESCE(status, '') || ' ' ||
+                COALESCE(source, '') || ' ' ||
+                COALESCE(summary, '') || ' ' ||
                 COALESCE(path, '') || ' ' ||
                 COALESCE(details::text, '')
             ) LIKE %s
@@ -9030,7 +9535,7 @@ def _admin_audit_where_sql(action_filter='all', entity_filter='all', actor_filte
     return where_sql, params
 
 
-def _fetch_admin_audit_entries_from_db(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter='', target_filter='', limit=None, newest_first=True):
+def _fetch_admin_audit_entries_from_db(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter='', target_filter='', tenant_filter='all', source_filter='all', changed_field_filter='all', date_from='', date_to='', limit=None, newest_first=True):
     conn, err = _timescale_connect()
     if conn is None:
         return None, err
@@ -9043,6 +9548,11 @@ def _fetch_admin_audit_entries_from_db(action_filter='all', entity_filter='all',
             status_filter=status_filter,
             text_filter=text_filter,
             target_filter=target_filter,
+            tenant_filter=tenant_filter,
+            source_filter=source_filter,
+            changed_field_filter=changed_field_filter,
+            date_from=date_from,
+            date_to=date_to,
         )
         order_sql = "DESC" if newest_first else "ASC"
         limit_sql = ""
@@ -9053,7 +9563,7 @@ def _fetch_admin_audit_entries_from_db(action_filter='all', entity_filter='all',
         with conn.cursor() as cur:
             cur.execute(
                 f"""
-                SELECT ts, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, details
+                SELECT ts, audit_id, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, source, summary, details
                 FROM admin_audit_log
                 {where_sql}
                 ORDER BY ts {order_sql}
@@ -9062,24 +9572,7 @@ def _fetch_admin_audit_entries_from_db(action_filter='all', entity_filter='all',
                 query_params,
             )
             rows = cur.fetchall() or []
-        entries = []
-        for row in rows:
-            entries.append({
-                "timestamp": str(row[0].isoformat(timespec="milliseconds") if hasattr(row[0], "isoformat") else row[0]),
-                "action": str(row[1] or "").strip(),
-                "entity": str(row[2] or "").strip(),
-                "target_id": str(row[3] or "").strip(),
-                "status": str(row[4] or "").strip().lower() or "success",
-                "actor": str(row[5] or "").strip(),
-                "role": str(row[6] or "").strip(),
-                "actor_tenant": str(row[7] or "").strip(),
-                "active_tenant": str(row[8] or "").strip(),
-                "method": str(row[9] or "").strip(),
-                "path": str(row[10] or "").strip(),
-                "ip": str(row[11] or "").strip(),
-                "user_agent": str(row[12] or "").strip(),
-                "details": _db_json_value(row[13], {}),
-            })
+        entries = [_serialize_admin_audit_db_row(row) for row in rows]
         return entries, None
     except Exception as exc:
         return None, str(exc)
@@ -9090,7 +9583,7 @@ def _fetch_admin_audit_entries_from_db(action_filter='all', entity_filter='all',
             pass
 
 
-def _fetch_admin_audit_summary_from_db(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter='', target_filter='', limit=200):
+def _fetch_admin_audit_summary_from_db(action_filter='all', entity_filter='all', actor_filter='all', status_filter='all', text_filter='', target_filter='', tenant_filter='all', source_filter='all', changed_field_filter='all', date_from='', date_to='', limit=200):
     conn, err = _timescale_connect()
     if conn is None:
         return None, err
@@ -9103,6 +9596,11 @@ def _fetch_admin_audit_summary_from_db(action_filter='all', entity_filter='all',
             status_filter=status_filter,
             text_filter=text_filter,
             target_filter=target_filter,
+            tenant_filter=tenant_filter,
+            source_filter=source_filter,
+            changed_field_filter=changed_field_filter,
+            date_from=date_from,
+            date_to=date_to,
         )
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM admin_audit_log")
@@ -9113,7 +9611,7 @@ def _fetch_admin_audit_summary_from_db(action_filter='all', entity_filter='all',
 
             cur.execute(
                 f"""
-                SELECT ts, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, details
+                SELECT ts, audit_id, action, entity, target_id, status, actor, role, actor_tenant, active_tenant, method, path, ip, user_agent, source, summary, details
                 FROM admin_audit_log
                 {where_sql}
                 ORDER BY ts DESC
@@ -9132,6 +9630,21 @@ def _fetch_admin_audit_summary_from_db(action_filter='all', entity_filter='all',
             cur.execute("SELECT DISTINCT actor FROM admin_audit_log WHERE actor <> '' ORDER BY actor ASC")
             actors = [str(row[0] or "").strip() for row in (cur.fetchall() or []) if str(row[0] or "").strip()]
 
+            cur.execute("SELECT DISTINCT active_tenant FROM admin_audit_log WHERE active_tenant <> '' ORDER BY active_tenant ASC")
+            tenants = [str(row[0] or "").strip() for row in (cur.fetchall() or []) if str(row[0] or "").strip()]
+
+            cur.execute("SELECT DISTINCT source FROM admin_audit_log WHERE source <> '' ORDER BY source ASC")
+            sources = [str(row[0] or "").strip() for row in (cur.fetchall() or []) if str(row[0] or "").strip()]
+
+            cur.execute("""
+                SELECT DISTINCT changed_field.value
+                FROM admin_audit_log
+                CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(details->'changed_fields', '[]'::jsonb)) AS changed_field(value)
+                WHERE changed_field.value <> ''
+                ORDER BY changed_field.value ASC
+            """)
+            changed_fields = [str(row[0] or "").strip() for row in (cur.fetchall() or []) if str(row[0] or "").strip()]
+
             cur.execute(
                 f"""
                 SELECT LOWER(status) AS normalized_status, COUNT(*)
@@ -9147,24 +9660,20 @@ def _fetch_admin_audit_summary_from_db(action_filter='all', entity_filter='all',
                 if not key:
                     continue
                 status_counts[key] = int(row[1] or 0)
-        entries = []
-        for row in rows:
-            entries.append({
-                "timestamp": str(row[0].isoformat(timespec="milliseconds") if hasattr(row[0], "isoformat") else row[0]),
-                "action": str(row[1] or "").strip(),
-                "entity": str(row[2] or "").strip(),
-                "target_id": str(row[3] or "").strip(),
-                "status": str(row[4] or "").strip().lower() or "success",
-                "actor": str(row[5] or "").strip(),
-                "role": str(row[6] or "").strip(),
-                "actor_tenant": str(row[7] or "").strip(),
-                "active_tenant": str(row[8] or "").strip(),
-                "method": str(row[9] or "").strip(),
-                "path": str(row[10] or "").strip(),
-                "ip": str(row[11] or "").strip(),
-                "user_agent": str(row[12] or "").strip(),
-                "details": _db_json_value(row[13], {}),
-            })
+            cur.execute(
+                f"""
+                SELECT
+                    COUNT(DISTINCT NULLIF(target_id, '')) AS target_count,
+                    COUNT(DISTINCT NULLIF(actor, '')) AS actor_count,
+                    COUNT(DISTINCT NULLIF(active_tenant, '')) AS tenant_count,
+                    COUNT(*) FILTER (WHERE ts >= NOW() - INTERVAL '24 hours') AS recent_24h
+                FROM admin_audit_log
+                {where_sql}
+                """,
+                params,
+            )
+            kpi_row = cur.fetchone() or [0, 0, 0, 0]
+        entries = [_serialize_admin_audit_db_row(row) for row in rows]
         return {
             'entries': entries,
             'total': total,
@@ -9172,7 +9681,16 @@ def _fetch_admin_audit_summary_from_db(action_filter='all', entity_filter='all',
             'actions': actions,
             'entities': entities,
             'actors': actors,
+            'tenants': tenants,
+            'sources': sources,
+            'changed_fields': changed_fields,
             'status_counts': status_counts,
+            'kpis': {
+                'targets': int(kpi_row[0] or 0),
+                'actors': int(kpi_row[1] or 0),
+                'tenants': int(kpi_row[2] or 0),
+                'recent_24h': int(kpi_row[3] or 0),
+            },
         }, None
     except Exception as exc:
         return None, str(exc)
@@ -9783,8 +10301,128 @@ def _audit_scrub_value(value, depth=0):
     return str(value)
 
 
+def _build_admin_audit_summary(action, entity, target_id, details):
+    details_map = details if isinstance(details, dict) else {}
+    message = str(details_map.get("message") or "").strip()
+    if message:
+        return message[:240]
+    summary_parts = [str(action or "").strip(), str(entity or "").strip(), str(target_id or "").strip()]
+    return " ".join(part for part in summary_parts if part).strip()[:240]
+
+
+def _normalize_admin_audit_entry(entry):
+    normalized = copy.deepcopy(entry if isinstance(entry, dict) else {})
+    normalized["timestamp"] = str(normalized.get("timestamp") or datetime.now(timezone.utc).isoformat(timespec="milliseconds"))
+    normalized["audit_id"] = str(normalized.get("audit_id") or getattr(_uuid_mod, "uuid4")()).strip()
+    normalized["action"] = str(normalized.get("action") or "unknown").strip() or "unknown"
+    normalized["entity"] = str(normalized.get("entity") or "unknown").strip() or "unknown"
+    normalized["target_id"] = str(normalized.get("target_id") or "").strip()
+    normalized["status"] = str(normalized.get("status") or "success").strip().lower() or "success"
+    normalized["actor"] = str(normalized.get("actor") or "system").strip() or "system"
+    normalized["role"] = str(normalized.get("role") or "").strip()
+    normalized["actor_tenant"] = _normalize_tenant_id(normalized.get("actor_tenant"), fallback=_default_tenant_id())
+    normalized["active_tenant"] = _normalize_tenant_id(normalized.get("active_tenant"), fallback=_default_tenant_id())
+    normalized["method"] = str(normalized.get("method") or "").strip()
+    normalized["path"] = str(normalized.get("path") or "").strip()
+    normalized["ip"] = str(normalized.get("ip") or "").strip()
+    normalized["user_agent"] = str(normalized.get("user_agent") or "").strip()[:240]
+    normalized["source"] = str(normalized.get("source") or "service_center_ui").strip() or "service_center_ui"
+    normalized["details"] = _audit_scrub_value(normalized.get("details") or {})
+    normalized["summary"] = str(normalized.get("summary") or _build_admin_audit_summary(normalized["action"], normalized["entity"], normalized["target_id"], normalized["details"])).strip()[:240]
+    return normalized
+
+
+def _load_admin_audit_file_entries_payload(limit=None):
+    if not os.path.exists(admin_audit_log_file):
+        return []
+    loaded = []
+    try:
+        with open(admin_audit_log_file, "r", encoding="utf-8") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line:
+                    continue
+                try:
+                    item = json.loads(line)
+                except Exception:
+                    continue
+                if isinstance(item, dict):
+                    loaded.append(_normalize_admin_audit_entry(item))
+    except Exception as exc:
+        logger.warning("Failed to load admin audit log: %s", exc)
+        return []
+    if limit is None:
+        return loaded
+    return loaded[-max(1, int(limit)):]
+
+
+def _bootstrap_admin_audit_store_if_needed():
+    if not _db_first_config_enabled():
+        return {"used": False, "source": "json", "seeded": False}
+    loaded, err = _load_admin_audit_entries_from_db(limit=1)
+    if isinstance(loaded, list) and loaded:
+        state, _ = _load_app_config_state_value_from_db(_ADMIN_AUDIT_BOOTSTRAP_STATE_KEY, {})
+        if not isinstance(state, dict) or not state:
+            state = {
+                "seeded_at": datetime.now(timezone.utc).isoformat(),
+                "seed_source": "preexisting_db",
+                "seeded": False,
+            }
+            _save_app_config_state_value_to_db(_ADMIN_AUDIT_BOOTSTRAP_STATE_KEY, state)
+        return {"used": True, "source": "db", "seeded": False, "state": state if isinstance(state, dict) else {}}
+    legacy_loaded = _load_admin_audit_file_entries_payload(limit=max_admin_audit_entries)
+    if legacy_loaded:
+        try:
+            for item in legacy_loaded:
+                _append_admin_audit_entry_to_db(item)
+            state_payload = {
+                "seeded_at": datetime.now(timezone.utc).isoformat(),
+                "seed_source": admin_audit_log_file,
+                "seeded": True,
+            }
+            _save_app_config_state_value_to_db(_ADMIN_AUDIT_BOOTSTRAP_STATE_KEY, state_payload)
+            return {"used": True, "source": "db", "seeded": True, "state": state_payload}
+        except Exception as exc:
+            return {"used": False, "source": "file-fallback", "seeded": False, "error": str(exc) or err}
+    state, state_err = _load_app_config_state_value_from_db(_ADMIN_AUDIT_BOOTSTRAP_STATE_KEY, {})
+    if not isinstance(state, dict) or not state:
+        state = {
+            "seeded_at": datetime.now(timezone.utc).isoformat(),
+            "seed_source": "empty_audit_seed",
+            "seeded": False,
+        }
+        _save_app_config_state_value_to_db(_ADMIN_AUDIT_BOOTSTRAP_STATE_KEY, state)
+    return {"used": True, "source": "db", "seeded": False, "state": state if isinstance(state, dict) else {}, "error": state_err or err}
+
+
+def _admin_audit_storage_backend_meta():
+    if not _db_first_config_enabled():
+        return {
+            "backend": "jsonl",
+            "db_enabled": False,
+            "bootstrap_state": {},
+            "seed_defaults_file": "",
+            "recovery_file": admin_audit_log_file,
+        }
+    _bootstrap_admin_audit_store_if_needed()
+    state, err = _load_app_config_state_value_from_db(_ADMIN_AUDIT_BOOTSTRAP_STATE_KEY, {})
+    summary, summary_err = _fetch_admin_audit_summary_from_db(limit=1)
+    return {
+        "backend": "db",
+        "db_enabled": True,
+        "bootstrap_state": state if isinstance(state, dict) else {},
+        "bootstrap_error": err or "",
+        "runtime_total": int((summary or {}).get("total", 0) or 0),
+        "runtime_filtered_total": int((summary or {}).get("filtered_total", 0) or 0),
+        "summary_error": summary_err or "",
+        "seed_defaults_file": "",
+        "recovery_file": admin_audit_log_file,
+    }
+
+
 def _append_admin_audit_entry(entry):
     global admin_audit_entries
+    entry = _normalize_admin_audit_entry(entry)
     with _admin_audit_lock:
         admin_audit_entries.append(entry)
         if len(admin_audit_entries) > max_admin_audit_entries:
@@ -9806,49 +10444,13 @@ def _append_admin_audit_entry(entry):
 def _load_admin_audit_entries():
     global admin_audit_entries
     if _db_first_config_enabled():
+        _bootstrap_admin_audit_store_if_needed()
         loaded, err = _load_admin_audit_entries_from_db(limit=max_admin_audit_entries)
         if isinstance(loaded, list):
-            if not loaded and os.path.exists(admin_audit_log_file):
-                legacy_loaded = []
-                try:
-                    with open(admin_audit_log_file, "r", encoding="utf-8") as f:
-                        for raw_line in f:
-                            line = raw_line.strip()
-                            if not line:
-                                continue
-                            try:
-                                item = json.loads(line)
-                            except Exception:
-                                continue
-                            if isinstance(item, dict):
-                                legacy_loaded.append(item)
-                    for item in legacy_loaded[-max_admin_audit_entries:]:
-                        _append_admin_audit_entry_to_db(item)
-                    loaded, _ = _load_admin_audit_entries_from_db(limit=max_admin_audit_entries)
-                except Exception as legacy_exc:
-                    logger.warning("Failed to migrate legacy admin audit log into DB: %s", legacy_exc)
             admin_audit_entries = loaded[-max_admin_audit_entries:]
             return
         logger.warning("Failed to load admin audit log from DB, falling back to file: %s", err)
-    if not os.path.exists(admin_audit_log_file):
-        admin_audit_entries = []
-        return
-    loaded = []
-    try:
-        with open(admin_audit_log_file, "r", encoding="utf-8") as f:
-            for raw_line in f:
-                line = raw_line.strip()
-                if not line:
-                    continue
-                try:
-                    item = json.loads(line)
-                except Exception:
-                    continue
-                if isinstance(item, dict):
-                    loaded.append(item)
-    except Exception as exc:
-        logger.warning("Failed to load admin audit log: %s", exc)
-        loaded = []
+    loaded = _load_admin_audit_file_entries_payload(limit=max_admin_audit_entries)
     admin_audit_entries = loaded[-max_admin_audit_entries:]
 
 
@@ -9883,6 +10485,7 @@ def _record_admin_audit(action, entity, target_id="", status="success", details=
 
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
+        "audit_id": str(getattr(_uuid_mod, "uuid4")()),
         "action": str(action or "").strip() or "unknown",
         "entity": str(entity or "").strip() or "unknown",
         "target_id": str(target_id or "").strip(),
@@ -9895,8 +10498,10 @@ def _record_admin_audit(action, entity, target_id="", status="success", details=
         "path": path,
         "ip": ip_addr,
         "user_agent": user_agent,
+        "source": "service_center_ui",
         "details": _audit_scrub_value(details or {}),
     }
+    entry["summary"] = _build_admin_audit_summary(entry["action"], entry["entity"], entry["target_id"], entry["details"])
     _append_admin_audit_entry(entry)
 
 # Custom log handler to capture all logs with timezone support
@@ -11974,6 +12579,35 @@ def alerts_page():
     return render_template('alerts.html')
 
 
+@app.route('/api/alerts/storage-meta', methods=['GET'])
+@login_required
+@admin_scope_required('manage_tenants')
+def get_alerts_storage_meta():
+    active_tenant = _active_tenant_id()
+    alerts = [
+        a for a in _load_alerts()
+        if _tenant_matches(_resolve_alert_tenant_id(a), active_tenant)
+    ]
+    storage_meta = _alerts_storage_backend_meta()
+    runtime_state, runtime_state_err = _load_app_config_state_value_from_db(_ALERT_RUNTIME_BOOTSTRAP_STATE_KEY, {})
+    runtime_state_rows = _load_alert_runtime_state(active_tenant)
+    active_runtime_count = sum(1 for item in runtime_state_rows.values() if bool(item.get('is_active')))
+    runtime_event_count = len(_load_alert_history_events(active_tenant, fetch_limit=2000))
+    return jsonify({
+        'success': True,
+        'storage_backend': storage_meta.get('backend', 'json'),
+        'storage_db_enabled': bool(storage_meta.get('db_enabled', False)),
+        'bootstrap_state': storage_meta.get('bootstrap_state', {}),
+        'runtime_bootstrap_state': runtime_state if isinstance(runtime_state, dict) else {},
+        'runtime_bootstrap_error': runtime_state_err or "",
+        'seed_defaults_file': storage_meta.get('seed_defaults_file', ALERTS_SEED_FILE),
+        'recovery_file': storage_meta.get('recovery_file', ALERTS_RECOVERY_FILE),
+        'alert_count': len(alerts),
+        'runtime_active_count': active_runtime_count,
+        'runtime_event_count': runtime_event_count,
+    })
+
+
 @app.route('/sensor-telemetry')
 @login_required
 @internal_portal_required
@@ -13052,6 +13686,18 @@ def api_alerts_create():
         alerts = _load_alerts()
         alerts.append(alert)
         _save_alerts(alerts)
+        created_snapshot = _alert_audit_snapshot(alert)
+        _record_admin_audit(
+            action='alert.create',
+            entity='alert',
+            target_id=alert['id'],
+            status='success',
+            details={
+                'tenant_id': active_tenant,
+                'after': created_snapshot,
+                'changed_fields': list(created_snapshot.keys()),
+            },
+        )
         return jsonify({"success": True, "alert": alert}), 201
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc)}), 500
@@ -13067,6 +13713,7 @@ def api_alerts_update(alert_id):
         visible_sensors = _build_visible_sensor_lookup(active_tenant)
         alerts = _load_alerts()
         target = next((a for a in alerts if a.get('id') == alert_id), None)
+        previous_snapshot = _alert_audit_snapshot(target) if target else None
         if target and str(target.get('sensor_eui', '')).strip().upper() not in visible_sensors:
             return jsonify({"success": False, "message": "K tomuto upozorneniu nemáte prístup."}), 404
         if not target:
@@ -13099,6 +13746,19 @@ def api_alerts_update(alert_id):
         if 'enabled' in body:
             target['enabled'] = bool(body['enabled'])
         _save_alerts(alerts)
+        new_snapshot = _alert_audit_snapshot(target)
+        _record_admin_audit(
+            action='alert.update',
+            entity='alert',
+            target_id=str(target.get('id') or alert_id),
+            status='success',
+            details={
+                'tenant_id': active_tenant,
+                'before': previous_snapshot,
+                'after': new_snapshot,
+                'changed_fields': _audit_changed_fields(previous_snapshot, new_snapshot),
+            },
+        )
         return jsonify({"success": True, "alert": target})
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc)}), 500
@@ -13121,7 +13781,155 @@ def api_alerts_delete(alert_id):
     if len(new_list) == len(alerts):
         return jsonify({"success": False, "message": "Upozornenie sa nenašlo."}), 404
     _save_alerts(new_list)
+    _record_admin_audit(
+        action='alert.delete',
+        entity='alert',
+        target_id=alert_id,
+        status='success',
+        details={
+            'tenant_id': active_tenant,
+            'before': _alert_audit_snapshot(target),
+        },
+    )
     return jsonify({"success": True})
+
+
+@app.route('/api/alerts/export', methods=['GET'])
+@login_required
+@admin_scope_required('manage_tenants')
+def export_alert_rules():
+    try:
+        active_tenant = _active_tenant_id()
+        storage_meta = _alerts_storage_backend_meta()
+        alerts = [
+            _normalize_stored_alert(alert)
+            for alert in _load_alerts()
+            if _tenant_matches(_resolve_alert_tenant_id(alert), active_tenant)
+        ]
+        alerts = [alert for alert in alerts if isinstance(alert, dict)]
+        payload = {
+            'format_version': 1,
+            'exported_at': datetime.now(timezone.utc).isoformat(),
+            'storage_backend': storage_meta.get('backend', 'json'),
+            'seed_defaults_file': storage_meta.get('seed_defaults_file', ALERTS_SEED_FILE),
+            'recovery_file': storage_meta.get('recovery_file', ALERTS_RECOVERY_FILE),
+            'alerts': alerts,
+        }
+        _record_admin_audit(
+            action='alert.export',
+            entity='alert',
+            target_id='tenant',
+            status='success',
+            details={
+                'tenant_id': active_tenant,
+                'count': len(alerts),
+                'storage_backend': storage_meta.get('backend', 'json'),
+            },
+        )
+        filename = f"alerts_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        return Response(
+            json.dumps(payload, indent=2, ensure_ascii=False),
+            mimetype='application/json',
+            headers={'Content-Disposition': f'attachment; filename={filename}'},
+        )
+    except Exception as exc:
+        return jsonify({'success': False, 'message': str(exc)}), 500
+
+
+@app.route('/api/alerts/import', methods=['POST'])
+@login_required
+@admin_scope_required('manage_tenants')
+def import_alert_rules():
+    try:
+        payload = _parse_json_upload_or_payload()
+    except ValueError as exc:
+        _record_admin_audit(
+            action='alert.import',
+            entity='alert',
+            target_id='tenant',
+            status='error',
+            details={'error': str(exc)},
+        )
+        return jsonify({'success': False, 'message': str(exc)}), 400
+
+    imported = payload.get('data', payload) if isinstance(payload, dict) else {}
+    rows_in = imported.get('alerts', imported.get('items', [])) if isinstance(imported, dict) else []
+    if not isinstance(rows_in, list):
+        return jsonify({'success': False, 'message': 'Import payload must contain an alerts list.'}), 400
+
+    active_tenant = _active_tenant_id()
+    storage_meta = _alerts_storage_backend_meta()
+    visible_sensors = _build_visible_sensor_lookup(active_tenant)
+    alerts = _load_alerts()
+    created = 0
+    updated = 0
+    skipped = []
+
+    for entry in rows_in:
+        if not isinstance(entry, dict):
+            skipped.append({'reason': 'invalid_record'})
+            continue
+        sensor_eui = _normalize_eui_upper(entry.get('sensor_eui'))
+        if not sensor_eui:
+            skipped.append({'reason': 'missing_sensor_eui'})
+            continue
+        if sensor_eui not in visible_sensors:
+            skipped.append({'reason': 'sensor_not_visible', 'sensor_eui': sensor_eui})
+            continue
+        candidate = dict(entry)
+        candidate['tenant_id'] = active_tenant
+        candidate['sensor_eui'] = sensor_eui
+        normalized = _normalize_stored_alert(candidate)
+        if not normalized:
+            skipped.append({'reason': 'invalid_alert', 'sensor_eui': sensor_eui})
+            continue
+        existing_idx = next(
+            (
+                idx for idx, item in enumerate(alerts)
+                if str((item or {}).get('id') or '').strip() == str(normalized.get('id') or '').strip()
+                and _tenant_matches(_resolve_alert_tenant_id(item), active_tenant)
+            ),
+            None,
+        )
+        if existing_idx is None:
+            conflicting_idx = next(
+                (
+                    idx for idx, item in enumerate(alerts)
+                    if str((item or {}).get('id') or '').strip() == str(normalized.get('id') or '').strip()
+                ),
+                None,
+            )
+            if conflicting_idx is not None:
+                normalized['id'] = str(_uuid_mod.uuid4())
+            alerts.append(normalized)
+            created += 1
+        else:
+            alerts[existing_idx] = normalized
+            updated += 1
+
+    _save_alerts(alerts)
+    _record_admin_audit(
+        action='alert.import',
+        entity='alert',
+        target_id='tenant',
+        status='success',
+        details={
+            'tenant_id': active_tenant,
+            'created': created,
+            'updated': updated,
+            'skipped': len(skipped),
+            'storage_backend': storage_meta.get('backend', 'json'),
+        },
+    )
+    return jsonify({
+        'success': True,
+        'created': created,
+        'updated': updated,
+        'skipped': skipped,
+        'storage_backend': storage_meta.get('backend', 'json'),
+        'seed_defaults_file': storage_meta.get('seed_defaults_file', ALERTS_SEED_FILE),
+        'recovery_file': storage_meta.get('recovery_file', ALERTS_RECOVERY_FILE),
+    })
 
 
 @app.route('/api/alerts/triggered', methods=['GET'])
@@ -13247,42 +14055,8 @@ def api_alerts_history():
             return True
 
         events = []
-
-        # Try TimescaleDB first
-        conn = None
-        try:
-            conn, err = _timescale_connect()
-            if conn is not None:
-                with conn.cursor() as cur:
-                    cur.execute("""
-                        SELECT ts, alert_id, sensor_eui, event_type, severity, payload
-                        FROM alert_events
-                        WHERE tenant_id = %s
-                        ORDER BY ts DESC
-                        LIMIT %s
-                    """, (_normalize_tenant_id(active_tenant, fallback=_default_tenant_id()), fetch_limit))
-                    for ts, alert_id, sensor_eui, event_type, severity, payload in (cur.fetchall() or []):
-                        events.append(_history_event_from_payload(ts, alert_id, sensor_eui, event_type, severity, payload))
-        except Exception:
-            pass
-        finally:
-            try:
-                if conn is not None:
-                    conn.close()
-            except Exception:
-                pass
-
-        # File-based fallback if DB had no results
-        if not events:
-            for e in sorted(_load_alert_events_file(), key=lambda x: x.get('ts', ''), reverse=True)[:fetch_limit]:
-                events.append(_history_event_from_payload(
-                    e.get('ts', ''),
-                    e.get('alert_id', ''),
-                    e.get('sensor_eui', ''),
-                    e.get('event_type', ''),
-                    e.get('severity', 'warning'),
-                    e,
-                ))
+        for ts, alert_id, sensor_eui, event_type, severity, payload in _load_alert_history_events(active_tenant, fetch_limit):
+            events.append(_history_event_from_payload(ts, alert_id, sensor_eui, event_type, severity, payload))
 
         events = [event for event in events if _history_event_matches(event)]
         return jsonify({"success": True, "events": events[:limit]})
@@ -17609,6 +18383,16 @@ def clear_logs():
     return jsonify({'success': True, 'message': 'Logs cleared successfully'})
 
 
+@app.route('/api/audit/storage-meta', methods=['GET'])
+@login_required
+@admin_scope_required('view_admin_audit')
+def get_admin_audit_storage_meta():
+    return jsonify({
+        'success': True,
+        'storage_backend': _admin_audit_storage_backend_meta(),
+    })
+
+
 @app.route('/api/audit/logs', methods=['GET'])
 @login_required
 @admin_scope_required('view_admin_audit')
@@ -17618,6 +18402,11 @@ def get_admin_audit_logs():
     actor_filter = str(request.args.get('actor', 'all') or 'all').strip().lower()
     status_filter = str(request.args.get('status', 'all') or 'all').strip().lower()
     target_filter = str(request.args.get('target_id', '') or '').strip().lower()
+    tenant_filter = str(request.args.get('tenant', 'all') or 'all').strip().lower()
+    source_filter = str(request.args.get('source', 'all') or 'all').strip().lower()
+    changed_field_filter = str(request.args.get('changed_field', 'all') or 'all').strip().lower()
+    date_from = str(request.args.get('date_from', '') or '').strip()
+    date_to = str(request.args.get('date_to', '') or '').strip()
     text_filter = str(request.args.get('q', '') or '').strip().lower()
     try:
         limit = int(request.args.get('limit', 200))
@@ -17632,6 +18421,11 @@ def get_admin_audit_logs():
         "actor": actor_filter,
         "status": status_filter,
         "target": target_filter,
+        "tenant": tenant_filter,
+        "source": source_filter,
+        "changed_field": changed_field_filter,
+        "date_from": date_from,
+        "date_to": date_to,
         "q": text_filter,
         "limit": limit,
     }, separators=(",", ":"), sort_keys=True)
@@ -17652,6 +18446,11 @@ def get_admin_audit_logs():
             status_filter=status_filter,
             text_filter=text_filter,
             target_filter=target_filter,
+            tenant_filter=tenant_filter,
+            source_filter=source_filter,
+            changed_field_filter=changed_field_filter,
+            date_from=date_from,
+            date_to=date_to,
             limit=limit,
         )
         if summary is not None:
@@ -17661,6 +18460,10 @@ def get_admin_audit_logs():
             actions = list(summary.get('actions', []))
             entities = list(summary.get('entities', []))
             actors = list(summary.get('actors', []))
+            tenants = list(summary.get('tenants', []))
+            sources = list(summary.get('sources', []))
+            changed_fields = list(summary.get('changed_fields', []))
+            kpis = dict(summary.get('kpis', {}))
             status_counts = dict(summary.get('status_counts', {'success': 0, 'warning': 0, 'error': 0}))
             source_label = 'db'
         else:
@@ -17672,6 +18475,11 @@ def get_admin_audit_logs():
                 status_filter=status_filter,
                 text_filter=text_filter,
                 target_filter=target_filter,
+                tenant_filter=tenant_filter,
+                source_filter=source_filter,
+                changed_field_filter=changed_field_filter,
+                date_from=date_from,
+                date_to=date_to,
             )
             with _admin_audit_lock:
                 total = len(admin_audit_entries)
@@ -17681,6 +18489,24 @@ def get_admin_audit_logs():
             actions = sorted({str(item.get('action', '')).strip() for item in source_entries if str(item.get('action', '')).strip()})
             entities = sorted({str(item.get('entity', '')).strip() for item in source_entries if str(item.get('entity', '')).strip()})
             actors = sorted({str(item.get('actor', '')).strip() for item in source_entries if str(item.get('actor', '')).strip()})
+            tenants = sorted({str(item.get('active_tenant', '')).strip() for item in source_entries if str(item.get('active_tenant', '')).strip()})
+            sources = sorted({str(item.get('source', '')).strip() for item in source_entries if str(item.get('source', '')).strip()})
+            changed_fields = sorted({
+                str(field or '').strip()
+                for item in source_entries
+                for field in ((item.get('details', {}) or {}).get('changed_fields', []) or [])
+                if str(field or '').strip()
+            })
+            now_utc = datetime.now(timezone.utc)
+            kpis = {
+                'targets': len({str(item.get('target_id', '')).strip() for item in filtered if str(item.get('target_id', '')).strip()}),
+                'actors': len({str(item.get('actor', '')).strip() for item in filtered if str(item.get('actor', '')).strip()}),
+                'tenants': len({str(item.get('active_tenant', '')).strip() for item in filtered if str(item.get('active_tenant', '')).strip()}),
+                'recent_24h': len([
+                    item for item in filtered
+                    if (lambda ts: ts is not None and ts >= (now_utc - timedelta(hours=24)))(_admin_audit_entry_timestamp(item))
+                ]),
+            }
             status_counts = {'success': 0, 'warning': 0, 'error': 0}
             for item in filtered:
                 normalized = str(item.get('status', 'success')).strip().lower()
@@ -17697,6 +18523,11 @@ def get_admin_audit_logs():
             status_filter=status_filter,
             text_filter=text_filter,
             target_filter=target_filter,
+            tenant_filter=tenant_filter,
+            source_filter=source_filter,
+            changed_field_filter=changed_field_filter,
+            date_from=date_from,
+            date_to=date_to,
         )
         with _admin_audit_lock:
             total = len(admin_audit_entries)
@@ -17707,6 +18538,24 @@ def get_admin_audit_logs():
         actions = sorted({str(item.get('action', '')).strip() for item in source_entries if str(item.get('action', '')).strip()})
         entities = sorted({str(item.get('entity', '')).strip() for item in source_entries if str(item.get('entity', '')).strip()})
         actors = sorted({str(item.get('actor', '')).strip() for item in source_entries if str(item.get('actor', '')).strip()})
+        tenants = sorted({str(item.get('active_tenant', '')).strip() for item in source_entries if str(item.get('active_tenant', '')).strip()})
+        sources = sorted({str(item.get('source', '')).strip() for item in source_entries if str(item.get('source', '')).strip()})
+        changed_fields = sorted({
+            str(field or '').strip()
+            for item in source_entries
+            for field in ((item.get('details', {}) or {}).get('changed_fields', []) or [])
+            if str(field or '').strip()
+        })
+        now_utc = datetime.now(timezone.utc)
+        kpis = {
+            'targets': len({str(item.get('target_id', '')).strip() for item in filtered if str(item.get('target_id', '')).strip()}),
+            'actors': len({str(item.get('actor', '')).strip() for item in filtered if str(item.get('actor', '')).strip()}),
+            'tenants': len({str(item.get('active_tenant', '')).strip() for item in filtered if str(item.get('active_tenant', '')).strip()}),
+            'recent_24h': len([
+                item for item in filtered
+                if (lambda ts: ts is not None and ts >= (now_utc - timedelta(hours=24)))(_admin_audit_entry_timestamp(item))
+            ]),
+        }
 
         status_counts = {'success': 0, 'warning': 0, 'error': 0}
         for item in filtered:
@@ -17726,6 +18575,10 @@ def get_admin_audit_logs():
         'actions': actions,
         'entities': entities,
         'actors': actors,
+        'tenants': tenants,
+        'sources': sources,
+        'changed_fields': changed_fields,
+        'kpis': kpis,
         'status_counts': status_counts,
         'source': source_label,
     }
@@ -17745,10 +18598,22 @@ def _filter_admin_audit_entries(
     status_filter='all',
     text_filter='',
     target_filter='',
+    tenant_filter='all',
+    source_filter='all',
+    changed_field_filter='all',
+    date_from='',
+    date_to='',
 ):
     with _admin_audit_lock:
         all_entries = list(admin_audit_entries)
     filtered = list(all_entries)
+    parsed_from = _parse_audit_filter_datetime(date_from, end_of_day=False)
+    parsed_to = _parse_audit_filter_datetime(date_to, end_of_day=True)
+
+    if parsed_from is not None:
+        filtered = [item for item in filtered if (_admin_audit_entry_timestamp(item) is not None and _admin_audit_entry_timestamp(item) >= parsed_from)]
+    if parsed_to is not None:
+        filtered = [item for item in filtered if (_admin_audit_entry_timestamp(item) is not None and _admin_audit_entry_timestamp(item) < parsed_to)]
 
     if action_filter != 'all':
         filtered = [item for item in filtered if str(item.get('action', '')).strip().lower() == action_filter]
@@ -17760,6 +18625,19 @@ def _filter_admin_audit_entries(
         filtered = [item for item in filtered if str(item.get('status', '')).strip().lower() == status_filter]
     if target_filter:
         filtered = [item for item in filtered if str(item.get('target_id', '')).strip().lower() == target_filter]
+    if tenant_filter != 'all':
+        filtered = [item for item in filtered if str(item.get('active_tenant', '')).strip().lower() == tenant_filter]
+    if source_filter != 'all':
+        filtered = [item for item in filtered if str(item.get('source', '')).strip().lower() == source_filter]
+    if changed_field_filter != 'all':
+        filtered = [
+            item for item in filtered
+            if changed_field_filter in {
+                str(field or '').strip().lower()
+                for field in (item.get('details', {}) or {}).get('changed_fields', []) or []
+                if str(field or '').strip()
+            }
+        ]
     if text_filter:
         text_filter = str(text_filter).strip().lower()
 
@@ -17768,8 +18646,11 @@ def _filter_admin_audit_entries(
                 str(entry.get('action', '')),
                 str(entry.get('entity', '')),
                 str(entry.get('target_id', '')),
+                str(entry.get('active_tenant', '')),
                 str(entry.get('actor', '')),
                 str(entry.get('status', '')),
+                str(entry.get('source', '')),
+                str(entry.get('summary', '')),
                 str(entry.get('path', '')),
                 json.dumps(entry.get('details', {}), ensure_ascii=True),
             ]).lower()
@@ -17788,6 +18669,11 @@ def export_admin_audit_logs():
     actor_filter = str(request.args.get('actor', 'all') or 'all').strip().lower()
     status_filter = str(request.args.get('status', 'all') or 'all').strip().lower()
     target_filter = str(request.args.get('target_id', '') or '').strip().lower()
+    tenant_filter = str(request.args.get('tenant', 'all') or 'all').strip().lower()
+    source_filter = str(request.args.get('source', 'all') or 'all').strip().lower()
+    changed_field_filter = str(request.args.get('changed_field', 'all') or 'all').strip().lower()
+    date_from = str(request.args.get('date_from', '') or '').strip()
+    date_to = str(request.args.get('date_to', '') or '').strip()
     text_filter = str(request.args.get('q', '') or '').strip().lower()
     export_format = str(request.args.get('format', 'json') or 'json').strip().lower()
     if export_format not in {'json', 'csv'}:
@@ -17808,6 +18694,11 @@ def export_admin_audit_logs():
             status_filter=status_filter,
             text_filter=text_filter,
             target_filter=target_filter,
+            tenant_filter=tenant_filter,
+            source_filter=source_filter,
+            changed_field_filter=changed_field_filter,
+            date_from=date_from,
+            date_to=date_to,
             limit=limit,
             newest_first=True,
         )
@@ -17820,6 +18711,11 @@ def export_admin_audit_logs():
                 status_filter=status_filter,
                 text_filter=text_filter,
                 target_filter=target_filter,
+                tenant_filter=tenant_filter,
+                source_filter=source_filter,
+                changed_field_filter=changed_field_filter,
+                date_from=date_from,
+                date_to=date_to,
             )
             filtered_total = len(filtered)
             exported_rows = filtered[-limit:] if filtered_total > limit else filtered
@@ -17832,6 +18728,11 @@ def export_admin_audit_logs():
                 status_filter=status_filter,
                 text_filter=text_filter,
                 target_filter=target_filter,
+                tenant_filter=tenant_filter,
+                source_filter=source_filter,
+                changed_field_filter=changed_field_filter,
+                date_from=date_from,
+                date_to=date_to,
                 limit=1,
             )
             filtered_total = int((filtered_total_payload or {}).get('filtered_total', len(exported_rows)) or 0)
@@ -17843,6 +18744,11 @@ def export_admin_audit_logs():
             status_filter=status_filter,
             text_filter=text_filter,
             target_filter=target_filter,
+            tenant_filter=tenant_filter,
+            source_filter=source_filter,
+            changed_field_filter=changed_field_filter,
+            date_from=date_from,
+            date_to=date_to,
         )
         filtered_total = len(filtered)
         exported_rows = filtered[-limit:] if filtered_total > limit else filtered
@@ -17864,6 +18770,11 @@ def export_admin_audit_logs():
                 'actor': actor_filter,
                 'status': status_filter,
                 'target_id': target_filter,
+                'tenant': tenant_filter,
+                'source': source_filter,
+                'changed_field': changed_field_filter,
+                'date_from': date_from,
+                'date_to': date_to,
                 'q': text_filter,
             },
         },
@@ -17876,7 +18787,7 @@ def export_admin_audit_logs():
         writer.writerow([
             'timestamp', 'action', 'entity', 'target_id', 'status',
             'actor', 'role', 'actor_tenant', 'active_tenant',
-            'method', 'path', 'ip', 'details',
+            'method', 'path', 'ip', 'source', 'summary', 'details',
         ])
         for entry in exported_rows:
             writer.writerow([
@@ -17892,6 +18803,8 @@ def export_admin_audit_logs():
                 entry.get('method', ''),
                 entry.get('path', ''),
                 entry.get('ip', ''),
+                entry.get('source', ''),
+                entry.get('summary', ''),
                 json.dumps(entry.get('details', {}), ensure_ascii=True),
             ])
         content = output.getvalue()
