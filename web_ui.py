@@ -6456,7 +6456,14 @@ def _sensor_activity_ui_meta(activity_status: Any) -> Dict[str, Any]:
     }
 
 
-def _sensor_availability_snapshot(sensor_config: Optional[Dict[str, Any]], active_tenant: str) -> Dict[str, Any]:
+def _sensor_availability_snapshot(
+    sensor_config: Optional[Dict[str, Any]],
+    active_tenant: str,
+    *,
+    runtime_status: Optional[Dict[str, Any]] = None,
+    packet_stats: Optional[Dict[str, Any]] = None,
+    snapshot_sensor_map: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
     sensor_config = dict(sensor_config or {})
     sensor_eui = str(sensor_config.get("eui") or "").strip().upper()
     interval_meta = _resolve_sensor_expected_interval(sensor_config, None)
@@ -6470,20 +6477,22 @@ def _sensor_availability_snapshot(sensor_config: Optional[Dict[str, Any]], activ
     if not sensor_eui:
         return snapshot
 
-    runtime_status = {}
-    packet_stats = {}
-    global tls_server_instance
-    tls_server = tls_server_instance
-    if tls_server and hasattr(tls_server, "get_sensor_registration_status"):
-        try:
-            runtime_status = tls_server.get_sensor_registration_status() or {}
-        except Exception:
-            runtime_status = {}
-    if tls_server and hasattr(tls_server, "sensor_packet_stats"):
-        try:
-            packet_stats = getattr(tls_server, "sensor_packet_stats", {}) or {}
-        except Exception:
-            packet_stats = {}
+    if runtime_status is None or packet_stats is None:
+        global tls_server_instance
+        tls_server = tls_server_instance
+        if runtime_status is None and tls_server and hasattr(tls_server, "get_sensor_registration_status"):
+            try:
+                runtime_status = tls_server.get_sensor_registration_status() or {}
+            except Exception:
+                runtime_status = {}
+        if packet_stats is None and tls_server and hasattr(tls_server, "sensor_packet_stats"):
+            try:
+                packet_stats = getattr(tls_server, "sensor_packet_stats", {}) or {}
+            except Exception:
+                packet_stats = {}
+    runtime_status = runtime_status or {}
+    packet_stats = packet_stats or {}
+    snapshot_sensor_map = snapshot_sensor_map or {}
 
     runtime_entry = (
         runtime_status.get(sensor_eui)
@@ -6516,13 +6525,27 @@ def _sensor_availability_snapshot(sensor_config: Optional[Dict[str, Any]], activ
         except (TypeError, ValueError):
             last_seen_ts = 0.0
     if last_seen_ts <= 0:
+        snapshot_entry = (
+            snapshot_sensor_map.get(sensor_eui)
+            or snapshot_sensor_map.get(sensor_eui.upper())
+            or snapshot_sensor_map.get(sensor_eui.lower())
+            or {}
+        )
+        snapshot_payload = snapshot_entry.get("payload") if isinstance(snapshot_entry, dict) else {}
         try:
-            query_tenant = _resolve_query_tenant_for_sensor(sensor_eui, active_tenant)
-            history = _timescale_fetch_sensor_payload_history(sensor_eui, tenant_id=query_tenant, limit=1)
-            if history:
-                last_seen_ts = _parse_iso_timestamp_to_unix(history[0].get("received_at"))
-        except Exception:
+            last_seen_ts = float((snapshot_payload or {}).get("last_seen_ts") or 0.0)
+        except (TypeError, ValueError):
             last_seen_ts = 0.0
+        if last_seen_ts <= 0:
+            try:
+                last_seen_ts = _parse_iso_timestamp_to_unix((snapshot_payload or {}).get("received_at"))
+            except Exception:
+                last_seen_ts = 0.0
+        if last_seen_ts <= 0:
+            try:
+                last_seen_ts = _parse_iso_timestamp_to_unix((snapshot_entry or {}).get("updated_at"))
+            except Exception:
+                last_seen_ts = 0.0
 
     snapshot["last_seen_timestamp"] = float(last_seen_ts or 0.0)
     if last_seen_ts > 0:
@@ -6570,6 +6593,46 @@ def _sensor_availability_snapshot(sensor_config: Optional[Dict[str, Any]], activ
     return snapshot
 
 
+def _build_sensor_availability_lookup(
+    active_tenant: str,
+    visible_sensors: Optional[Dict[str, Dict[str, Any]]] = None,
+    *,
+    runtime_status: Optional[Dict[str, Any]] = None,
+    packet_stats: Optional[Dict[str, Any]] = None,
+    snapshot_sensor_map: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> Dict[str, Dict[str, Any]]:
+    visible_sensors = visible_sensors or _build_visible_sensor_lookup(active_tenant)
+    if runtime_status is None or packet_stats is None:
+        global tls_server_instance
+        tls_server = tls_server_instance
+        if runtime_status is None:
+            runtime_status = {}
+            if tls_server and hasattr(tls_server, "get_sensor_registration_status"):
+                try:
+                    runtime_status = tls_server.get_sensor_registration_status() or {}
+                except Exception:
+                    runtime_status = {}
+        if packet_stats is None:
+            packet_stats = {}
+            if tls_server and hasattr(tls_server, "sensor_packet_stats"):
+                try:
+                    packet_stats = getattr(tls_server, "sensor_packet_stats", {}) or {}
+                except Exception:
+                    packet_stats = {}
+    if snapshot_sensor_map is None:
+        snapshot_sensor_map = _timescale_fetch_latest_sensor_snapshots(active_tenant)
+    availability_lookup: Dict[str, Dict[str, Any]] = {}
+    for sensor_eui, sensor_config in visible_sensors.items():
+        availability_lookup[sensor_eui] = _sensor_availability_snapshot(
+            sensor_config,
+            active_tenant,
+            runtime_status=runtime_status,
+            packet_stats=packet_stats,
+            snapshot_sensor_map=snapshot_sensor_map,
+        )
+    return availability_lookup
+
+
 def _sensor_is_unavailable(activity_status: Any) -> bool:
     meta = _sensor_activity_ui_meta(activity_status)
     return bool(meta.get("status_incident"))
@@ -6579,6 +6642,8 @@ def _evaluate_triggered_alerts(
     active_tenant: str,
     visible_sensors: Optional[Dict[str, Dict[str, Any]]] = None,
     *,
+    availability_by_eui: Optional[Dict[str, Dict[str, Any]]] = None,
+    latest_values_by_eui: Optional[Dict[str, Dict[str, Any]]] = None,
     persist_state: bool = True,
 ) -> list[Dict[str, Any]]:
     visible_sensors = visible_sensors or _build_visible_sensor_lookup(active_tenant)
@@ -6605,12 +6670,16 @@ def _evaluate_triggered_alerts(
         if not eui:
             continue
         sensor_config = visible_sensors.get(eui)
-        values = _sensor_latest_values(eui, active_tenant)
+        values = dict((latest_values_by_eui or {}).get(eui) or {})
+        if not values:
+            values = _sensor_latest_values(eui, active_tenant)
         availability = None
         for alert in sensor_alerts:
             if alert.get('kind') == 'sensor_offline':
                 if availability is None:
-                    availability = _sensor_availability_snapshot(sensor_config, active_tenant)
+                    availability = dict((availability_by_eui or {}).get(eui) or {})
+                    if not availability:
+                        availability = _sensor_availability_snapshot(sensor_config, active_tenant)
                 if _sensor_is_unavailable(availability.get('activity_status')):
                     triggered.append({
                         **alert,
@@ -6703,6 +6772,11 @@ def _generic_sensor_availability_reason(activity_status: Any) -> str:
 
 def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
     visible_sensors = _build_visible_sensor_lookup(active_tenant)
+    availability_by_eui = _build_sensor_availability_lookup(active_tenant, visible_sensors=visible_sensors)
+    latest_values_by_eui = _timescale_fetch_latest_sensor_decoded_values_map(
+        active_tenant,
+        sensor_euis=list(visible_sensors.keys()),
+    )
     enabled_offline_rule_sensors = {
         str(alert.get("sensor_eui") or "").strip().upper()
         for alert in _load_alerts()
@@ -6714,7 +6788,7 @@ def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
     activity_active_records: list[Dict[str, Any]] = []
 
     for sensor_eui, sensor_config in visible_sensors.items():
-        availability = _sensor_availability_snapshot(sensor_config, active_tenant)
+        availability = dict(availability_by_eui.get(sensor_eui) or {})
         sensor_name = str(sensor_config.get("name") or sensor_eui)
         status_incident = bool(availability.get("status_incident"))
         severity = "error" if availability.get("status_incident_severity") == "error" else "warn"
@@ -6772,7 +6846,13 @@ def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
     if activity_known_records:
         _persist_runtime_history_state(activity_known_records, activity_active_records)
 
-    for alert in _evaluate_triggered_alerts(active_tenant, visible_sensors=visible_sensors, persist_state=True):
+    for alert in _evaluate_triggered_alerts(
+        active_tenant,
+        visible_sensors=visible_sensors,
+        availability_by_eui=availability_by_eui,
+        latest_values_by_eui=latest_values_by_eui,
+        persist_state=True,
+    ):
         kind = _normalize_alert_kind(alert.get("kind"))
         sensor_eui = str(alert.get("sensor_eui") or "").strip().upper()
         sensor_name = str((visible_sensors.get(sensor_eui) or {}).get("name") or sensor_eui or "—")
@@ -7822,6 +7902,83 @@ def _load_app_config_state_value_from_db(config_key, fallback=None):
         return _db_json_value(row[0], fallback if fallback is not None else {}), None
     except Exception as exc:
         return copy.deepcopy(fallback), str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _timescale_fetch_latest_sensor_decoded_values_map(
+    tenant_id: Optional[str] = None,
+    sensor_euis: Optional[List[str]] = None,
+) -> Dict[str, Dict[str, Any]]:
+    tenant = _default_tenant_id() if tenant_id is None else tenant_id
+    normalized_euis = [
+        str(eui or "").strip().upper()
+        for eui in (sensor_euis or [])
+        if str(eui or "").strip()
+    ]
+    if sensor_euis is not None and not normalized_euis:
+        return {}
+    conn, err = _timescale_connect()
+    if conn is None:
+        return {}
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            if _is_global_tenant_scope(tenant):
+                if normalized_euis:
+                    cur.execute(
+                        """
+                        SELECT DISTINCT ON (sensor_eui) sensor_eui, decoded
+                        FROM telemetry_uplink
+                        WHERE sensor_eui = ANY(%s)
+                        ORDER BY sensor_eui, received_at DESC
+                        """,
+                        (normalized_euis,),
+                    )
+                else:
+                    cur.execute(
+                        """
+                        SELECT DISTINCT ON (sensor_eui) sensor_eui, decoded
+                        FROM telemetry_uplink
+                        ORDER BY sensor_eui, received_at DESC
+                        """
+                    )
+            else:
+                tenant_key = _normalize_tenant_id(tenant, fallback=_default_tenant_id())
+                if normalized_euis:
+                    cur.execute(
+                        """
+                        SELECT DISTINCT ON (sensor_eui) sensor_eui, decoded
+                        FROM telemetry_uplink
+                        WHERE tenant_id = %s AND sensor_eui = ANY(%s)
+                        ORDER BY sensor_eui, received_at DESC
+                        """,
+                        (tenant_key, normalized_euis),
+                    )
+                else:
+                    cur.execute(
+                        """
+                        SELECT DISTINCT ON (sensor_eui) sensor_eui, decoded
+                        FROM telemetry_uplink
+                        WHERE tenant_id = %s
+                        ORDER BY sensor_eui, received_at DESC
+                        """,
+                        (tenant_key,),
+                    )
+            rows = cur.fetchall() or []
+        result: Dict[str, Dict[str, Any]] = {}
+        for sensor_eui, decoded in rows:
+            eui_upper = str(sensor_eui or "").strip().upper()
+            if not eui_upper:
+                continue
+            decoded_payload = decoded if isinstance(decoded, dict) else {}
+            result[eui_upper] = dict((decoded_payload.get("values") or {}))
+        return result
+    except Exception:
+        return {}
     finally:
         try:
             conn.close()
@@ -11989,7 +12146,13 @@ def get_sensors():
                         sensor_data.update(_resolve_sensor_expected_interval(sensor_data, None))
                 else:
                     sensor_data.update(_resolve_sensor_expected_interval(sensor_data, None))
-                availability = _sensor_availability_snapshot(sensor_data, active_tenant)
+                availability = _sensor_availability_snapshot(
+                    sensor_data,
+                    active_tenant,
+                    runtime_status=runtime_status,
+                    packet_stats=packet_stats,
+                    snapshot_sensor_map=snapshot_sensor_map,
+                )
                 sensor_data.update({
                     'activity_status': availability.get('activity_status', sensor_data.get('activity_status', 'no_data')),
                     'last_seen_timestamp': availability.get('last_seen_timestamp', sensor_data.get('last_seen_timestamp', 0)),
