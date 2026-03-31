@@ -2722,11 +2722,13 @@ def _normalize_tenant_registry_entry(entry, fallback_tenant_id=None):
 
 def _demo_tenant_ids() -> set[str]:
     try:
-        return {
+        demo_ids = {
             tenant_id
             for tenant_id, entry in _tenant_registry_map().items()
             if _normalize_demo_tenant_flag((entry or {}).get("is_demo"), tenant_id)
         }
+        demo_ids.add("test")
+        return demo_ids
     except Exception:
         return {"test"}
 
