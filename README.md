@@ -113,12 +113,12 @@ Configuration is split between:
 
 - `.env` (runtime/env integration settings)
 - `bssci_config.py` (core server defaults)
-- JSON runtime files:
+- inventory/runtime JSON files:
   - `endpoints.json`
   - `base_stations.json`
   - `coverage_positions.json`
-  - `users.json`
-  - `tenants.json`
+  - `users.json` (recovery fallback only for access bootstrap/import)
+  - `tenants.json` (seed/recovery input for tenant registry)
 
 Important integration families:
 
@@ -131,11 +131,43 @@ Important integration families:
 
 Typical persisted state:
 
-- `users.json`, `tenants.json` (access and tenancy)
 - `base_stations.json` (BS inventory)
 - `endpoints.json` (sensor inventory/config)
 - `coverage_positions.json` (map coordinates)
 - `logs/` (runtime logs)
+
+### DB-First Access and Tenant Registry
+
+Phase 2.1 introduces DB-first storage for:
+
+- users
+- tenant registry metadata
+- admin audit log
+
+Primary storage now lives in the operational database tables:
+
+- `app_users`
+- `tenant_registry_meta`
+- `admin_audit_log`
+- `app_config_state`
+
+Bootstrap and recovery rules:
+
+- `users.default.json`
+  - seed source only
+  - used for first bootstrap of default accounts on a clean clone
+- `users.json`
+  - recovery/import fallback only
+  - no longer the primary runtime store for users
+- `tenants.json`
+  - tenant seed/recovery input
+  - no longer the primary runtime registry when DB-first storage is enabled
+
+Operational guidance:
+
+- Back up the database as the primary source of truth for users, tenant registry and admin audit.
+- Keep `users.default.json` versioned in Git as bootstrap seed content.
+- Treat `users.json` and `tenants.json` as recovery inputs, not as authoritative runtime state.
 
 ## Reliability Features
 
@@ -159,7 +191,7 @@ Suggested backup scope:
 - TimescaleDB data
 - configuration files (`.env`, `bssci_config.py`, JSON state)
 - certificates (`certs/`)
-- users and tenants
+- DB-first access/tenant state (`app_users`, `tenant_registry_meta`, `admin_audit_log`, `app_config_state`)
 
 See `README-Docker.md` for practical commands and examples.
 

@@ -181,6 +181,30 @@ Grafana access:
 - Default datasource: `TimescaleDB`
 - Tenant-aware dashboard variable: use `var-tenant=<tenant_id>` in URL (for example `...?var-tenant=default`)
 
+### DB-First Bootstrap and Recovery Notes
+
+When Timescale-backed config storage is enabled, access and tenant registry are DB-first.
+
+Primary DB tables:
+- `app_users`
+- `tenant_registry_meta`
+- `admin_audit_log`
+- `app_config_state`
+
+Seed / recovery files:
+- `users.default.json`
+  - seed source only for first bootstrap
+- `users.json`
+  - recovery/import fallback only
+- `tenants.json`
+  - tenant seed/recovery input
+
+Operational implications:
+- a clean clone can bootstrap `admin`, `customer` and `test` from `users.default.json`
+- bootstrap admin is forced to change password on first login
+- user and tenant runtime state should be backed up from DB, not reconstructed from `users.json`
+- keep `users.default.json` versioned in Git as bootstrap seed content
+
 ### Volumes
 
 The following directories are mounted as volumes:
@@ -234,7 +258,8 @@ This repository now includes PowerShell scripts:
 They are designed for this stack and backup/restore:
 - TimescaleDB (`bssci-timescaledb`)
 - runtime config files (`.env`, `bssci_config.py`, `endpoints.json`, `base_stations.json`, `coverage_positions.json`, `coverage_floorplan.txt`, `docker-compose.yml`)
-- identity and tenant files (`users.json`, `tenants.json`)
+- DB-first access and tenant registry state (`app_users`, `tenant_registry_meta`, `admin_audit_log`, `app_config_state`)
+- recovery/seed files (`users.json`, `tenants.json`, `users.default.json`) when you use them operationally
 - certificates (`certs/`)
 
 ### Create backup

@@ -777,6 +777,16 @@
                 <div class="bs-inventory-tools">
                     <input id="bsSearch" type="text" class="form-control form-control-sm bs-search" placeholder="{{ t('base_stations.search_placeholder', 'Search by EUI, name, IP, GPS, tag...') }}">
                     <small id="bsTableMeta" class="text-muted fw-semibold">{{ t('base_stations.live_gateway_inventory', 'Live base station inventory') }}</small>
+                    <small id="bsStorageMeta" class="text-muted fw-semibold"></small>
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('bsImportFile').click()">
+                            <i class="fas fa-upload me-1"></i>{{ t('common.import', 'Importovať') }}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportBaseStations()">
+                            <i class="fas fa-download me-1"></i>{{ t('common.export', 'Exportovať') }}
+                        </button>
+                    </div>
+                    <input type="file" id="bsImportFile" accept=".json,application/json" style="display:none;" onchange="importBaseStations(this)">
                 </div>
                 <div id="bsFilterRow" class="bs-filter-row">
                     <button type="button" class="bs-filter-chip is-active" data-filter="all">{{ t('common.all', 'All') }} <span class="count" id="bs-filter-count-all">0</span></button>
@@ -996,6 +1006,7 @@ let editingEui = null;
 let refreshInterval;
 let uptimeChart = null;
 let baseStationCache = [];
+let baseStationStorageMeta = null;
 let bsActiveFilter = 'all';
 let bsCurrentPage = 1;
 let bsPageSize = 20;
@@ -1469,13 +1480,31 @@ function renderBaseStationTable() {
     initBsActionDropdowns();
 }
 
+function updateBaseStationStorageMeta() {
+    const metaEl = document.getElementById('bsStorageMeta');
+    if (!metaEl) return;
+    if (!baseStationStorageMeta || typeof baseStationStorageMeta !== 'object') {
+        metaEl.textContent = '';
+        return;
+    }
+    const backend = String(baseStationStorageMeta.storage_backend || '').toLowerCase() === 'db'
+        ? tr('common.database', 'Databáza')
+        : tr('common.recovery_file', 'Recovery súbor');
+    const seeded = baseStationStorageMeta.bootstrap_state && baseStationStorageMeta.bootstrap_state.seeded
+        ? tr('common.seeded', 'bootstrap')
+        : tr('common.live', 'live');
+    metaEl.textContent = `${backend} · ${seeded}`;
+}
+
 function loadBaseStations() {
     Promise.all([
         fetch('/api/base-stations').then(r => r.json()),
-        fetch('/api/base-stations/certificates/status').then(r => r.json()).catch(() => ({success: false, certificates: []}))
-    ]).then(([data, certData]) => {
+        fetch('/api/base-stations/certificates/status').then(r => r.json()).catch(() => ({success: false, certificates: []})),
+        fetch('/api/base-stations/storage-meta').then(r => r.json()).catch(() => null)
+    ]).then(([data, certData, storageMeta]) => {
         let connected = 0, connecting = 0, offline = 0;
         const allBs = data.base_stations || [];
+        baseStationStorageMeta = storageMeta && storageMeta.success ? storageMeta : null;
 
         const certMap = {};
         if (certData.success) {
@@ -1498,12 +1527,44 @@ function loadBaseStations() {
         document.getElementById('totalOffline').textContent = offline;
 
         refreshBsFilterChips();
+        updateBaseStationStorageMeta();
         renderBaseStationTable();
         maybeOpenBaseStationEditFromQuery();
     }).catch(err => {
         console.error('Failed to load base stations:', err);
         document.getElementById('bs-table').innerHTML = `<tr><td colspan="10" class="text-center text-danger py-3 fw-semibold">${escapeHtml(tr('runtime.failed_load_base_station_data', 'Failed to load base station data.'))}</td></tr>`;
     });
+}
+
+function exportBaseStations() {
+    window.location.href = '/api/base-stations/export';
+}
+
+function importBaseStations(input) {
+    if (!input.files || input.files.length === 0) return;
+
+    const formData = new FormData();
+    formData.append('file', input.files[0]);
+
+    fetch('/api/base-stations/import', { method: 'POST', body: formData })
+        .then(async (response) => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.success === false) {
+                throw new Error(data.message || data.error || `Request failed (${response.status})`);
+            }
+            showToast(data.message || tr('runtime.import_complete', 'Import complete.'));
+            refreshAll();
+        })
+        .catch((error) => {
+            if (window.showAlert) {
+                showAlert('danger', tr('runtime.import_base_stations_failed', 'Import základňových staníc zlyhal: {error}', { error: error.message }));
+            } else {
+                alert(error.message || tr('runtime.import_base_stations_failed', 'Import základňových staníc zlyhal.'));
+            }
+        })
+        .finally(() => {
+            input.value = '';
+        });
 }
 
 function maybeOpenBaseStationEditFromQuery() {

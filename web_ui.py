@@ -2896,6 +2896,58 @@ def _maybe_upgrade_legacy_password_after_login(users_data, username, raw_passwor
     user["password"] = _hash_password_value(raw_password)
     return bool(save_users(users_data))
 
+
+def _generate_temporary_password():
+    return f"Temp!{secrets.token_urlsafe(6)}"
+
+
+def _serialize_user_for_export(username, user):
+    if not isinstance(user, dict):
+        return None
+    role = _normalize_user_role(user.get("role", "viewer"))
+    tenant_id = _normalize_user_tenant_for_role(role, user.get("tenant_id"), fallback=_default_tenant_id())
+    record = {
+        "username": str(username or "").strip(),
+        "name": str(user.get("name") or username or "").strip(),
+        "role": _visible_role_name(role),
+        "tenant_id": tenant_id,
+        "active": bool(user.get("active", True)),
+    }
+    if role == "admin":
+        record["admin_permissions"] = _normalize_admin_permissions(user.get("admin_permissions"))
+    return record if record["username"] else None
+
+
+def _serialize_base_station_for_export(eui, base_station):
+    if not isinstance(base_station, dict):
+        return None
+    normalized_eui = _normalize_eui_upper(base_station.get("eui") or eui)
+    if not normalized_eui:
+        return None
+    return {
+        "eui": normalized_eui,
+        "name": str(base_station.get("name") or "").strip(),
+        "tags": list(base_station.get("tags") or []),
+        "ip": str(base_station.get("ip") or "").strip(),
+        "gps_lat": base_station.get("gps_lat"),
+        "gps_lng": base_station.get("gps_lng"),
+        "tenant_id": _tenant_id_from_base_station(base_station),
+    }
+
+
+def _parse_json_upload_or_payload():
+    upload = request.files.get("file")
+    if upload is not None and getattr(upload, "filename", ""):
+        try:
+            raw_bytes = upload.read()
+            return json.loads(raw_bytes.decode("utf-8"))
+        except Exception as exc:
+            raise ValueError(f"Invalid uploaded JSON file: {exc}")
+    payload = request.get_json(silent=True)
+    if isinstance(payload, dict):
+        return payload
+    raise ValueError("Missing JSON payload or uploaded file.")
+
 def _should_force_initial_admin_password_change(user, bootstrap_admin_password=None):
     if not bool(getattr(bssci_config, "AUTH_FORCE_INITIAL_ADMIN_PASSWORD_CHANGE", True)):
         return False
@@ -3289,6 +3341,28 @@ def _ensure_timescale_schema(conn):
             """)
             cur.execute("CREATE INDEX IF NOT EXISTS idx_app_users_role ON app_users (role)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_app_users_tenant ON app_users (tenant_id)")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS app_sensors (
+                    eui TEXT PRIMARY KEY,
+                    tenant_id TEXT NOT NULL DEFAULT 'default',
+                    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_app_sensors_tenant ON app_sensors (tenant_id)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_app_sensors_updated ON app_sensors (updated_at DESC)")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS app_base_stations (
+                    eui TEXT PRIMARY KEY,
+                    tenant_id TEXT NOT NULL DEFAULT 'default',
+                    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_app_base_stations_tenant ON app_base_stations (tenant_id)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_app_base_stations_updated ON app_base_stations (updated_at DESC)")
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS app_config_state (
                     config_key TEXT PRIMARY KEY,
@@ -5226,9 +5300,67 @@ def _update_sensor_attached_base_stations(sensor_eui, base_station_euis, tenant_
         _save_all_sensors(sensors)
     return found and changed
 
+
+def _sensor_audit_snapshot(sensor: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    sensor = dict(sensor or {})
+    return {
+        "eui": _normalize_eui_upper(sensor.get("eui")),
+        "name": str(sensor.get("name") or "").strip(),
+        "tenant_id": _tenant_id_from_sensor(sensor),
+        "short_addr": str(sensor.get("shortAddr") or "").strip(),
+        "bidi": bool(sensor.get("bidi", False)),
+        "tags": _normalize_sensor_tags(sensor.get("tags", [])),
+        "sensor_profile": str(sensor.get("sensor_profile") or "auto"),
+        "payload_decoder": str(sensor.get("payload_decoder") or "auto"),
+        "environment_context": str(sensor.get("environment_context") or "auto"),
+        "reporting_mode": _normalize_reporting_mode(sensor.get("reporting_mode")),
+        "expected_interval_seconds": _normalize_expected_interval_seconds(sensor.get("expected_interval_seconds")),
+        "stale_after_hours": _normalize_stale_after_hours(sensor.get("stale_after_hours")),
+        "gps_lat": sensor.get("gps_lat"),
+        "gps_lng": sensor.get("gps_lng"),
+        "marker_color": sensor.get("marker_color"),
+        "attached_base_stations": _normalize_base_station_route_list(sensor.get("attached_base_stations", [])),
+        "shared_tenants": [
+            _normalize_tenant_id(item, fallback=_default_tenant_id())
+            for item in (sensor.get("shared_tenants") or [])
+        ],
+    }
+
+
+def _base_station_audit_snapshot(eui: Any, base_station: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    base_station = dict(base_station or {})
+    return {
+        "eui": _normalize_eui_upper(base_station.get("eui") or eui),
+        "name": str(base_station.get("name") or "").strip(),
+        "tenant_id": _tenant_id_from_base_station(base_station),
+        "ip": str(base_station.get("ip") or "").strip(),
+        "tags": list(base_station.get("tags") or []),
+        "gps_lat": base_station.get("gps_lat"),
+        "gps_lng": base_station.get("gps_lng"),
+    }
+
+
+def _audit_changed_fields(before: Optional[Dict[str, Any]], after: Optional[Dict[str, Any]]) -> list[str]:
+    before = dict(before or {})
+    after = dict(after or {})
+    changed = []
+    for key in sorted(set(before.keys()) | set(after.keys())):
+        if before.get(key) != after.get(key):
+            changed.append(str(key))
+    return changed
+
 def _load_all_sensors():
+    if _db_first_config_enabled():
+        bootstrap_state = _bootstrap_sensors_store_if_needed()
+        sensors, err = _load_sensors_payload_from_db()
+        if isinstance(sensors, list):
+            return sensors
+        if err:
+            logger.warning("Falling back to %s for sensors load: %s", SENSORS_RECOVERY_FILE, err)
+        elif bootstrap_state.get("seeded"):
+            logger.info("Bootstrapped sensors store from %s", bootstrap_state.get("source"))
     try:
-        with open(bssci_config.SENSOR_CONFIG_FILE, "r") as f:
+        with open(bssci_config.SENSOR_CONFIG_FILE, "r", encoding="utf-8") as f:
             sensors = json.load(f) or []
         if isinstance(sensors, list):
             return sensors
@@ -5237,8 +5369,15 @@ def _load_all_sensors():
     return []
 
 def _save_all_sensors(sensors):
-    with open(bssci_config.SENSOR_CONFIG_FILE, "w") as f:
-        json.dump(list(sensors or []), f, indent=4)
+    if _db_first_config_enabled():
+        ok, err = _save_sensors_payload_to_db(list(sensors or []))
+        if not ok:
+            logger.warning("Falling back to %s for sensors save: %s", SENSORS_RECOVERY_FILE, err)
+        else:
+            _invalidate_viewer_sensor_list_cache()
+            return
+    with open(bssci_config.SENSOR_CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(list(sensors or []), f, indent=4, ensure_ascii=False)
     _invalidate_viewer_sensor_list_cache()
 
 
@@ -6878,8 +7017,7 @@ def _sync_inventory_gps_to_coverage_positions():
 
     # Sensors
     try:
-        with open(bssci_config.SENSOR_CONFIG_FILE, "r") as f:
-            sensors = json.load(f) or []
+        sensors = _load_all_sensors()
     except Exception:
         sensors = []
 
@@ -7023,13 +7161,7 @@ def _update_sensor_gps_by_eui(eui: str, gps_lat: float, gps_lng: float) -> None:
     if not sensor_eui:
         raise ValueError("Sensor EUI is required")
 
-    try:
-        with open(bssci_config.SENSOR_CONFIG_FILE, "r") as f:
-            sensors = json.load(f) or []
-    except FileNotFoundError:
-        sensors = []
-    except json.JSONDecodeError:
-        sensors = []
+    sensors = _load_all_sensors()
 
     if not isinstance(sensors, list):
         raise ValueError("Sensor configuration is invalid")
@@ -7051,8 +7183,7 @@ def _update_sensor_gps_by_eui(eui: str, gps_lat: float, gps_lng: float) -> None:
     if not found:
         raise ValueError(f"Sensor {sensor_eui} not found")
 
-    with open(bssci_config.SENSOR_CONFIG_FILE, "w") as f:
-        json.dump(sensors, f, indent=4)
+    _save_all_sensors(sensors)
 
 def _update_base_station_gps_by_eui(eui: str, gps_lat: float, gps_lng: float) -> None:
     bs_eui = _normalize_eui_upper(eui)
@@ -7076,10 +7207,24 @@ def _update_base_station_gps_by_eui(eui: str, gps_lat: float, gps_lng: float) ->
         raise ValueError(f"Base station {bs_eui} not found")
 
     bs_data = dict(base_stations.get(target_key, {}) or {})
+    before_snapshot = _base_station_audit_snapshot(target_key, bs_data)
     bs_data["gps_lat"] = gps_lat
     bs_data["gps_lng"] = gps_lng
     base_stations[target_key] = bs_data
     save_base_station_config(config)
+    after_snapshot = _base_station_audit_snapshot(target_key, bs_data)
+    _record_admin_audit(
+        action='base_station.update_gps',
+        entity='base_station',
+        target_id=bs_eui,
+        status='success',
+        details={
+            'tenant_id': _tenant_id_from_base_station(bs_data),
+            'before': before_snapshot,
+            'after': after_snapshot,
+            'changed_fields': _audit_changed_fields(before_snapshot, after_snapshot),
+        },
+    )
 
 def _normalize_sensor_payload(data):
     def _normalize_payload_decoder(value):
@@ -7150,12 +7295,42 @@ def _ensure_ca_exists():
                            capture_output=True, text=True, timeout=30)
     return result.returncode == 0
 
-def _generate_bs_certificate(eui):
+def _generate_bs_certificate(eui, audit_context: str = "system"):
     eui = eui.lower()
+    config = load_base_station_config()
+    bs_data = dict(config.get("base_stations", {}).get(eui, {}) or {})
+    tenant_id = _tenant_id_from_base_station(bs_data)
+    before_snapshot = _base_station_audit_snapshot(eui, bs_data) if bs_data else None
     if not _validate_eui(eui):
-        return False, "Invalid EUI format"
+        message = "Invalid EUI format"
+        _record_admin_audit(
+            action='base_station.generate_certificate',
+            entity='base_station',
+            target_id=eui,
+            status='error',
+            details={
+                'tenant_id': tenant_id,
+                'message': message,
+                'audit_context': audit_context,
+                'before': before_snapshot,
+            },
+        )
+        return False, message
     if not _ensure_ca_exists():
-        return False, "Failed to ensure CA exists"
+        message = "Failed to ensure CA exists"
+        _record_admin_audit(
+            action='base_station.generate_certificate',
+            entity='base_station',
+            target_id=eui,
+            status='error',
+            details={
+                'tenant_id': tenant_id,
+                'message': message,
+                'audit_context': audit_context,
+                'before': before_snapshot,
+            },
+        )
+        return False, message
     bs_cert_dir = os.path.join('certs', f'bs_{eui}')
     os.makedirs(bs_cert_dir, exist_ok=True)
     key_path = os.path.join(bs_cert_dir, f'{eui}_key.pem')
@@ -7164,27 +7339,82 @@ def _generate_bs_certificate(eui):
     result = subprocess.run(['openssl', 'genrsa', '-out', key_path, '2048'],
                            capture_output=True, text=True, timeout=30)
     if result.returncode != 0:
-        return False, f"Key generation failed: {result.stderr}"
+        message = f"Key generation failed: {result.stderr}"
+        _record_admin_audit(
+            action='base_station.generate_certificate',
+            entity='base_station',
+            target_id=eui,
+            status='error',
+            details={
+                'tenant_id': tenant_id,
+                'message': message,
+                'audit_context': audit_context,
+                'before': before_snapshot,
+            },
+        )
+        return False, message
     result = subprocess.run(['openssl', 'req', '-new', '-key', key_path, '-out', csr_path,
                             '-subj', f'/C=US/ST=State/L=City/O=BSSCI/CN={eui}'],
                            capture_output=True, text=True, timeout=30)
     if result.returncode != 0:
-        return False, f"CSR generation failed: {result.stderr}"
+        message = f"CSR generation failed: {result.stderr}"
+        _record_admin_audit(
+            action='base_station.generate_certificate',
+            entity='base_station',
+            target_id=eui,
+            status='error',
+            details={
+                'tenant_id': tenant_id,
+                'message': message,
+                'audit_context': audit_context,
+                'before': before_snapshot,
+            },
+        )
+        return False, message
     result = subprocess.run(['openssl', 'x509', '-req', '-in', csr_path,
                             '-CA', 'certs/ca_cert.pem', '-CAkey', 'certs/ca_key.pem',
                             '-CAcreateserial', '-out', cert_path, '-days', '365'],
                            capture_output=True, text=True, timeout=30)
     if result.returncode != 0:
-        return False, f"Certificate signing failed: {result.stderr}"
+        message = f"Certificate signing failed: {result.stderr}"
+        _record_admin_audit(
+            action='base_station.generate_certificate',
+            entity='base_station',
+            target_id=eui,
+            status='error',
+            details={
+                'tenant_id': tenant_id,
+                'message': message,
+                'audit_context': audit_context,
+                'before': before_snapshot,
+            },
+        )
+        return False, message
     if os.path.exists(csr_path):
         os.remove(csr_path)
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=365)
-    config = load_base_station_config()
     if eui in config.get("base_stations", {}):
         config["base_stations"][eui]["cert_generated"] = now.strftime('%Y-%m-%dT%H:%M:%S')
         config["base_stations"][eui]["cert_expires"] = expires.strftime('%Y-%m-%dT%H:%M:%S')
         save_base_station_config(config)
+    after_data = dict(config.get("base_stations", {}).get(eui, {}) or {})
+    after_snapshot = _base_station_audit_snapshot(eui, after_data) if after_data else None
+    _record_admin_audit(
+        action='base_station.generate_certificate',
+        entity='base_station',
+        target_id=eui,
+        status='success',
+        details={
+            'tenant_id': _tenant_id_from_base_station(after_data) or tenant_id,
+            'audit_context': audit_context,
+            'before': before_snapshot,
+            'after': after_snapshot,
+            'changed_fields': _audit_changed_fields(before_snapshot or {}, after_snapshot or {}),
+            'cert_generated': after_data.get('cert_generated'),
+            'cert_expires': after_data.get('cert_expires'),
+        },
+    )
     return True, "Certificate generated successfully"
 
 app = Flask(__name__)
@@ -7414,9 +7644,14 @@ def _check_api_rate_limit(actor_key):
 
 TENANT_REGISTRY_FILE = "tenants.json"
 USER_SEED_FILE = "users.default.json"
+USERS_RECOVERY_FILE = "users.json"
+SENSORS_RECOVERY_FILE = getattr(bssci_config, "SENSOR_CONFIG_FILE", "endpoints.json")
+BASE_STATIONS_RECOVERY_FILE = getattr(bssci_config, "BASE_STATION_CONFIG_FILE", "base_stations.json")
 _ROLE_PERMISSIONS_CONFIG_KEY = "role_permissions"
 _USERS_BOOTSTRAP_STATE_KEY = "bootstrap.users"
 _TENANTS_BOOTSTRAP_STATE_KEY = "bootstrap.tenants"
+_SENSORS_BOOTSTRAP_STATE_KEY = "bootstrap.sensors"
+_BASE_STATIONS_BOOTSTRAP_STATE_KEY = "bootstrap.base_stations"
 
 
 def _db_first_config_enabled():
@@ -7643,26 +7878,363 @@ def _bootstrap_tenant_registry_store_if_needed():
 
 def _users_storage_backend_meta():
     if not _db_first_config_enabled():
-        return {"backend": "json", "db_enabled": False, "bootstrap_state": {}}
+        return {
+            "backend": "json",
+            "db_enabled": False,
+            "bootstrap_state": {},
+            "seed_defaults_file": USER_SEED_FILE,
+            "recovery_file": USERS_RECOVERY_FILE,
+        }
     state, err = _load_app_config_state_value_from_db(_USERS_BOOTSTRAP_STATE_KEY, {})
     return {
         "backend": "db",
         "db_enabled": True,
         "bootstrap_state": state if isinstance(state, dict) else {},
         "bootstrap_error": err or "",
+        "seed_defaults_file": USER_SEED_FILE,
+        "recovery_file": USERS_RECOVERY_FILE,
     }
 
 
 def _tenant_storage_backend_meta():
     if not _db_first_config_enabled():
-        return {"backend": "json", "db_enabled": False, "bootstrap_state": {}}
+        return {
+            "backend": "json",
+            "db_enabled": False,
+            "bootstrap_state": {},
+            "seed_defaults_file": TENANT_REGISTRY_FILE,
+            "recovery_file": TENANT_REGISTRY_FILE,
+        }
     state, err = _load_app_config_state_value_from_db(_TENANTS_BOOTSTRAP_STATE_KEY, {})
     return {
         "backend": "db",
         "db_enabled": True,
         "bootstrap_state": state if isinstance(state, dict) else {},
         "bootstrap_error": err or "",
+        "seed_defaults_file": TENANT_REGISTRY_FILE,
+        "recovery_file": TENANT_REGISTRY_FILE,
     }
+
+
+def _sensors_storage_backend_meta():
+    if not _db_first_config_enabled():
+        return {
+            "backend": "json",
+            "db_enabled": False,
+            "bootstrap_state": {},
+            "seed_defaults_file": SENSORS_RECOVERY_FILE,
+            "recovery_file": SENSORS_RECOVERY_FILE,
+        }
+    state, err = _load_app_config_state_value_from_db(_SENSORS_BOOTSTRAP_STATE_KEY, {})
+    return {
+        "backend": "db",
+        "db_enabled": True,
+        "bootstrap_state": state if isinstance(state, dict) else {},
+        "bootstrap_error": err or "",
+        "seed_defaults_file": SENSORS_RECOVERY_FILE,
+        "recovery_file": SENSORS_RECOVERY_FILE,
+    }
+
+
+def _base_stations_storage_backend_meta():
+    if not _db_first_config_enabled():
+        return {
+            "backend": "json",
+            "db_enabled": False,
+            "bootstrap_state": {},
+            "seed_defaults_file": BASE_STATIONS_RECOVERY_FILE,
+            "recovery_file": BASE_STATIONS_RECOVERY_FILE,
+        }
+    state, err = _load_app_config_state_value_from_db(_BASE_STATIONS_BOOTSTRAP_STATE_KEY, {})
+    return {
+        "backend": "db",
+        "db_enabled": True,
+        "bootstrap_state": state if isinstance(state, dict) else {},
+        "bootstrap_error": err or "",
+        "seed_defaults_file": BASE_STATIONS_RECOVERY_FILE,
+        "recovery_file": BASE_STATIONS_RECOVERY_FILE,
+    }
+
+
+def _load_sensors_file_payload():
+    sensor_file = getattr(bssci_config, "SENSOR_CONFIG_FILE", "endpoints.json")
+    try:
+        with open(sensor_file, "r", encoding="utf-8") as f:
+            data = json.load(f) or []
+        return data if isinstance(data, list) else []
+    except Exception as exc:
+        logger.warning("Failed to read %s for DB migration seed: %s", sensor_file, exc)
+        return []
+
+
+def _load_base_station_file_payload():
+    config_file = getattr(bssci_config, "BASE_STATION_CONFIG_FILE", "base_stations.json")
+    try:
+        with open(config_file, "r", encoding="utf-8") as f:
+            data = json.load(f) or {}
+        return data if isinstance(data, dict) else {"base_stations": {}}
+    except Exception as exc:
+        logger.warning("Failed to read %s for DB migration seed: %s", config_file, exc)
+        return {"base_stations": {}}
+
+
+def _load_sensors_payload_from_db():
+    conn, err = _timescale_connect()
+    if conn is None:
+        return None, err
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT eui, payload
+                FROM app_sensors
+                ORDER BY eui ASC
+            """)
+            rows = cur.fetchall() or []
+        sensors = []
+        for eui, payload in rows:
+            if isinstance(payload, str):
+                try:
+                    payload = json.loads(payload)
+                except Exception:
+                    payload = {}
+            if not isinstance(payload, dict):
+                payload = {}
+            payload = copy.deepcopy(payload)
+            payload["eui"] = _normalize_eui_upper(payload.get("eui") or eui)
+            sensors.append(payload)
+        return sensors, None
+    except Exception as exc:
+        return None, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _save_sensors_payload_to_db(sensors):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return False, err
+    try:
+        _ensure_timescale_schema(conn)
+        normalized_rows = []
+        tenant_ids = set()
+        for raw_sensor in (sensors or []):
+            if not isinstance(raw_sensor, dict):
+                continue
+            payload = copy.deepcopy(raw_sensor)
+            eui = _normalize_eui_upper(payload.get("eui"))
+            if not eui:
+                continue
+            payload["eui"] = eui
+            tenant_id = _tenant_id_from_sensor(payload)
+            tenant_ids.add(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()))
+            normalized_rows.append((eui, tenant_id, json.dumps(payload, ensure_ascii=False)))
+
+        conn.autocommit = False
+        with conn.cursor() as cur:
+            if tenant_ids:
+                cur.executemany(
+                    """
+                    INSERT INTO tenants (id, name)
+                    VALUES (%s, %s)
+                    ON CONFLICT (id) DO NOTHING
+                    """,
+                    [(tenant_id, tenant_id) for tenant_id in sorted(tenant_ids)],
+                )
+            cur.execute("SELECT eui FROM app_sensors")
+            existing = {str((row or [None])[0] or "").strip().upper() for row in (cur.fetchall() or [])}
+            incoming = {row[0] for row in normalized_rows}
+            for eui in sorted(existing - incoming):
+                cur.execute("DELETE FROM app_sensors WHERE eui = %s", (eui,))
+            for eui, tenant_id, payload_json in normalized_rows:
+                cur.execute(
+                    """
+                    INSERT INTO app_sensors (eui, tenant_id, payload, updated_at)
+                    VALUES (%s, %s, %s::jsonb, NOW())
+                    ON CONFLICT (eui) DO UPDATE SET
+                        tenant_id = EXCLUDED.tenant_id,
+                        payload = EXCLUDED.payload,
+                        updated_at = NOW()
+                    """,
+                    (eui, tenant_id, payload_json),
+                )
+        conn.commit()
+        return True, None
+    except Exception as exc:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        return False, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _load_base_station_payload_from_db():
+    conn, err = _timescale_connect()
+    if conn is None:
+        return None, err
+    try:
+        _ensure_timescale_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT eui, payload
+                FROM app_base_stations
+                ORDER BY eui ASC
+            """)
+            rows = cur.fetchall() or []
+        base_stations = {}
+        for eui, payload in rows:
+            if isinstance(payload, str):
+                try:
+                    payload = json.loads(payload)
+                except Exception:
+                    payload = {}
+            if not isinstance(payload, dict):
+                payload = {}
+            payload = copy.deepcopy(payload)
+            canonical_eui = _normalize_eui_upper(payload.get("eui") or eui)
+            payload["eui"] = canonical_eui
+            base_stations[canonical_eui] = payload
+        return {"base_stations": base_stations}, None
+    except Exception as exc:
+        return None, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _save_base_station_payload_to_db(config):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return False, err
+    try:
+        _ensure_timescale_schema(conn)
+        base_stations = (config or {}).get("base_stations", {}) if isinstance(config, dict) else {}
+        if not isinstance(base_stations, dict):
+            base_stations = {}
+        normalized_rows = []
+        tenant_ids = set()
+        for raw_eui, raw_bs in (base_stations or {}).items():
+            if not isinstance(raw_bs, dict):
+                continue
+            payload = copy.deepcopy(raw_bs)
+            eui = _normalize_eui_upper(payload.get("eui") or raw_eui)
+            if not eui:
+                continue
+            payload["eui"] = eui
+            tenant_id = _tenant_id_from_base_station(payload)
+            tenant_ids.add(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()))
+            normalized_rows.append((eui, tenant_id, json.dumps(payload, ensure_ascii=False)))
+
+        conn.autocommit = False
+        with conn.cursor() as cur:
+            if tenant_ids:
+                cur.executemany(
+                    """
+                    INSERT INTO tenants (id, name)
+                    VALUES (%s, %s)
+                    ON CONFLICT (id) DO NOTHING
+                    """,
+                    [(tenant_id, tenant_id) for tenant_id in sorted(tenant_ids)],
+                )
+            cur.execute("SELECT eui FROM app_base_stations")
+            existing = {str((row or [None])[0] or "").strip().upper() for row in (cur.fetchall() or [])}
+            incoming = {row[0] for row in normalized_rows}
+            for eui in sorted(existing - incoming):
+                cur.execute("DELETE FROM app_base_stations WHERE eui = %s", (eui,))
+            for eui, tenant_id, payload_json in normalized_rows:
+                cur.execute(
+                    """
+                    INSERT INTO app_base_stations (eui, tenant_id, payload, updated_at)
+                    VALUES (%s, %s, %s::jsonb, NOW())
+                    ON CONFLICT (eui) DO UPDATE SET
+                        tenant_id = EXCLUDED.tenant_id,
+                        payload = EXCLUDED.payload,
+                        updated_at = NOW()
+                    """,
+                    (eui, tenant_id, payload_json),
+                )
+        conn.commit()
+        return True, None
+    except Exception as exc:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        return False, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _bootstrap_sensors_store_if_needed():
+    if not _db_first_config_enabled():
+        return {"used": False, "source": "json", "seeded": False}
+    current_rows, err = _load_sensors_payload_from_db()
+    if isinstance(current_rows, list) and current_rows:
+        state, state_err = _load_app_config_state_value_from_db(_SENSORS_BOOTSTRAP_STATE_KEY, {})
+        if not isinstance(state, dict) or not state:
+            state_payload = {
+                "seeded_at": datetime.now(timezone.utc).isoformat(),
+                "seed_source": "preexisting_db",
+                "seeded": False,
+            }
+            _save_app_config_state_value_to_db(_SENSORS_BOOTSTRAP_STATE_KEY, state_payload)
+            state = state_payload
+        return {"used": False, "source": "db", "seeded": False, "state": state, "error": state_err or err}
+    seed_payload = _load_sensors_file_payload()
+    seed_source = SENSORS_RECOVERY_FILE
+    ok, save_err = _save_sensors_payload_to_db(seed_payload)
+    if ok:
+        state_payload = {
+            "seeded_at": datetime.now(timezone.utc).isoformat(),
+            "seed_source": seed_source,
+            "seeded": True,
+        }
+        _save_app_config_state_value_to_db(_SENSORS_BOOTSTRAP_STATE_KEY, state_payload)
+        return {"used": True, "source": seed_source, "seeded": True, "state": state_payload}
+    return {"used": False, "source": "json-fallback", "seeded": False, "error": save_err or err}
+
+
+def _bootstrap_base_stations_store_if_needed():
+    if not _db_first_config_enabled():
+        return {"used": False, "source": "json", "seeded": False}
+    current_payload, err = _load_base_station_payload_from_db()
+    current_map = current_payload.get("base_stations", {}) if isinstance(current_payload, dict) else {}
+    if isinstance(current_map, dict) and current_map:
+        state, state_err = _load_app_config_state_value_from_db(_BASE_STATIONS_BOOTSTRAP_STATE_KEY, {})
+        if not isinstance(state, dict) or not state:
+            state_payload = {
+                "seeded_at": datetime.now(timezone.utc).isoformat(),
+                "seed_source": "preexisting_db",
+                "seeded": False,
+            }
+            _save_app_config_state_value_to_db(_BASE_STATIONS_BOOTSTRAP_STATE_KEY, state_payload)
+            state = state_payload
+        return {"used": False, "source": "db", "seeded": False, "state": state, "error": state_err or err}
+    seed_payload = _load_base_station_file_payload()
+    seed_source = BASE_STATIONS_RECOVERY_FILE
+    ok, save_err = _save_base_station_payload_to_db(seed_payload)
+    if ok:
+        state_payload = {
+            "seeded_at": datetime.now(timezone.utc).isoformat(),
+            "seed_source": seed_source,
+            "seeded": True,
+        }
+        _save_app_config_state_value_to_db(_BASE_STATIONS_BOOTSTRAP_STATE_KEY, state_payload)
+        return {"used": True, "source": seed_source, "seeded": True, "state": state_payload}
+    return {"used": False, "source": "json-fallback", "seeded": False, "error": save_err or err}
 
 
 def _load_users_payload_from_db():
@@ -9280,6 +9852,8 @@ def api_users():
             'storage_backend': storage_meta.get('backend', 'json'),
             'storage_db_enabled': bool(storage_meta.get('db_enabled', False)),
             'bootstrap_state': storage_meta.get('bootstrap_state', {}),
+            'seed_defaults_file': storage_meta.get('seed_defaults_file', USER_SEED_FILE),
+            'recovery_file': storage_meta.get('recovery_file', USERS_RECOVERY_FILE),
             'admin_scopes': [
                 {
                     'id': scope_id,
@@ -9429,6 +10003,156 @@ def api_users():
                 details={},
             )
         return jsonify({'success': True})
+
+
+@app.route('/api/users/export', methods=['GET'])
+@login_required
+@admin_scope_required('manage_users')
+def export_users_admin():
+    users_data = load_users()
+    payload_users = []
+    for username, user in sorted((users_data.get('users', {}) or {}).items(), key=lambda item: str(item[0]).lower()):
+        record = _serialize_user_for_export(username, user)
+        if record:
+            payload_users.append(record)
+    storage_meta = _users_storage_backend_meta()
+    payload = {
+        "format_version": 1,
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "storage_backend": storage_meta.get("backend", "json"),
+        "seed_defaults_file": storage_meta.get("seed_defaults_file", USER_SEED_FILE),
+        "recovery_file": storage_meta.get("recovery_file", USERS_RECOVERY_FILE),
+        "users": payload_users,
+    }
+    _record_admin_audit(
+        action='user.export',
+        entity='user',
+        target_id='all_users',
+        status='success',
+        details={'count': len(payload_users)},
+    )
+    filename = f"users_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    return Response(
+        json.dumps(payload, indent=2, ensure_ascii=True),
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment; filename={filename}'},
+    )
+
+
+@app.route('/api/users/import', methods=['POST'])
+@login_required
+@admin_scope_required('manage_users')
+def import_users_admin():
+    actor_user = get_current_user() or {}
+    current_username = str(session.get('username') or '').strip()
+    try:
+        payload = _parse_json_upload_or_payload()
+    except ValueError as exc:
+        _record_admin_audit(
+            action='user.import',
+            entity='user',
+            target_id='all_users',
+            status='error',
+            details={'error': str(exc)},
+        )
+        return jsonify({'success': False, 'error': str(exc)}), 400
+
+    imported = payload.get("data", payload) if isinstance(payload, dict) else {}
+    users_in = imported.get("users", []) if isinstance(imported, dict) else []
+    if not isinstance(users_in, list):
+        return jsonify({'success': False, 'error': 'Import payload must contain a users list.'}), 400
+
+    users_data = load_users()
+    users_map = users_data.get('users', {}) if isinstance(users_data, dict) else {}
+    created = 0
+    updated = 0
+    skipped = []
+    generated_passwords = []
+
+    for entry in users_in:
+        if not isinstance(entry, dict):
+            skipped.append({'reason': 'invalid_record'})
+            continue
+        username = str(entry.get('username') or '').strip()
+        if not username:
+            skipped.append({'reason': 'missing_username'})
+            continue
+        if username == current_username:
+            skipped.append({'username': username, 'reason': 'self_update_blocked'})
+            continue
+
+        existing = users_map.get(username)
+        role = _normalize_user_role(entry.get('role', (existing or {}).get('role', 'customer')))
+        tenant_id = _normalize_user_tenant_for_role(
+            role,
+            entry.get('tenant_id', (existing or {}).get('tenant_id')),
+            fallback=_default_tenant_id(),
+        )
+        if role != 'admin' and _is_reserved_default_tenant(tenant_id):
+            skipped.append({'username': username, 'reason': 'reserved_tenant_scope'})
+            continue
+
+        password = str(entry.get('password') or '').strip()
+        generated_password = ''
+        if existing:
+            password_to_store = password or str(existing.get('password') or '')
+        else:
+            if not password:
+                generated_password = _generate_temporary_password()
+                password = generated_password
+            password_to_store = password
+
+        user_row = {
+            'password': password_to_store,
+            'role': role,
+            'name': str(entry.get('name') or (existing or {}).get('name') or username).strip() or username,
+            'tenant_id': tenant_id,
+            'active': bool(entry.get('active', (existing or {}).get('active', True))),
+        }
+        if role == 'admin':
+            user_row['admin_permissions'] = _apply_grantable_admin_permissions(
+                actor_user,
+                entry.get('admin_permissions'),
+                existing_permissions=(existing or {}).get('admin_permissions') if isinstance(existing, dict) else None,
+            )
+            user_row['require_password_change'] = bool((existing or {}).get('require_password_change', False))
+        elif existing and 'require_password_change' in existing:
+            user_row['require_password_change'] = bool(existing.get('require_password_change'))
+
+        users_map[username] = user_row
+        if tenant_id:
+            _upsert_tenant_registry_entry(tenant_id)
+
+        if existing:
+            updated += 1
+        else:
+            created += 1
+            if generated_password:
+                generated_passwords.append({'username': username, 'password': generated_password})
+
+    users_data['users'] = users_map
+    if not save_users(users_data):
+        return jsonify({'success': False, 'error': 'Failed to persist imported users.'}), 500
+
+    _record_admin_audit(
+        action='user.import',
+        entity='user',
+        target_id='all_users',
+        status='success',
+        details={
+            'created': created,
+            'updated': updated,
+            'skipped': len(skipped),
+            'generated_passwords': len(generated_passwords),
+        },
+    )
+    return jsonify({
+        'success': True,
+        'created': created,
+        'updated': updated,
+        'skipped': skipped,
+        'generated_passwords': generated_passwords,
+    })
 
 @app.route('/api/tenants', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @login_required
@@ -9818,6 +10542,8 @@ def api_tenants():
         "storage_backend": tenant_storage_meta.get("backend", "json"),
         "storage_db_enabled": bool(tenant_storage_meta.get("db_enabled", False)),
         "bootstrap_state": tenant_storage_meta.get("bootstrap_state", {}),
+        "seed_defaults_file": tenant_storage_meta.get("seed_defaults_file", TENANT_REGISTRY_FILE),
+        "recovery_file": tenant_storage_meta.get("recovery_file", TENANT_REGISTRY_FILE),
         "tenants": tenant_summaries,
         "base_stations_catalog": [
             {
@@ -9832,6 +10558,104 @@ def api_tenants():
         ],
         "timescale": timescale,
     })
+
+
+@app.route('/api/tenants/metadata/export', methods=['GET'])
+@login_required
+@admin_scope_required('manage_tenants')
+def export_tenant_metadata():
+    registry_map = _tenant_registry_map()
+    tenants = []
+    for tenant_id, entry in sorted(registry_map.items()):
+        if _is_reserved_default_tenant(tenant_id):
+            continue
+        tenants.append({
+            'id': tenant_id,
+            'name': str(entry.get('name') or tenant_id).strip() or tenant_id,
+            'description': str(entry.get('description') or '').strip(),
+            'created_at': str(entry.get('created_at') or ''),
+        })
+    storage_meta = _tenant_storage_backend_meta()
+    payload = {
+        'format_version': 1,
+        'exported_at': datetime.now(timezone.utc).isoformat(),
+        'storage_backend': storage_meta.get('backend', 'json'),
+        'seed_defaults_file': storage_meta.get('seed_defaults_file', TENANT_REGISTRY_FILE),
+        'recovery_file': storage_meta.get('recovery_file', TENANT_REGISTRY_FILE),
+        'tenants': tenants,
+    }
+    _record_admin_audit(
+        action='tenant.metadata_export',
+        entity='tenant',
+        target_id='all_tenants',
+        status='success',
+        details={'count': len(tenants)},
+    )
+    filename = f"tenant_metadata_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    return Response(
+        json.dumps(payload, indent=2, ensure_ascii=True),
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment; filename={filename}'},
+    )
+
+
+@app.route('/api/tenants/metadata/import', methods=['POST'])
+@login_required
+@admin_scope_required('manage_tenants')
+def import_tenant_metadata():
+    try:
+        payload = _parse_json_upload_or_payload()
+    except ValueError as exc:
+        _record_admin_audit(
+            action='tenant.metadata_import',
+            entity='tenant',
+            target_id='all_tenants',
+            status='error',
+            details={'error': str(exc)},
+        )
+        return jsonify({'success': False, 'error': str(exc)}), 400
+
+    imported = payload.get("data", payload) if isinstance(payload, dict) else {}
+    tenants_in = imported.get("tenants", []) if isinstance(imported, dict) else []
+    if not isinstance(tenants_in, list):
+        return jsonify({'success': False, 'error': 'Import payload must contain a tenants list.'}), 400
+
+    existing_map = _tenant_registry_map()
+    created = 0
+    updated = 0
+    skipped = []
+    for entry in tenants_in:
+        if not isinstance(entry, dict):
+            skipped.append({'reason': 'invalid_record'})
+            continue
+        tenant_id = _sanitize_tenant_id(entry.get('id') or entry.get('tenant_id'))
+        if not tenant_id:
+            skipped.append({'reason': 'missing_tenant_id'})
+            continue
+        if _is_reserved_default_tenant(tenant_id):
+            skipped.append({'tenant_id': tenant_id, 'reason': 'reserved_scope'})
+            continue
+        ok, err, _ = _upsert_tenant_registry_entry(
+            tenant_id=tenant_id,
+            name=str(entry.get('name') or tenant_id).strip(),
+            description=str(entry.get('description') or '').strip(),
+        )
+        if not ok:
+            skipped.append({'tenant_id': tenant_id, 'reason': err or 'save_failed'})
+            continue
+        if tenant_id in existing_map:
+            updated += 1
+        else:
+            created += 1
+
+    _record_admin_audit(
+        action='tenant.metadata_import',
+        entity='tenant',
+        target_id='all_tenants',
+        status='success',
+        details={'created': created, 'updated': updated, 'skipped': len(skipped)},
+    )
+    return jsonify({'success': True, 'created': created, 'updated': updated, 'skipped': skipped})
 
 @app.route('/api/tenants/export', methods=['GET'])
 @login_required
@@ -10790,15 +11614,13 @@ def get_sensors():
             if cached_payload is not None:
                 return jsonify(cached_payload)
         
-        # Load sensors from config file first
+        # Load configured sensors from the DB-first store (with recovery-file fallback)
         sensor_status = {}
         try:
-            sensor_file = getattr(bssci_config, 'SENSOR_CONFIG_FILE', 'endpoints.json')
-            print(f"Loading sensors from file: {sensor_file}")
             sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
-            print(f"Loaded {len(sensors)} sensors from file for tenant '{active_tenant}'")
+            print(f"Loaded {len(sensors)} configured sensors for tenant '{active_tenant}'")
                 
-            # Initialize sensor status from config file
+            # Initialize sensor status from configured inventory
             for sensor in sensors:
                 eui = str(sensor.get('eui', '')).upper()
                 if not eui:
@@ -11046,11 +11868,11 @@ def get_sensors():
             return jsonify(sensor_status)
         except FileNotFoundError:
             sensor_file = getattr(bssci_config, 'SENSOR_CONFIG_FILE', 'endpoints.json')
-            print(f"Sensor config file not found: {sensor_file}")
+            print(f"Sensor recovery file not found: {sensor_file}")
             return jsonify({})
         except json.JSONDecodeError as e:
             sensor_file = getattr(bssci_config, 'SENSOR_CONFIG_FILE', 'endpoints.json')
-            print(f"Invalid JSON in sensor config file {sensor_file}: {e}")
+            print(f"Invalid JSON in sensor recovery file {sensor_file}: {e}")
             return jsonify({})
             
     except Exception as e:
@@ -11072,7 +11894,7 @@ def add_sensor():
         if not data.get('eui'):
             return jsonify({'success': False, 'message': 'EUI is required'})
         
-        # Step 1: Save directly to endpoints.json
+        # Step 1: Persist into the DB-first sensor store
         sensors = _load_all_sensors()
         active_tenant = _resolve_write_tenant_id(data.get("tenant_id"))
         data["tenant_id"] = active_tenant
@@ -11081,6 +11903,7 @@ def add_sensor():
         sensor_updated = False
         changed_fields = []
         attach_targets_after_save = []
+        previous_snapshot = {}
         for sensor in sensors:
             if str(sensor.get('eui', '')).upper() != data['eui'].upper():
                 continue
@@ -11091,6 +11914,7 @@ def add_sensor():
                     'message': f"Sensor EUI already exists in tenant '{existing_tenant}'. Reassign first if needed."
                 }), 409
             # Update existing sensor
+            previous_snapshot = _sensor_audit_snapshot(sensor)
             compare_fields = [
                 'nwKey',
                 'shortAddr',
@@ -11156,25 +11980,17 @@ def add_sensor():
         )
 
         _upsert_device_gps_position("sensor", data.get("eui", ""), data.get("gps_lat"), data.get("gps_lng"))
+        new_snapshot = _sensor_audit_snapshot(data)
         _record_admin_audit(
             action='sensor.update' if sensor_updated else 'sensor.create',
             entity='sensor',
             target_id=data.get("eui", ""),
             status='success',
             details={
-                "name": data.get("name", ""),
-                "short_addr": data.get("shortAddr", ""),
-                "bidi": bool(data.get("bidi", False)),
-                "tags_count": len(data.get("tags", [])),
-                "sensor_profile": data.get("sensor_profile", "auto"),
-                "payload_decoder": data.get("payload_decoder", "auto"),
-                "environment_context": data.get("environment_context", "auto"),
-                "reporting_mode": data.get("reporting_mode", "auto"),
-                "expected_interval_seconds": data.get("expected_interval_seconds"),
-                "stale_after_hours": data.get("stale_after_hours"),
-                "gps_lat": data.get("gps_lat"),
-                "gps_lng": data.get("gps_lng"),
                 "tenant_id": active_tenant,
+                "changed_fields": changed_fields if sensor_updated else list(new_snapshot.keys()),
+                "before": previous_snapshot if sensor_updated else {},
+                "after": new_snapshot,
             },
         )
         
@@ -11246,6 +12062,7 @@ def update_sensor(eui):
         if target_index is None or not existing_sensor:
             return jsonify({'success': False, 'message': 'Sensor not found'}), 404
 
+        previous_snapshot = _sensor_audit_snapshot(existing_sensor)
         merged = dict(existing_sensor)
         merged.update(dict(patch or {}))
         merged['eui'] = eui_upper
@@ -11300,25 +12117,17 @@ def update_sensor(eui):
         )
 
         _upsert_device_gps_position("sensor", data.get("eui", ""), data.get("gps_lat"), data.get("gps_lng"))
+        new_snapshot = _sensor_audit_snapshot(data)
         _record_admin_audit(
             action='sensor.update',
             entity='sensor',
             target_id=data.get("eui", ""),
             status='success',
             details={
-                "name": data.get("name", ""),
-                "short_addr": data.get("shortAddr", ""),
-                "bidi": bool(data.get("bidi", False)),
-                "tags_count": len(data.get("tags", [])),
-                "sensor_profile": data.get("sensor_profile", "auto"),
-                "payload_decoder": data.get("payload_decoder", "auto"),
-                "environment_context": data.get("environment_context", "auto"),
-                "reporting_mode": data.get("reporting_mode", "auto"),
-                "expected_interval_seconds": data.get("expected_interval_seconds"),
-                "stale_after_hours": data.get("stale_after_hours"),
-                "gps_lat": data.get("gps_lat"),
-                "gps_lng": data.get("gps_lng"),
                 "tenant_id": active_tenant,
+                "changed_fields": _audit_changed_fields(previous_snapshot, new_snapshot),
+                "before": previous_snapshot,
+                "after": new_snapshot,
             },
         )
 
@@ -11350,7 +12159,7 @@ def update_sensor(eui):
                 print(f"Error notifying TLS server: {e}")
                 return jsonify({'success': True, 'message': 'Senzor bol uložený. Dokončenie prepojenia sa oneskorilo.'})
 
-            return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí neskôr.'})
+        return jsonify({'success': True, 'message': 'Senzor bol uložený. Prepojenie sa dokončí neskôr.'})
     except ValueError as e:
         return jsonify({'success': False, 'message': str(e)}), 400
     except Exception as e:
@@ -11396,9 +12205,8 @@ def delete_sensor(eui):
             target_id=eui,
             status='success',
             details={
-                "name": (deleted_sensor or {}).get("name", ""),
-                "short_addr": (deleted_sensor or {}).get("shortAddr", ""),
                 "tenant_id": active_tenant,
+                "before": _sensor_audit_snapshot(deleted_sensor),
             },
         )
         return jsonify({'success': True, 'message': 'Sensor deleted successfully'})
@@ -11438,8 +12246,9 @@ def manage_sensor_share(eui):
     if tenant == owner_tenant:
         return jsonify({"success": False, "message": "Cannot share with the owner tenant"}), 400
 
-    shared = [_normalize_tenant_id(t, fallback=_default_tenant_id())
+    previous_shared = [_normalize_tenant_id(t, fallback=_default_tenant_id())
               for t in (sensor.get("shared_tenants") or [])]
+    shared = list(previous_shared)
     if action == "add":
         if tenant not in shared:
             shared.append(tenant)
@@ -11448,6 +12257,20 @@ def manage_sensor_share(eui):
 
     sensor["shared_tenants"] = shared
     _save_all_sensors(sensors)
+    _record_admin_audit(
+        action='sensor.share_update',
+        entity='sensor',
+        target_id=eui_upper,
+        status='success',
+        details={
+            "tenant_id": active_tenant,
+            "share_action": action,
+            "shared_tenant": tenant,
+            "before": {"shared_tenants": previous_shared},
+            "after": {"shared_tenants": shared},
+            "changed_fields": ["shared_tenants"] if previous_shared != shared else [],
+        },
+    )
     logger.info(f"Sensor {eui_upper} shared_tenants updated by {session.get('username')}: {shared}")
     return jsonify({"success": True, "shared_tenants": shared})
 
@@ -11460,12 +12283,14 @@ def attach_sensor(eui):
     try:
         eui_upper = str(eui or "").strip().upper()
         active_tenant = _active_tenant_id()
-        if not any(
-            str(s.get("eui", "")).strip().upper() == eui_upper
+        target_sensor = next((
+            s for s in _load_all_sensors()
+            if str(s.get("eui", "")).strip().upper() == eui_upper
             and _tenant_matches(_tenant_id_from_sensor(s), active_tenant)
-            for s in _load_all_sensors()
-        ):
+        ), None)
+        if not target_sensor:
             return jsonify({'success': False, 'message': 'Senzor sa nenašiel v aktuálnom priestore.'}), 404
+        previous_targets = _normalize_base_station_route_list(target_sensor.get("attached_base_stations", []))
 
         payload = request.get_json(silent=True) or {}
         requested_bases = payload.get('base_stations')
@@ -11518,6 +12343,9 @@ def attach_sensor(eui):
                 details={
                     'tenant_id': active_tenant,
                     'mapping_cleared': True,
+                    'before': {'attached_base_stations': previous_targets},
+                    'after': {'attached_base_stations': []},
+                    'changed_fields': ['attached_base_stations'] if previous_targets else [],
                     'runtime_detached': bool(runtime_detached),
                     'runtime_error': runtime_error,
                 },
@@ -11570,6 +12398,9 @@ def attach_sensor(eui):
             status='success',
             details={
                 'tenant_id': active_tenant,
+                'before': {'attached_base_stations': previous_targets},
+                'after': {'attached_base_stations': selected_base_stations},
+                'changed_fields': ['attached_base_stations'] if previous_targets != selected_base_stations else [],
                 'requested_base_stations': selected_base_stations,
                 'requested_count': len(selected_base_stations),
                 'connected_count_now': len(connected_targets),
@@ -12092,14 +12923,28 @@ def api_sensor_gps_update(eui):
             if (_normalize_eui_upper(s.get('eui', '')) == eui_upper
                     and (_tenant_matches(_tenant_id_from_sensor(s), active_tenant)
                          or _sensor_shared_with_tenant(s, active_tenant))):
+                before_snapshot = _sensor_audit_snapshot(s)
                 s['gps_lat'] = round(gps_lat, 8)
                 s['gps_lng'] = round(gps_lng, 8)
+                after_snapshot = _sensor_audit_snapshot(s)
                 found = True
                 break
         if not found:
             return jsonify({"success": False, "message": "Senzor nenájdený"}), 404
         _save_all_sensors(sensors)
         _upsert_device_gps_position("sensor", eui_upper, round(gps_lat, 8), round(gps_lng, 8))
+        _record_admin_audit(
+            action='sensor.update_gps',
+            entity='sensor',
+            target_id=eui_upper,
+            status='success',
+            details={
+                'tenant_id': active_tenant,
+                'before': before_snapshot,
+                'after': after_snapshot,
+                'changed_fields': _audit_changed_fields(before_snapshot, after_snapshot),
+            },
+        )
         return jsonify({"success": True, "eui": eui_upper, "gps_lat": gps_lat, "gps_lng": gps_lng})
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc)}), 500
@@ -12122,15 +12967,29 @@ def api_sensor_marker_color(eui):
             if (_normalize_eui_upper(s.get('eui', '')) == eui_upper
                     and (_tenant_matches(_tenant_id_from_sensor(s), active_tenant)
                          or _sensor_shared_with_tenant(s, active_tenant))):
+                before_snapshot = _sensor_audit_snapshot(s)
                 if color:
                     s['marker_color'] = color
                 else:
                     s.pop('marker_color', None)
+                after_snapshot = _sensor_audit_snapshot(s)
                 found = True
                 break
         if not found:
             return jsonify({"success": False, "message": "Senzor nenájdený"}), 404
         _save_all_sensors(sensors)
+        _record_admin_audit(
+            action='sensor.update_marker_color',
+            entity='sensor',
+            target_id=eui_upper,
+            status='success',
+            details={
+                'tenant_id': active_tenant,
+                'before': before_snapshot,
+                'after': after_snapshot,
+                'changed_fields': _audit_changed_fields(before_snapshot, after_snapshot),
+            },
+        )
         return jsonify({"success": True, "marker_color": color or None})
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc)}), 500
@@ -12144,12 +13003,14 @@ def detach_sensor(eui):
     try:
         active_tenant = _active_tenant_id()
         eui_upper = str(eui or "").strip().upper()
-        if not any(
-            str(s.get("eui", "")).strip().upper() == eui_upper
+        target_sensor = next((
+            s for s in _load_all_sensors()
+            if str(s.get("eui", "")).strip().upper() == eui_upper
             and _tenant_matches(_tenant_id_from_sensor(s), active_tenant)
-            for s in _load_all_sensors()
-        ):
+        ), None)
+        if not target_sensor:
             return jsonify({'success': False, 'message': 'Senzor sa nenašiel v aktuálnom priestore.'}), 404
+        previous_targets = _normalize_base_station_route_list(target_sensor.get("attached_base_stations", []))
 
         # Always clear desired attach mapping first (works even if no online BS).
         _update_sensor_attached_base_stations(eui_upper, [], tenant_id=active_tenant)
@@ -12189,6 +13050,9 @@ def detach_sensor(eui):
             details={
                 'tenant_id': active_tenant,
                 'mapping_cleared': True,
+                'before': {'attached_base_stations': previous_targets},
+                'after': {'attached_base_stations': []},
+                'changed_fields': ['attached_base_stations'] if previous_targets else [],
                 'runtime_detached': bool(runtime_detached),
                 'runtime_error': runtime_error,
             },
@@ -12467,17 +13331,39 @@ def attach_all_sensors():
     try:
         global tls_server_instance
         tls_server = tls_server_instance
+        active_tenant = _active_tenant_id()
         
         if not tls_server:
+            _record_admin_audit(
+                action='sensor.attach_all',
+                entity='sensor',
+                target_id='tenant',
+                status='error',
+                details={'tenant_id': active_tenant, 'error': 'tls_server_not_available'},
+            )
             return jsonify({'success': False, 'message': 'TLS server not available'})
         
         if not hasattr(tls_server, 'connected_base_stations') or not tls_server.connected_base_stations:
+            _record_admin_audit(
+                action='sensor.attach_all',
+                entity='sensor',
+                target_id='tenant',
+                status='error',
+                details={'tenant_id': active_tenant, 'error': 'no_base_stations_connected'},
+            )
             return jsonify({'success': False, 'message': 'No base stations connected'})
         
-        # Get all sensors from config file
-        sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=_active_tenant_id())
+        # Get all configured sensors from the DB-first store
+        sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
         
         if not sensors:
+            _record_admin_audit(
+                action='sensor.attach_all',
+                entity='sensor',
+                target_id='tenant',
+                status='error',
+                details={'tenant_id': active_tenant, 'error': 'no_sensors_configured'},
+            )
             return jsonify({'success': False, 'message': 'No sensors configured to attach'})
         
         # Force reload sensor config to ensure all sensors are loaded
@@ -12493,9 +13379,9 @@ def attach_all_sensors():
                     for bs_eui in (tls_server.connected_base_stations or {}).values()
                     if _normalize_eui_upper(bs_eui)
                 ]
-                active_tenant = _active_tenant_id()
                 all_sensors = _load_all_sensors()
                 changed = False
+                changed_sensor_euis = []
                 for sensor in all_sensors:
                     if not isinstance(sensor, dict):
                         continue
@@ -12508,6 +13394,7 @@ def attach_all_sensors():
                     if current_targets != connected_targets:
                         sensor["attached_base_stations"] = list(connected_targets)
                         changed = True
+                        changed_sensor_euis.append(sensor_eui)
                 if changed:
                     _save_all_sensors(all_sensors)
             message = f'Sent attach requests for {attached_count} sensors to {bs_count} base stations'
@@ -12517,15 +13404,32 @@ def attach_all_sensors():
                 target_id='tenant',
                 status='success',
                 details={
-                    'tenant_id': _active_tenant_id(),
+                    'tenant_id': active_tenant,
                     'attached_count': attached_count,
                     'base_station_count': bs_count,
+                    'changed_sensor_count': len(changed_sensor_euis) if attached_count > 0 else 0,
+                    'sample_sensor_euis': changed_sensor_euis[:20] if attached_count > 0 else [],
+                    'attached_base_stations': connected_targets if attached_count > 0 else [],
                 },
             )
             return jsonify({'success': True, 'message': message})
         else:
+            _record_admin_audit(
+                action='sensor.attach_all',
+                entity='sensor',
+                target_id='tenant',
+                status='error',
+                details={'tenant_id': active_tenant, 'error': 'tls_attach_all_unavailable'},
+            )
             return jsonify({'success': False, 'message': 'Attach all function not available in TLS server'})
     except Exception as e:
+        _record_admin_audit(
+            action='sensor.attach_all',
+            entity='sensor',
+            target_id='tenant',
+            status='error',
+            details={'tenant_id': _active_tenant_id(), 'error': str(e)},
+        )
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/sensors/detach-all', methods=['POST'])
@@ -12541,6 +13445,7 @@ def detach_all_sensors():
         active_tenant = _active_tenant_id()
         sensors = _load_all_sensors()
         changed = False
+        cleared_sensor_euis = []
         for sensor in sensors:
             if not isinstance(sensor, dict):
                 continue
@@ -12549,6 +13454,9 @@ def detach_all_sensors():
             if "attached_base_stations" in sensor:
                 sensor.pop("attached_base_stations", None)
                 changed = True
+                sensor_eui = str(sensor.get("eui", "")).strip().upper()
+                if sensor_eui:
+                    cleared_sensor_euis.append(sensor_eui)
         if changed:
             _save_all_sensors(sensors)
 
@@ -12583,6 +13491,8 @@ def detach_all_sensors():
                 'tenant_id': active_tenant,
                 'detached_count': detached_count,
                 'mapping_cleared': True,
+                'changed_sensor_count': len(cleared_sensor_euis),
+                'sample_sensor_euis': cleared_sensor_euis[:20],
                 'runtime_error': runtime_error,
             },
         )
@@ -12662,6 +13572,11 @@ def clear_all_sensors():
                 'tenant_id': active_tenant,
                 'removed_count': len(sensors_to_remove),
                 'detached_count': detached_count,
+                'sample_sensor_euis': [
+                    _normalize_eui_upper((sensor or {}).get("eui", ""))
+                    for sensor in sensors_to_remove[:20]
+                    if _normalize_eui_upper((sensor or {}).get("eui", ""))
+                ],
             },
         )
         return jsonify({'success': True, 'message': message})
@@ -12691,13 +13606,31 @@ def reload_sensors():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+
+@app.route('/api/sensors/storage-meta', methods=['GET'])
+@login_required
+@permission_required('can_edit_sensors')
+def get_sensors_storage_meta():
+    sensors = _load_all_sensors()
+    storage_meta = _sensors_storage_backend_meta()
+    return jsonify({
+        'success': True,
+        'storage_backend': storage_meta.get('backend', 'json'),
+        'storage_db_enabled': bool(storage_meta.get('db_enabled', False)),
+        'bootstrap_state': storage_meta.get('bootstrap_state', {}),
+        'seed_defaults_file': storage_meta.get('seed_defaults_file', SENSORS_RECOVERY_FILE),
+        'recovery_file': storage_meta.get('recovery_file', SENSORS_RECOVERY_FILE),
+        'sensor_count': len(sensors or []),
+    })
+
+
 @app.route('/api/sensors/export', methods=['GET'])
 @login_required
 @permission_required('can_edit_sensors')
 def export_sensors():
     """Export all sensors as CSV file"""
     try:
-        # Load sensors from config file
+        # Load sensors from the DB-first inventory store
         active_tenant = _active_tenant_id()
         sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
         
@@ -12707,6 +13640,7 @@ def export_sensors():
         # Create CSV content
         output = io.StringIO()
         writer = csv.writer(output)
+        storage_meta = _sensors_storage_backend_meta()
         
         # Write header
         writer.writerow(['eui', 'nwKey', 'shortAddr', 'bidi', 'name', 'tags', 'sensor_profile', 'payload_decoder', 'gps_lat', 'gps_lng', 'tenant_id'])
@@ -12729,10 +13663,25 @@ def export_sensors():
         
         # Create response with CSV file
         output.seek(0)
+        _record_admin_audit(
+            action='sensor.export',
+            entity='sensor',
+            target_id='tenant',
+            status='success',
+            details={
+                'tenant_id': active_tenant,
+                'count': len(sensors),
+                'storage_backend': storage_meta.get('backend', 'json'),
+                'recovery_file': storage_meta.get('recovery_file', SENSORS_RECOVERY_FILE),
+            },
+        )
         return Response(
             output.getvalue(),
             mimetype='text/csv',
-            headers={'Content-Disposition': f'attachment; filename=sensors_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'}
+            headers={
+                'Content-Disposition': f'attachment; filename=sensors_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                'X-Storage-Backend': str(storage_meta.get('backend', 'json')),
+            }
         )
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -12805,6 +13754,7 @@ def import_sensors():
         
         # Load existing sensors
         existing_sensors = _load_all_sensors()
+        storage_meta = _sensors_storage_backend_meta()
         existing_by_eui = {
             str(s.get('eui', '')).strip().upper(): s
             for s in existing_sensors
@@ -12937,13 +13887,32 @@ def import_sensors():
         message = f'Import complete: {imported_count} new sensors, {updated_count} updated'
         if errors:
             message += f', {len(errors)} errors'
+
+        _record_admin_audit(
+            action='sensor.import',
+            entity='sensor',
+            target_id='tenant',
+            status='success',
+            details={
+                'tenant_id': active_tenant,
+                'imported_count': imported_count,
+                'updated_count': updated_count,
+                'error_count': len(errors),
+                'filename': file.filename or 'unknown',
+                'storage_backend': storage_meta.get('backend', 'json'),
+                'recovery_file': storage_meta.get('recovery_file', SENSORS_RECOVERY_FILE),
+            },
+        )
         
         return jsonify({
             'success': True,
             'message': message,
             'imported': imported_count,
             'updated': updated_count,
-            'errors': errors[:10] if errors else []  # Limit error messages
+            'errors': errors[:10] if errors else [],  # Limit error messages
+            'storage_backend': storage_meta.get('backend', 'json'),
+            'seed_defaults_file': storage_meta.get('seed_defaults_file', SENSORS_RECOVERY_FILE),
+            'recovery_file': storage_meta.get('recovery_file', SENSORS_RECOVERY_FILE),
         })
         
     except Exception as e:
@@ -13725,15 +14694,13 @@ def _build_sensor_name_index(sensor_config: List[Dict[str, Any]]) -> Dict[str, s
 
 def _load_configured_sensors_index() -> Dict[str, Dict[str, Any]]:
     """
-    Load configured sensors from endpoints.json (or configured sensor file).
+    Load configured sensors from the DB-first inventory store.
     Returns mapping:
       EUI_UPPER -> {"name": str, "tags": list[str], "bidi": bool, "payload_decoder": str, "attached_base_stations": list[str]}
     """
     result: Dict[str, Dict[str, Any]] = {}
     try:
-        sensor_file = getattr(bssci_config, "SENSOR_CONFIG_FILE", "endpoints.json")
-        with open(sensor_file, "r") as f:
-            sensors = json.load(f) or []
+        sensors = _load_all_sensors()
     except Exception:
         sensors = []
 
@@ -14285,16 +15252,30 @@ def api_network():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 def load_base_station_config():
-    """Load base station configuration from JSON file"""
+    """Load base station configuration from the DB-first store."""
+    if _db_first_config_enabled():
+        bootstrap_state = _bootstrap_base_stations_store_if_needed()
+        payload, err = _load_base_station_payload_from_db()
+        if isinstance(payload, dict):
+            return payload
+        if err:
+            logger.warning("Falling back to %s for base station load: %s", BASE_STATIONS_RECOVERY_FILE, err)
+        elif bootstrap_state.get("seeded"):
+            logger.info("Bootstrapped base station store from %s", bootstrap_state.get("source"))
     try:
         config_path = getattr(bssci_config, 'BASE_STATION_CONFIG_FILE', 'base_stations.json')
-        with open(config_path, 'r') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except:
         return {"base_stations": {}}
 
 def save_base_station_config(config):
-    """Save base station configuration to JSON file"""
+    """Save base station configuration to the DB-first store."""
+    if _db_first_config_enabled():
+        ok, err = _save_base_station_payload_to_db(config)
+        if ok:
+            return
+        logger.warning("Falling back to %s for base station save: %s", BASE_STATIONS_RECOVERY_FILE, err)
     import os
     config_path = getattr(bssci_config, 'BASE_STATION_CONFIG_FILE', 'base_stations.json')
     try:
@@ -14303,8 +15284,8 @@ def save_base_station_config(config):
             os.makedirs(dir_path, exist_ok=True)
     except:
         pass
-    with open(config_path, 'w') as f:
-        json.dump(config, f, indent=2)
+    with open(config_path, 'w', encoding='utf-8') as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
 
 def _build_base_stations_runtime_payload() -> Dict[str, Any]:
     """Build base station runtime summary for customer-safe dashboard aggregation."""
@@ -14408,6 +15389,174 @@ def get_base_stations():
         return jsonify(_build_base_stations_runtime_payload())
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/base-stations/storage-meta', methods=['GET'])
+@login_required
+@admin_scope_required('manage_tenants')
+def get_base_stations_storage_meta():
+    config = load_base_station_config()
+    base_stations = (config or {}).get("base_stations", {}) if isinstance(config, dict) else {}
+    storage_meta = _base_stations_storage_backend_meta()
+    return jsonify({
+        'success': True,
+        'storage_backend': storage_meta.get('backend', 'json'),
+        'storage_db_enabled': bool(storage_meta.get('db_enabled', False)),
+        'bootstrap_state': storage_meta.get('bootstrap_state', {}),
+        'seed_defaults_file': storage_meta.get('seed_defaults_file', BASE_STATIONS_RECOVERY_FILE),
+        'recovery_file': storage_meta.get('recovery_file', BASE_STATIONS_RECOVERY_FILE),
+        'base_station_count': len(base_stations or {}),
+    })
+
+
+@app.route('/api/base-stations/export', methods=['GET'])
+@login_required
+@admin_scope_required('manage_tenants')
+def export_base_stations():
+    try:
+        active_tenant = _active_tenant_id()
+        config = load_base_station_config()
+        base_stations = _filter_base_stations_for_tenant((config or {}).get("base_stations", {}), tenant_id=active_tenant)
+        storage_meta = _base_stations_storage_backend_meta()
+        payload_rows = []
+        for eui, base_station in sorted((base_stations or {}).items(), key=lambda item: str(item[0]).lower()):
+            row = _serialize_base_station_for_export(eui, base_station)
+            if row:
+                payload_rows.append(row)
+        payload = {
+            'format_version': 1,
+            'exported_at': datetime.now(timezone.utc).isoformat(),
+            'storage_backend': storage_meta.get('backend', 'json'),
+            'seed_defaults_file': storage_meta.get('seed_defaults_file', BASE_STATIONS_RECOVERY_FILE),
+            'recovery_file': storage_meta.get('recovery_file', BASE_STATIONS_RECOVERY_FILE),
+            'base_stations': payload_rows,
+        }
+        _record_admin_audit(
+            action='base_station.export',
+            entity='base_station',
+            target_id='tenant',
+            status='success',
+            details={
+                'tenant_id': active_tenant,
+                'count': len(payload_rows),
+                'storage_backend': storage_meta.get('backend', 'json'),
+            },
+        )
+        filename = f"base_stations_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        return Response(
+            json.dumps(payload, indent=2, ensure_ascii=False),
+            mimetype='application/json',
+            headers={'Content-Disposition': f'attachment; filename={filename}'},
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/base-stations/import', methods=['POST'])
+@login_required
+@admin_scope_required('manage_tenants')
+def import_base_stations():
+    try:
+        payload = _parse_json_upload_or_payload()
+    except ValueError as exc:
+        _record_admin_audit(
+            action='base_station.import',
+            entity='base_station',
+            target_id='tenant',
+            status='error',
+            details={'error': str(exc)},
+        )
+        return jsonify({'success': False, 'error': str(exc)}), 400
+
+    imported = payload.get("data", payload) if isinstance(payload, dict) else {}
+    rows_in = imported.get("base_stations", imported.get("items", [])) if isinstance(imported, dict) else []
+    if isinstance(rows_in, dict):
+        rows_in = [
+            dict((value or {}), eui=key)
+            for key, value in rows_in.items()
+            if isinstance(value, dict)
+        ]
+    if not isinstance(rows_in, list):
+        return jsonify({'success': False, 'error': 'Import payload must contain a base_stations list.'}), 400
+
+    active_tenant = _active_tenant_id()
+    storage_meta = _base_stations_storage_backend_meta()
+    config = load_base_station_config()
+    base_stations = dict((config or {}).get("base_stations", {}) or {})
+    created = 0
+    updated = 0
+    skipped = []
+
+    for entry in rows_in:
+        if not isinstance(entry, dict):
+            skipped.append({'reason': 'invalid_record'})
+            continue
+        eui = str(entry.get('eui') or '').strip().lower()
+        if not eui or not _validate_eui(eui):
+            skipped.append({'reason': 'invalid_eui', 'eui': str(entry.get('eui') or '')})
+            continue
+        try:
+            gps_lat, gps_lng = _normalize_gps_coordinates(entry.get("gps_lat"), entry.get("gps_lng"))
+        except ValueError as exc:
+            skipped.append({'eui': eui.upper(), 'reason': str(exc)})
+            continue
+        existing = base_stations.get(eui, {})
+        tenant_id = _resolve_write_tenant_id(
+            entry.get("tenant_id"),
+            existing_tenant=(existing or {}).get("tenant_id"),
+        )
+        row = {
+            "name": str(entry.get("name") or (existing or {}).get("name") or "").strip(),
+            "tags": list(entry.get("tags") or (existing or {}).get("tags") or []),
+            "ip": str(entry.get("ip") or (existing or {}).get("ip") or "").strip(),
+            "gps_lat": gps_lat,
+            "gps_lng": gps_lng,
+            "tenant_id": tenant_id,
+        }
+        base_stations[eui] = row
+        _upsert_device_gps_position("bs", eui, gps_lat, gps_lng)
+        if existing:
+            updated += 1
+        else:
+            created += 1
+
+    config["base_stations"] = base_stations
+    save_base_station_config(config)
+
+    _try_record_inventory_event(
+        "base_station",
+        "imported",
+        "batch",
+        {
+            "created_count": created,
+            "updated_count": updated,
+            "error_count": len(skipped),
+            "tenant_id": active_tenant,
+        }
+    )
+    _record_admin_audit(
+        action='base_station.import',
+        entity='base_station',
+        target_id='tenant',
+        status='success',
+        details={
+            'tenant_id': active_tenant,
+            'created': created,
+            'updated': updated,
+            'skipped': len(skipped),
+            'storage_backend': storage_meta.get('backend', 'json'),
+        },
+    )
+    return jsonify({
+        'success': True,
+        'created': created,
+        'updated': updated,
+        'skipped': skipped,
+        'storage_backend': storage_meta.get('backend', 'json'),
+        'seed_defaults_file': storage_meta.get('seed_defaults_file', BASE_STATIONS_RECOVERY_FILE),
+        'recovery_file': storage_meta.get('recovery_file', BASE_STATIONS_RECOVERY_FILE),
+    })
+
 
 @app.route('/api/base-stations/certificates/status')
 @login_required
@@ -14733,26 +15882,24 @@ def add_base_station():
         )
 
         _upsert_device_gps_position("bs", eui, gps_lat, gps_lng)
+        after_snapshot = _base_station_audit_snapshot(eui, config["base_stations"][eui])
         _record_admin_audit(
             action='base_station.create',
             entity='base_station',
             target_id=eui,
             status='success',
             details={
-                "name": data.get("name", ""),
-                "ip": data.get("ip", ""),
-                "tags_count": len(data.get("tags", [])),
-                "gps_lat": gps_lat,
-                "gps_lng": gps_lng,
                 "tenant_id": tenant_id,
                 "generate_cert": bool(data.get("generate_cert", True)),
+                "after": after_snapshot,
+                "changed_fields": list(after_snapshot.keys()),
             },
         )
         
         generate_cert = data.get("generate_cert", True)
         cert_download_url = None
         if generate_cert:
-            success, msg = _generate_bs_certificate(eui)
+            success, msg = _generate_bs_certificate(eui, audit_context='base_station_create')
             if success:
                 cert_download_url = f"/api/base-stations/{eui}/certificate/download"
         
@@ -14784,6 +15931,7 @@ def update_base_station(eui):
                 return jsonify({"success": False, "error": "Základňová stanica sa nenašla v aktuálnom priestore."}), 404
         
         previous_data = dict(config["base_stations"].get(eui, {}))
+        previous_snapshot = _base_station_audit_snapshot(eui, previous_data)
         config["base_stations"][eui] = {
             "name": data.get("name", ""),
             "tags": data.get("tags", []),
@@ -14814,20 +15962,17 @@ def update_base_station(eui):
         )
 
         _upsert_device_gps_position("bs", eui, gps_lat, gps_lng)
+        after_snapshot = _base_station_audit_snapshot(eui, config["base_stations"][eui])
         _record_admin_audit(
             action='base_station.update',
             entity='base_station',
             target_id=eui,
             status='success',
             details={
-                "name": data.get("name", ""),
-                "ip": data.get("ip", ""),
-                "tags_count": len(data.get("tags", [])),
-                "gps_lat": gps_lat,
-                "gps_lng": gps_lng,
                 "tenant_id": config["base_stations"][eui].get("tenant_id", _active_tenant_id()),
-                "previous_name": previous_data.get("name", ""),
-                "previous_ip": previous_data.get("ip", ""),
+                "before": previous_snapshot,
+                "after": after_snapshot,
+                "changed_fields": _audit_changed_fields(previous_snapshot, after_snapshot),
             },
         )
         
@@ -14874,9 +16019,8 @@ def delete_base_station(eui):
             target_id=eui,
             status='success',
             details={
-                "name": removed.get("name", ""),
-                "ip": removed.get("ip", ""),
                 "tenant_id": _tenant_id_from_base_station(removed),
+                "before": _base_station_audit_snapshot(eui, removed),
             },
         )
         
@@ -15668,8 +16812,11 @@ def create_backup():
         # Create backup directory
         os.makedirs(backup_dir, exist_ok=True)
         
-        # Backup important files
-        files_to_backup = ['.env', 'endpoints.json', 'VERSION']
+        # Backup important files and recovery JSONs when present
+        files_to_backup = ['.env', 'VERSION']
+        for recovery_file in [SENSORS_RECOVERY_FILE, BASE_STATIONS_RECOVERY_FILE, USERS_RECOVERY_FILE, TENANT_REGISTRY_FILE]:
+            if recovery_file and recovery_file not in files_to_backup:
+                files_to_backup.append(recovery_file)
         dirs_to_backup = ['certs']
         
         for file in files_to_backup:
@@ -15987,7 +17134,7 @@ def get_bssci_service_status():
         total_sensors = 0
         registered_sensors = 0
         try:
-            # Count sensors from config file instead of runtime status to avoid asyncio issues
+            # Count sensors from configured inventory instead of runtime status to avoid asyncio issues
             sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=_active_tenant_id())
             total_sensors = len(sensors)
             # For now, assume all configured sensors could be registered
@@ -17014,16 +18161,37 @@ def generate_bs_certificate(eui):
     try:
         eui = eui.lower()
         if not _validate_eui(eui):
+            _record_admin_audit(
+                action='base_station.generate_certificate',
+                entity='base_station',
+                target_id=eui,
+                status='error',
+                details={'message': 'Invalid EUI format', 'audit_context': 'api_route'},
+            )
             return jsonify({'success': False, 'message': 'Invalid EUI format'}), 400
         config = load_base_station_config()
         if eui not in config.get("base_stations", {}):
+            _record_admin_audit(
+                action='base_station.generate_certificate',
+                entity='base_station',
+                target_id=eui,
+                status='error',
+                details={'message': 'Base station not found', 'audit_context': 'api_route'},
+            )
             return jsonify({'success': False, 'message': 'Base station not found'}), 404
-        success, msg = _generate_bs_certificate(eui)
+        success, msg = _generate_bs_certificate(eui, audit_context='api_route')
         if success:
             return jsonify({'success': True, 'message': msg, 'download_url': f'/api/base-stations/{eui}/certificate/download'})
         else:
             return jsonify({'success': False, 'message': msg}), 500
     except Exception as e:
+        _record_admin_audit(
+            action='base_station.generate_certificate',
+            entity='base_station',
+            target_id=str(eui or '').lower(),
+            status='error',
+            details={'message': str(e), 'audit_context': 'api_route'},
+        )
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/base-stations/<eui>/certificate/download')
@@ -17034,12 +18202,40 @@ def download_bs_certificate(eui):
     try:
         eui = eui.lower()
         if not _validate_eui(eui):
+            _record_admin_audit(
+                action='base_station.download_certificate',
+                entity='base_station',
+                target_id=eui,
+                status='error',
+                details={'message': 'Invalid EUI format'},
+            )
             return jsonify({'success': False, 'message': 'Invalid EUI format'}), 400
+        config = load_base_station_config()
+        bs_data = dict(config.get("base_stations", {}).get(eui, {}) or {})
+        if not bs_data:
+            _record_admin_audit(
+                action='base_station.download_certificate',
+                entity='base_station',
+                target_id=eui,
+                status='error',
+                details={'message': 'Base station not found'},
+            )
+            return jsonify({'success': False, 'message': 'Base station not found'}), 404
         bs_cert_dir = os.path.join('certs', f'bs_{eui}')
         cert_path = os.path.join(bs_cert_dir, f'{eui}_cert.pem')
         key_path = os.path.join(bs_cert_dir, f'{eui}_key.pem')
         ca_path = 'certs/ca_cert.pem'
         if not os.path.exists(cert_path) or not os.path.exists(key_path):
+            _record_admin_audit(
+                action='base_station.download_certificate',
+                entity='base_station',
+                target_id=eui,
+                status='error',
+                details={
+                    'tenant_id': _tenant_id_from_base_station(bs_data),
+                    'message': 'Certificate not found for this base station',
+                },
+            )
             return jsonify({'success': False, 'message': 'Certificate not found for this base station'}), 404
         temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
         with zipfile.ZipFile(temp_zip.name, 'w') as zipf:
@@ -17047,8 +18243,26 @@ def download_bs_certificate(eui):
                 zipf.write(ca_path, 'ca_cert.pem')
             zipf.write(cert_path, f'{eui}_cert.pem')
             zipf.write(key_path, f'{eui}_key.pem')
+        _record_admin_audit(
+            action='base_station.download_certificate',
+            entity='base_station',
+            target_id=eui,
+            status='success',
+            details={
+                'tenant_id': _tenant_id_from_base_station(bs_data),
+                'cert_generated': bs_data.get('cert_generated'),
+                'cert_expires': bs_data.get('cert_expires'),
+            },
+        )
         return send_file(temp_zip.name, as_attachment=True, download_name=f'bs_{eui}_certificates.zip')
     except Exception as e:
+        _record_admin_audit(
+            action='base_station.download_certificate',
+            entity='base_station',
+            target_id=str(eui or '').lower(),
+            status='error',
+            details={'message': str(e)},
+        )
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/container/restart', methods=['POST'])

@@ -2324,6 +2324,7 @@ button:active {
             <button class="btn btn-primary ui-editor-only" data-bs-toggle="modal" data-bs-target="#sensorModal" onclick="openSensorModal()">
                 <i class="fas fa-plus"></i> {{ t('sensors.add_new_sensor', 'Pridať senzor') }}
             </button>
+            <small id="sensorStorageMeta" class="sensor-meta-note ui-admin-only"></small>
             <div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-ellipsis-h"></i> {{ t('common.more', 'Viac') }}
@@ -3178,6 +3179,7 @@ let sensorCache = [];
 let activeQuickFilter = 'all';
 let selectedSensors = new Set();
 let sensorRefreshTimer = null;
+let sensorStorageMeta = null;
 let sensorCurrentPage = 1;
 let sensorPageSize = 20;
 let currentPageSensors = [];
@@ -4061,6 +4063,23 @@ function refreshSensorView() {
     renderSensors(getFilteredSensors());
 }
 
+function formatSensorStorageMeta(meta) {
+    if (!meta || typeof meta !== 'object') return '';
+    const backend = String(meta.storage_backend || '').toLowerCase() === 'db'
+        ? tr('common.database', 'Databáza')
+        : tr('common.recovery_file', 'Recovery súbor');
+    const seeded = meta.bootstrap_state && meta.bootstrap_state.seeded
+        ? tr('common.seeded', 'bootstrap')
+        : tr('common.live', 'live');
+    return `${backend} · ${seeded}`;
+}
+
+function updateSensorStorageMeta() {
+    const metaEl = document.getElementById('sensorStorageMeta');
+    if (!metaEl) return;
+    metaEl.textContent = formatSensorStorageMeta(sensorStorageMeta);
+}
+
 async function apiRequest(url, method = 'POST', body = null) {
     const options = { method, headers: {} };
     if (body && !(body instanceof FormData)) {
@@ -4089,12 +4108,22 @@ function setAutoRefresh(enabled) {
 }
 
 function loadSensors(silent = false) {
-    return fetch('/api/sensors')
-        .then(response => response.json())
-        .then(sensorStatus => {
+    const requests = [fetch('/api/sensors').then(response => response.json())];
+    if (SENSOR_IS_ADMIN) {
+        requests.push(
+            fetch('/api/sensors/storage-meta')
+                .then(response => response.json())
+                .catch(() => null)
+        );
+    }
+
+    return Promise.all(requests)
+        .then(([sensorStatus, storageMeta]) => {
             sensorCache = Object.values(sensorStatus || {}).sort((a, b) => String(a.eui).localeCompare(String(b.eui)));
+            sensorStorageMeta = storageMeta && storageMeta.success ? storageMeta : null;
             selectedSensors = new Set([...selectedSensors].filter(eui => sensorCache.some(sensor => sensor.eui === eui)));
             updateSensorOverview(sensorCache);
+            updateSensorStorageMeta();
             refreshSensorView();
             updateLastRefreshNote();
             maybeOpenSensorActionFromQuery();

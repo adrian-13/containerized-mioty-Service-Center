@@ -171,6 +171,22 @@
     color: #5e7593;
     font-size: 0.76rem;
 }
+.tenant-storage-note {
+    margin-top: 0.38rem;
+    color: #5e7593;
+    font-size: 0.74rem;
+}
+.tenant-toolbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    margin-bottom: 0.68rem;
+    flex-wrap: wrap;
+}
+.tenant-toolbar-actions .btn-group {
+    flex-wrap: wrap;
+}
 .admin-modal .modal-content {
     border-radius: 0.95rem;
     border: 1px solid #dce5f2;
@@ -405,6 +421,14 @@
                         <h5><i class="fas fa-users me-2"></i>{{ t('admin.users_tenant_assignment', 'Users and Tenant Assignment') }}</h5>
                         <div class="d-flex align-items-center gap-2">
                             <span class="tenant-chip" id="tenantUserCount">0 shown</span>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="{{ t('admin.user_transfer_actions', 'User import and export') }}">
+                                <button type="button" class="btn btn-outline-secondary" onclick="exportAdminUsers()">
+                                    <i class="fas fa-download me-1"></i>{{ t('common.export', 'Export') }}
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="triggerAdminUserImport()">
+                                    <i class="fas fa-upload me-1"></i>{{ t('common.import', 'Import') }}
+                                </button>
+                            </div>
                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="openTenantUserModal('create')">
                                 <i class="fas fa-user-plus me-1"></i>{{ t('admin.new_user', 'New User') }}
                             </button>
@@ -414,11 +438,17 @@
                         <div id="tenantAdminStatus" class="alert alert-info py-2 mb-3 tenant-admin-status">
                             {{ t('admin.load_users_tenants_note', 'Load users and tenants from backend.') }}
                         </div>
+                        <div id="tenantUsersStorageNote" class="tenant-storage-note">
+                            {{ t('admin.users_storage_note_default', 'Users are loaded from the active storage backend.') }}
+                        </div>
+                        <input type="file" id="tenantUserImportFile" class="d-none" accept=".json,application/json">
 
-                        <div class="tenant-toolbar">
+                        <div class="tenant-toolbar-actions">
+                            <div class="tenant-toolbar">
                             <input type="text" class="form-control tenant-compact-control" id="tenantUserSearch" placeholder="{{ t('admin.search_username_name_tenant', 'Search username, name or tenant') }}">
                             <select class="form-control tenant-compact-control" id="tenantRoleFilter"></select>
                             <select class="form-control tenant-compact-control" id="tenantTenantFilter"></select>
+                            </div>
                         </div>
 
                         <div class="table-responsive">
@@ -454,6 +484,14 @@
                         <h5><i class="fas fa-building me-2"></i>{{ t('admin.tenant_registry', 'Tenant Registry') }}</h5>
                         <div class="d-flex align-items-center gap-2">
                             <span class="tenant-chip" id="tenantRegistryCount">0 tenants</span>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="{{ t('admin.tenant_transfer_actions', 'Tenant metadata import and export') }}">
+                                <button type="button" class="btn btn-outline-secondary" onclick="exportTenantMetadata()">
+                                    <i class="fas fa-download me-1"></i>{{ t('common.export', 'Export') }}
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="triggerTenantMetadataImport()">
+                                    <i class="fas fa-upload me-1"></i>{{ t('common.import', 'Import') }}
+                                </button>
+                            </div>
                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="openTenantEntityModal('create')">
                                 <i class="fas fa-plus-circle me-1"></i>{{ t('admin.new_tenant', 'New Tenant') }}
                             </button>
@@ -463,6 +501,10 @@
                         <div id="tenantMgmtStatus" class="alert alert-info py-2 mb-3 tenant-admin-status">
                             {{ t('admin.manage_tenant_records', 'Manage tenant records and data operations.') }}
                         </div>
+                        <div id="tenantRegistryStorageNote" class="tenant-storage-note">
+                            {{ t('admin.tenant_storage_note_default', 'Tenant metadata is loaded from the active storage backend.') }}
+                        </div>
+                        <input type="file" id="tenantMetadataImportFile" class="d-none" accept=".json,application/json">
                         <div class="table-responsive">
                             <table class="table table-sm align-middle table-admin mb-0">
                                 <thead>
@@ -716,6 +758,8 @@ let tenantUserFormBaseline = null;
 let tenantEntityFormBaseline = null;
 let tenantUserModalCloseBySave = false;
 let tenantEntityModalCloseBySave = false;
+let tenantUsersStorageMeta = {};
+let tenantRegistryStorageMeta = {};
 const TENANT_PAGE_ADMIN_SCOPES = {{ (current_user.admin_permissions if current_user and current_user.role == 'admin' else {})|tojson }};
 
 function tenantScopeLabel(tenantId) {
@@ -952,6 +996,188 @@ function showModal(modalId) {
 function hideModal(modalId) {
     const modal = getModalInstance(modalId);
     if (modal) modal.hide();
+}
+
+function formatStorageMetaNote(meta, kindLabel, defaultSeed, defaultRecovery) {
+    const normalized = meta && typeof meta === 'object' ? meta : {};
+    const backend = String(normalized.storage_backend || normalized.backend || 'json').toLowerCase();
+    const backendLabel = backend === 'db' ? appTranslate('admin.storage_backend_db', 'DB-first storage') : appTranslate('admin.storage_backend_json', 'JSON fallback storage');
+    const seedFile = String(normalized.seed_defaults_file || defaultSeed || '').trim();
+    const recoveryFile = String(normalized.recovery_file || defaultRecovery || '').trim();
+    const bootstrap = normalized.bootstrap_state && typeof normalized.bootstrap_state === 'object'
+        ? normalized.bootstrap_state
+        : {};
+    const seedSource = String(bootstrap.seed_source || '').trim();
+    const parts = [
+        `${kindLabel}: ${backendLabel}.`,
+    ];
+    if (seedFile) {
+        parts.push(appTranslate('admin.storage_seed_note', 'Seed source: {file}.', { file: seedFile }));
+    }
+    if (recoveryFile) {
+        parts.push(appTranslate('admin.storage_recovery_note', 'Recovery fallback: {file}.', { file: recoveryFile }));
+    }
+    if (seedSource) {
+        parts.push(appTranslate('admin.storage_bootstrap_note', 'Bootstrap source: {source}.', { source: seedSource }));
+    }
+    return parts.join(' ');
+}
+
+function renderAdminStorageNotes() {
+    const usersNote = document.getElementById('tenantUsersStorageNote');
+    if (usersNote) {
+        usersNote.textContent = formatStorageMetaNote(
+            tenantUsersStorageMeta,
+            appTranslate('admin.users_storage_label', 'Users'),
+            'users.default.json',
+            'users.json'
+        );
+    }
+    const tenantsNote = document.getElementById('tenantRegistryStorageNote');
+    if (tenantsNote) {
+        tenantsNote.textContent = formatStorageMetaNote(
+            tenantRegistryStorageMeta,
+            appTranslate('admin.tenants_storage_label', 'Tenant metadata'),
+            'tenants.json',
+            'tenants.json'
+        );
+    }
+}
+
+function downloadBlob(blob, filename) {
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = filename || 'export.json';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
+function readFilenameFromResponse(response, fallbackName) {
+    const disposition = String(response.headers.get('Content-Disposition') || '');
+    const match = disposition.match(/filename=\"?([^\";]+)\"?/i);
+    return match?.[1] || fallbackName;
+}
+
+async function exportAdminUsers() {
+    try {
+        showStatus('tenantAdminStatus', appTranslate('admin.exporting_users', 'Exporting users...'), 'info');
+        const response = await fetch('/api/users/export');
+        if (!response.ok) {
+            let message = appTranslate('admin.export_failed', 'Export failed.');
+            try {
+                const payload = await response.json();
+                message = payload.error || payload.message || message;
+            } catch (error) {}
+            throw new Error(message);
+        }
+        const blob = await response.blob();
+        downloadBlob(blob, readFilenameFromResponse(response, 'users_export.json'));
+        showStatus('tenantAdminStatus', appTranslate('admin.users_export_ready', 'User export is ready.'), 'success');
+    } catch (error) {
+        showStatus('tenantAdminStatus', `${appTranslate('admin.export_failed', 'Export failed.')}: ${error.message}`, 'danger');
+    }
+}
+
+function triggerAdminUserImport() {
+    const input = document.getElementById('tenantUserImportFile');
+    if (input) {
+        input.value = '';
+        input.click();
+    }
+}
+
+async function importAdminUsersFromFile(file) {
+    if (!file) return;
+    try {
+        showStatus('tenantAdminStatus', appTranslate('admin.importing_users', 'Importing users...'), 'info');
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch('/api/users/import', {
+            method: 'POST',
+            body: formData,
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || result.message || 'Import failed');
+        }
+        await fetchTenantAdminData();
+        const generated = Array.isArray(result.generated_passwords) ? result.generated_passwords : [];
+        const summary = appTranslate(
+            'admin.users_import_summary',
+            'Users imported. Created: {created}, updated: {updated}, skipped: {skipped}.',
+            { created: result.created ?? 0, updated: result.updated ?? 0, skipped: Array.isArray(result.skipped) ? result.skipped.length : 0 }
+        );
+        const generatedLines = generated.length
+            ? ' ' + appTranslate(
+                'admin.generated_passwords_notice',
+                'Generated temporary passwords: {items}',
+                { items: generated.map((item) => `${item.username}=${item.password}`).join(', ') }
+            )
+            : '';
+        showStatus('tenantAdminStatus', `${summary}${generatedLines}`, 'success');
+    } catch (error) {
+        showStatus('tenantAdminStatus', `${appTranslate('admin.import_failed', 'Import failed.')}: ${error.message}`, 'danger');
+    }
+}
+
+async function exportTenantMetadata() {
+    try {
+        showStatus('tenantMgmtStatus', appTranslate('admin.exporting_tenants', 'Exporting tenant metadata...'), 'info');
+        const response = await fetch('/api/tenants/metadata/export');
+        if (!response.ok) {
+            let message = appTranslate('admin.export_failed', 'Export failed.');
+            try {
+                const payload = await response.json();
+                message = payload.error || payload.message || message;
+            } catch (error) {}
+            throw new Error(message);
+        }
+        const blob = await response.blob();
+        downloadBlob(blob, readFilenameFromResponse(response, 'tenant_metadata_export.json'));
+        showStatus('tenantMgmtStatus', appTranslate('admin.tenant_export_ready', 'Tenant metadata export is ready.'), 'success');
+    } catch (error) {
+        showStatus('tenantMgmtStatus', `${appTranslate('admin.export_failed', 'Export failed.')}: ${error.message}`, 'danger');
+    }
+}
+
+function triggerTenantMetadataImport() {
+    const input = document.getElementById('tenantMetadataImportFile');
+    if (input) {
+        input.value = '';
+        input.click();
+    }
+}
+
+async function importTenantMetadataFromFile(file) {
+    if (!file) return;
+    try {
+        showStatus('tenantMgmtStatus', appTranslate('admin.importing_tenants', 'Importing tenant metadata...'), 'info');
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch('/api/tenants/metadata/import', {
+            method: 'POST',
+            body: formData,
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || result.message || 'Import failed');
+        }
+        await fetchTenantAdminData();
+        showStatus(
+            'tenantMgmtStatus',
+            appTranslate(
+                'admin.tenants_import_summary',
+                'Tenant metadata imported. Created: {created}, updated: {updated}, skipped: {skipped}.',
+                { created: result.created ?? 0, updated: result.updated ?? 0, skipped: Array.isArray(result.skipped) ? result.skipped.length : 0 }
+            ),
+            'success'
+        );
+    } catch (error) {
+        showStatus('tenantMgmtStatus', `${appTranslate('admin.import_failed', 'Import failed.')}: ${error.message}`, 'danger');
+    }
 }
 
 function setAdminTab(tabName) {
@@ -1702,12 +1928,20 @@ async function fetchTenantAdminData() {
             tenantAdminScopeDefinitions = usersData.admin_scopes || [];
             tenantCurrentAdminPermissions = usersData.current_admin_permissions || {};
             tenantKnownTenantChoices = usersData.tenant_choices || [];
+            tenantUsersStorageMeta = {
+                storage_backend: usersData.storage_backend || 'json',
+                storage_db_enabled: !!usersData.storage_db_enabled,
+                bootstrap_state: usersData.bootstrap_state || {},
+                seed_defaults_file: usersData.seed_defaults_file || 'users.default.json',
+                recovery_file: usersData.recovery_file || 'users.json',
+            };
         } else {
             tenantAdminUsers = [];
             tenantAdminRoles = ['admin', 'user', 'customer'];
             tenantAdminScopeDefinitions = [];
             tenantCurrentAdminPermissions = {};
             tenantKnownTenantChoices = [];
+            tenantUsersStorageMeta = {};
         }
 
         let tenantsData = {};
@@ -1737,6 +1971,13 @@ async function fetchTenantAdminData() {
                 configured_ip: item.configured_ip || '',
                 tags: Array.isArray(item.tags) ? item.tags : [],
             }));
+            tenantRegistryStorageMeta = {
+                storage_backend: tenantsData.storage_backend || 'json',
+                storage_db_enabled: !!tenantsData.storage_db_enabled,
+                bootstrap_state: tenantsData.bootstrap_state || {},
+                seed_defaults_file: tenantsData.seed_defaults_file || 'tenants.json',
+                recovery_file: tenantsData.recovery_file || 'tenants.json',
+            };
         } else {
             tenantAdminTenants = (tenantKnownTenantChoices || []).map((tenantId) => ({
                 tenant_id: tenantId,
@@ -1749,6 +1990,7 @@ async function fetchTenantAdminData() {
                 can_delete: false,
             }));
             tenantBaseStationCatalog = [];
+            tenantRegistryStorageMeta = {};
         }
 
         tenantAdminDefaultTenant =
@@ -1763,6 +2005,7 @@ async function fetchTenantAdminData() {
         renderTenantUsersTable();
         renderTenantManagementTable();
         renderTenantBaseStationPicker();
+        renderAdminStorageNotes();
         updateKpis();
         setTenantUserBaseline();
         setTenantEntityBaseline();
@@ -1859,6 +2102,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     const userTenant = document.getElementById('tenantUserTenant');
     const tenantBaseStationSearch = document.getElementById('tenantBaseStationSearch');
     const tenantEntityId = document.getElementById('tenantEntityId');
+    const tenantUserImportFile = document.getElementById('tenantUserImportFile');
+    const tenantMetadataImportFile = document.getElementById('tenantMetadataImportFile');
 
     if (userSearch) userSearch.addEventListener('input', renderTenantUsersTable);
     if (roleFilter) roleFilter.addEventListener('change', renderTenantUsersTable);
@@ -1867,6 +2112,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (userTenant) userTenant.addEventListener('change', updateUserScopeBadges);
     if (tenantBaseStationSearch) tenantBaseStationSearch.addEventListener('input', renderTenantBaseStationPicker);
     if (tenantEntityId) tenantEntityId.addEventListener('input', renderTenantBaseStationPicker);
+    if (tenantUserImportFile) tenantUserImportFile.addEventListener('change', (event) => importAdminUsersFromFile(event.target.files?.[0]));
+    if (tenantMetadataImportFile) tenantMetadataImportFile.addEventListener('change', (event) => importTenantMetadataFromFile(event.target.files?.[0]));
 
     initAdminTabs();
     resetTenantUserForm();
