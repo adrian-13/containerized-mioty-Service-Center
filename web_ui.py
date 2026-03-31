@@ -72,6 +72,12 @@ _VIEWER_SENSOR_LIST_CACHE_TTL_SECONDS = 15.0
 _customer_dashboard_cache_lock = threading.Lock()
 _customer_dashboard_cache = {}
 _CUSTOMER_DASHBOARD_CACHE_TTL_SECONDS = 5.0
+_customer_dashboard_summary_cache_lock = threading.Lock()
+_customer_dashboard_summary_cache = {}
+_CUSTOMER_DASHBOARD_SUMMARY_CACHE_TTL_SECONDS = 5.0
+_customer_dashboard_runtime_cache_lock = threading.Lock()
+_customer_dashboard_runtime_cache = {}
+_CUSTOMER_DASHBOARD_RUNTIME_CACHE_TTL_SECONDS = 10.0
 _incident_feed_cache_lock = threading.Lock()
 _incident_feed_cache = {}
 _INCIDENT_FEED_CACHE_TTL_SECONDS = 5.0
@@ -5413,8 +5419,18 @@ def _invalidate_customer_dashboard_cache(tenant_id: Optional[str] = None):
     with _customer_dashboard_cache_lock:
         if tenant_id is None:
             _customer_dashboard_cache.clear()
+        else:
+            _customer_dashboard_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
+    with _customer_dashboard_summary_cache_lock:
+        if tenant_id is None:
+            _customer_dashboard_summary_cache.clear()
+        else:
+            _customer_dashboard_summary_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
+    with _customer_dashboard_runtime_cache_lock:
+        if tenant_id is None:
+            _customer_dashboard_runtime_cache.clear()
             return
-        _customer_dashboard_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
+        _customer_dashboard_runtime_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
 
 def _get_cached_customer_dashboard_payload(tenant_id: str):
     tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
@@ -5432,6 +5448,46 @@ def _store_cached_customer_dashboard_payload(tenant_id: str, payload: Dict[str, 
     tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
     with _customer_dashboard_cache_lock:
         _customer_dashboard_cache[tenant_key] = {
+            "ts": time.time(),
+            "payload": copy.deepcopy(payload or {}),
+        }
+
+def _get_cached_customer_dashboard_summary_payload(tenant_id: str):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _customer_dashboard_summary_cache_lock:
+        entry = _customer_dashboard_summary_cache.get(tenant_key)
+        if not entry:
+            return None
+        age = time.time() - float(entry.get("ts") or 0.0)
+        if age > _CUSTOMER_DASHBOARD_SUMMARY_CACHE_TTL_SECONDS:
+            _customer_dashboard_summary_cache.pop(tenant_key, None)
+            return None
+        return copy.deepcopy(entry.get("payload") or {})
+
+def _store_cached_customer_dashboard_summary_payload(tenant_id: str, payload: Dict[str, Any]):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _customer_dashboard_summary_cache_lock:
+        _customer_dashboard_summary_cache[tenant_key] = {
+            "ts": time.time(),
+            "payload": copy.deepcopy(payload or {}),
+        }
+
+def _get_cached_customer_dashboard_runtime_payload(tenant_id: str):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _customer_dashboard_runtime_cache_lock:
+        entry = _customer_dashboard_runtime_cache.get(tenant_key)
+        if not entry:
+            return None
+        age = time.time() - float(entry.get("ts") or 0.0)
+        if age > _CUSTOMER_DASHBOARD_RUNTIME_CACHE_TTL_SECONDS:
+            _customer_dashboard_runtime_cache.pop(tenant_key, None)
+            return None
+        return copy.deepcopy(entry.get("payload") or {})
+
+def _store_cached_customer_dashboard_runtime_payload(tenant_id: str, payload: Dict[str, Any]):
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _customer_dashboard_runtime_cache_lock:
+        _customer_dashboard_runtime_cache[tenant_key] = {
             "ts": time.time(),
             "payload": copy.deepcopy(payload or {}),
         }
@@ -17642,18 +17698,30 @@ def bssci_status():
         }
         return jsonify(error_response), 500
 
-def _build_customer_dashboard_payload() -> Dict[str, Any]:
-    """Aggregate customer-safe dashboard data without exposing internal runtime API surface."""
+def _build_customer_dashboard_summary_payload() -> Dict[str, Any]:
+    """Build the fast customer dashboard summary payload for first paint."""
     return {
         'success': True,
         'statusData': get_bssci_service_status(),
+        'gatewaysData': _build_base_stations_runtime_payload(),
+    }
+
+def _build_customer_dashboard_runtime_payload() -> Dict[str, Any]:
+    """Build slower dashboard widgets that can be hydrated after first paint."""
+    return {
+        'success': True,
         'vmData': _build_vm_status_payload(),
         'trafficData': _build_traffic_metrics_payload(),
         'healthData': _build_health_stats_payload(),
         'topologyData': _build_network_topology_payload(),
-        'gatewaysData': _build_base_stations_runtime_payload(),
         'coverageState': _build_coverage_positions_read_payload(),
     }
+
+def _build_customer_dashboard_payload() -> Dict[str, Any]:
+    """Aggregate customer-safe dashboard data without exposing internal runtime API surface."""
+    payload = _build_customer_dashboard_summary_payload()
+    payload.update(_build_customer_dashboard_runtime_payload())
+    return payload
 
 @app.route('/api/customer/dashboard', methods=['GET'])
 @login_required
@@ -17669,6 +17737,38 @@ def customer_dashboard_payload():
         return jsonify(payload)
     except Exception as exc:
         logger.exception("Failed to build customer dashboard payload")
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+@app.route('/api/customer/dashboard/summary', methods=['GET'])
+@login_required
+def customer_dashboard_summary_payload():
+    """Fast customer dashboard payload used for first paint."""
+    try:
+        active_tenant = _active_tenant_id()
+        cached_payload = _get_cached_customer_dashboard_summary_payload(active_tenant)
+        if cached_payload:
+            return jsonify(cached_payload)
+        payload = _build_customer_dashboard_summary_payload()
+        _store_cached_customer_dashboard_summary_payload(active_tenant, payload)
+        return jsonify(payload)
+    except Exception as exc:
+        logger.exception("Failed to build customer dashboard summary payload")
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+@app.route('/api/customer/dashboard/runtime', methods=['GET'])
+@login_required
+def customer_dashboard_runtime_payload():
+    """Deferred customer dashboard widgets hydrated after first paint."""
+    try:
+        active_tenant = _active_tenant_id()
+        cached_payload = _get_cached_customer_dashboard_runtime_payload(active_tenant)
+        if cached_payload:
+            return jsonify(cached_payload)
+        payload = _build_customer_dashboard_runtime_payload()
+        _store_cached_customer_dashboard_runtime_payload(active_tenant, payload)
+        return jsonify(payload)
+    except Exception as exc:
+        logger.exception("Failed to build customer dashboard runtime payload")
         return jsonify({'success': False, 'error': str(exc)}), 500
 
 @app.route('/api/customer/base-stations', methods=['GET'])

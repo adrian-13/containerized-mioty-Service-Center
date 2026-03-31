@@ -3045,6 +3045,11 @@ let latestTopologyData = null;
 let latestCoverageState = null;
 let latestSensorInventoryData = null;
 let latestStatusData = null;
+let latestVmData = null;
+let latestTrafficData = null;
+let latestHealthData = null;
+let latestGatewaysData = null;
+let latestIncidentsData = null;
 let miniCoverageViewInitialized = false;
 let miniMapSaveStatusTimer = null;
 let miniGraphInitialized = false;
@@ -3173,22 +3178,27 @@ function applyDashboardPayload(payload, meta = {}) {
     const sensorsData = data.sensorsData || null;
     const incidentsData = data.incidentsData || null;
 
-    latestTopologyData = topologyData;
-    latestCoverageState = coverageState;
-    latestSensorInventoryData = sensorsData;
-    latestStatusData = statusData;
+    if (topologyData) latestTopologyData = topologyData;
+    if (coverageState) latestCoverageState = coverageState;
+    if (sensorsData) latestSensorInventoryData = sensorsData;
+    if (statusData) latestStatusData = statusData;
+    if (vmData) latestVmData = vmData;
+    if (trafficData) latestTrafficData = trafficData;
+    if (healthData) latestHealthData = healthData;
+    if (gatewaysData) latestGatewaysData = gatewaysData;
+    if (incidentsData) latestIncidentsData = incidentsData;
 
-    if (statusData) updateStatusCards(statusData);
-    if (miniRuntimeInitialized && topologyData) {
-        updateTopologyPanel(topologyData);
-        updateMiniCoverageMap(topologyData || {}, coverageState || {}, sensorsData || {});
+    if (latestStatusData) updateStatusCards(latestStatusData);
+    if (miniRuntimeInitialized && (latestTopologyData || latestCoverageState || latestSensorInventoryData)) {
+        updateTopologyPanel(latestTopologyData || {});
+        updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
     }
-    const vmCapable = updateVmMetrics(vmData || {});
-    const trafficInfo = updateTrafficMetrics(trafficData || {});
-    const healthInfo = updateHealthMetrics(healthData || {});
+    const vmCapable = updateVmMetrics(latestVmData || {});
+    const trafficInfo = updateTrafficMetrics(latestTrafficData || {});
+    const healthInfo = updateHealthMetrics(latestHealthData || {});
     updateOperationsPanel(trafficInfo, healthInfo, vmCapable);
-    updateGatewayActions(gatewaysData || {});
-    renderIncidents(incidentsData && Array.isArray(incidentsData.incidents) ? incidentsData.incidents : []);
+    updateGatewayActions(latestGatewaysData || {});
+    renderIncidents(latestIncidentsData && Array.isArray(latestIncidentsData.incidents) ? latestIncidentsData.incidents : []);
     previousSnapshot.packetLoss = healthInfo.packetLoss || 0;
     updateLastUpdatedLabel(meta && Number.isFinite(meta.ts) ? meta.ts : undefined);
     updateDashboardCacheIndicator(meta);
@@ -3199,20 +3209,19 @@ function applyDashboardPayload(payload, meta = {}) {
 
 function fetchDashboardPayload() {
     return Promise.all([
-        fetchJson('/api/customer/dashboard'),
+        fetchJson('/api/customer/dashboard/summary'),
         fetchJson('/api/sensors'),
         fetchJson('/api/incidents')
     ]).then(([dashboardData, sensorsData, incidentsData]) => ({
         statusData: dashboardData && dashboardData.statusData ? dashboardData.statusData : null,
-        vmData: dashboardData && dashboardData.vmData ? dashboardData.vmData : null,
-        trafficData: dashboardData && dashboardData.trafficData ? dashboardData.trafficData : null,
-        healthData: dashboardData && dashboardData.healthData ? dashboardData.healthData : null,
-        topologyData: dashboardData && dashboardData.topologyData ? dashboardData.topologyData : null,
         gatewaysData: dashboardData && dashboardData.gatewaysData ? dashboardData.gatewaysData : null,
-        coverageState: dashboardData && dashboardData.coverageState ? dashboardData.coverageState : null,
         sensorsData,
         incidentsData
     }));
+}
+
+function fetchDashboardRuntimePayload() {
+    return fetchJson('/api/customer/dashboard/runtime');
 }
 
 function setTrendState(id, current, previous, labels) {
@@ -4232,6 +4241,13 @@ async function refreshNow(manualTrigger) {
                     onFresh: (freshPayload, meta) => {
                         applyDashboardPayload(freshPayload, { ...(meta || {}), source: 'network' });
                         setDashboardSkeletonState(false);
+                        fetchDashboardRuntimePayload()
+                            .then((runtimePayload) => {
+                                if (runtimePayload) {
+                                    applyDashboardPayload(runtimePayload, { ts: Date.now(), source: 'network-runtime' });
+                                }
+                            })
+                            .catch(() => {});
                     },
                     onError: () => {
                         setDashboardSkeletonState(false);
@@ -4248,6 +4264,10 @@ async function refreshNow(manualTrigger) {
             const payload = await fetchDashboardPayload();
             applyDashboardPayload(payload, { ts: Date.now(), source: 'network' });
             setDashboardSkeletonState(false);
+            const runtimePayload = await fetchDashboardRuntimePayload();
+            if (runtimePayload) {
+                applyDashboardPayload(runtimePayload, { ts: Date.now(), source: 'network-runtime' });
+            }
         }
     } catch (error) {
         console.error('Dashboard refresh failed:', error);
