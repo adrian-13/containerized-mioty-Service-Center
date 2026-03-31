@@ -760,6 +760,8 @@ let tenantUserModalCloseBySave = false;
 let tenantEntityModalCloseBySave = false;
 let tenantUsersStorageMeta = {};
 let tenantRegistryStorageMeta = {};
+let tenantUsersLoaded = false;
+let tenantTenantsLoaded = false;
 const TENANT_PAGE_ADMIN_SCOPES = {{ (current_user.admin_permissions if current_user and current_user.role == 'admin' else {})|tojson }};
 
 function tenantScopeLabel(tenantId) {
@@ -1194,6 +1196,12 @@ function setAdminTab(tabName) {
     if (usersPanel) usersPanel.classList.toggle('d-none', nextTab !== 'users');
     if (tenantsPanel) tenantsPanel.classList.toggle('d-none', nextTab !== 'tenants');
     if (decodersPanel) decodersPanel.classList.toggle('d-none', nextTab !== 'decoders');
+    if (nextTab === 'users' && !tenantUsersLoaded && canManageUsers) {
+        fetchTenantAdminData({ loadUsers: true, loadTenants: false });
+    }
+    if (nextTab === 'tenants' && !tenantTenantsLoaded && canManageTenants) {
+        fetchTenantAdminData({ loadUsers: false, loadTenants: true });
+    }
     if (nextTab === 'decoders') loadDecoderProfiles();
 
     document.querySelectorAll('[data-admin-tab-btn]').forEach(btn => {
@@ -1910,17 +1918,31 @@ async function deleteTenantEntity(tenantId) {
     }
 }
 
-async function fetchTenantAdminData() {
+async function fetchTenantAdminData(options = {}) {
     const canManageUsers = canCurrentAdminScope('manage_users');
     const canManageTenants = canCurrentAdminScope('manage_tenants');
+    const hasExplicitOptions = Object.keys(options || {}).length > 0;
+    const loadUsers = Boolean(options.loadUsers ?? canManageUsers);
+    const loadTenants = Boolean(options.loadTenants ?? canManageTenants);
+    const forceReload = Boolean(options.force || !hasExplicitOptions);
+    const shouldLoadUsers = canManageUsers && loadUsers && (forceReload || !tenantUsersLoaded);
+    const shouldLoadTenants = canManageTenants && loadTenants && (forceReload || !tenantTenantsLoaded);
+    if (!shouldLoadUsers && !shouldLoadTenants) {
+        return;
+    }
     try {
         showStatus('tenantAdminStatus', 'Loading administration data...', 'info');
 
         let usersData = {};
-        if (canManageUsers) {
-            const usersResp = await fetch('/api/users');
-            usersData = await usersResp.json();
-            if (!usersResp.ok || !usersData.users) {
+        let tenantsData = {};
+        const [usersFetch, tenantsFetch] = await Promise.all([
+            shouldLoadUsers ? fetch('/api/users') : Promise.resolve(null),
+            shouldLoadTenants ? fetch('/api/tenants') : Promise.resolve(null),
+        ]);
+
+        if (shouldLoadUsers && usersFetch) {
+            usersData = await usersFetch.json();
+            if (!usersFetch.ok || !usersData.users) {
                 throw new Error(usersData.error || usersData.message || 'Failed to load users');
             }
             tenantAdminUsers = usersData.users || [];
@@ -1935,7 +1957,8 @@ async function fetchTenantAdminData() {
                 seed_defaults_file: usersData.seed_defaults_file || 'users.default.json',
                 recovery_file: usersData.recovery_file || 'users.json',
             };
-        } else {
+            tenantUsersLoaded = true;
+        } else if (!tenantUsersLoaded) {
             tenantAdminUsers = [];
             tenantAdminRoles = ['admin', 'user', 'customer'];
             tenantAdminScopeDefinitions = [];
@@ -1944,11 +1967,9 @@ async function fetchTenantAdminData() {
             tenantUsersStorageMeta = {};
         }
 
-        let tenantsData = {};
-        if (canManageTenants) {
-            const tenantsResp = await fetch('/api/tenants');
-            tenantsData = await tenantsResp.json();
-            if (!tenantsResp.ok || !tenantsData.tenants) {
+        if (shouldLoadTenants && tenantsFetch) {
+            tenantsData = await tenantsFetch.json();
+            if (!tenantsFetch.ok || !tenantsData.tenants) {
                 throw new Error(tenantsData.error || tenantsData.message || 'Failed to load tenants');
             }
             tenantAdminTenants = (tenantsData.tenants || []).map(tenant => ({
@@ -1978,7 +1999,8 @@ async function fetchTenantAdminData() {
                 seed_defaults_file: tenantsData.seed_defaults_file || 'tenants.json',
                 recovery_file: tenantsData.recovery_file || 'tenants.json',
             };
-        } else {
+            tenantTenantsLoaded = true;
+        } else if (!tenantTenantsLoaded) {
             tenantAdminTenants = (tenantKnownTenantChoices || []).map((tenantId) => ({
                 tenant_id: tenantId,
                 name: tenantId,
@@ -2009,14 +2031,14 @@ async function fetchTenantAdminData() {
         updateKpis();
         setTenantUserBaseline();
         setTenantEntityBaseline();
-        if (canManageUsers) {
+        if (shouldLoadUsers) {
             showStatus('tenantAdminStatus', `Loaded ${tenantAdminUsers.length} users and ${tenantAdminTenants.length} tenants.`, 'success');
-        } else {
+        } else if (!canManageUsers) {
             showStatus('tenantAdminStatus', 'User management disabled for your admin scope.', 'warning');
         }
-        if (canManageTenants) {
+        if (shouldLoadTenants) {
             showStatus('tenantMgmtStatus', 'Tenant data loaded.', 'success');
-        } else {
+        } else if (!canManageTenants) {
             showStatus('tenantMgmtStatus', 'Tenant management disabled for your admin scope.', 'warning');
         }
     } catch (error) {
@@ -2118,7 +2140,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     initAdminTabs();
     resetTenantUserForm();
     resetTenantEntityForm();
-    await fetchTenantAdminData();
     initAdministrationUnsavedGuards();
 });
 

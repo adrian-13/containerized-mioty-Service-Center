@@ -81,6 +81,15 @@ _CUSTOMER_DASHBOARD_RUNTIME_CACHE_TTL_SECONDS = 10.0
 _incident_feed_cache_lock = threading.Lock()
 _incident_feed_cache = {}
 _INCIDENT_FEED_CACHE_TTL_SECONDS = 5.0
+_admin_users_cache_lock = threading.Lock()
+_admin_users_cache = {}
+_ADMIN_USERS_CACHE_TTL_SECONDS = 5.0
+_admin_tenants_cache_lock = threading.Lock()
+_admin_tenants_cache = {}
+_ADMIN_TENANTS_CACHE_TTL_SECONDS = 5.0
+_admin_audit_summary_cache_lock = threading.Lock()
+_admin_audit_summary_cache = {}
+_ADMIN_AUDIT_SUMMARY_CACHE_TTL_SECONDS = 5.0
 _timescale_uplink_stats = {
     "queued": 0,
     "written": 0,
@@ -5397,12 +5406,14 @@ def _save_all_sensors(sensors):
         if not ok:
             logger.warning("Falling back to %s for sensors save: %s", SENSORS_RECOVERY_FILE, err)
         else:
+            _invalidate_admin_management_cache()
             _invalidate_viewer_sensor_list_cache()
             _invalidate_customer_dashboard_cache()
             _invalidate_incident_feed_cache()
             return
     with open(bssci_config.SENSOR_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(list(sensors or []), f, indent=4, ensure_ascii=False)
+    _invalidate_admin_management_cache()
     _invalidate_viewer_sensor_list_cache()
     _invalidate_customer_dashboard_cache()
     _invalidate_incident_feed_cache()
@@ -5539,6 +5550,35 @@ def _store_cached_viewer_sensor_list(tenant_id: str, payload: Dict[str, Any]):
         _viewer_sensor_list_cache[tenant_key] = {
             "ts": time.time(),
             "payload": copy.deepcopy(payload or {}),
+        }
+
+
+def _invalidate_admin_management_cache():
+    with _admin_users_cache_lock:
+        _admin_users_cache.clear()
+    with _admin_tenants_cache_lock:
+        _admin_tenants_cache.clear()
+    with _admin_audit_summary_cache_lock:
+        _admin_audit_summary_cache.clear()
+
+
+def _get_ttl_cached_payload(cache_store: Dict[str, Any], cache_lock: threading.Lock, cache_key: str, ttl_seconds: float):
+    with cache_lock:
+        entry = cache_store.get(cache_key)
+        if not entry:
+            return None
+        age = time.time() - float(entry.get("ts") or 0.0)
+        if age > ttl_seconds:
+            cache_store.pop(cache_key, None)
+            return None
+        return copy.deepcopy(entry.get("payload"))
+
+
+def _store_ttl_cached_payload(cache_store: Dict[str, Any], cache_lock: threading.Lock, cache_key: str, payload: Any):
+    with cache_lock:
+        cache_store[cache_key] = {
+            "ts": time.time(),
+            "payload": copy.deepcopy(payload),
         }
 
 # ── Alert helpers ────────────────────────────────────────────────────────────
@@ -8807,6 +8847,7 @@ def _append_admin_audit_entry_to_db(entry):
                     json.dumps(entry.get("details") or {}, separators=(",", ":"), ensure_ascii=True),
                 ),
             )
+        _invalidate_admin_management_cache()
         return True, None
     except Exception as exc:
         return False, str(exc)
@@ -8871,6 +8912,7 @@ def _clear_admin_audit_entries_in_db():
         _ensure_timescale_schema(conn)
         with conn.cursor() as cur:
             cur.execute("TRUNCATE TABLE admin_audit_log")
+        _invalidate_admin_management_cache()
         return True, None
     except Exception as exc:
         return False, str(exc)
@@ -9221,11 +9263,13 @@ def save_tenant_registry(registry_data):
     if _db_first_config_enabled():
         ok, err = _save_tenant_registry_to_db(registry_data)
         if ok:
+            _invalidate_admin_management_cache()
             return True
         logger.error("Failed to save tenant registry to DB, falling back to file: %s", err)
     try:
         with open(TENANT_REGISTRY_FILE, "w", encoding="utf-8") as f:
             json.dump(registry_data, f, indent=2, ensure_ascii=True)
+        _invalidate_admin_management_cache()
         return True
     except Exception as exc:
         logger.error(f"Failed to save tenant registry '{TENANT_REGISTRY_FILE}': {exc}")
@@ -9409,11 +9453,13 @@ def save_users(users_data):
     if _db_first_config_enabled():
         ok, err = _save_users_payload_to_db(users_data)
         if ok:
+            _invalidate_admin_management_cache()
             return True
         logger.error("Failed to save users to DB, falling back to JSON: %s", err)
     try:
         with open('users.json', 'w') as f:
             json.dump(users_data, f, indent=2)
+        _invalidate_admin_management_cache()
         return True
     except Exception as e:
         logger.error(f"Failed to save users: {e}")
@@ -9743,6 +9789,7 @@ def _append_admin_audit_entry(entry):
         admin_audit_entries.append(entry)
         if len(admin_audit_entries) > max_admin_audit_entries:
             admin_audit_entries = admin_audit_entries[-max_admin_audit_entries:]
+    _invalidate_admin_management_cache()
     if _db_first_config_enabled():
         ok, err = _append_admin_audit_entry_to_db(entry)
         if ok:
@@ -10092,6 +10139,15 @@ def api_users():
     actor_user = get_current_user() or {}
     
     if request.method == 'GET':
+        cache_key = f"{str(actor_user.get('username') or session.get('username') or '')}:users"
+        cached_payload = _get_ttl_cached_payload(
+            _admin_users_cache,
+            _admin_users_cache_lock,
+            cache_key,
+            _ADMIN_USERS_CACHE_TTL_SECONDS,
+        )
+        if cached_payload is not None:
+            return jsonify(cached_payload)
         users_list = []
         legacy_default_user_present = False
         storage_meta = _users_storage_backend_meta()
@@ -10145,7 +10201,7 @@ def api_users():
                 legacy_default_user_present = True
             else:
                 known_tenant_ids.add(normalized_tenant)
-        return jsonify({
+        payload = {
             'users': users_list,
             'roles': _visible_role_choices(users_data.get('role_permissions', {})),
             'default_tenant': _default_tenant_id(),
@@ -10167,7 +10223,9 @@ def api_users():
                 for scope_id, meta in ADMIN_SCOPE_DEFINITIONS.items()
             ],
             'current_admin_permissions': _normalize_admin_permissions(actor_user.get('admin_permissions')),
-        })
+        }
+        _store_ttl_cached_payload(_admin_users_cache, _admin_users_cache_lock, cache_key, payload)
+        return jsonify(payload)
     
     elif request.method == 'POST':
         data = request.get_json()
@@ -10462,6 +10520,17 @@ def import_users_admin():
 @admin_scope_required('manage_tenants')
 def api_tenants():
     """List and manage tenant metadata."""
+    actor_user = get_current_user() or {}
+    cache_key = f"{str(actor_user.get('username') or session.get('username') or '')}:tenants"
+    if request.method == "GET":
+        cached_payload = _get_ttl_cached_payload(
+            _admin_tenants_cache,
+            _admin_tenants_cache_lock,
+            cache_key,
+            _ADMIN_TENANTS_CACHE_TTL_SECONDS,
+        )
+        if cached_payload is not None:
+            return jsonify(cached_payload)
     tenant_ids = set()
     default_tenant = _default_tenant_id()
     tenant_ids.add(default_tenant)
@@ -10838,7 +10907,7 @@ def api_tenants():
             ),
         })
 
-    return jsonify({
+    payload = {
         "success": True,
         "default_tenant": default_tenant,
         "default_tenant_label": "Super admin",
@@ -10860,7 +10929,15 @@ def api_tenants():
             if isinstance(bs_data, dict)
         ],
         "timescale": timescale,
-    })
+    }
+    if request.method == "GET":
+        _store_ttl_cached_payload(
+            _admin_tenants_cache,
+            _admin_tenants_cache_lock,
+            cache_key,
+            payload,
+        )
+    return jsonify(payload)
 
 
 @app.route('/api/tenants/metadata/export', methods=['GET'])
@@ -15588,6 +15665,7 @@ def save_base_station_config(config):
     if _db_first_config_enabled():
         ok, err = _save_base_station_payload_to_db(config)
         if ok:
+            _invalidate_admin_management_cache()
             _invalidate_customer_dashboard_cache()
             return
         logger.warning("Falling back to %s for base station save: %s", BASE_STATIONS_RECOVERY_FILE, err)
@@ -15601,6 +15679,7 @@ def save_base_station_config(config):
         pass
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
+    _invalidate_admin_management_cache()
     _invalidate_customer_dashboard_cache()
 
 def _build_base_stations_runtime_payload() -> Dict[str, Any]:
@@ -17545,6 +17624,25 @@ def get_admin_audit_logs():
     except (TypeError, ValueError):
         limit = 200
     limit = max(20, min(limit, 2000))
+    actor_user = get_current_user() or {}
+    cache_key = json.dumps({
+        "username": str(actor_user.get("username") or session.get("username") or ""),
+        "action": action_filter,
+        "entity": entity_filter,
+        "actor": actor_filter,
+        "status": status_filter,
+        "target": target_filter,
+        "q": text_filter,
+        "limit": limit,
+    }, separators=(",", ":"), sort_keys=True)
+    cached_payload = _get_ttl_cached_payload(
+        _admin_audit_summary_cache,
+        _admin_audit_summary_cache_lock,
+        cache_key,
+        _ADMIN_AUDIT_SUMMARY_CACHE_TTL_SECONDS,
+    )
+    if cached_payload is not None:
+        return jsonify(cached_payload)
 
     if _db_first_config_enabled():
         summary, err = _fetch_admin_audit_summary_from_db(
@@ -17619,7 +17717,7 @@ def get_admin_audit_logs():
                 status_counts[normalized] = status_counts.get(normalized, 0) + 1
         source_label = 'memory+file'
 
-    return jsonify({
+    payload = {
         'success': True,
         'entries': recent,
         'total': total,
@@ -17630,7 +17728,14 @@ def get_admin_audit_logs():
         'actors': actors,
         'status_counts': status_counts,
         'source': source_label,
-    })
+    }
+    _store_ttl_cached_payload(
+        _admin_audit_summary_cache,
+        _admin_audit_summary_cache_lock,
+        cache_key,
+        payload,
+    )
+    return jsonify(payload)
 
 
 def _filter_admin_audit_entries(
@@ -17826,6 +17931,7 @@ def clear_admin_audit_logs():
     global admin_audit_entries
     with _admin_audit_lock:
         admin_audit_entries = []
+    _invalidate_admin_management_cache()
     if _db_first_config_enabled():
         ok, err = _clear_admin_audit_entries_in_db()
         if not ok:
