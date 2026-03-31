@@ -2734,6 +2734,8 @@ function tier(sensorOrStatus) {
     return 'offline';
 }
 const VIEWER_STATUS_LABELS = {
+    new: 'Nový',
+    awaiting_first_data: 'Čaká na prvé dáta',
     active: 'Aktívny',
     online: 'Online',
     connected: 'Online',
@@ -2751,7 +2753,7 @@ const VIEWER_STATUS_LABELS = {
     unknown: 'Neznámy'
 };
 function viewerStatusLabel(sensor) {
-    const raw = sensor && (sensor.activity_status || sensor.status);
+    const raw = sensor && (sensor.lifecycle_status || sensor.activity_status || sensor.status);
     if (!raw) return 'Neznámy';
     return VIEWER_STATUS_LABELS[String(raw).toLowerCase()] || String(raw);
 }
@@ -3601,6 +3603,11 @@ function setSensorBulkMode(enabled) {
 function getSensorStatusType(sensor) {
     const activity = sensor.activity_status || 'no_data';
     if (activity === 'auto_detached') return 'detached';
+    const lifecycle = String(sensor.lifecycle_status || '').toLowerCase();
+    if (lifecycle === 'new' || lifecycle === 'awaiting_first_data') return 'lifecycle_initial';
+    if (lifecycle === 'warning') return 'warning';
+    if (lifecycle === 'offline') return 'offline';
+    if (lifecycle === 'active') return 'active';
     if (activity === 'warning' || activity === 'auto_detach_pending' || activity === 'stale') return 'warning';
     if (activity === 'quiet') return 'active';
     if (activity === 'active') return 'active';
@@ -3609,9 +3616,15 @@ function getSensorStatusType(sensor) {
 }
 
 function getSensorStatusLabel(sensor) {
+    const lifecycle = String(sensor.lifecycle_status || '').toLowerCase();
     const activity = String(sensor.activity_status || 'no_data');
     const reportingMode = String(sensor.reporting_mode || 'periodic');
     switch (getSensorStatusType(sensor)) {
+        case 'lifecycle_initial':
+            if (lifecycle === 'new') {
+                return { text: tr('sensors.lifecycle_new', 'Nový'), klass: 'bg-secondary' };
+            }
+            return { text: tr('sensors.lifecycle_waiting_first_data', 'Čaká na prvé dáta'), klass: 'bg-secondary' };
         case 'active':
             if (reportingMode === 'event') {
                 return { text: activity === 'active' ? tr('sensors.status_recent_event', 'Nedávna udalosť') : tr('sensors.status_quiet', 'Pokojový stav'), klass: 'bg-success' };
@@ -3620,6 +3633,8 @@ function getSensorStatusLabel(sensor) {
         case 'warning':
             if (activity === 'stale') return { text: tr('sensors.status_stale', 'Po lehote') , klass: 'bg-warning text-dark' };
             return { text: tr('common.warning', 'Upozornenie'), klass: 'bg-warning text-dark' };
+        case 'offline':
+            return { text: tr('common.offline', 'Offline'), klass: 'bg-danger' };
         case 'detached':
             return { text: tr('sensors.status_auto_detached', 'Automaticky odpojený'), klass: 'bg-danger' };
         case 'unregistered':
@@ -3628,7 +3643,7 @@ function getSensorStatusLabel(sensor) {
             if (reportingMode === 'event' && isRegistered(sensor)) {
                 return { text: tr('sensors.status_no_events', 'Bez udalostí'), klass: 'bg-secondary' };
             }
-            return { text: tr('sensors.status_no_data', 'Bez dát'), klass: 'bg-secondary' };
+            return { text: tr('sensors.lifecycle_waiting_first_data', 'Čaká na prvé dáta'), klass: 'bg-secondary' };
     }
 }
 
@@ -5098,6 +5113,22 @@ function renderSensorQuickView(data, eui) {
     const offlineThresholdSec = Number(data.offline_threshold_seconds || 0) > 0 ? Number(data.offline_threshold_seconds) : Math.max((expectedIntervalSec || 60) * 8, delayedThresholdSec + 240);
     const staleThresholdSec = Number(data.stale_threshold_seconds || 0) > 0 ? Number(data.stale_threshold_seconds) : (staleAfterHours ? staleAfterHours * 3600 : offlineThresholdSec);
     const statusMeta = (() => {
+        const lifecycle = String(data.lifecycle_status || '').trim().toLowerCase();
+        if (lifecycle === 'new') {
+            return { label: 'Nový', klass: 'sensor-status-chip--unknown', note: 'Senzor bol pridaný a pripravuje sa na prvé meranie.' };
+        }
+        if (lifecycle === 'awaiting_first_data') {
+            return { label: 'Čaká na prvé dáta', klass: 'sensor-status-chip--unknown', note: 'Senzor je pripravený, ale prvé dáta ešte neprišli.' };
+        }
+        if (lifecycle === 'warning') {
+            if (reportingMode === 'event') {
+                return { label: 'Upozornenie', klass: 'sensor-status-chip--warning', note: 'V očakávanom okne nebola zaznamenaná nová udalosť.' };
+            }
+            return { label: 'Upozornenie', klass: 'sensor-status-chip--warning', note: `Posledný uplink je mimo očakávaného okna (${formatDurationShort(timeSinceLastSeenSec || 0)} dozadu).` };
+        }
+        if (lifecycle === 'offline') {
+            return { label: 'Offline', klass: 'sensor-status-chip--offline', note: `Zo senzora neprišli nové dáta už ${formatDurationShort(timeSinceLastSeenSec || 0)}.` };
+        }
         if (reportingMode === 'event') {
             if (hasTelemetry && timeSinceLastSeenSec !== null) {
                 const recentEventWindowSec = Math.min(Math.max((staleThresholdSec || 7200) * 0.08, 1800), 14400);

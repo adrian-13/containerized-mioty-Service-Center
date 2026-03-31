@@ -1419,7 +1419,53 @@ load();
   function getExpectedIntervalSourceLabel(source) { const normalized = String(source || '').trim().toLowerCase(); const labels = { configured: {{ t('sensor_detail.expected_interval_source_configured', 'nastavený')|tojson }}, default: {{ t('sensor_detail.expected_interval_source_default', 'predvolený')|tojson }}, profile: {{ t('sensor_detail.expected_interval_source_profile', 'profil senzora')|tojson }}, observed: {{ t('sensor_detail.expected_interval_source_observed', 'odvodený z prevádzky')|tojson }}, inferred: {{ t('sensor_detail.expected_interval_source_inferred', 'automaticky odvodený')|tojson }}, auto: {{ t('sensor_detail.expected_interval_source_inferred', 'automaticky odvodený')|tojson }} }; return labels[normalized] || normalized || tr('unknown', 'Neznáme'); }
   function getPacketLossSourceLabel(source) { const normalized = String(source || '').trim().toLowerCase(); const labels = { runtime: {{ t('sensor_detail.packet_loss_source_runtime', 'runtime')|tojson }}, snapshot: {{ t('sensor_detail.packet_loss_source_snapshot', 'snapshot')|tojson }} }; return labels[normalized] || normalized || tr('unknown', 'Neznáme'); }
   function deriveMonitoringMode(detail) { const explicit = String(detail?.config?.reporting_mode || '').trim().toLowerCase(); if (explicit === 'event' || explicit === 'periodic') return explicit; return String(detail?.sensor_profile || '').toLowerCase().includes('m2') ? 'event' : 'periodic'; }
-  function deriveStatus(detail) { const mode = deriveMonitoringMode(detail); const now = Date.now() / 1000; const lastSeenSec = Number(detail?.last_seen || 0); const expected = Number(detail?.expected_interval_seconds || 0); const offline = Number(detail?.offline_threshold_seconds || 0); const staleHours = Number(detail?.config?.stale_after_hours || 0); if (!lastSeenSec) return mode === 'event' ? { label: tr('noEvents', 'Bez udalostí'), variant: 'is-quiet', note: {{ t('sensor_detail.no_events_note', 'Pre tento senzor zatiaľ nebola zaznamenaná žiadna udalosť.')|tojson }} } : { label: tr('unknown', 'Neznáme'), variant: 'is-delayed', note: {{ t('sensor_detail.unknown_telemetry_note', 'Zatiaľ nebola zachytená žiadna nedávna telemetria.')|tojson }} }; const age = Math.max(0, now - lastSeenSec); if (mode === 'event') { const stale = staleHours > 0 ? staleHours * 3600 : (offline > 0 ? offline : 72 * 3600); if (age <= 3600) return { label: tr('recentEvent', 'Nedávna udalosť'), variant: 'is-recent', note: {{ t('sensor_detail.last_event_arrived', 'Posledná udalosť prišla {time}.')|tojson }}.replace('{time}', formatTimeAgo(lastSeenSec)) }; if (age <= stale) return { label: tr('quiet', 'Pokojový stav'), variant: 'is-quiet', note: {{ t('sensor_detail.quiet_note', 'Nedávno nebola zaznamenaná žiadna udalosť. Pri udalostných senzoroch je to v poriadku.')|tojson }} }; return { label: tr('stale', 'Bez udalosti dlhšie'), variant: 'is-stale', note: {{ t('sensor_detail.stale_note', 'V rámci nastaveného servisného okna neprišla žiadna udalosť.')|tojson }} }; } if (expected > 0 && age <= expected) return { label: tr('online', 'Online'), variant: 'is-online', note: {{ t('sensor_detail.online_note', 'Senzor posiela dáta v očakávanom intervale.')|tojson }} }; if (offline > 0 && age <= offline) return { label: tr('delayed', 'Oneskorené'), variant: 'is-delayed', note: {{ t('sensor_detail.delayed_note', 'Posledný uplink mešká ({time}).')|tojson }}.replace('{time}', formatTimeAgo(lastSeenSec)) }; return { label: tr('offline', 'Offline'), variant: 'is-offline', note: {{ t('sensor_detail.offline_note', 'V rámci offline prahu neprišla žiadna telemetria.')|tojson }} }; }
+  function deriveStatus(detail) {
+    const mode = deriveMonitoringMode(detail);
+    const lifecycle = String(detail?.lifecycle_status || '').trim().toLowerCase();
+    const now = Date.now() / 1000;
+    const lastSeenSec = Number(detail?.last_seen || 0);
+    const expected = Number(detail?.expected_interval_seconds || 0);
+    const offline = Number(detail?.offline_threshold_seconds || 0);
+    const staleHours = Number(detail?.config?.stale_after_hours || 0);
+    if (lifecycle === 'new') {
+      return {
+        label: tr('lifecycleNew', 'Nový'),
+        variant: 'is-quiet',
+        note: {{ t('sensor_detail.lifecycle_new_note', 'Senzor bol pridaný a pripravuje sa na prvé meranie.')|tojson }}
+      };
+    }
+    if (lifecycle === 'awaiting_first_data') {
+      return {
+        label: tr('lifecycleWaitingFirstData', 'Čaká na prvé dáta'),
+        variant: 'is-delayed',
+        note: {{ t('sensor_detail.lifecycle_waiting_first_data_note', 'Senzor je pripravený, ale prvé dáta ešte neprišli.')|tojson }}
+      };
+    }
+    if (!lastSeenSec) {
+      return mode === 'event'
+        ? { label: tr('noEvents', 'Bez udalostí'), variant: 'is-quiet', note: {{ t('sensor_detail.no_events_note', 'Pre tento senzor zatiaľ nebola zaznamenaná žiadna udalosť.')|tojson }} }
+        : { label: tr('unknown', 'Neznáme'), variant: 'is-delayed', note: {{ t('sensor_detail.unknown_telemetry_note', 'Zatiaľ nebola zachytená žiadna nedávna telemetria.')|tojson }} };
+    }
+    const age = Math.max(0, now - lastSeenSec);
+    if (lifecycle === 'offline') {
+      return { label: tr('offline', 'Offline'), variant: 'is-offline', note: {{ t('sensor_detail.offline_note', 'V rámci offline prahu neprišla žiadna telemetria.')|tojson }} };
+    }
+    if (lifecycle === 'warning') {
+      if (mode === 'event') {
+        return { label: tr('lifecycleWarning', 'Upozornenie'), variant: 'is-stale', note: {{ t('sensor_detail.stale_note', 'V rámci nastaveného servisného okna neprišla žiadna udalosť.')|tojson }} };
+      }
+      return { label: tr('lifecycleWarning', 'Upozornenie'), variant: 'is-delayed', note: {{ t('sensor_detail.delayed_note', 'Posledný uplink mešká ({time}).')|tojson }}.replace('{time}', formatTimeAgo(lastSeenSec)) };
+    }
+    if (mode === 'event') {
+      const stale = staleHours > 0 ? staleHours * 3600 : (offline > 0 ? offline : 72 * 3600);
+      if (age <= 3600) return { label: tr('recentEvent', 'Nedávna udalosť'), variant: 'is-recent', note: {{ t('sensor_detail.last_event_arrived', 'Posledná udalosť prišla {time}.')|tojson }}.replace('{time}', formatTimeAgo(lastSeenSec)) };
+      if (age <= stale) return { label: tr('quiet', 'Pokojový stav'), variant: 'is-quiet', note: {{ t('sensor_detail.quiet_note', 'Nedávno nebola zaznamenaná žiadna udalosť. Pri udalostných senzoroch je to v poriadku.')|tojson }} };
+      return { label: tr('stale', 'Bez udalosti dlhšie'), variant: 'is-stale', note: {{ t('sensor_detail.stale_note', 'V rámci nastaveného servisného okna neprišla žiadna udalosť.')|tojson }} };
+    }
+    if (expected > 0 && age <= expected) return { label: tr('online', 'Online'), variant: 'is-online', note: {{ t('sensor_detail.online_note', 'Senzor posiela dáta v očakávanom intervale.')|tojson }} };
+    if (offline > 0 && age <= offline) return { label: tr('delayed', 'Oneskorené'), variant: 'is-delayed', note: {{ t('sensor_detail.delayed_note', 'Posledný uplink mešká ({time}).')|tojson }}.replace('{time}', formatTimeAgo(lastSeenSec)) };
+    return { label: tr('offline', 'Offline'), variant: 'is-offline', note: {{ t('sensor_detail.offline_note', 'V rámci offline prahu neprišla žiadna telemetria.')|tojson }} };
+  }
   function renderTabs() { const tabs = [{ id: 'overview', icon: 'fa-gauge-high', label: tr('overview', 'Prehľad') }, { id: 'telemetry', icon: 'fa-wave-square', label: tr('telemetry', 'Telemetria') }, { id: 'debug', icon: 'fa-terminal', label: tr('debug', 'Debug'), advancedOnly: true }]; if (CAN_VIEW_AUDIT) tabs.push({ id: 'audit', icon: 'fa-clipboard-list', label: tr('audit', 'Audit') }); if (CAN_EDIT_SENSORS_DETAIL) tabs.push({ id: 'sharing', icon: 'fa-share-nodes', label: tr('sharing', 'Zdieľanie') }); els.tabs.innerHTML = tabs.map((tab) => `<button type="button" class="sensor-detail-tab ${tab.advancedOnly ? 'ui-advanced-only' : ''} ${state.activeTab === tab.id ? 'is-active' : ''}" data-tab="${tab.id}"><i class="fas ${tab.icon}"></i>${tab.label}</button>`).join(''); els.tabs.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => { state.activeTab = button.dataset.tab; renderTabs(); renderBody(); if (state.activeTab === 'audit') ensureAuditLoaded(); if (state.activeTab === 'sharing') ensureSharingLoaded(); })); }
   function renderOverview(detail) {
     const config = detail.config || {};

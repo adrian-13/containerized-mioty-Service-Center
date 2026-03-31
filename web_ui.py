@@ -661,6 +661,11 @@ _UI_TRANSLATIONS = {
         "sensor_detail.stale_note": "V rámci nastaveného servisného okna neprišla žiadna udalosť.",
         "sensor_detail.online_note": "Senzor posiela dáta v očakávanom intervale.",
         "sensor_detail.delayed_note": "Posledný uplink mešká ({time}).",
+        "sensor_detail.lifecycle_new": "Nový",
+        "sensor_detail.lifecycle_new_note": "Senzor bol pridaný a pripravuje sa na prvé meranie.",
+        "sensor_detail.lifecycle_waiting_first_data": "Čaká na prvé dáta",
+        "sensor_detail.lifecycle_waiting_first_data_note": "Senzor je pripravený, ale prvé dáta ešte neprišli.",
+        "sensor_detail.lifecycle_warning": "Upozornenie",
         "sensor_detail.offline_note": "V rámci offline prahu neprišla žiadna telemetria.",
         "sensor_detail.audit_all": "Všetko",
         "sensor_detail.audit_updates": "Úpravy",
@@ -1461,6 +1466,11 @@ _UI_TRANSLATIONS["sk"].update({
     "sensors.status_auto_detached": "Automaticky odpojený",
     "sensors.status_no_events": "Bez udalostí",
     "sensors.status_no_data": "Bez dát",
+    "sensors.lifecycle_new": "Nový",
+    "sensors.lifecycle_waiting_first_data": "Čaká na prvé dáta",
+    "sensors.lifecycle_active": "Aktívny",
+    "sensors.lifecycle_warning": "Upozornenie",
+    "sensors.lifecycle_offline": "Offline",
     "sensors.status_registered": "Registrovaný",
     "sensors.status_not_registered": "Neregistrovaný",
     "sensors.event_seen": "Udalosť zachytená",
@@ -6994,6 +7004,68 @@ def _sensor_activity_ui_meta(activity_status: Any) -> Dict[str, Any]:
     }
 
 
+def _sensor_lifecycle_meta(
+    sensor_config: Optional[Dict[str, Any]],
+    availability_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    sensor_config = dict(sensor_config or {})
+    availability_snapshot = dict(availability_snapshot or {})
+    activity_status = _normalize_sensor_activity_status(
+        availability_snapshot.get("activity_status") or sensor_config.get("activity_status")
+    )
+    reporting_mode = str(
+        availability_snapshot.get("reporting_mode")
+        or sensor_config.get("reporting_mode")
+        or "periodic"
+    ).strip().lower()
+    expected_interval_seconds = float(availability_snapshot.get("expected_interval_seconds") or 0.0)
+    stale_threshold_seconds = float(availability_snapshot.get("stale_threshold_seconds") or 0.0)
+    created_at_ts = _parse_iso_timestamp_to_unix(sensor_config.get("created_at"))
+    now_ts = datetime.now(timezone.utc).timestamp()
+
+    lifecycle_status = "awaiting_first_data"
+
+    if activity_status in {"active", "quiet"}:
+        lifecycle_status = "active"
+    elif activity_status in {"warning", "stale", "auto_detach_pending"}:
+        lifecycle_status = "warning"
+    elif activity_status in {"offline", "auto_detached"}:
+        lifecycle_status = "offline"
+    else:
+        if reporting_mode == "event":
+            initial_window_seconds = min(max(stale_threshold_seconds * 0.1, 1800.0), 21600.0)
+        else:
+            initial_window_seconds = min(
+                max((expected_interval_seconds * 2.0) if expected_interval_seconds > 0 else 900.0, 900.0),
+                1800.0,
+            )
+        if created_at_ts > 0 and max(0.0, now_ts - created_at_ts) <= initial_window_seconds:
+            lifecycle_status = "new"
+
+    lifecycle_tier = {
+        "new": "unknown",
+        "awaiting_first_data": "unknown",
+        "active": "online",
+        "warning": "warn",
+        "offline": "offline",
+    }.get(lifecycle_status, "unknown")
+
+    lifecycle_label = {
+        "new": "Nový",
+        "awaiting_first_data": "Čaká na prvé dáta",
+        "active": "Aktívny",
+        "warning": "Upozornenie",
+        "offline": "Offline",
+    }.get(lifecycle_status, "Čaká na prvé dáta")
+
+    return {
+        "lifecycle_status": lifecycle_status,
+        "lifecycle_tier": lifecycle_tier,
+        "lifecycle_label": lifecycle_label,
+        "lifecycle_is_initial": lifecycle_status in {"new", "awaiting_first_data"},
+    }
+
+
 def _sensor_availability_snapshot(
     sensor_config: Optional[Dict[str, Any]],
     active_tenant: str,
@@ -7128,6 +7200,7 @@ def _sensor_availability_snapshot(
                     snapshot["activity_status"] = "warning"
 
     snapshot.update(_sensor_activity_ui_meta(snapshot.get("activity_status")))
+    snapshot.update(_sensor_lifecycle_meta(sensor_config, snapshot))
     return snapshot
 
 
@@ -13051,6 +13124,10 @@ def get_sensors():
                     'offline_threshold_seconds': availability.get('offline_threshold_seconds', sensor_data.get('offline_threshold_seconds')),
                     'stale_threshold_seconds': availability.get('stale_threshold_seconds', sensor_data.get('stale_threshold_seconds')),
                     'ui_tier': availability.get('ui_tier', sensor_data.get('ui_tier')),
+                    'lifecycle_status': availability.get('lifecycle_status', sensor_data.get('lifecycle_status')),
+                    'lifecycle_tier': availability.get('lifecycle_tier', sensor_data.get('lifecycle_tier')),
+                    'lifecycle_label': availability.get('lifecycle_label', sensor_data.get('lifecycle_label')),
+                    'lifecycle_is_initial': availability.get('lifecycle_is_initial', sensor_data.get('lifecycle_is_initial')),
                     'status_incident': availability.get('status_incident', sensor_data.get('status_incident')),
                     'status_incident_severity': availability.get('status_incident_severity', sensor_data.get('status_incident_severity')),
                 })
@@ -14583,6 +14660,7 @@ def get_sensor_details(eui):
             send_interval = sum(interval_candidates) / len(interval_candidates)
 
         interval_meta = _resolve_sensor_expected_interval(sensor_config, send_interval or None)
+        availability = _sensor_availability_snapshot(sensor_config, active_tenant)
         
         # Calculate device health scores
         signal_score = 5.0
@@ -14645,6 +14723,14 @@ def get_sensor_details(eui):
             'expected_interval_source': interval_meta['expected_interval_source'],
             'delay_threshold_seconds': interval_meta['delay_threshold_seconds'],
             'offline_threshold_seconds': interval_meta['offline_threshold_seconds'],
+            'activity_status': availability.get('activity_status', 'no_data'),
+            'ui_tier': availability.get('ui_tier', 'unknown'),
+            'status_incident': availability.get('status_incident', False),
+            'status_incident_severity': availability.get('status_incident_severity'),
+            'lifecycle_status': availability.get('lifecycle_status', 'awaiting_first_data'),
+            'lifecycle_tier': availability.get('lifecycle_tier', 'unknown'),
+            'lifecycle_label': availability.get('lifecycle_label', 'Čaká na prvé dáta'),
+            'lifecycle_is_initial': availability.get('lifecycle_is_initial', True),
             'gateway_count': gateway_count,
             'primary_gateway': topology.get('primary_bs', ''),
             'receiving_gateways': list(topology.get('receiving_bases', {}).keys()) if topology else [],

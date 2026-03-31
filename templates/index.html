@@ -1946,13 +1946,14 @@ function SENSOR_TIER(sensor) {
     return STATUS_TIER_RAW(sensor && (sensor.activity_status || sensor.status));
 }
 const STATUS_LABELS = {
+    new: 'Nový', awaiting_first_data: 'Čaká na prvé dáta',
     active: 'Aktívny', online: 'Online', connected: 'Online', quiet: 'Pokojový stav',
     warning: 'Upozornenie', warn: 'Upozornenie', degraded: 'Upozornenie', stale: 'Bez udalosti dlhšie', auto_detach_pending: 'Odpája sa',
     offline: 'Offline', disconnected: 'Offline', inactive: 'Offline', auto_detached: 'Odpojený',
     no_data: 'Bez dát', unknown: 'Neznámy'
 };
 function SENSOR_STATUS_LABEL(sensor) {
-    const raw = sensor && (sensor.activity_status || sensor.status);
+    const raw = sensor && (sensor.lifecycle_status || sensor.activity_status || sensor.status);
     if (!raw) return 'Neznámy';
     return STATUS_LABELS[String(raw).toLowerCase()] || STATUS_LABELS[raw] || String(raw);
 }
