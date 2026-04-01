@@ -819,7 +819,16 @@ function historyTypeLabel(event){
     if(kind==='sensor_offline')return'Senzor nedostupný';
     return'Prahové pravidlo';
 }
+function historyStatusLabel(event){
+    if(!event)return'';
+    return String(event.current_status_label||event.lifecycle_label||event.trigger_status||'').trim();
+}
 function historyDesc(event){
+    var statusLabel=historyStatusLabel(event);
+    if(String((event&&event.kind)||'').toLowerCase()==='activity' && statusLabel){
+        var reasonText=String((event&&event.reason)|| (event&&event.desc) || '').trim();
+        return 'Stav senzora: '+statusLabel+(reasonText ? ' · '+reasonText : '');
+    }
     if(event&&event.reason)return String(event.reason);
     if(event&&event.desc)return String(event.desc);
     if(String((event&&event.kind)||'').toLowerCase()==='sensor_offline'){
@@ -967,6 +976,7 @@ async function loadTriggered(){
             var sevLabel=a.tier==='error'?'Kritické':'Varovanie';
             var sevClass=a.tier==='error'?'is-error':'is-warn';
             var sevIcon=a.tier==='error'?'fa-circle-xmark':'fa-triangle-exclamation';
+            var statusLabel=String(a.current_status_label||a.lifecycle_label||a.current_status||'').trim();
             var tsDate='',tsTime='';
             if(a.triggeredAt){try{var _d=new Date(a.triggeredAt);if(!isNaN(_d)){tsDate=_d.getDate()+'.'+(_d.getMonth()+1)+'.'+String(_d.getFullYear()).slice(2);tsTime=_pad(_d.getHours())+':'+_pad(_d.getMinutes());}}catch(e){}}
             var linkUrl=a.linkUrl||'/alerts';
@@ -987,6 +997,7 @@ async function loadTriggered(){
                     +'<div class="ap-detail-meta">'
                         +'<div class="ap-detail-row"><span class="ap-detail-label">Typ</span><span class="ap-detail-value">'+esc(kindLabel)+'</span></div>'
                         +'<div class="ap-detail-row"><span class="ap-detail-label">Závažnosť</span><span class="ap-detail-value">'+esc(sevLabel)+'</span></div>'
+                        +(statusLabel?'<div class="ap-detail-row"><span class="ap-detail-label">Stav senzora</span><span class="ap-detail-value">'+esc(statusLabel)+'</span></div>':'')
                         +(a.reason?'<div class="ap-detail-row"><span class="ap-detail-label">Dôvod</span><span class="ap-detail-value">'+esc(a.reason)+'</span></div>':'')
                         +(a.valStr?'<div class="ap-detail-row"><span class="ap-detail-label">Hodnota</span><span class="ap-detail-value">'+esc(a.valStr)+'</span></div>':'')
                         +(tsDate&&tsTime?'<div class="ap-detail-row"><span class="ap-detail-label">Vznik</span><span class="ap-detail-value">'+esc(tsDate)+' '+esc(tsTime)+'</span></div>':'')

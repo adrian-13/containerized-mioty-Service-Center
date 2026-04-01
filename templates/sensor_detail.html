@@ -642,10 +642,10 @@ function svdToast(msg,type){
   setTimeout(function(){t.style.cssText='opacity:0;transition:opacity .3s;';setTimeout(function(){t.remove();},300);},3500);
 }
 /* ─────────────────────────────────────────────────────── */
-function timeAgo(ts){if(!ts)return'Bez dát';const s=Math.round(Date.now()/1000-Number(ts));if(s<10)return'práve teraz';if(s<60)return s+'s';const m=Math.round(s/60);if(m<60)return m+'min';const h=Math.round(m/60);if(h<24)return h+'hod';return Math.round(h/24)+'d';}
+function timeAgo(ts){if(!ts)return'Zatiaľ bez dát';const s=Math.round(Date.now()/1000-Number(ts));if(s<10)return'práve teraz';if(s<60)return s+'s';const m=Math.round(s/60);if(m<60)return m+'min';const h=Math.round(m/60);if(h<24)return h+'hod';return Math.round(h/24)+'d';}
 function deriveStatus(d){
   const ls=Number(d.last_seen||0);
-  if(!ls)return{label:'Bez dát',cls:'quiet'};
+  if(!ls)return{label:'Čaká na prvé dáta',cls:'quiet'};
   const age=Date.now()/1000-ls;
   const exp=Number(d.expected_interval_seconds||0);
   const off=Number(d.offline_threshold_seconds||0);

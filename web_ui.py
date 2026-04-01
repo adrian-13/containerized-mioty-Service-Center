@@ -1286,6 +1286,16 @@ _UI_TRANSLATIONS["sk"].update({
         "dashboard.quick_gateway_context": "Rýchly stav základňových staníc",
     "dashboard.no_gateways_yet": "Zatiaľ žiadne základňové stanice",
     "dashboard.waiting_for_data": "Čaká sa na dáta...",
+    "dashboard.awaiting_first_data": "Čaká na dáta",
+    "dashboard.awaiting_first_data_note": "Senzory sú pripravené, ale ešte neposlali prvé dáta.",
+    "dashboard.awaiting_first_data_short": "{count} čakajú na dáta",
+    "dashboard.live_configured_summary_initial": "{live} live · {count} nakonfigurované · {awaiting} čakajú na dáta",
+    "dashboard.no_initial_sensors_note": "Žiadne senzory momentálne nečakajú na prvé dáta.",
+    "dashboard.no_initial_sensors_short": "Žiadne senzory nečakajú na dáta",
+    "dashboard.ops_initial_setup_badge": "Prebieha prvotné spustenie",
+    "dashboard.ops_initial_setup_note": "Časť senzorov ešte čaká na prvé dáta.",
+    "dashboard.ops_sensors_initial": "Niektoré senzory ešte len čakajú na prvé merania",
+    "dashboard.incident_initial_sensors_pending": "{count} senzorov ešte čaká na prvé dáta.",
     "telemetry.telemetry_store": "Úložisko telemetrie",
     "telemetry.subtitle": "TimescaleDB sa používa ako primárne úložisko telemetrie pre produkčnú históriu. Tabuľka zobrazuje najprv dekódované hodnoty; raw payload je dostupný iba v rozbaľovacom debug zobrazení.",
     "telemetry.waiting": "čaká sa",
@@ -7388,7 +7398,45 @@ def _estimate_sensor_incident_started_at(availability: Dict[str, Any]) -> Option
     return started_at.isoformat()
 
 
-def _generic_sensor_availability_reason(activity_status: Any) -> str:
+def _sensor_lifecycle_label(lifecycle_status: Any) -> str:
+    normalized = str(lifecycle_status or "").strip().lower()
+    labels = {
+        "new": "Nový",
+        "awaiting_first_data": "Čaká na prvé dáta",
+        "active": "Aktívny",
+        "warning": "Upozornenie",
+        "offline": "Offline",
+    }
+    return labels.get(normalized, "Čaká na prvé dáta")
+
+
+def _sensor_current_status_label(availability: Dict[str, Any]) -> str:
+    lifecycle_status = str(availability.get("lifecycle_status") or "").strip().lower()
+    activity_status = _normalize_sensor_activity_status(availability.get("activity_status"))
+    if lifecycle_status in {"new", "awaiting_first_data", "warning", "offline"}:
+        return _sensor_lifecycle_label(lifecycle_status)
+    labels = {
+        "active": "Aktívny",
+        "quiet": "Pokojový stav",
+        "stale": "Bez udalosti dlhšie",
+        "warning": "Upozornenie",
+        "offline": "Offline",
+        "auto_detach_pending": "Odpája sa",
+        "auto_detached": "Odpojený",
+        "no_data": "Bez dát",
+    }
+    return labels.get(activity_status, _sensor_lifecycle_label(lifecycle_status))
+
+
+def _generic_sensor_availability_reason(activity_status: Any, lifecycle_status: Any = None) -> str:
+    normalized = _normalize_sensor_activity_status(activity_status)
+    lifecycle = str(lifecycle_status or "").strip().lower()
+    if lifecycle == "new":
+        return "Senzor bol pridaný a pripravuje sa na prvé meranie."
+    if lifecycle == "awaiting_first_data":
+        return "Senzor je pripravený, ale prvé dáta ešte neprišli."
+    if normalized == "stale":
+        return "Zo senzora neprišla nová udalosť v očakávanom čase."
     return "Senzor neposlal dáta v očakávanom čase."
 
 
@@ -7415,7 +7463,10 @@ def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
         status_incident = bool(availability.get("status_incident"))
         severity = "error" if availability.get("status_incident_severity") == "error" else "warn"
         raw_status = str(availability.get("activity_status") or "").strip().lower()
-        reason = _generic_sensor_availability_reason(raw_status)
+        lifecycle_status = str(availability.get("lifecycle_status") or "").strip().lower()
+        lifecycle_label = _sensor_lifecycle_label(lifecycle_status)
+        current_status_label = _sensor_current_status_label(availability)
+        reason = _generic_sensor_availability_reason(raw_status, lifecycle_status)
         hours_since_last_seen = availability.get("hours_since_last_seen")
         hours_str = ""
         try:
@@ -7435,6 +7486,9 @@ def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
             "reason": reason,
             "desc": reason,
             "current_status": raw_status,
+            "current_status_label": current_status_label,
+            "lifecycle_status": lifecycle_status,
+            "lifecycle_label": lifecycle_label,
             "hours_since_last_seen": hours_since_last_seen,
             "triggered_at": _estimate_sensor_incident_started_at(availability),
             "val_str": hours_str,
@@ -7461,6 +7515,9 @@ def _build_current_incidents(active_tenant: str) -> list[Dict[str, Any]]:
             "valStr": hours_str,
             "linkUrl": activity_record["link_url"],
             "current_status": raw_status,
+            "current_status_label": current_status_label,
+            "lifecycle_status": lifecycle_status,
+            "lifecycle_label": lifecycle_label,
             "hours_since_last_seen": hours_since_last_seen,
         })
         activity_active_records.append(activity_record)
@@ -14260,6 +14317,18 @@ def api_alerts_history():
                 or ('offline_rule' if _normalize_alert_kind(rule.get('kind') or p.get('kind')) == 'sensor_offline' else 'threshold')
             ).strip().lower()
             kind = str(rule.get('kind') or p.get('kind') or ('activity' if source == 'activity' else 'threshold')).strip().lower()
+            lifecycle_status = str(p.get('lifecycle_status') or '').strip().lower()
+            current_status = str(p.get('current_status') or p.get('trigger_status') or '').strip().lower()
+            current_status_label = str(p.get('current_status_label') or '').strip()
+            lifecycle_label = str(p.get('lifecycle_label') or '').strip()
+            if source == 'activity':
+                if not lifecycle_label and lifecycle_status:
+                    lifecycle_label = _sensor_lifecycle_label(lifecycle_status)
+                if not current_status_label:
+                    current_status_label = lifecycle_label or _sensor_current_status_label({
+                        "lifecycle_status": lifecycle_status,
+                        "activity_status": current_status,
+                    })
             return {
                 "ts": ts_value.isoformat() if hasattr(ts_value, 'isoformat') else str(ts_value or ''),
                 "alert_id": str(alert_id or p.get('id') or ''),
@@ -14277,7 +14346,10 @@ def api_alerts_history():
                 "desc": str(p.get('desc') or p.get('reason') or '').strip(),
                 "trigger_value": p.get('current_value') if p.get('current_value') is not None else p.get('trigger_value'),
                 "val_str": p.get('val_str') if p.get('val_str') not in (None, '') else p.get('valStr'),
-                "trigger_status": p.get('current_status') or p.get('trigger_status'),
+                "trigger_status": current_status,
+                "current_status_label": current_status_label,
+                "lifecycle_status": lifecycle_status,
+                "lifecycle_label": lifecycle_label,
                 "triggered_at": p.get('triggered_at'),
                 "resolved_at": p.get('resolved_at'),
                 "hours_since_last_seen": p.get('hours_since_last_seen'),

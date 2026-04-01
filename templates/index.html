@@ -159,6 +159,7 @@
 .mview-filter.is-active.f-online  { background: #0f9d69; border-color: #0f9d69; }
 .mview-filter.is-active.f-warn    { background: #d97706; border-color: #d97706; }
 .mview-filter.is-active.f-offline { background: #cb3a42; border-color: #cb3a42; }
+.mview-filter.is-active.f-initial { background: #64748b; border-color: #64748b; }
 .mview-filter-count { opacity: 0.75; }
 /* ── Sensor rows ── */
 .mview-list-body { overflow-y: auto; flex: 3; min-height: 0; }
@@ -216,11 +217,13 @@
 .mview-dot.online  { background: #0f9d69; }
 .mview-dot.warn    { background: #e4a313; }
 .mview-dot.offline { background: #cb3a42; }
+.mview-dot.initial { background: #7b8ca5; }
 .mview-dot.unknown { background: #94a3b8; }
 .mview-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.16rem 0.5rem; border-radius: 999px; flex-shrink: 0; }
 .mview-badge.online  { background: #e6f7f1; color: #0a7a50; }
 .mview-badge.warn    { background: #fef3cd; color: #8a6200; }
 .mview-badge.offline { background: #fde8e9; color: #a12b32; }
+.mview-badge.initial { background: #eef2f7; color: #52647d; }
 .mview-badge.unknown { background: #f0f4fa; color: #64748b; }
 /* ── Metric chips ── */
 .mview-metrics { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.22rem; }
@@ -656,6 +659,9 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                 </button>
                 <button class="mview-filter f-online" data-filter="online" onclick="mviewSetFilter('online')">
                     <span class="mview-dot online"></span> Online <span class="mview-filter-count" id="mviewFiltOnline">0</span>
+                </button>
+                <button class="mview-filter f-initial" data-filter="initial" onclick="mviewSetFilter('initial')">
+                    <span class="mview-dot initial"></span> Čaká na dáta <span class="mview-filter-count" id="mviewFiltInitial">0</span>
                 </button>
                 <button class="mview-filter f-warn" data-filter="warn" onclick="mviewSetFilter('warn')">
                     <span class="mview-dot warn"></span> Upozornenie <span class="mview-filter-count" id="mviewFiltWarn">0</span>
@@ -1443,6 +1449,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 .ops-stat-card.icon-blue   .ops-stat-icon { background: rgba(59,  130, 246, 0.12); color: #1d5fc8; }
 .ops-stat-card.icon-red    .ops-stat-icon { background: rgba(239, 68,  68,  0.12); color: #c53030; }
 .ops-stat-card.icon-teal   .ops-stat-icon { background: rgba(16,  185, 129, 0.12); color: #0d9466; }
+.ops-stat-card.icon-amber  .ops-stat-icon { background: rgba(245, 158, 11, 0.12); color: #c27d00; }
 .ops-stat-card.icon-indigo .ops-stat-icon { background: rgba(99,  102, 241, 0.12); color: #4338ca; }
 
 /* ═══════════════════════════════════════════════════════
@@ -1892,6 +1899,14 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                         <div class="ops-stat-value" id="active-sensors-today">0</div>
                         <div class="ops-stat-note" id="traffic-sensors-note">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</div>
                     </div>
+                    <div class="ops-stat-card icon-amber">
+                        <div class="ops-stat-head">
+                            <div class="ops-stat-label">{{ t('dashboard.awaiting_first_data', 'Awaiting first data') }}</div>
+                            <span class="ops-stat-icon"><i class="fas fa-hourglass-half"></i></span>
+                        </div>
+                        <div class="ops-stat-value" id="awaiting-sensors-today">0</div>
+                        <div class="ops-stat-note" id="traffic-initial-note">{{ t('dashboard.no_initial_sensors_note', 'No sensors are waiting for first data.') }}</div>
+                    </div>
                     <div class="ops-stat-card icon-indigo">
                         <div class="ops-stat-head">
                             <div class="ops-stat-label">{{ t('dashboard.live_links', 'Live Links') }}</div>
@@ -1929,7 +1944,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 <script>
 (function() {
 const STATUS_COLORS = { online: '#0f9d69', warn: '#e4a313', offline: '#cb3a42', unknown: '#94a3b8' };
-const TIER_ORDER    = { offline: 0, warn: 1, online: 2, unknown: 3 };
+const TIER_ORDER    = { offline: 0, warn: 1, initial: 2, online: 3, unknown: 4 };
 
 function STATUS_TIER_RAW(s) {
     if (!s) return 'unknown';
@@ -1941,6 +1956,10 @@ function STATUS_TIER_RAW(s) {
     return 'unknown';
 }
 function SENSOR_TIER(sensor) {
+    const lifecycleStatus = String((sensor && sensor.lifecycle_status) || '').toLowerCase();
+    const lifecycleTier = String((sensor && sensor.lifecycle_tier) || '').toLowerCase();
+    if (lifecycleStatus === 'new' || lifecycleStatus === 'awaiting_first_data') return 'initial';
+    if (lifecycleTier === 'online' || lifecycleTier === 'warn' || lifecycleTier === 'offline') return lifecycleTier;
     const tier = String((sensor && sensor.ui_tier) || '').toLowerCase();
     if (tier === 'online' || tier === 'warn' || tier === 'offline' || tier === 'unknown') return tier;
     return STATUS_TIER_RAW(sensor && (sensor.activity_status || sensor.status));
@@ -2575,7 +2594,7 @@ function renderList(sensors) {
         const raw    = s.activity_status || s.status || 'unknown';
         const tier   = SENSOR_TIER(s);
         const name   = esc(s.name || s.eui || s.device_eui || s.sensor_id || '\u2014');
-        const _tierLabel = { online: 'Online', warn: 'Upozornenie', offline: 'Offline' };
+        const _tierLabel = { online: 'Online', initial: 'Čaká na dáta', warn: 'Upozornenie', offline: 'Offline' };
         const slabel = esc(_tierLabel[tier] || SENSOR_STATUS_LABEL(s));
         const id     = sensorId(s);
         const href   = '/sensors/' + esc(id);
@@ -2724,14 +2743,15 @@ function load() {
 
             // Sort: offline → warn → online
             raw.sort(function(a, b) {
-                return (TIER_ORDER[SENSOR_TIER(a)] || 3) - (TIER_ORDER[SENSOR_TIER(b)] || 3);
+                return (TIER_ORDER[SENSOR_TIER(a)] ?? 4) - (TIER_ORDER[SENSOR_TIER(b)] ?? 4);
             });
             allSensors = raw;
 
-            let online = 0, warn = 0, offline = 0;
+            let online = 0, initial = 0, warn = 0, offline = 0;
             raw.forEach(function(s) {
                 const t = SENSOR_TIER(s);
                 if (t === 'online') online++;
+                else if (t === 'initial') initial++;
                 else if (t === 'warn') warn++;
                 else if (t === 'offline') offline++;
             });
@@ -2741,6 +2761,7 @@ function load() {
             // Filter counts
             if (g('mviewFiltAll'))     g('mviewFiltAll').textContent     = raw.length;
             if (g('mviewFiltOnline'))  g('mviewFiltOnline').textContent  = online;
+            if (g('mviewFiltInitial')) g('mviewFiltInitial').textContent = initial;
             if (g('mviewFiltWarn'))    g('mviewFiltWarn').textContent    = warn;
             if (g('mviewFiltOffline')) g('mviewFiltOffline').textContent = offline;
 
@@ -3196,6 +3217,8 @@ function applyDashboardPayload(payload, meta = {}) {
     }
     const vmCapable = updateVmMetrics(latestVmData || {});
     const trafficInfo = updateTrafficMetrics(latestTrafficData || {});
+    updateSensorLifecycleMetrics(latestSensorInventoryData || {});
+    updateSensorOverviewMetrics(latestSensorInventoryData || {});
     const healthInfo = updateHealthMetrics(latestHealthData || {});
     updateOperationsPanel(trafficInfo, healthInfo, vmCapable);
     updateGatewayActions(latestGatewaysData || {});
@@ -3898,6 +3921,65 @@ function updateTrafficMetrics(data) {
     };
 }
 
+function countInitialSensors(data) {
+    const sensors = Array.isArray(data && data.sensors) ? data.sensors : [];
+    return sensors.reduce((count, sensor) => {
+        const lifecycleStatus = String((sensor && sensor.lifecycle_status) || '').toLowerCase();
+        if (lifecycleStatus === 'new' || lifecycleStatus === 'awaiting_first_data') return count + 1;
+        const status = String((sensor && (sensor.activity_status || sensor.status)) || '').toLowerCase();
+        if (status === 'no_data') return count + 1;
+        return count;
+    }, 0);
+}
+
+function countNonInitialSensors(data) {
+    const sensors = Array.isArray(data && data.sensors) ? data.sensors : [];
+    return sensors.reduce((count, sensor) => {
+        const lifecycleStatus = String((sensor && sensor.lifecycle_status) || '').toLowerCase();
+        if (lifecycleStatus === 'new' || lifecycleStatus === 'awaiting_first_data') return count;
+        return count + 1;
+    }, 0);
+}
+
+function updateSensorLifecycleMetrics(data) {
+    const initialSensors = countInitialSensors(data);
+    const countEl = document.getElementById('awaiting-sensors-today');
+    if (countEl) countEl.textContent = initialSensors.toLocaleString();
+    const noteEl = document.getElementById('traffic-initial-note');
+    if (noteEl) {
+        noteEl.textContent = initialSensors > 0
+            ? appTranslate('dashboard.awaiting_first_data_note', 'Sensors are ready but have not sent first data yet.')
+            : appTranslate('dashboard.no_initial_sensors_note', 'No sensors are waiting for first data.');
+    }
+    return initialSensors;
+}
+
+function updateSensorOverviewMetrics(data) {
+    const sensors = Array.isArray(data && data.sensors) ? data.sensors : [];
+    const totalSensors = sensors.length;
+    const initialSensors = countInitialSensors(data);
+    const liveSensors = Math.max(totalSensors - initialSensors, 0);
+
+    const countEl = document.getElementById('sensor-count');
+    if (countEl) countEl.textContent = totalSensors.toLocaleString();
+
+    const detailEl = document.getElementById('sensor-detail');
+    if (detailEl) {
+        detailEl.textContent = appTranslate(
+            'dashboard.live_configured_summary_initial',
+            `${liveSensors} live · ${totalSensors} configured · ${initialSensors} awaiting first data`,
+            { live: liveSensors, count: totalSensors, awaiting: initialSensors }
+        );
+    }
+
+    const noteEl = document.getElementById('sensor-note');
+    if (noteEl) {
+        noteEl.textContent = initialSensors > 0
+            ? appTranslate('dashboard.awaiting_first_data_short', `${initialSensors} waiting for data`, { count: initialSensors })
+            : appTranslate('dashboard.no_initial_sensors_short', 'No sensors waiting for data');
+    }
+}
+
 function updateHealthMetrics(data) {
     if (!data || !data.success) return { packetLoss: 0 };
 
@@ -3976,6 +4058,7 @@ function updateOperationsPanel(trafficInfo, healthInfo, vmCapable) {
     const registeredSensors = latestStatusData && latestStatusData.tls_server
         ? toNumber(latestStatusData.tls_server.registered_sensors)
         : 0;
+    const initialSensors = countInitialSensors(latestSensorInventoryData || {});
 
     const trafficPanelEl = document.getElementById('traffic-panel');
     if (trafficPanelEl) trafficPanelEl.classList.toggle('ops-empty', connectedBs === 0);
@@ -3988,6 +4071,9 @@ function updateOperationsPanel(trafficInfo, healthInfo, vmCapable) {
     } else if (packetLoss >= 5) {
         badge.classList.add('is-danger');
         badge.textContent = appTranslate('dashboard.ops_delivery_risk_badge', 'Delivery at risk');
+    } else if (initialSensors > 0 && registeredSensors === 0) {
+        badge.classList.add('is-warning');
+        badge.textContent = appTranslate('dashboard.ops_initial_setup_badge', 'Initial setup in progress');
     } else if (packetsPerHour === 0 || registeredSensors === 0) {
         badge.classList.add('is-warning');
         badge.textContent = appTranslate('dashboard.ops_waiting_traffic_badge', 'Waiting for telemetry');
@@ -4010,7 +4096,9 @@ function updateOperationsPanel(trafficInfo, healthInfo, vmCapable) {
     document.getElementById('traffic-delivery-note').textContent = packetLoss < 1
         ? appTranslate('dashboard.ops_delivery_good', 'Delivery looks healthy across active sensors')
         : appTranslate('dashboard.ops_delivery_watch', 'Estimated from packet counter gaps');
-    document.getElementById('traffic-sensors-note').textContent = registeredSensors > 0
+    document.getElementById('traffic-sensors-note').textContent = initialSensors > 0 && registeredSensors === 0
+        ? appTranslate('dashboard.ops_sensors_initial', 'Some sensors are still waiting for first measurements')
+        : registeredSensors > 0
         ? appTranslate('dashboard.ops_sensors_reporting', 'Sensors observed in live runtime')
         : appTranslate('dashboard.ops_sensors_idle', 'No live sensor telemetry yet');
     document.getElementById('traffic-links-note').textContent = connectedBs > 0
@@ -4066,14 +4154,22 @@ function buildIncidents(status, healthPacketLoss, vmCapable, trafficInfo) {
     const connectedBs = status && status.base_stations ? toNumber(status.base_stations.total_connected) : 0;
     const totalSensors = status && status.tls_server ? toNumber(status.tls_server.total_sensors) : 0;
     const registeredSensors = status && status.tls_server ? toNumber(status.tls_server.registered_sensors) : 0;
+    const initialSensors = countInitialSensors(latestSensorInventoryData || {});
+    const nonInitialSensors = countNonInitialSensors(latestSensorInventoryData || {});
 
     if (!tlsActive) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_tls_offline', 'TLS server is offline.') });
     if (mqttEnabled && !mqttActive) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_mqtt_disconnected', 'MQTT broker is disconnected.') });
     if (connectedBs === 0) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_no_connected_bs', 'Nie je pripojená žiadna základňová stanica.') });
-    if (totalSensors > 0 && registeredSensors / totalSensors < 0.5) incidents.push({
+    if (initialSensors > 0) incidents.push({
         level: 'warn',
-        text: appTranslate('dashboard.incident_only_sensors_active', `Only ${Math.round((registeredSensors / totalSensors) * 100)}% sensors are active.`, {
-            percent: Math.round((registeredSensors / totalSensors) * 100)
+        text: appTranslate('dashboard.incident_initial_sensors_pending', `${initialSensors} sensors are still waiting for first data.`, {
+            count: initialSensors
+        })
+    });
+    if (nonInitialSensors > 0 && registeredSensors / nonInitialSensors < 0.5) incidents.push({
+        level: 'warn',
+        text: appTranslate('dashboard.incident_only_sensors_active', `Only ${Math.round((registeredSensors / nonInitialSensors) * 100)}% sensors are active.`, {
+            percent: Math.round((registeredSensors / nonInitialSensors) * 100)
         })
     });
     if (healthPacketLoss > 5) incidents.push({

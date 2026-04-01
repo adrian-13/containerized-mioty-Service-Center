@@ -52,6 +52,7 @@
 .sv-filter.is-active.f-online { background: #0f9d69; border-color: #0f9d69; }
 .sv-filter.is-active.f-warn   { background: #d97706; border-color: #d97706; }
 .sv-filter.is-active.f-offline{ background: #cb3a42; border-color: #cb3a42; }
+.sv-filter.is-active.f-initial{ background: #64748b; border-color: #64748b; }
 .sv-cnt { opacity: 0.7; }
 .sv-row {
     display: flex;
@@ -73,11 +74,13 @@
 .sv-dot.online  { background: #0f9d69; }
 .sv-dot.warn    { background: #e4a313; }
 .sv-dot.offline { background: #cb3a42; }
+.sv-dot.initial { background: #7b8ca5; }
 .sv-dot.unknown { background: #94a3b8; }
 .sv-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.16rem 0.5rem; border-radius: 999px; flex-shrink: 0; }
 .sv-badge.online  { background: #e6f7f1; color: #0a7a50; }
 .sv-badge.warn    { background: #fef3cd; color: #8a6200; }
 .sv-badge.offline { background: #fde8e9; color: #a12b32; }
+.sv-badge.initial { background: #eef2f7; color: #52647d; }
 .sv-badge.unknown { background: #f0f4fa; color: #64748b; }
 .sv-link { display: flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; color: #94a3b8; font-size: 0.65rem; flex-shrink: 0; text-decoration: none; transition: all 0.15s; }
 .sv-link:hover { background: #e2e8f0; color: #1e293b; }
@@ -350,6 +353,7 @@ button:active {
         <div class="sv-filters">
             <button class="sv-filter is-active" data-f="all"     onclick="svSetFilter('all')">    {{ t('common.all','Všetky') }}  <span class="sv-cnt" id="svCntAll">0</span></button>
             <button class="sv-filter f-online"  data-f="online"  onclick="svSetFilter('online')"> <span class="sv-dot online"></span> Online  <span class="sv-cnt" id="svCntOnline">0</span></button>
+            <button class="sv-filter f-initial" data-f="initial" onclick="svSetFilter('initial')"><span class="sv-dot initial"></span> Čaká na dáta  <span class="sv-cnt" id="svCntInitial">0</span></button>
             <button class="sv-filter f-warn"    data-f="warn"    onclick="svSetFilter('warn')">   <span class="sv-dot warn"></span>   Upozornenie     <span class="sv-cnt" id="svCntWarn">0</span></button>
             <button class="sv-filter f-offline" data-f="offline" onclick="svSetFilter('offline')"><span class="sv-dot offline"></span> Offline  <span class="sv-cnt" id="svCntOffline">0</span></button>
         </div>
@@ -2312,6 +2316,10 @@ button:active {
                 <span class="fleet-stat-label">{{ t('sensors.registered', 'Registrované') }}</span>
             </div>
             <div class="fleet-stat">
+                <span class="fleet-stat-value text-secondary" id="sensorInitialCount">0</span>
+                <span class="fleet-stat-label">Čaká na dáta</span>
+            </div>
+            <div class="fleet-stat">
                 <span class="fleet-stat-value text-info" id="sensorActiveCount">0</span>
                 <span class="fleet-stat-label">{{ t('sensors.active', 'Aktívne') }}</span>
             </div>
@@ -2719,8 +2727,12 @@ function apToast(msg,type){
 }
 /* ─────────────────────────────────────────────────────── */
 
-const TIER_ORDER = { offline: 0, warn: 1, online: 2, unknown: 3 };
+const TIER_ORDER = { offline: 0, warn: 1, initial: 2, online: 3, unknown: 4 };
 function tier(sensorOrStatus) {
+    const lifecycleStatus = String((sensorOrStatus && sensorOrStatus.lifecycle_status) || '').toLowerCase();
+    const lifecycleTier = String((sensorOrStatus && sensorOrStatus.lifecycle_tier) || '').toLowerCase();
+    if (lifecycleStatus === 'new' || lifecycleStatus === 'awaiting_first_data') return 'initial';
+    if (lifecycleTier === 'online' || lifecycleTier === 'warn' || lifecycleTier === 'offline') return lifecycleTier;
     const backendTier = String((sensorOrStatus && sensorOrStatus.ui_tier) || '').toLowerCase();
     if (backendTier === 'online' || backendTier === 'warn' || backendTier === 'offline' || backendTier === 'unknown') return backendTier;
     const raw = sensorOrStatus && typeof sensorOrStatus === 'object'
@@ -2870,19 +2882,21 @@ function svLoad() {
                 : (data && Array.isArray(data.sensors) ? data.sensors
                 : (data && typeof data === 'object' && !data.error ? Object.values(data) : []));
             raw.sort(function(a, b) {
-                return (TIER_ORDER[tier(a)] ?? 3) - (TIER_ORDER[tier(b)] ?? 3);
+                return (TIER_ORDER[tier(a)] ?? 4) - (TIER_ORDER[tier(b)] ?? 4);
             });
             allSensors = raw;
-            let online = 0, warn = 0, offline = 0;
+            let online = 0, initial = 0, warn = 0, offline = 0;
             raw.forEach(function(s) {
                 const t = tier(s);
                 if (t === 'online') online++;
+                else if (t === 'initial') initial++;
                 else if (t === 'warn') warn++;
                 else if (t === 'offline') offline++;
             });
             function g(id) { return document.getElementById(id); }
             if (g('svCntAll'))        g('svCntAll').textContent        = raw.length;
             if (g('svCntOnline'))     g('svCntOnline').textContent     = online;
+            if (g('svCntInitial'))    g('svCntInitial').textContent    = initial;
             if (g('svCntWarn'))       g('svCntWarn').textContent       = warn;
             if (g('svCntOffline'))    g('svCntOffline').textContent    = offline;
             if (g('svTimestamp'))     g('svTimestamp').textContent     = new Date().toLocaleTimeString();
@@ -3685,6 +3699,7 @@ function updateLastRefreshNote() {
 function updateSensorOverview(sensors) {
     const total = sensors.length;
     const registered = sensors.filter(sensor => isRegistered(sensor)).length;
+    const initial = sensors.filter(sensor => getSensorStatusType(sensor) === 'lifecycle_initial').length;
     const active = sensors.filter(sensor => getSensorStatusType(sensor) === 'active').length;
     const warnings = sensors.filter(sensor => {
         const status = getSensorStatusType(sensor);
@@ -3693,6 +3708,7 @@ function updateSensorOverview(sensors) {
 
     document.getElementById('sensorTotalCount').textContent = total;
     document.getElementById('sensorRegisteredCount').textContent = registered;
+    document.getElementById('sensorInitialCount').textContent = initial;
     document.getElementById('sensorActiveCount').textContent = active;
     document.getElementById('sensorWarningCount').textContent = warnings;
 }
@@ -3700,6 +3716,7 @@ function updateSensorOverview(sensors) {
 function getQuickFilterCounts() {
     const counts = {
         all: sensorCache.length,
+        initial: 0,
         active: 0,
         attention: 0,
         detached: 0,
@@ -3708,8 +3725,9 @@ function getQuickFilterCounts() {
 
     sensorCache.forEach(sensor => {
         const status = getSensorStatusType(sensor);
+        if (status === 'lifecycle_initial') counts.initial += 1;
         if (status === 'active') counts.active += 1;
-        if (status === 'warning' || status === 'no_data') counts.attention += 1;
+        if (status === 'warning' || status === 'no_data' || status === 'lifecycle_initial') counts.attention += 1;
         if (status === 'detached') counts.detached += 1;
         if (status === 'unregistered') counts.unregistered += 1;
     });
@@ -3732,8 +3750,9 @@ function refreshQuickFilters() {
 function matchesQuickFilter(sensor) {
     const status = getSensorStatusType(sensor);
     if (activeQuickFilter === 'all') return true;
+    if (activeQuickFilter === 'initial') return status === 'lifecycle_initial';
     if (activeQuickFilter === 'active') return status === 'active';
-    if (activeQuickFilter === 'attention') return status === 'warning' || status === 'no_data';
+    if (activeQuickFilter === 'attention') return status === 'warning' || status === 'no_data' || status === 'lifecycle_initial';
     if (activeQuickFilter === 'detached') return status === 'detached';
     if (activeQuickFilter === 'unregistered') return status === 'unregistered';
     return true;
