@@ -156,6 +156,79 @@
 }
 .ap-storage-meta i { color:var(--brand-500); opacity:.9; }
 
+/* â”€â”€ Admin triage â”€â”€ */
+.ap-triage {
+    display:grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap:.65rem;
+    padding:.85rem 1rem .25rem;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(var(--brand-rgb),.035), rgba(255,255,255,0));
+}
+.ap-triage-card {
+    border:1px solid rgba(var(--brand-rgb),.12);
+    border-radius:.72rem;
+    background:var(--surface-1);
+    padding:.72rem .82rem;
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+    min-width:0;
+}
+.ap-triage-k { font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--text-500); }
+.ap-triage-v { font-size:1.05rem; font-weight:800; color:var(--text-900); line-height:1.1; margin-top:.18rem; }
+.ap-triage-s { font-size:.67rem; color:var(--text-500); margin-top:.15rem; line-height:1.45; }
+.ap-triage-list {
+    margin:.45rem 0 0;
+    padding:0;
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:.36rem;
+}
+.ap-triage-item {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:.6rem;
+    font-size:.7rem;
+    color:var(--text-700);
+}
+.ap-triage-item a {
+    color:inherit;
+    text-decoration:none;
+    min-width:0;
+}
+.ap-triage-item a:hover { color:var(--brand-600); text-decoration:none; }
+.ap-triage-item strong {
+    color:var(--text-900);
+    font-size:.72rem;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:inline-block;
+    max-width:100%;
+}
+.ap-triage-pill {
+    display:inline-flex;
+    align-items:center;
+    gap:.22rem;
+    font-size:.6rem;
+    font-weight:700;
+    border-radius:999px;
+    padding:.08rem .36rem;
+    background:rgba(var(--brand-rgb),.08);
+    color:var(--brand-600);
+    white-space:nowrap;
+}
+.ap-triage-pill.is-warn { background:rgba(228,163,19,.1); color:#8a6200; }
+.ap-triage-pill.is-error { background:rgba(203,58,66,.1); color:var(--danger-500); }
+@media(max-width:1100px){
+    .ap-triage { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media(max-width:640px){
+    .ap-triage { grid-template-columns: 1fr; }
+}
+
 /* ── Alert rows (triggered) ── */
 .ap-alerts { display:flex; flex-direction:column; flex:1; }
 
@@ -557,6 +630,32 @@
       {% endif %}
     </nav>
 
+    {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('manage_tenants') %}
+    <section class="ap-triage" id="alpAdminTriage" aria-label="Administrátorský prehľad incidentov">
+      <article class="ap-triage-card">
+        <div class="ap-triage-k">Aktívne incidenty</div>
+        <div class="ap-triage-v" id="alpTriageTotal">0</div>
+        <div class="ap-triage-s" id="alpTriageTotalNote">Zatiaľ bez incidentov</div>
+      </article>
+      <article class="ap-triage-card">
+        <div class="ap-triage-k">Kritické</div>
+        <div class="ap-triage-v" id="alpTriageCritical">0</div>
+        <div class="ap-triage-s">Priame zásahy alebo offline stav</div>
+      </article>
+      <article class="ap-triage-card">
+        <div class="ap-triage-k">Varovania</div>
+        <div class="ap-triage-v" id="alpTriageWarning">0</div>
+        <div class="ap-triage-s">Skoré zásahy pred eskaláciou</div>
+      </article>
+      <article class="ap-triage-card">
+        <div class="ap-triage-k">Najviac incidentov</div>
+        <ul class="ap-triage-list" id="alpTriageTopSensors">
+          <li class="ap-triage-item"><span>Načítavam…</span><span class="ap-triage-pill">--</span></li>
+        </ul>
+      </article>
+    </section>
+    {% endif %}
+
     <!-- Panel: Active alerts -->
     <div id="panel-alerts" class="ap-panel is-active">
       <div id="alpTriggeredBody">
@@ -855,6 +954,46 @@ function updateSummaryCards(active,critical,warning){
     if(dot)dot.classList.toggle('is-visible',active>0);
 }
 
+function renderAdminTriage(incidents){
+    if(!ALERTS_IS_ADMIN)return;
+    var totalEl=document.getElementById('alpTriageTotal');
+    var noteEl=document.getElementById('alpTriageTotalNote');
+    var criticalEl=document.getElementById('alpTriageCritical');
+    var warningEl=document.getElementById('alpTriageWarning');
+    var topEl=document.getElementById('alpTriageTopSensors');
+    var total=Array.isArray(incidents)?incidents.length:0;
+    var critical=Array.isArray(incidents)?incidents.filter(function(item){return item.tier==='error';}).length:0;
+    var warning=Math.max(0,total-critical);
+    if(totalEl) totalEl.textContent=String(total);
+    if(noteEl) noteEl.textContent=total ? 'Systém zatiaľ signalizuje '+total+' aktívnych incidentov.' : 'Zatiaľ bez incidentov';
+    if(criticalEl) criticalEl.textContent=String(critical);
+    if(warningEl) warningEl.textContent=String(warning);
+    if(!topEl) return;
+    if(!total){
+        topEl.innerHTML='<li class="ap-triage-item"><span>Bez incidentov</span><span class="ap-triage-pill">OK</span></li>';
+        return;
+    }
+    var bySensor={};
+    incidents.forEach(function(item){
+        var key=String(item.eui||item.sensor_eui||item.id||'').toUpperCase();
+        if(!key)return;
+        if(!bySensor[key])bySensor[key]={count:0,name:item.name||item.sensor_name||key,tier:item.tier||'warn',eui:key};
+        bySensor[key].count+=1;
+        if(item.tier==='error')bySensor[key].tier='error';
+        if(item.name||item.sensor_name)bySensor[key].name=item.name||item.sensor_name||bySensor[key].name;
+    });
+    var topSensors=Object.values(bySensor).sort(function(a,b){
+        if(b.count!==a.count)return b.count-a.count;
+        if(a.tier!==b.tier)return a.tier==='error'?-1:1;
+        return String(a.name||'').localeCompare(String(b.name||''));
+    }).slice(0,4);
+    topEl.innerHTML=topSensors.map(function(item){
+        var badgeClass=item.tier==='error'?'is-error':'is-warn';
+        var href=item.eui?'/sensors/'+encodeURIComponent(item.eui):'/alerts';
+        return '<li class="ap-triage-item"><a href="'+href+'" title="'+esc(item.eui)+'"><strong>'+esc(item.name)+'</strong></a><span class="ap-triage-pill '+badgeClass+'">'+esc(String(item.count))+'×</span></li>';
+    }).join('') || '<li class="ap-triage-item"><span>Bez incidentov</span><span class="ap-triage-pill">OK</span></li>';
+}
+
 /* ── Rule filter meta ── */
 function updateRuleFiltersMeta(scopedRules,renderedRules){
     var countAll=scopedRules.length;
@@ -945,6 +1084,7 @@ async function loadTriggered(){
         var incidentUrl=getAlertsIncludeDemoData()?'/api/incidents?include_demo=1':'/api/incidents';
         var incidentsRes=await fetch(incidentUrl).then(function(r){return r.ok?r.json():{incidents:[]};}).catch(function(){return{incidents:[]};});
         var combined=Array.isArray(incidentsRes.incidents)?incidentsRes.incidents:[];
+        renderAdminTriage(combined);
 
         combined.sort(function(a,b){return a.tier==='error'&&b.tier!=='error'?-1:1;});
         var visible=combined.filter(function(a){return!a.ackKey||!isAcked(a.ackKey);});
@@ -1050,6 +1190,7 @@ async function loadTriggered(){
             });
         });
     }catch(e){
+        renderAdminTriage([]);
         updateSummaryCards(0,0,0);
         if(body)body.innerHTML='<div class="ap-empty"><div class="ap-empty-ico"><i class="fas fa-circle-exclamation"></i></div><div class="ap-empty-h">Chyba načítania</div><div class="ap-empty-p">Skontrolujte pripojenie alebo obnovte stránku.</div></div>';
     }
