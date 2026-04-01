@@ -96,6 +96,9 @@ _ADMIN_TENANTS_CACHE_TTL_SECONDS = 5.0
 _admin_audit_summary_cache_lock = threading.Lock()
 _admin_audit_summary_cache = {}
 _ADMIN_AUDIT_SUMMARY_CACHE_TTL_SECONDS = 5.0
+_notification_delivery_cache_lock = threading.Lock()
+_notification_delivery_cache = {}
+_NOTIFICATION_DELIVERY_CACHE_TTL_SECONDS = 5.0
 _timescale_uplink_stats = {
     "queued": 0,
     "written": 0,
@@ -2760,15 +2763,67 @@ def _tenant_notification_settings_for(tenant_id):
 def _dispatch_tenant_webhook_notification(tenant_id, event_type, alert_record, previous_state=None):
     settings = _tenant_notification_settings_for(tenant_id)
     if not settings.get("enabled"):
+        _record_notification_delivery_log(
+            tenant_id=tenant_id,
+            event_type=f"alert.{str(event_type or '').strip().lower() or 'unknown'}",
+            alert_record=alert_record,
+            previous_state=previous_state,
+            status="skipped",
+            reason="disabled",
+            endpoint_url=str(settings.get("webhook_url") or "").strip(),
+            http_status=None,
+            duration_ms=0,
+            response_preview="",
+            error_message="notifications disabled",
+        )
         return False, "disabled"
     webhook_url = str(settings.get("webhook_url") or "").strip()
     if not webhook_url:
+        _record_notification_delivery_log(
+            tenant_id=tenant_id,
+            event_type=f"alert.{str(event_type or '').strip().lower() or 'unknown'}",
+            alert_record=alert_record,
+            previous_state=previous_state,
+            status="skipped",
+            reason="webhook_url_missing",
+            endpoint_url=webhook_url,
+            http_status=None,
+            duration_ms=0,
+            response_preview="",
+            error_message="webhook url missing",
+        )
         return False, "webhook_url_missing"
 
     event_type = str(event_type or "").strip().lower()
     if event_type == "triggered" and not settings.get("notify_on_triggered", True):
+        _record_notification_delivery_log(
+            tenant_id=tenant_id,
+            event_type="alert.triggered",
+            alert_record=alert_record,
+            previous_state=previous_state,
+            status="skipped",
+            reason="trigger_notifications_disabled",
+            endpoint_url=webhook_url,
+            http_status=None,
+            duration_ms=0,
+            response_preview="",
+            error_message="trigger notifications disabled",
+        )
         return False, "trigger_notifications_disabled"
     if event_type == "resolved" and not settings.get("notify_on_resolved", True):
+        _record_notification_delivery_log(
+            tenant_id=tenant_id,
+            event_type="alert.resolved",
+            alert_record=alert_record,
+            previous_state=previous_state,
+            status="skipped",
+            reason="resolved_notifications_disabled",
+            endpoint_url=webhook_url,
+            http_status=None,
+            duration_ms=0,
+            response_preview="",
+            error_message="resolved notifications disabled",
+        )
         return False, "resolved_notifications_disabled"
 
     tenant_id_norm = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
@@ -2805,6 +2860,11 @@ def _dispatch_tenant_webhook_notification(tenant_id, event_type, alert_record, p
     }
 
     def _worker():
+        started = time.perf_counter()
+        http_status = None
+        status = "delivered"
+        response_preview = ""
+        error_message = ""
         parsed = urllib.parse.urlparse(webhook_url)
         ssl_ctx = ssl.create_default_context() if parsed.scheme.lower() == "https" else None
         req = urllib.request.Request(
@@ -2820,17 +2880,355 @@ def _dispatch_tenant_webhook_notification(tenant_id, event_type, alert_record, p
         try:
             with urllib.request.urlopen(req, context=ssl_ctx, timeout=5) as response:
                 try:
-                    response.read(1)
+                    http_status = int(getattr(response, "status", response.getcode()) or 0) or None
+                except Exception:
+                    http_status = None
+                try:
+                    response_preview = response.read(240).decode("utf-8", "ignore").strip()
                 except Exception:
                     pass
-        except Exception:
-            pass
+        except urllib.error.HTTPError as error:
+            status = "failed"
+            http_status = int(getattr(error, "code", 0) or 0) or None
+            try:
+                response_preview = error.read(240).decode("utf-8", "ignore").strip()
+            except Exception:
+                response_preview = ""
+            error_message = str(getattr(error, "reason", "") or error).strip()
+        except Exception as error:
+            status = "failed"
+            error_message = str(error).strip()
+        finally:
+            duration_ms = int(max(0.0, (time.perf_counter() - started) * 1000.0))
+            _record_notification_delivery_log(
+                tenant_id=tenant_id_norm,
+                event_type=f"alert.{event_type}",
+                alert_record=alert_payload,
+                previous_state=previous_payload,
+                status=status,
+                reason="delivered" if status == "delivered" else "delivery_failed",
+                endpoint_url=webhook_url,
+                http_status=http_status,
+                duration_ms=duration_ms,
+                response_preview=response_preview,
+                error_message=error_message,
+            )
 
     try:
         threading.Thread(target=_worker, daemon=True).start()
         return True, None
     except Exception as exc:
+        _record_notification_delivery_log(
+            tenant_id=tenant_id_norm,
+            event_type=f"alert.{event_type}",
+            alert_record=alert_payload,
+            previous_state=previous_payload,
+            status="failed",
+            reason="worker_start_failed",
+            endpoint_url=webhook_url,
+            http_status=None,
+            duration_ms=0,
+            response_preview="",
+            error_message=str(exc),
+        )
         return False, str(exc)
+
+
+def _record_notification_delivery_log(
+    tenant_id,
+    event_type,
+    alert_record=None,
+    previous_state=None,
+    status="delivered",
+    reason="",
+    endpoint_url="",
+    http_status=None,
+    duration_ms=None,
+    response_preview="",
+    error_message="",
+):
+    if not _db_first_config_enabled():
+        return False, "db_first_disabled"
+    conn, err = _timescale_connect()
+    if conn is None:
+        return False, err
+    try:
+        _ensure_timescale_schema(conn)
+        tenant_id_norm = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+        alert_payload = dict(alert_record or {})
+        previous_payload = dict(previous_state or {})
+        parsed = urllib.parse.urlparse(str(endpoint_url or "").strip())
+        endpoint_scheme = str(parsed.scheme or "").strip().lower()
+        endpoint_host = str(parsed.netloc or "").strip().lower()
+        event_type_norm = str(event_type or "").strip().lower() or "alert.unknown"
+        status_norm = str(status or "delivered").strip().lower() or "delivered"
+        alert_id = str(alert_payload.get("id") or previous_payload.get("id") or "").strip()
+        alert_name = str(alert_payload.get("name") or previous_payload.get("name") or "").strip()
+        sensor_eui = _normalize_eui_upper(alert_payload.get("sensor_eui") or previous_payload.get("sensor_eui")) or ""
+        tenant_name = _tenant_scope_display_name(
+            tenant_id_norm,
+            (_tenant_registry_map().get(tenant_id_norm) or {}).get("name"),
+        )
+        payload_snapshot = {
+            "payload": alert_payload,
+            "previous_state": {
+                "is_active": bool(previous_payload.get("is_active", False)),
+                "last_triggered_at": previous_payload.get("last_triggered_at"),
+                "last_resolved_at": previous_payload.get("last_resolved_at"),
+            },
+            "reason": str(reason or "").strip(),
+            "response_preview": str(response_preview or "").strip()[:500],
+            "error_message": str(error_message or "").strip()[:500],
+        }
+        summary_parts = [
+            event_type_norm,
+            status_norm,
+        ]
+        if tenant_name:
+            summary_parts.append(tenant_name)
+        if alert_name:
+            summary_parts.append(alert_name)
+        if endpoint_host:
+            summary_parts.append(endpoint_host)
+        if http_status is not None:
+            summary_parts.append(str(int(http_status)))
+        if duration_ms is not None:
+            summary_parts.append(f"{int(duration_ms)}ms")
+        summary = " · ".join(summary_parts)
+        delivery_id = f"notif_{getattr(_uuid_mod, 'uuid4')().hex}"
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO notification_delivery_log
+                    (ts, delivery_id, tenant_id, tenant_name, event_type, alert_id, alert_name, sensor_eui, status, http_status, duration_ms, endpoint_scheme, endpoint_host, reason, summary, details)
+                VALUES
+                    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                """,
+                (
+                    datetime.now(timezone.utc),
+                    delivery_id,
+                    tenant_id_norm,
+                    tenant_name,
+                    event_type_norm,
+                    alert_id,
+                    alert_name,
+                    sensor_eui,
+                    status_norm,
+                    http_status,
+                    int(duration_ms) if duration_ms is not None else None,
+                    endpoint_scheme,
+                    endpoint_host,
+                    str(reason or "").strip(),
+                    summary,
+                    json.dumps(payload_snapshot, ensure_ascii=True, separators=(",", ":")),
+                ),
+            )
+        _invalidate_notification_delivery_cache(tenant_id_norm)
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _serialize_notification_delivery_db_row(row):
+    details = _db_json_value(row[15], {})
+    status = str(row[8] or "").strip().lower() or "delivered"
+    if status not in {"delivered", "failed", "skipped"}:
+        status = "delivered" if status not in {"failed", "skipped"} else status
+    return {
+        "timestamp": str(row[0].isoformat(timespec="milliseconds") if hasattr(row[0], "isoformat") else row[0]),
+        "delivery_id": str(row[1] or "").strip(),
+        "tenant_id": str(row[2] or "").strip(),
+        "tenant_name": str(row[3] or "").strip(),
+        "event_type": str(row[4] or "").strip(),
+        "alert_id": str(row[5] or "").strip(),
+        "alert_name": str(row[6] or "").strip(),
+        "sensor_eui": str(row[7] or "").strip(),
+        "status": status,
+        "http_status": int(row[9]) if row[9] is not None else None,
+        "duration_ms": int(row[10]) if row[10] is not None else None,
+        "endpoint_scheme": str(row[11] or "").strip(),
+        "endpoint_host": str(row[12] or "").strip(),
+        "reason": str(row[13] or "").strip(),
+        "summary": str(row[14] or "").strip(),
+        "details": details if isinstance(details, dict) else {},
+    }
+
+
+def _notification_delivery_where_sql(status_filter='all', event_filter='all', tenant_filter='all', target_filter='', text_filter='', date_from='', date_to=''):
+    clauses = []
+    params = []
+
+    if status_filter and status_filter != 'all':
+        clauses.append("LOWER(status) = LOWER(%s)")
+        params.append(status_filter)
+    if event_filter and event_filter != 'all':
+        clauses.append("LOWER(event_type) = LOWER(%s)")
+        params.append(event_filter)
+    if tenant_filter and tenant_filter != 'all':
+        clauses.append("LOWER(tenant_id) = LOWER(%s)")
+        params.append(tenant_filter)
+
+    target_filter = str(target_filter or '').strip().lower()
+    if target_filter:
+        clauses.append("(LOWER(COALESCE(alert_id, '')) LIKE %s OR LOWER(COALESCE(alert_name, '')) LIKE %s OR LOWER(COALESCE(sensor_eui, '')) LIKE %s OR LOWER(COALESCE(endpoint_host, '')) LIKE %s)")
+        like = f"%{target_filter}%"
+        params.extend([like, like, like, like])
+
+    text_filter = str(text_filter or '').strip().lower()
+    if text_filter:
+        clauses.append("(LOWER(COALESCE(summary, '')) LIKE %s OR LOWER(COALESCE(reason, '')) LIKE %s OR LOWER(COALESCE(details->>'error_message', '')) LIKE %s OR LOWER(COALESCE(details->>'response_preview', '')) LIKE %s)")
+        like = f"%{text_filter}%"
+        params.extend([like, like, like, like])
+
+    date_from_dt = _parse_audit_filter_datetime(date_from, end_of_day=False)
+    if date_from_dt is not None:
+        clauses.append("ts >= %s")
+        params.append(date_from_dt)
+    date_to_dt = _parse_audit_filter_datetime(date_to, end_of_day=True)
+    if date_to_dt is not None:
+        clauses.append("ts <= %s")
+        params.append(date_to_dt)
+
+    where_sql = ""
+    if clauses:
+        where_sql = "WHERE " + " AND ".join(clauses)
+    return where_sql, params
+
+
+def _fetch_notification_delivery_summary_from_db(status_filter='all', event_filter='all', tenant_filter='all', target_filter='', text_filter='', date_from='', date_to='', limit=200):
+    conn, err = _timescale_connect()
+    if conn is None:
+        return None, err
+    try:
+        _ensure_timescale_schema(conn)
+        where_sql, params = _notification_delivery_where_sql(
+            status_filter=status_filter,
+            event_filter=event_filter,
+            tenant_filter=tenant_filter,
+            target_filter=target_filter,
+            text_filter=text_filter,
+            date_from=date_from,
+            date_to=date_to,
+        )
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM notification_delivery_log")
+            total = int((cur.fetchone() or [0])[0] or 0)
+
+            cur.execute(f"SELECT COUNT(*) FROM notification_delivery_log {where_sql}", params)
+            filtered_total = int((cur.fetchone() or [0])[0] or 0)
+
+            cur.execute(
+                f"""
+                SELECT ts, delivery_id, tenant_id, tenant_name, event_type, alert_id, alert_name, sensor_eui, status, http_status, duration_ms, endpoint_scheme, endpoint_host, reason, summary, details
+                FROM notification_delivery_log
+                {where_sql}
+                ORDER BY ts DESC
+                LIMIT %s
+                """,
+                [*params, max(1, int(limit))],
+            )
+            rows = cur.fetchall() or []
+
+            cur.execute("SELECT DISTINCT event_type FROM notification_delivery_log WHERE event_type <> '' ORDER BY event_type ASC")
+            event_types = [str(row[0] or '').strip() for row in (cur.fetchall() or []) if str(row[0] or '').strip()]
+
+            cur.execute("SELECT DISTINCT tenant_id FROM notification_delivery_log WHERE tenant_id <> '' ORDER BY tenant_id ASC")
+            tenants = [str(row[0] or '').strip() for row in (cur.fetchall() or []) if str(row[0] or '').strip()]
+
+            cur.execute(
+                f"""
+                SELECT LOWER(status) AS normalized_status, COUNT(*)
+                FROM notification_delivery_log
+                {where_sql}
+                GROUP BY LOWER(status)
+                """,
+                params,
+            )
+            status_counts = {'delivered': 0, 'failed': 0, 'skipped': 0}
+            for row in (cur.fetchall() or []):
+                key = str(row[0] or '').strip().lower()
+                if not key:
+                    continue
+                status_counts[key] = int(row[1] or 0)
+
+            cur.execute(
+                f"""
+                SELECT
+                    COUNT(DISTINCT NULLIF(alert_id, '')) AS alert_count,
+                    COUNT(DISTINCT NULLIF(tenant_id, '')) AS tenant_count,
+                    COUNT(*) FILTER (WHERE ts >= NOW() - INTERVAL '24 hours') AS recent_24h,
+                    MAX(ts) AS latest_ts
+                FROM notification_delivery_log
+                {where_sql}
+                """,
+                params,
+            )
+            kpi_row = cur.fetchone() or [0, 0, 0, None]
+        entries = [_serialize_notification_delivery_db_row(row) for row in rows]
+        return {
+            'entries': entries,
+            'total': total,
+            'filtered_total': filtered_total,
+            'event_types': event_types,
+            'tenants': tenants,
+            'status_counts': status_counts,
+            'kpis': {
+                'alerts': int(kpi_row[0] or 0),
+                'tenants': int(kpi_row[1] or 0),
+                'recent_24h': int(kpi_row[2] or 0),
+                'latest_ts': str(kpi_row[3].isoformat(timespec="seconds") if hasattr(kpi_row[3], "isoformat") else kpi_row[3] or ""),
+            },
+        }, None
+    except Exception as exc:
+        return None, str(exc)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _notification_delivery_storage_backend_meta():
+    if not _db_first_config_enabled():
+        return {
+            "backend": "memory",
+            "db_enabled": False,
+            "runtime_total": 0,
+            "delivered_count": 0,
+            "failed_count": 0,
+            "skipped_count": 0,
+            "recent_24h": 0,
+            "latest_ts": "",
+        }
+    summary, err = _fetch_notification_delivery_summary_from_db(limit=1)
+    if summary is None:
+        return {
+            "backend": "db",
+            "db_enabled": True,
+            "runtime_total": 0,
+            "delivered_count": 0,
+            "failed_count": 0,
+            "skipped_count": 0,
+            "recent_24h": 0,
+            "latest_ts": "",
+            "bootstrap_error": err or "",
+        }
+    counts = dict(summary.get("status_counts", {}))
+    return {
+        "backend": "db",
+        "db_enabled": True,
+        "runtime_total": int(summary.get("total", 0) or 0),
+        "delivered_count": int(counts.get("delivered", 0) or 0),
+        "failed_count": int(counts.get("failed", 0) or 0),
+        "skipped_count": int(counts.get("skipped", 0) or 0),
+        "recent_24h": int((summary.get("kpis", {}) or {}).get("recent_24h", 0) or 0),
+        "latest_ts": str((summary.get("kpis", {}) or {}).get("latest_ts", "") or ""),
+    }
 
 
 def _normalize_tenant_registry_entry(entry, fallback_tenant_id=None):
@@ -3003,6 +3401,8 @@ def _is_customer_blocked_api_path(path: str) -> bool:
         "/api/sensors/import",
         "/api/sensors/telemetry/history/export",
         "/api/alerts/storage-meta",
+        "/api/notifications/storage-meta",
+        "/api/notifications/deliveries",
         "/api/alerts/export",
         "/api/alerts/import",
         "/api/alerts/triggered",
@@ -3030,6 +3430,7 @@ def _is_customer_blocked_api_path(path: str) -> bool:
         "/api/timescale",
         "/api/oms",
         "/api/logs",
+        "/api/notifications",
         "/api/mqtt",
         "/api/system",
         "/api/certificates",
@@ -3648,6 +4049,35 @@ def _ensure_timescale_schema(conn):
             cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_audit_log_audit_id ON admin_audit_log (audit_id) WHERE audit_id IS NOT NULL")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_log_action_ts ON admin_audit_log (action, ts DESC)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_log_actor_ts ON admin_audit_log (actor, ts DESC)")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS notification_delivery_log (
+                    ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    delivery_id TEXT PRIMARY KEY,
+                    tenant_id TEXT NOT NULL DEFAULT 'default',
+                    tenant_name TEXT NOT NULL DEFAULT '',
+                    event_type TEXT NOT NULL,
+                    alert_id TEXT NOT NULL DEFAULT '',
+                    alert_name TEXT NOT NULL DEFAULT '',
+                    sensor_eui TEXT NOT NULL DEFAULT '',
+                    status TEXT NOT NULL DEFAULT 'delivered',
+                    http_status INTEGER,
+                    duration_ms INTEGER,
+                    endpoint_scheme TEXT NOT NULL DEFAULT '',
+                    endpoint_host TEXT NOT NULL DEFAULT '',
+                    reason TEXT NOT NULL DEFAULT '',
+                    summary TEXT NOT NULL DEFAULT '',
+                    details JSONB NOT NULL DEFAULT '{}'::jsonb
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_notification_delivery_log_ts ON notification_delivery_log (ts DESC)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_notification_delivery_log_tenant_ts ON notification_delivery_log (tenant_id, ts DESC)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_notification_delivery_log_status_ts ON notification_delivery_log (status, ts DESC)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_notification_delivery_log_event_ts ON notification_delivery_log (event_type, ts DESC)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_notification_delivery_log_alert_ts ON notification_delivery_log (alert_id, ts DESC)")
+            try:
+                cur.execute("SELECT create_hypertable('notification_delivery_log', 'ts', if_not_exists => TRUE, migrate_data => TRUE)")
+            except Exception:
+                pass
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS inventory_events (
                     ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -5767,6 +6197,17 @@ def _invalidate_alert_runtime_cache(tenant_id: Optional[str] = None):
         stale_keys = [key for key in _alert_history_cache.keys() if str(key).startswith(tenant_key + "|")]
         for key in stale_keys:
             _alert_history_cache.pop(key, None)
+
+
+def _invalidate_notification_delivery_cache(tenant_id: Optional[str] = None):
+    with _notification_delivery_cache_lock:
+        if tenant_id is None:
+            _notification_delivery_cache.clear()
+            return
+        tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+        stale_keys = [key for key in _notification_delivery_cache.keys() if str(key).startswith(tenant_key + "|")]
+        for key in stale_keys:
+            _notification_delivery_cache.pop(key, None)
 
 def _get_cached_incident_feed_payload(tenant_id: str):
     tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
@@ -13083,6 +13524,114 @@ def get_alerts_storage_meta():
         'runtime_active_count': active_runtime_count,
         'runtime_event_count': runtime_event_count,
     })
+
+
+@app.route('/api/notifications/storage-meta', methods=['GET'])
+@login_required
+@admin_scope_required('view_admin_audit')
+def get_notification_delivery_storage_meta():
+    storage_meta = _notification_delivery_storage_backend_meta()
+    return jsonify({
+        'success': True,
+        'storage_backend': storage_meta.get('backend', 'memory'),
+        'storage_db_enabled': bool(storage_meta.get('db_enabled', False)),
+        'runtime_total': int(storage_meta.get('runtime_total', 0) or 0),
+        'delivered_count': int(storage_meta.get('delivered_count', 0) or 0),
+        'failed_count': int(storage_meta.get('failed_count', 0) or 0),
+        'skipped_count': int(storage_meta.get('skipped_count', 0) or 0),
+        'recent_24h': int(storage_meta.get('recent_24h', 0) or 0),
+        'latest_ts': str(storage_meta.get('latest_ts', '') or ''),
+    })
+
+
+@app.route('/api/notifications/deliveries', methods=['GET'])
+@login_required
+@admin_scope_required('view_admin_audit')
+def get_notification_deliveries():
+    status_filter = str(request.args.get('status', 'all') or 'all').strip().lower()
+    event_filter = str(request.args.get('event_type', 'all') or 'all').strip().lower()
+    tenant_filter = str(request.args.get('tenant', 'all') or 'all').strip().lower()
+    target_filter = str(request.args.get('target_id', '') or '').strip().lower()
+    text_filter = str(request.args.get('q', '') or '').strip().lower()
+    date_from = str(request.args.get('date_from', '') or '').strip()
+    date_to = str(request.args.get('date_to', '') or '').strip()
+    try:
+        limit = int(request.args.get('limit', 200))
+    except (TypeError, ValueError):
+        limit = 200
+    limit = max(20, min(limit, 2000))
+
+    cache_key = json.dumps({
+        "username": str((get_current_user() or {}).get("username") or session.get("username") or ""),
+        "status": status_filter,
+        "event_type": event_filter,
+        "tenant": tenant_filter,
+        "target": target_filter,
+        "q": text_filter,
+        "date_from": date_from,
+        "date_to": date_to,
+        "limit": limit,
+    }, separators=(",", ":"), sort_keys=True)
+    cached_payload = _get_ttl_cached_payload(
+        _notification_delivery_cache,
+        _notification_delivery_cache_lock,
+        cache_key,
+        _NOTIFICATION_DELIVERY_CACHE_TTL_SECONDS,
+    )
+    if cached_payload is not None:
+        return jsonify(cached_payload)
+
+    if not _db_first_config_enabled():
+        payload = {
+            'success': True,
+            'entries': [],
+            'total': 0,
+            'filtered_total': 0,
+            'event_types': [],
+            'tenants': [],
+            'status_counts': {'delivered': 0, 'failed': 0, 'skipped': 0},
+            'kpis': {'alerts': 0, 'tenants': 0, 'recent_24h': 0, 'latest_ts': ''},
+            'source': 'memory',
+        }
+        _store_ttl_cached_payload(
+            _notification_delivery_cache,
+            _notification_delivery_cache_lock,
+            cache_key,
+            payload,
+        )
+        return jsonify(payload)
+
+    summary, err = _fetch_notification_delivery_summary_from_db(
+        status_filter=status_filter,
+        event_filter=event_filter,
+        tenant_filter=tenant_filter,
+        target_filter=target_filter,
+        text_filter=text_filter,
+        date_from=date_from,
+        date_to=date_to,
+        limit=limit,
+    )
+    if summary is None:
+        return jsonify({"success": False, "message": err or "Failed to load notification deliveries"}), 500
+
+    payload = {
+        'success': True,
+        'entries': summary.get('entries', []),
+        'total': int(summary.get('total', 0) or 0),
+        'filtered_total': int(summary.get('filtered_total', 0) or 0),
+        'event_types': list(summary.get('event_types', [])),
+        'tenants': list(summary.get('tenants', [])),
+        'status_counts': dict(summary.get('status_counts', {'delivered': 0, 'failed': 0, 'skipped': 0})),
+        'kpis': dict(summary.get('kpis', {})),
+        'source': 'db',
+    }
+    _store_ttl_cached_payload(
+        _notification_delivery_cache,
+        _notification_delivery_cache_lock,
+        cache_key,
+        payload,
+    )
+    return jsonify(payload)
 
 
 @app.route('/sensor-telemetry')
