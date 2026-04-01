@@ -659,6 +659,32 @@
                         </div>
                     </section>
                     <section class="admin-modal-section">
+                        <p class="admin-modal-section-title">{{ t('admin.notifications', 'Notifications') }}</p>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="tenantEntityNotificationEnabled">
+                            <label class="form-check-label" for="tenantEntityNotificationEnabled">{{ t('admin.webhook_notifications', 'Webhook notifications') }}</label>
+                        </div>
+                        <div class="mb-2">
+                            <label for="tenantEntityWebhookUrl" class="form-label">{{ t('admin.webhook_url', 'Webhook URL') }}</label>
+                            <input type="url" class="form-control tenant-compact-control" id="tenantEntityWebhookUrl" placeholder="https://example.com/webhook">
+                            <small class="tenant-meta-note">{{ t('admin.webhook_url_note', 'Webhook sa odošle pri aktivácii alebo vyriešení upozornenia.') }}</small>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mt-1">
+                                    <input class="form-check-input" type="checkbox" id="tenantEntityWebhookTriggered" checked>
+                                    <label class="form-check-label" for="tenantEntityWebhookTriggered">{{ t('admin.notify_on_triggered', 'Pri aktivácii upozornenia') }}</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mt-1">
+                                    <input class="form-check-input" type="checkbox" id="tenantEntityWebhookResolved" checked>
+                                    <label class="form-check-label" for="tenantEntityWebhookResolved">{{ t('admin.notify_on_resolved', 'Pri vyriešení upozornenia') }}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="admin-modal-section">
                         <div class="tenant-bs-toolbar">
                             <div>
                                 <p class="admin-modal-section-title mb-1">{{ t('admin.assigned_base_stations', 'Priradené základňové stanice') }}</p>
@@ -809,7 +835,11 @@ const TENANT_ENTITY_FIELDS = [
     'tenantEntityOriginalId',
     'tenantEntityId',
     'tenantEntityName',
-    'tenantEntityDescription'
+    'tenantEntityDescription',
+    'tenantEntityNotificationEnabled',
+    'tenantEntityWebhookUrl',
+    'tenantEntityWebhookTriggered',
+    'tenantEntityWebhookResolved'
 ];
 
 function canCurrentAdminScope(scopeId) {
@@ -854,6 +884,43 @@ function setTenantUserBaseline() {
 
 function setTenantEntityBaseline() {
     tenantEntityFormBaseline = JSON.stringify(getFormSnapshot(TENANT_ENTITY_FIELDS));
+}
+
+function getTenantNotificationSettingsFromForm() {
+    const enabled = !!document.getElementById('tenantEntityNotificationEnabled')?.checked;
+    const webhookUrl = String(document.getElementById('tenantEntityWebhookUrl')?.value || '').trim();
+    const notifyOnTriggered = !!document.getElementById('tenantEntityWebhookTriggered')?.checked;
+    const notifyOnResolved = !!document.getElementById('tenantEntityWebhookResolved')?.checked;
+    return {
+        enabled: enabled && Boolean(webhookUrl),
+        webhook_url: webhookUrl,
+        notify_on_triggered: notifyOnTriggered,
+        notify_on_resolved: notifyOnResolved,
+    };
+}
+
+function applyTenantNotificationSettings(settings) {
+    const normalized = settings && typeof settings === 'object' ? settings : {};
+    const enabled = !!normalized.enabled && Boolean(String(normalized.webhook_url || '').trim());
+    const enabledToggle = document.getElementById('tenantEntityNotificationEnabled');
+    const webhookUrlInput = document.getElementById('tenantEntityWebhookUrl');
+    const triggeredToggle = document.getElementById('tenantEntityWebhookTriggered');
+    const resolvedToggle = document.getElementById('tenantEntityWebhookResolved');
+    if (enabledToggle) enabledToggle.checked = enabled;
+    if (webhookUrlInput) webhookUrlInput.value = String(normalized.webhook_url || '');
+    if (triggeredToggle) triggeredToggle.checked = normalized.notify_on_triggered !== false;
+    if (resolvedToggle) resolvedToggle.checked = normalized.notify_on_resolved !== false;
+    syncTenantNotificationFormState();
+}
+
+function syncTenantNotificationFormState() {
+    const enabled = !!document.getElementById('tenantEntityNotificationEnabled')?.checked;
+    const webhookUrlInput = document.getElementById('tenantEntityWebhookUrl');
+    const triggeredToggle = document.getElementById('tenantEntityWebhookTriggered');
+    const resolvedToggle = document.getElementById('tenantEntityWebhookResolved');
+    if (webhookUrlInput) webhookUrlInput.disabled = !enabled;
+    if (triggeredToggle) triggeredToggle.disabled = !enabled;
+    if (resolvedToggle) resolvedToggle.disabled = !enabled;
 }
 
 function isTenantUserFormDirty() {
@@ -1443,10 +1510,19 @@ function renderTenantManagementTable() {
         const canEdit = tenant.can_edit !== false;
         const deleteBtnClass = canDelete ? 'btn-outline-danger' : 'btn-outline-secondary';
         const deleteDisabled = canDelete ? '' : 'disabled';
+        const notificationSettings = tenant.notification_settings || {};
+        const notificationNote = notificationSettings.enabled
+            ? (notificationSettings.webhook_url
+                ? appTranslate('admin.webhook_notifications_enabled', 'Webhook notifications enabled')
+                : appTranslate('admin.webhook_notifications_enabled_no_target', 'Webhook notifications enabled'))
+            : appTranslate('admin.webhook_notifications_disabled', 'Webhook notifications disabled');
         return `
         <tr>
             <td><span class="tenant-chip ${tenant.is_reserved ? 'tenant-chip-global' : ''}">${tenantEscapeHtml(tenantScopeLabel(tenant.tenant_id))}</span></td>
-            <td>${tenantEscapeHtml(tenantScopeName(tenant))}</td>
+            <td>
+                <div>${tenantEscapeHtml(tenantScopeName(tenant))}</div>
+                <div class="tenant-meta-note mt-1">${tenantEscapeHtml(notificationNote)}</div>
+            </td>
             <td class="text-end">${tenantEscapeHtml(tenant.user_count ?? 0)}</td>
             <td class="text-end">${tenantEscapeHtml(tenant.sensor_count ?? 0)}</td>
             <td class="text-end">${tenantEscapeHtml(tenant.base_station_count ?? 0)}</td>
@@ -1810,6 +1886,12 @@ function resetTenantEntityForm() {
     document.getElementById('tenantEntityId').value = '';
     document.getElementById('tenantEntityName').value = '';
     document.getElementById('tenantEntityDescription').value = '';
+    applyTenantNotificationSettings({
+        enabled: false,
+        webhook_url: '',
+        notify_on_triggered: true,
+        notify_on_resolved: true,
+    });
     const tenantBsSearch = document.getElementById('tenantBaseStationSearch');
     if (tenantBsSearch) tenantBsSearch.value = '';
     setTenantEntityMode('create');
@@ -1841,6 +1923,7 @@ function editTenantEntity(tenantId) {
     document.getElementById('tenantEntityId').value = tenant.tenant_id;
     document.getElementById('tenantEntityName').value = tenant.name || tenant.tenant_id;
     document.getElementById('tenantEntityDescription').value = tenant.description || '';
+    applyTenantNotificationSettings(tenant.notification_settings || {});
     const tenantBsSearch = document.getElementById('tenantBaseStationSearch');
     if (tenantBsSearch) tenantBsSearch.value = '';
     setTenantEntityMode('edit');
@@ -1870,6 +1953,7 @@ async function saveTenantEntity() {
         name: tenantName || tenantId,
         description: tenantDescription,
         base_station_euis: getSelectedTenantBaseStations(),
+        notification_settings: getTenantNotificationSettingsFromForm(),
     };
 
     const method = mode === 'edit' ? 'PUT' : 'POST';
@@ -2000,6 +2084,7 @@ async function fetchTenantAdminData(options = {}) {
                 display_name: tenant.display_name || tenant.name || tenant.tenant_id,
                 name: tenant.name || tenant.tenant_id,
                 description: tenant.description || '',
+                notification_settings: tenant.notification_settings || {},
                 sensor_count: tenant.sensor_count || 0,
                 base_station_count: tenant.base_station_count || 0,
                 assigned_base_station_euis: tenant.assigned_base_station_euis || [],
@@ -2028,6 +2113,7 @@ async function fetchTenantAdminData(options = {}) {
                 tenant_id: tenantId,
                 name: tenantId,
                 description: '',
+                notification_settings: {},
                 sensor_count: 0,
                 base_station_count: 0,
                 assigned_base_station_euis: [],
@@ -2164,6 +2250,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     const tenantEntityId = document.getElementById('tenantEntityId');
     const tenantUserImportFile = document.getElementById('tenantUserImportFile');
     const tenantMetadataImportFile = document.getElementById('tenantMetadataImportFile');
+    const tenantNotificationToggle = document.getElementById('tenantEntityNotificationEnabled');
+    const tenantWebhookUrl = document.getElementById('tenantEntityWebhookUrl');
+    const tenantWebhookTriggered = document.getElementById('tenantEntityWebhookTriggered');
+    const tenantWebhookResolved = document.getElementById('tenantEntityWebhookResolved');
 
     if (userSearch) userSearch.addEventListener('input', renderTenantUsersTable);
     if (roleFilter) roleFilter.addEventListener('change', renderTenantUsersTable);
@@ -2172,6 +2262,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (userTenant) userTenant.addEventListener('change', updateUserScopeBadges);
     if (tenantBaseStationSearch) tenantBaseStationSearch.addEventListener('input', renderTenantBaseStationPicker);
     if (tenantEntityId) tenantEntityId.addEventListener('input', renderTenantBaseStationPicker);
+    if (tenantNotificationToggle) tenantNotificationToggle.addEventListener('change', syncTenantNotificationFormState);
+    if (tenantWebhookUrl) tenantWebhookUrl.addEventListener('input', setTenantEntityBaseline);
+    if (tenantWebhookTriggered) tenantWebhookTriggered.addEventListener('change', setTenantEntityBaseline);
+    if (tenantWebhookResolved) tenantWebhookResolved.addEventListener('change', setTenantEntityBaseline);
     if (tenantUserImportFile) tenantUserImportFile.addEventListener('change', (event) => importAdminUsersFromFile(event.target.files?.[0]));
     if (tenantMetadataImportFile) tenantMetadataImportFile.addEventListener('change', (event) => importTenantMetadataFromFile(event.target.files?.[0]));
 

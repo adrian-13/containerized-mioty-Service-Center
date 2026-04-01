@@ -2724,6 +2724,115 @@ def _tenant_scope_display_description(tenant_id, description=None):
     return str(description or "").strip()
 
 
+def _default_tenant_notification_settings():
+    return {
+        "enabled": False,
+        "webhook_url": "",
+        "notify_on_triggered": True,
+        "notify_on_resolved": True,
+    }
+
+
+def _normalize_tenant_notification_settings(raw_settings):
+    defaults = _default_tenant_notification_settings()
+    if not isinstance(raw_settings, dict):
+        return dict(defaults)
+    normalized = dict(defaults)
+    if "enabled" in raw_settings:
+        normalized["enabled"] = bool(raw_settings.get("enabled"))
+    if "webhook_url" in raw_settings:
+        normalized["webhook_url"] = str(raw_settings.get("webhook_url") or "").strip()[:500]
+    if "notify_on_triggered" in raw_settings:
+        normalized["notify_on_triggered"] = bool(raw_settings.get("notify_on_triggered"))
+    if "notify_on_resolved" in raw_settings:
+        normalized["notify_on_resolved"] = bool(raw_settings.get("notify_on_resolved"))
+    if not normalized["webhook_url"]:
+        normalized["enabled"] = False
+    return normalized
+
+
+def _tenant_notification_settings_for(tenant_id):
+    normalized_tenant = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    registry_entry = _tenant_registry_map().get(normalized_tenant, {})
+    return _normalize_tenant_notification_settings(registry_entry.get("notification_settings"))
+
+
+def _dispatch_tenant_webhook_notification(tenant_id, event_type, alert_record, previous_state=None):
+    settings = _tenant_notification_settings_for(tenant_id)
+    if not settings.get("enabled"):
+        return False, "disabled"
+    webhook_url = str(settings.get("webhook_url") or "").strip()
+    if not webhook_url:
+        return False, "webhook_url_missing"
+
+    event_type = str(event_type or "").strip().lower()
+    if event_type == "triggered" and not settings.get("notify_on_triggered", True):
+        return False, "trigger_notifications_disabled"
+    if event_type == "resolved" and not settings.get("notify_on_resolved", True):
+        return False, "resolved_notifications_disabled"
+
+    tenant_id_norm = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    tenant_name = _tenant_scope_display_name(
+        tenant_id_norm,
+        (_tenant_registry_map().get(tenant_id_norm) or {}).get("name"),
+    )
+    alert_payload = dict(alert_record or {})
+    previous_payload = dict(previous_state or {})
+    payload = {
+        "source": "service_center",
+        "sent_at": datetime.now(timezone.utc).isoformat(),
+        "event_type": f"alert.{event_type}",
+        "tenant_id": tenant_id_norm,
+        "tenant_name": tenant_name,
+        "alert_id": str(alert_payload.get("id") or "").strip(),
+        "alert_name": str(alert_payload.get("name") or "").strip(),
+        "sensor_eui": _normalize_eui_upper(alert_payload.get("sensor_eui")),
+        "severity": str(alert_payload.get("severity") or previous_payload.get("severity") or "warning").strip().lower() or "warning",
+        "kind": str(alert_payload.get("kind") or previous_payload.get("kind") or "").strip(),
+        "metric": alert_payload.get("metric") or previous_payload.get("metric"),
+        "condition": alert_payload.get("condition") or previous_payload.get("condition"),
+        "threshold": alert_payload.get("threshold") or previous_payload.get("threshold"),
+        "current_value": alert_payload.get("current_value"),
+        "current_status": alert_payload.get("current_status"),
+        "hours_since_last_seen": alert_payload.get("hours_since_last_seen"),
+        "triggered_at": alert_payload.get("triggered_at") or previous_payload.get("triggered_at"),
+        "resolved_at": alert_payload.get("resolved_at") or previous_payload.get("resolved_at"),
+        "previous_state": {
+            "is_active": bool(previous_payload.get("is_active", False)),
+            "last_triggered_at": previous_payload.get("last_triggered_at"),
+            "last_resolved_at": previous_payload.get("last_resolved_at"),
+        },
+    }
+
+    def _worker():
+        parsed = urllib.parse.urlparse(webhook_url)
+        ssl_ctx = ssl.create_default_context() if parsed.scheme.lower() == "https" else None
+        req = urllib.request.Request(
+            webhook_url,
+            method="POST",
+            data=json.dumps(payload, separators=(",", ":"), ensure_ascii=True).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Accept": "application/json",
+                "User-Agent": "BSSCI-Service-Center",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, context=ssl_ctx, timeout=5) as response:
+                try:
+                    response.read(1)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    try:
+        threading.Thread(target=_worker, daemon=True).start()
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+
+
 def _normalize_tenant_registry_entry(entry, fallback_tenant_id=None):
     if not isinstance(entry, dict):
         return None
@@ -2737,6 +2846,7 @@ def _normalize_tenant_registry_entry(entry, fallback_tenant_id=None):
         "description": _tenant_scope_display_description(tenant_id, entry.get("description")),
         "created_at": str(entry.get("created_at") or now_iso),
         "is_demo": _normalize_demo_tenant_flag(entry.get("is_demo"), tenant_id),
+        "notification_settings": _normalize_tenant_notification_settings(entry.get("notification_settings")),
     }
 
 
@@ -3455,12 +3565,14 @@ def _ensure_timescale_schema(conn):
                     name TEXT NOT NULL,
                     description TEXT NOT NULL DEFAULT '',
                     is_demo BOOLEAN NOT NULL DEFAULT FALSE,
+                    notification_settings JSONB NOT NULL DEFAULT '{}'::jsonb,
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 )
             """)
             cur.execute("CREATE INDEX IF NOT EXISTS idx_tenant_registry_meta_updated ON tenant_registry_meta (updated_at DESC)")
             cur.execute("ALTER TABLE tenant_registry_meta ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE")
+            cur.execute("ALTER TABLE tenant_registry_meta ADD COLUMN IF NOT EXISTS notification_settings JSONB NOT NULL DEFAULT '{}'::jsonb")
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS app_users (
                     username TEXT PRIMARY KEY,
@@ -6499,6 +6611,12 @@ def _persist_runtime_history_state(known_records: list, active_records: list) ->
                             known.get("severity", "warning"),
                             payload_json,
                         ))
+                        _dispatch_tenant_webhook_notification(
+                            known.get("tenant_id"),
+                            "triggered",
+                            active_payload,
+                            previous,
+                        )
                     last_triggered_at = active_payload.get("triggered_at") or now_iso
                     last_resolved_at = previous.get("last_resolved_at")
                 else:
@@ -6523,6 +6641,12 @@ def _persist_runtime_history_state(known_records: list, active_records: list) ->
                         previous.get("payload", {}).get("severity") or known.get("severity", "warning"),
                         payload_json,
                     ))
+                    _dispatch_tenant_webhook_notification(
+                        known.get("tenant_id"),
+                        "resolved",
+                        resolved_payload,
+                        previous,
+                    )
                     last_triggered_at = (
                         resolved_payload.get("triggered_at")
                         or _iso_timestamp_value(previous.get("last_triggered_at"))
@@ -6579,6 +6703,12 @@ def _persist_runtime_history_state(known_records: list, active_records: list) ->
                             "severity": known.get("severity", "warning"),
                             **active_payload,
                         })
+                        _dispatch_tenant_webhook_notification(
+                            known.get("tenant_id"),
+                            "triggered",
+                            active_payload,
+                            previous,
+                        )
                     state[state_key] = {
                         "is_active": True,
                         "triggered_at": active_payload.get("triggered_at"),
@@ -6597,6 +6727,12 @@ def _persist_runtime_history_state(known_records: list, active_records: list) ->
                         "severity": previous.get("payload", {}).get("severity") or known.get("severity", "warning"),
                         **resolved_payload,
                     })
+                    _dispatch_tenant_webhook_notification(
+                        known.get("tenant_id"),
+                        "resolved",
+                        resolved_payload,
+                        previous,
+                    )
                     state[state_key] = {
                         "is_active": False,
                         "triggered_at": resolved_payload.get("triggered_at"),
@@ -9363,7 +9499,7 @@ def _load_tenant_registry_from_db():
         _ensure_timescale_schema(conn)
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT id, name, description, is_demo, created_at
+                SELECT id, name, description, is_demo, notification_settings, created_at
                 FROM tenant_registry_meta
                 ORDER BY id ASC
             """)
@@ -9375,7 +9511,8 @@ def _load_tenant_registry_from_db():
                         "name": row[1],
                         "description": row[2],
                         "is_demo": row[3],
-                        "created_at": row[4],
+                        "notification_settings": _db_json_value(row[4], {}),
+                        "created_at": row[5],
                     }
                 )
                 if normalized:
@@ -9408,6 +9545,7 @@ def _save_tenant_registry_to_db(registry_data):
                 str(normalized.get("name") or normalized["id"]).strip()[:120] or normalized["id"],
                 str(normalized.get("description") or "").strip()[:240],
                 bool(normalized.get("is_demo", False)),
+                json.dumps(_normalize_tenant_notification_settings(normalized.get("notification_settings")), separators=(",", ":"), ensure_ascii=True),
                 str(normalized.get("created_at") or datetime.now(timezone.utc).isoformat()),
             ))
 
@@ -9425,18 +9563,19 @@ def _save_tenant_registry_to_db(registry_data):
                     "DELETE FROM tenant_registry_meta WHERE id = %s",
                     [(tenant_id,) for tenant_id in stale_ids],
                 )
-            for tenant_id, name, description, is_demo, created_at in normalized_rows:
+            for tenant_id, name, description, is_demo, notification_settings, created_at in normalized_rows:
                 cur.execute(
                     """
-                    INSERT INTO tenant_registry_meta (id, name, description, is_demo, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, %s::timestamptz, NOW())
+                    INSERT INTO tenant_registry_meta (id, name, description, is_demo, notification_settings, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s::jsonb, %s::timestamptz, NOW())
                     ON CONFLICT (id) DO UPDATE SET
                         name = EXCLUDED.name,
                         description = EXCLUDED.description,
                         is_demo = EXCLUDED.is_demo,
+                        notification_settings = EXCLUDED.notification_settings,
                         updated_at = NOW()
                     """,
-                    (tenant_id, name, description, is_demo, created_at),
+                    (tenant_id, name, description, is_demo, notification_settings, created_at),
                 )
                 cur.execute(
                     """
@@ -10008,7 +10147,7 @@ def _tenant_registry_map():
             tenant_map[normalized["id"]] = normalized
     return tenant_map
 
-def _upsert_tenant_registry_entry(tenant_id, name=None, description=None, is_demo=None):
+def _upsert_tenant_registry_entry(tenant_id, name=None, description=None, is_demo=None, notification_settings=None):
     tenant_id = _sanitize_tenant_id(tenant_id)
     if not tenant_id:
         return False, "Invalid tenant id", None
@@ -10031,6 +10170,7 @@ def _upsert_tenant_registry_entry(tenant_id, name=None, description=None, is_dem
             "description": str(description or "").strip(),
             "created_at": now_iso,
             "is_demo": _normalize_demo_tenant_flag(is_demo, tenant_id),
+            "notification_settings": _normalize_tenant_notification_settings(notification_settings),
         }
     else:
         if name is not None:
@@ -10046,6 +10186,10 @@ def _upsert_tenant_registry_entry(tenant_id, name=None, description=None, is_dem
             existing["is_demo"] = _normalize_demo_tenant_flag(is_demo, tenant_id)
         else:
             existing["is_demo"] = _normalize_demo_tenant_flag(existing.get("is_demo"), tenant_id)
+        if notification_settings is not None:
+            existing["notification_settings"] = _normalize_tenant_notification_settings(notification_settings)
+        else:
+            existing["notification_settings"] = _normalize_tenant_notification_settings(existing.get("notification_settings"))
 
     existing["name"] = existing["name"][:120]
     existing["description"] = existing["description"][:240]
@@ -11455,6 +11599,9 @@ def api_tenants():
                     "description": str(existing.get("description") or meta.get("description") or "").strip(),
                     "created_at": existing.get("created_at") or meta.get("created_at") or "",
                     "is_demo": _normalize_demo_tenant_flag(existing.get("is_demo"), tenant_id),
+                    "notification_settings": _normalize_tenant_notification_settings(
+                        existing.get("notification_settings") or meta.get("notification_settings")
+                    ),
                 }
         else:
             db_tenant_meta = {}
@@ -11490,12 +11637,14 @@ def api_tenants():
         tenant_name = str(data.get("name") or tenant_id).strip()[:120]
         tenant_description = str(data.get("description") or "").strip()[:240]
         tenant_is_demo = _normalize_demo_tenant_flag(data.get("is_demo"), tenant_id)
+        notification_settings = _normalize_tenant_notification_settings(data.get("notification_settings"))
         requested_base_stations = _normalize_base_station_route_list(data.get("base_station_euis", []))
         ok, err, tenant_entry = _upsert_tenant_registry_entry(
             tenant_id=tenant_id,
             name=tenant_name,
             description=tenant_description,
             is_demo=tenant_is_demo,
+            notification_settings=notification_settings,
         )
         if not ok:
             return jsonify({"success": False, "error": err or "Failed to create tenant"}), 500
@@ -11534,12 +11683,17 @@ def api_tenants():
                 'name': tenant_name,
                 'description': tenant_description,
                 'is_demo': tenant_is_demo,
+                'notification_enabled': bool(notification_settings.get('enabled')),
+                'notification_triggered': bool(notification_settings.get('notify_on_triggered', True)),
+                'notification_resolved': bool(notification_settings.get('notify_on_resolved', True)),
+                'notification_target_configured': bool(notification_settings.get('webhook_url')),
                 'base_station_count': len(bs_assignment.get('assigned', [])),
                 'base_stations_assigned': bs_assignment.get('assigned', []),
                 'timescale_synced': bool(timescale_result.get('synced')),
                 'timescale_error': timescale_result.get('error'),
             },
         )
+        _invalidate_admin_management_cache()
         return jsonify({
             "success": True,
             "tenant": tenant_entry,
@@ -11558,12 +11712,14 @@ def api_tenants():
         tenant_name = str(data.get("name") or tenant_id).strip()[:120]
         tenant_description = str(data.get("description") or "").strip()[:240]
         tenant_is_demo = _normalize_demo_tenant_flag(data.get("is_demo"), tenant_id)
+        notification_settings = _normalize_tenant_notification_settings(data.get("notification_settings"))
         requested_base_stations = _normalize_base_station_route_list(data.get("base_station_euis", []))
         ok, err, tenant_entry = _upsert_tenant_registry_entry(
             tenant_id=tenant_id,
             name=tenant_name,
             description=tenant_description,
             is_demo=tenant_is_demo,
+            notification_settings=notification_settings,
         )
         if not ok:
             return jsonify({"success": False, "error": err or "Failed to update tenant"}), 500
@@ -11602,6 +11758,10 @@ def api_tenants():
                 'name': tenant_name,
                 'description': tenant_description,
                 'is_demo': tenant_is_demo,
+                'notification_enabled': bool(notification_settings.get('enabled')),
+                'notification_triggered': bool(notification_settings.get('notify_on_triggered', True)),
+                'notification_resolved': bool(notification_settings.get('notify_on_resolved', True)),
+                'notification_target_configured': bool(notification_settings.get('webhook_url')),
                 'base_station_count': len(bs_assignment.get('assigned', [])),
                 'base_stations_assigned': bs_assignment.get('assigned', []),
                 'base_stations_released': bs_assignment.get('released', []),
@@ -11609,6 +11769,7 @@ def api_tenants():
                 'timescale_error': timescale_result.get('error'),
             },
         )
+        _invalidate_admin_management_cache()
         return jsonify({
             "success": True,
             "tenant": tenant_entry,
@@ -11724,6 +11885,7 @@ def api_tenants():
                 'timescale_error': timescale_result.get('error'),
             },
         )
+        _invalidate_admin_management_cache()
         return jsonify({
             "success": True,
             "tenant_id": tenant_id,
@@ -11791,12 +11953,16 @@ def api_tenants():
             or ts_entry.get("created_at")
             or None
         )
+        notification_settings = _normalize_tenant_notification_settings(registry_entry.get("notification_settings"))
         tenant_summaries.append({
             "tenant_id": tenant_id,
             "display_name": tenant_name,
             "name": tenant_name,
             "description": tenant_description,
             "is_demo": _normalize_demo_tenant_flag(registry_entry.get("is_demo"), tenant_id),
+            "notification_settings": notification_settings,
+            "notification_enabled": bool(notification_settings.get("enabled")),
+            "notification_target_configured": bool(notification_settings.get("webhook_url")),
             "created_at": created_at,
             "sensor_count": sensor_count,
             "base_station_count": base_station_count,
@@ -11865,6 +12031,8 @@ def export_tenant_metadata():
             'name': str(entry.get('name') or tenant_id).strip() or tenant_id,
             'description': str(entry.get('description') or '').strip(),
             'created_at': str(entry.get('created_at') or ''),
+            'is_demo': _normalize_demo_tenant_flag(entry.get('is_demo'), tenant_id),
+            'notification_settings': _normalize_tenant_notification_settings(entry.get('notification_settings')),
         })
     storage_meta = _tenant_storage_backend_meta()
     payload = {
@@ -11931,6 +12099,7 @@ def import_tenant_metadata():
             name=str(entry.get('name') or tenant_id).strip(),
             description=str(entry.get('description') or '').strip(),
             is_demo=entry.get('is_demo'),
+            notification_settings=entry.get('notification_settings'),
         )
         if not ok:
             skipped.append({'tenant_id': tenant_id, 'reason': err or 'save_failed'})
@@ -11947,6 +12116,7 @@ def import_tenant_metadata():
         status='success',
         details={'created': created, 'updated': updated, 'skipped': len(skipped)},
     )
+    _invalidate_admin_management_cache()
     return jsonify({'success': True, 'created': created, 'updated': updated, 'skipped': skipped})
 
 @app.route('/api/tenants/export', methods=['GET'])
