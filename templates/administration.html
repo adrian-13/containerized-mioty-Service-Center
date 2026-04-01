@@ -361,6 +361,7 @@
 }
 @media (max-width: 1199.98px) {
     .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .admin-ops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 991.98px) {
     .admin-head { flex-direction: column; }
@@ -375,6 +376,53 @@
 }
 @media (max-width: 575.98px) {
     .admin-kpis { grid-template-columns: 1fr; }
+    .admin-ops-grid { grid-template-columns: 1fr; }
+}
+.admin-ops-panel {
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+.admin-ops-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+.admin-ops-tile {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.92));
+    padding: 14px 16px;
+    min-height: 108px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+}
+.admin-ops-label {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+.admin-ops-value {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.05;
+}
+.admin-ops-note {
+    margin: 0;
+    font-size: 0.84rem;
+    color: #64748b;
+    line-height: 1.35;
+}
+.admin-ops-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 </style>
 
@@ -405,6 +453,50 @@
             <p class="admin-kpi-value" id="adminKpiAuditTargets">0</p>
         </article>
     </div>
+
+    <section class="card admin-card admin-ops-panel d-none" id="adminOpsOverviewPanel">
+        <div class="card-header d-flex align-items-center justify-content-between gap-3 flex-wrap">
+            <div>
+                <h5 class="mb-1"><i class="fas fa-chart-line me-2"></i>{{ t('admin.ops_overview', 'Prehľad prevádzky') }}</h5>
+                <div class="tenant-meta-note">{{ t('admin.ops_overview_note', 'Stav systému, audit a doručenia upozornení na prvý pohľad.') }}</div>
+            </div>
+            <div class="admin-ops-actions">
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('health') }}">
+                    <i class="fas fa-heartbeat me-1"></i>{{ t('common.system_health', 'Stav systému') }}
+                </a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('logs') }}#adminAuditPane">
+                    <i class="fas fa-file-alt me-1"></i>{{ t('common.audit', 'Audit') }}
+                </a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('logs') }}#notificationDeliveriesPane">
+                    <i class="fas fa-bell me-1"></i>{{ t('admin.webhook_notifications', 'Notifikácie') }}
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="admin-ops-grid">
+                <article class="admin-ops-tile">
+                    <p class="admin-ops-label">{{ t('admin.service_health', 'Stav služby') }}</p>
+                    <p class="admin-ops-value" id="adminOpsServiceStatus">—</p>
+                    <p class="admin-ops-note" id="adminOpsServiceNote">{{ t('admin.loading', 'Načítava sa...') }}</p>
+                </article>
+                <article class="admin-ops-tile">
+                    <p class="admin-ops-label">{{ t('admin.inventory_snapshot', 'Prehľad inventára') }}</p>
+                    <p class="admin-ops-value" id="adminOpsInventoryValue">—</p>
+                    <p class="admin-ops-note" id="adminOpsInventoryNote">{{ t('admin.loading', 'Načítava sa...') }}</p>
+                </article>
+                <article class="admin-ops-tile">
+                    <p class="admin-ops-label">{{ t('common.audit', 'Audit') }} 24h</p>
+                    <p class="admin-ops-value" id="adminOpsAuditValue">0</p>
+                    <p class="admin-ops-note" id="adminOpsAuditNote">{{ t('admin.loading', 'Načítava sa...') }}</p>
+                </article>
+                <article class="admin-ops-tile">
+                    <p class="admin-ops-label">{{ t('admin.webhook_notifications', 'Notifikácie') }} 24h</p>
+                    <p class="admin-ops-value" id="adminOpsNotificationValue">0</p>
+                    <p class="admin-ops-note" id="adminOpsNotificationNote">{{ t('admin.loading', 'Načítava sa...') }}</p>
+                </article>
+            </div>
+        </div>
+    </section>
 
     <div class="d-flex align-items-center justify-content-between gap-2">
         <div class="admin-tabs" id="adminTabs">
@@ -799,6 +891,8 @@ let tenantTenantsLoaded = false;
 let tenantAuditSummary = {};
 let tenantAuditStorageMeta = {};
 let tenantAuditLoaded = false;
+let tenantOpsOverview = {};
+let tenantOpsOverviewLoaded = false;
 const TENANT_PAGE_ADMIN_SCOPES = {{ (current_user.admin_permissions if current_user and current_user.role == 'admin' else {})|tojson }};
 
 function tenantScopeLabel(tenantId) {
@@ -1122,6 +1216,67 @@ function renderAdminStorageNotes() {
             'tenants.json'
         );
     }
+}
+
+function renderAdminOpsOverview() {
+    const panel = document.getElementById('adminOpsOverviewPanel');
+    const serviceStatusEl = document.getElementById('adminOpsServiceStatus');
+    const serviceNoteEl = document.getElementById('adminOpsServiceNote');
+    const inventoryValueEl = document.getElementById('adminOpsInventoryValue');
+    const inventoryNoteEl = document.getElementById('adminOpsInventoryNote');
+    const auditValueEl = document.getElementById('adminOpsAuditValue');
+    const auditNoteEl = document.getElementById('adminOpsAuditNote');
+    const notificationValueEl = document.getElementById('adminOpsNotificationValue');
+    const notificationNoteEl = document.getElementById('adminOpsNotificationNote');
+    if (!panel) return;
+
+    const canViewOps = canCurrentAdminScope('view_admin_audit');
+    if (!canViewOps) {
+        panel.classList.add('d-none');
+        return;
+    }
+    panel.classList.remove('d-none');
+
+    const service = tenantOpsOverview.service || {};
+    const notifications = tenantOpsOverview.notifications || {};
+    const serviceRunning = Boolean(service.running);
+    const mqttActive = Boolean((service.mqtt_broker || {}).active);
+    const tlsActive = Boolean((service.tls_server || {}).active);
+    const connectedBaseStations = Number(((service.base_stations || {}).total_connected) || 0);
+    const totalBaseStations = Number(((service.base_stations || {}).total) || 0);
+    const totalSensors = Number(service.total_sensors || 0);
+    const registeredSensors = Number(service.registered_sensors || 0);
+    const pendingRequests = Number(service.pending_requests || 0);
+    const healthLabel = serviceRunning && mqttActive && tlsActive
+        ? appTranslate('common.healthy', 'V poriadku')
+        : appTranslate('common.warning', 'Upozornenie');
+    const healthNoteParts = [];
+    healthNoteParts.push(mqttActive ? 'MQTT' : 'MQTT vypnuté');
+    healthNoteParts.push(tlsActive ? 'TLS' : 'TLS vypnuté');
+    healthNoteParts.push(`${connectedBaseStations}/${totalBaseStations} BS`);
+    if (pendingRequests > 0) {
+        healthNoteParts.push(`${pendingRequests} čaká`);
+    }
+
+    const recentAudit = Number((tenantAuditSummary.kpis || {}).recent_24h || 0);
+    const auditTargets = Number((tenantAuditSummary.kpis || {}).targets || 0);
+    const auditActors = Number((tenantAuditSummary.kpis || {}).actors || 0);
+    const auditTenants = Number((tenantAuditSummary.kpis || {}).tenants || 0);
+
+    const notifRecent = Number(notifications.recent_24h || 0);
+    const notifDelivered = Number(notifications.delivered_count || 0);
+    const notifFailed = Number(notifications.failed_count || 0);
+    const notifSkipped = Number(notifications.skipped_count || 0);
+    const notifTotal = Number(notifications.runtime_total || 0);
+
+    if (serviceStatusEl) serviceStatusEl.textContent = healthLabel;
+    if (serviceNoteEl) serviceNoteEl.textContent = healthNoteParts.join(' · ');
+    if (inventoryValueEl) inventoryValueEl.textContent = `${registeredSensors}/${totalSensors}`;
+    if (inventoryNoteEl) inventoryNoteEl.textContent = `${connectedBaseStations}/${totalBaseStations} ${appTranslate('common.connected', 'pripojené')} · ${appTranslate('admin.pending_requests', 'Čakajúce požiadavky')}: ${pendingRequests}`;
+    if (auditValueEl) auditValueEl.textContent = String(recentAudit);
+    if (auditNoteEl) auditNoteEl.textContent = `${auditTargets} ${appTranslate('common.targets', 'Ciele')} · ${auditActors} ${appTranslate('common.users', 'Používatelia')} · ${auditTenants} ${appTranslate('common.tenants', 'Tenanti')}`;
+    if (notificationValueEl) notificationValueEl.textContent = String(notifRecent);
+    if (notificationNoteEl) notificationNoteEl.textContent = `${notifDelivered} ${appTranslate('common.delivered', 'Doručené')} · ${notifFailed} ${appTranslate('common.failed', 'Chyby')} · ${notifSkipped} ${appTranslate('common.skipped', 'Preskočené')} · ${notifTotal} ${appTranslate('common.total', 'Spolu')}`;
 }
 
 function downloadBlob(blob, filename) {
@@ -2030,7 +2185,8 @@ async function fetchTenantAdminData(options = {}) {
     const shouldLoadUsers = canManageUsers && loadUsers && (forceReload || !tenantUsersLoaded);
     const shouldLoadTenants = canManageTenants && loadTenants && (forceReload || !tenantTenantsLoaded);
     const shouldLoadAudit = canViewAudit && (forceReload || !tenantAuditLoaded);
-    if (!shouldLoadUsers && !shouldLoadTenants && !shouldLoadAudit) {
+    const shouldLoadOps = canViewAudit && (forceReload || !tenantOpsOverviewLoaded);
+    if (!shouldLoadUsers && !shouldLoadTenants && !shouldLoadAudit && !shouldLoadOps) {
         return;
     }
     try {
@@ -2040,11 +2196,15 @@ async function fetchTenantAdminData(options = {}) {
         let tenantsData = {};
         let auditData = {};
         let auditMetaData = {};
-        const [usersFetch, tenantsFetch, auditFetch, auditMetaFetch] = await Promise.all([
+        let serviceStatusData = {};
+        let notificationMetaData = {};
+        const [usersFetch, tenantsFetch, auditFetch, auditMetaFetch, serviceStatusFetch, notificationMetaFetch] = await Promise.all([
             shouldLoadUsers ? fetch('/api/users') : Promise.resolve(null),
             shouldLoadTenants ? fetch('/api/tenants') : Promise.resolve(null),
             shouldLoadAudit ? fetch('/api/audit/logs?limit=1') : Promise.resolve(null),
             shouldLoadAudit ? fetch('/api/audit/storage-meta') : Promise.resolve(null),
+            shouldLoadOps ? fetch('/api/bssci/status').catch(() => null) : Promise.resolve(null),
+            shouldLoadOps ? fetch('/api/notifications/storage-meta').catch(() => null) : Promise.resolve(null),
         ]);
 
         if (shouldLoadUsers && usersFetch) {
@@ -2139,6 +2299,32 @@ async function fetchTenantAdminData(options = {}) {
             tenantAuditStorageMeta = {};
         }
 
+        if (shouldLoadOps && serviceStatusFetch) {
+            serviceStatusData = await serviceStatusFetch.json();
+            if (serviceStatusFetch.ok && serviceStatusData && typeof serviceStatusData === 'object') {
+                tenantOpsOverview = {
+                    service: serviceStatusData || {},
+                    notifications: tenantOpsOverview.notifications || {},
+                };
+            }
+        }
+
+        if (shouldLoadOps && notificationMetaFetch) {
+            notificationMetaData = await notificationMetaFetch.json();
+            if (notificationMetaFetch.ok && notificationMetaData && notificationMetaData.success) {
+                tenantOpsOverview = {
+                    service: tenantOpsOverview.service || {},
+                    notifications: notificationMetaData || {},
+                };
+            }
+        }
+
+        if (shouldLoadOps) {
+            tenantOpsOverviewLoaded = true;
+        } else if (!tenantOpsOverviewLoaded) {
+            tenantOpsOverview = {};
+        }
+
         tenantAdminDefaultTenant =
             tenantsData.default_tenant ||
             usersData.default_tenant ||
@@ -2152,6 +2338,7 @@ async function fetchTenantAdminData(options = {}) {
         renderTenantManagementTable();
         renderTenantBaseStationPicker();
         renderAdminStorageNotes();
+        renderAdminOpsOverview();
         updateKpis();
         setTenantUserBaseline();
         setTenantEntityBaseline();

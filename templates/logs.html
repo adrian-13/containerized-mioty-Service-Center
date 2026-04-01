@@ -735,6 +735,13 @@ function loadStoredLogsView() {
     }
 }
 
+function loadViewFromHash() {
+    const hash = String(window.location.hash || '').toLowerCase();
+    if (hash === '#adminauditpane' && CAN_VIEW_AUDIT) return 'admin';
+    if (hash === '#notificationdeliveriespane' && CAN_VIEW_NOTIFICATION_DELIVERIES) return 'notifications';
+    return null;
+}
+
 function persistActiveLogsView() {
     const value = activeLogsView === 'admin' && CAN_VIEW_AUDIT
         ? 'admin'
@@ -1585,7 +1592,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     bindEvents();
 
     if (CAN_VIEW_AUDIT) {
-        activeLogsView = loadStoredLogsView();
+        activeLogsView = loadViewFromHash() || loadStoredLogsView();
         activateLogsTab(activeLogsView);
     } else {
         activeLogsView = 'normal';
