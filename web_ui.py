@@ -10543,6 +10543,7 @@ def _normalize_admin_audit_entry(entry):
 def _default_user_ui_preferences():
     return {
         "admin_include_demo_data": False,
+        "viewer_onboarding_seen": False,
     }
 
 
@@ -10553,6 +10554,8 @@ def _normalize_user_ui_preferences(raw_preferences):
     normalized = dict(defaults)
     if "admin_include_demo_data" in raw_preferences:
         normalized["admin_include_demo_data"] = bool(raw_preferences.get("admin_include_demo_data"))
+    if "viewer_onboarding_seen" in raw_preferences:
+        normalized["viewer_onboarding_seen"] = bool(raw_preferences.get("viewer_onboarding_seen"))
     return normalized
 
 
@@ -10562,6 +10565,8 @@ def _merge_user_ui_preferences(existing_preferences, incoming_preferences):
         return merged
     if "admin_include_demo_data" in incoming_preferences:
         merged["admin_include_demo_data"] = bool(incoming_preferences.get("admin_include_demo_data"))
+    if "viewer_onboarding_seen" in incoming_preferences:
+        merged["viewer_onboarding_seen"] = bool(incoming_preferences.get("viewer_onboarding_seen"))
     return merged
 
 

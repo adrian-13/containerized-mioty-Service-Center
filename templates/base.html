@@ -2314,6 +2314,65 @@
     </div>
 
     {% if is_customer_user %}
+    <div class="modal fade" id="viewerOnboardingModal" tabindex="-1" aria-labelledby="viewerOnboardingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <p class="viewer-guide-kicker mb-1"><i class="fas fa-sparkles me-1"></i>Začiatok používania</p>
+                        <h5 class="modal-title" id="viewerOnboardingModalLabel">Vitajte v zákazníckom portáli</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="viewer-guide-copy mb-3">Tu vidíte svoje senzory, upozornenia a posledné hodnoty. Tento krátky úvod vám ukáže, kde sa čo nachádza, aby ste sa vedeli rýchlo zorientovať bez technických detailov.</p>
+                    <div class="viewer-guide-grid">
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-chart-pie"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Dashboard</h6>
+                            <p class="viewer-guide-card-copy">Rýchly prehľad stavu, incidentov a posledných údajov.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Vidíte, ktoré senzory sú aktívne</li>
+                                <li>Upozornenia sú zoradené podľa dôležitosti</li>
+                                <li>Mapa pomáha rýchlo nájsť senzor</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-microchip"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Senzory</h6>
+                            <p class="viewer-guide-card-copy">Tu spravujete zoznam zariadení a otvárate detail meraní.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Stav senzora: nový, čaká na dáta, aktívny alebo offline</li>
+                                <li>Detail ukáže posledné hodnoty a graf</li>
+                                <li>Rýchle akcie sú na riadku senzora</li>
+                            </ul>
+                        </section>
+                        <section class="viewer-guide-card">
+                            <div class="viewer-guide-head">
+                                <span class="viewer-guide-icon"><i class="fas fa-bell"></i></span>
+                            </div>
+                            <h6 class="viewer-guide-card-title">Upozornenia</h6>
+                            <p class="viewer-guide-card-copy">Aktívne incidenty a história upozornení na jednom mieste.</p>
+                            <ul class="viewer-guide-list">
+                                <li>Červené upozornenia vyžadujú pozornosť</li>
+                                <li>Oranžové upozornenia signalizujú varovanie</li>
+                                <li>História ukáže, čo sa dialo v čase</li>
+                            </ul>
+                        </section>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="viewerOnboardingLaterBtn">Neskôr</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="viewerOnboardingStartBtn">Začať prehliadku</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="viewerGuideModal" tabindex="-1" aria-labelledby="viewerGuideModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
@@ -3077,6 +3136,7 @@
         const IS_ADMIN_PORTAL = {{ 'true' if current_user and current_user.role == 'admin' else 'false' }};
         const SERVER_UI_PREFERENCES = {{ (((current_user.ui_preferences if current_user else {}) or {}))|tojson|safe }};
         let adminDemoDataPref = Boolean(SERVER_UI_PREFERENCES.admin_include_demo_data);
+        let viewerOnboardingSeen = Boolean(SERVER_UI_PREFERENCES.viewer_onboarding_seen);
 
         function readAdminDemoDataPref() {
             return IS_ADMIN_PORTAL ? adminDemoDataPref : false;
@@ -3128,6 +3188,46 @@
         window.AdminDemoDataPrefs = {
             get: readAdminDemoDataPref,
             set: writeAdminDemoDataPref
+        };
+
+        function readViewerOnboardingSeenPref() {
+            return viewerOnboardingSeen;
+        }
+
+        async function persistViewerOnboardingSeenPref(nextValue) {
+            if (!APP_IS_CUSTOMER) return nextValue;
+            const response = await fetch('/api/me/preferences', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ui_preferences: {
+                        viewer_onboarding_seen: Boolean(nextValue)
+                    }
+                })
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.success === false) {
+                throw new Error(payload.message || payload.error || `Request failed (${response.status})`);
+            }
+            viewerOnboardingSeen = Boolean((payload.ui_preferences || {}).viewer_onboarding_seen);
+            return viewerOnboardingSeen;
+        }
+
+        function writeViewerOnboardingSeenPref(enabled, options = {}) {
+            const nextValue = Boolean(enabled);
+            if (!APP_IS_CUSTOMER) return nextValue;
+            viewerOnboardingSeen = nextValue;
+            if (options.persist !== false) {
+                persistViewerOnboardingSeenPref(nextValue).catch((error) => {
+                    console.error('Failed to persist viewer onboarding preference', error);
+                });
+            }
+            return nextValue;
+        }
+
+        window.ViewerOnboardingPrefs = {
+            get: readViewerOnboardingSeenPref,
+            set: writeViewerOnboardingSeenPref
         };
 
         function clamp(value, min, max, fallback) {
@@ -3726,6 +3826,9 @@
         function initViewerGuide() {
             if (!APP_IS_CUSTOMER || typeof bootstrap === 'undefined') return;
             const prefs = loadViewerGuidePrefs();
+            const onboardingModalEl = document.getElementById('viewerOnboardingModal');
+            const onboardingLaterBtn = document.getElementById('viewerOnboardingLaterBtn');
+            const onboardingStartBtn = document.getElementById('viewerOnboardingStartBtn');
             const modalEl = document.getElementById('viewerGuideModal');
             const openBtn = document.getElementById('viewerGuideBtn');
             const settingsBtn = document.getElementById('viewerGuideSettingsBtn');
@@ -3810,7 +3913,44 @@
                 });
             }
 
-            if (prefs.autostart !== false && prefs.lastSeenVersion !== VIEWER_GUIDE_VERSION) {
+            function openViewerOnboarding() {
+                if (!onboardingModalEl) return;
+                bootstrap.Modal.getOrCreateInstance(onboardingModalEl).show();
+            }
+
+            function closeViewerOnboarding() {
+                if (!onboardingModalEl) return;
+                const modal = bootstrap.Modal.getInstance(onboardingModalEl);
+                if (modal) modal.hide();
+            }
+
+            function markViewerOnboardingSeenAndClose() {
+                writeViewerOnboardingSeenPref(true);
+                closeViewerOnboarding();
+            }
+
+            if (onboardingLaterBtn) {
+                onboardingLaterBtn.addEventListener('click', () => {
+                    markViewerOnboardingSeenAndClose();
+                });
+            }
+            if (onboardingStartBtn) {
+                onboardingStartBtn.addEventListener('click', () => {
+                    markViewerOnboardingSeenAndClose();
+                    window.setTimeout(() => startViewerTour(), 180);
+                });
+            }
+            if (onboardingModalEl) {
+                onboardingModalEl.addEventListener('hidden.bs.modal', () => {
+                    if (!readViewerOnboardingSeenPref()) {
+                        writeViewerOnboardingSeenPref(true);
+                    }
+                });
+            }
+
+            if (!readViewerOnboardingSeenPref()) {
+                window.setTimeout(() => openViewerOnboarding(), 480);
+            } else if (prefs.autostart !== false && prefs.lastSeenVersion !== VIEWER_GUIDE_VERSION) {
                 markViewerGuideSeen(prefs);
                 window.setTimeout(() => startViewerTour(), 620);
             }
