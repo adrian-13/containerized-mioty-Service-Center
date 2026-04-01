@@ -81,9 +81,10 @@ $backupName = "bssci_backup_$stamp"
 $backupDir = Join-Path $OutputRoot $backupName
 $dbDir = Join-Path $backupDir "db"
 $filesDir = Join-Path $backupDir "files"
+$logsDir = Join-Path $backupDir "logs"
 $certsDir = Join-Path $backupDir "certs"
 
-New-Item -ItemType Directory -Force -Path $backupDir, $dbDir, $filesDir | Out-Null
+New-Item -ItemType Directory -Force -Path $backupDir, $dbDir, $filesDir, $logsDir | Out-Null
 
 $envMap = Read-EnvFile -Path (Join-Path $root ".env")
 $dbName = Env-OrDefault -Map $envMap -Name "TIMESCALE_DB" -DefaultValue "bssci"
@@ -116,20 +117,41 @@ $fileList = @(
     "docker-compose.yml",
     "bssci_config.py",
     "endpoints.json",
+    "endpoints.default.json",
     "base_stations.json",
+    "base_stations.default.json",
     "coverage_positions.json",
     "coverage_floorplan.txt",
     "users.json",
-    "tenants.json"
+    "users.default.json",
+    "tenants.json",
+    "alerts.json",
+    "alerts.default.json",
+    "alert_state.json",
+    "alert_events.json",
+    "viewer_demo_telemetry.py"
 )
 
 $copiedFiles = @()
 foreach ($name in $fileList) {
     $src = Join-Path $root $name
     if (Test-Path -LiteralPath $src) {
-        Copy-Item -LiteralPath $src -Destination (Join-Path $filesDir $name) -Force
+        $dest = Join-Path $filesDir $name
+        $destDir = Split-Path -Parent $dest
+        if ($destDir -and -not (Test-Path -LiteralPath $destDir)) {
+            New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+        }
+        Copy-Item -LiteralPath $src -Destination $dest -Force
         $copiedFiles += $name
     }
+}
+
+$adminAuditSource = Join-Path $root "logs\admin_audit.jsonl"
+$copiedLogs = @()
+if (Test-Path -LiteralPath $adminAuditSource) {
+    $logsDest = Join-Path $logsDir "admin_audit.jsonl"
+    Copy-Item -LiteralPath $adminAuditSource -Destination $logsDest -Force
+    $copiedLogs += "admin_audit.jsonl"
 }
 
 # 3) Certificates
@@ -167,6 +189,7 @@ $manifest = [ordered]@{
     }
     includes = @{
         files = $copiedFiles
+        logs = $copiedLogs
         certs = $copiedCerts
     }
 }

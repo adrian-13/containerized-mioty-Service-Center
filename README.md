@@ -189,9 +189,11 @@ Included scripts:
 Suggested backup scope:
 
 - TimescaleDB data
-- configuration files (`.env`, `bssci_config.py`, JSON state)
+- configuration files (`.env`, `docker-compose.yml`, `bssci_config.py`)
+- DB-first access/tenant/audit state (`app_users`, `tenant_registry_meta`, `admin_audit_log`, `app_config_state`, notification delivery log, alert state/history)
+- recovery/seed files (`users.json`, `tenants.json`, `alerts.json`, `alert_state.json`, `alert_events.json`, `users.default.json`, `endpoints.default.json`, `base_stations.default.json`, `alerts.default.json`, `viewer_demo_telemetry.py`)
 - certificates (`certs/`)
-- DB-first access/tenant state (`app_users`, `tenant_registry_meta`, `admin_audit_log`, `app_config_state`)
+- admin audit fallback file (`logs/admin_audit.jsonl`) when present
 
 See `README-Docker.md` for practical commands and examples.
 

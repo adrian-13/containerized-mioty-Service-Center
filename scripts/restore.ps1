@@ -174,21 +174,31 @@ try {
         & docker stop $AppContainer | Out-Null
     }
 
-    if (-not $SkipFiles) {
-        $filesSource = Join-Path $backupRoot "files"
-        if (Test-Path -LiteralPath $filesSource) {
-            $preFiles = Join-Path $preRestoreDir "files"
-            New-Item -ItemType Directory -Force -Path $preFiles | Out-Null
+        if (-not $SkipFiles) {
+            $filesSource = Join-Path $backupRoot "files"
+            if (Test-Path -LiteralPath $filesSource) {
+                $preFiles = Join-Path $preRestoreDir "files"
+                New-Item -ItemType Directory -Force -Path $preFiles | Out-Null
 
-            foreach ($file in Get-ChildItem -LiteralPath $filesSource -File) {
-                $target = Join-Path $root $file.Name
-                if (Test-Path -LiteralPath $target) {
-                    Copy-Item -LiteralPath $target -Destination (Join-Path $preFiles $file.Name) -Force
+                foreach ($file in Get-ChildItem -LiteralPath $filesSource -Recurse -File) {
+                    $relPath = Relative-Path -BasePath $filesSource -FullPath $file.FullName
+                    $target = Join-Path $root $relPath
+                    $targetDir = Split-Path -Parent $target
+                    if ($targetDir -and -not (Test-Path -LiteralPath $targetDir)) {
+                        New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
+                    }
+                    if (Test-Path -LiteralPath $target) {
+                        $preTarget = Join-Path $preFiles $relPath
+                        $preTargetDir = Split-Path -Parent $preTarget
+                        if ($preTargetDir -and -not (Test-Path -LiteralPath $preTargetDir)) {
+                            New-Item -ItemType Directory -Force -Path $preTargetDir | Out-Null
+                        }
+                        Copy-Item -LiteralPath $target -Destination $preTarget -Force
+                    }
+                    Copy-Item -LiteralPath $file.FullName -Destination $target -Force
                 }
-                Copy-Item -LiteralPath $file.FullName -Destination $target -Force
-            }
-            Write-Step "Configuration and identity files restored."
-        } else {
+                Write-Step "Configuration and identity files restored."
+            } else {
             Write-Step "No files/ directory in backup. Skipping config restore."
         }
 
@@ -210,6 +220,31 @@ try {
             Write-Step "Certificates restored."
         } else {
             Write-Step "No certs/ directory in backup. Skipping certificate restore."
+        }
+
+        $logsSource = Join-Path $backupRoot "logs"
+        if (Test-Path -LiteralPath $logsSource) {
+            $targetLogs = Join-Path $root "logs"
+            $preLogs = Join-Path $preRestoreDir "logs"
+            if (Test-Path -LiteralPath $targetLogs) {
+                Copy-Item -LiteralPath $targetLogs -Destination $preLogs -Recurse -Force
+            }
+            New-Item -ItemType Directory -Force -Path $targetLogs | Out-Null
+            Get-ChildItem -LiteralPath $targetLogs -Force | ForEach-Object {
+                Remove-Item -LiteralPath $_.FullName -Recurse -Force
+            }
+            Get-ChildItem -LiteralPath $logsSource -Recurse -File | ForEach-Object {
+                $relPath = Relative-Path -BasePath $logsSource -FullPath $_.FullName
+                $dest = Join-Path $targetLogs $relPath
+                $destDir = Split-Path -Parent $dest
+                if ($destDir -and -not (Test-Path -LiteralPath $destDir)) {
+                    New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+                }
+                Copy-Item -LiteralPath $_.FullName -Destination $dest -Force
+            }
+            Write-Step "Log fallback files restored."
+        } else {
+            Write-Step "No logs/ directory in backup. Skipping log restore."
         }
     } else {
         Write-Step "Skipping file restore by request."

@@ -257,9 +257,10 @@ This repository now includes PowerShell scripts:
 
 They are designed for this stack and backup/restore:
 - TimescaleDB (`bssci-timescaledb`)
-- runtime config files (`.env`, `bssci_config.py`, `endpoints.json`, `base_stations.json`, `coverage_positions.json`, `coverage_floorplan.txt`, `docker-compose.yml`)
-- DB-first access and tenant registry state (`app_users`, `tenant_registry_meta`, `admin_audit_log`, `app_config_state`)
-- recovery/seed files (`users.json`, `tenants.json`, `users.default.json`) when you use them operationally
+- runtime config files (`.env`, `docker-compose.yml`, `bssci_config.py`, `endpoints.json`, `endpoints.default.json`, `base_stations.json`, `base_stations.default.json`, `alerts.json`, `alerts.default.json`, `coverage_positions.json`, `coverage_floorplan.txt`)
+- DB-first access and tenant registry state (`app_users`, `tenant_registry_meta`, `admin_audit_log`, `app_config_state`, alert state/history tables, notification delivery log)
+- recovery/seed files (`users.json`, `users.default.json`, `tenants.json`, `alerts.json`, `alerts.default.json`, `alert_state.json`, `alert_events.json`, `viewer_demo_telemetry.py`) when you use them operationally
+- admin audit fallback file (`logs/admin_audit.jsonl`) when present
 - certificates (`certs/`)
 
 ### Create backup
@@ -302,7 +303,7 @@ What restore does:
 1. Verifies checksums (if `checksums.sha256` exists)
 2. Creates safety copy in `.\backups\pre_restore_YYYYMMDD_HHMMSS\`
 3. Stops `bssci-service-center` (if running)
-4. Restores files + certs
+4. Restores files + logs + certs
 5. Restores Timescale dump into configured DB
 6. Starts `bssci-service-center` again (unless `-NoStart`)
 
