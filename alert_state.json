@@ -81,7 +81,7 @@
   },
   "test::test:rule:offline-nudzovy-vychod": {
     "is_active": true,
-    "triggered_at": "2026-03-30T09:25:56.224355+00:00",
+    "triggered_at": "2026-03-31T13:16:58.494019+00:00",
     "payload": {
       "id": "test:rule:offline-nudzovy-vychod",
       "tenant_id": "test",
@@ -96,14 +96,14 @@
       "created_at": "2026-03-26T02:16:00+00:00",
       "current_status": "stale",
       "hours_since_last_seen": 0.0,
+      "triggered_at": "2026-03-31T13:16:58.494019+00:00",
       "sensor_name": "Nudzovy vychod bez eventu",
-      "source": "offline_rule",
-      "triggered_at": "2026-03-30T09:25:56.224355+00:00"
+      "source": "offline_rule"
     }
   },
   "test::test:rule:offline-sklad": {
     "is_active": true,
-    "triggered_at": "2026-03-30T09:25:56.224355+00:00",
+    "triggered_at": "2026-03-31T13:16:58.494019+00:00",
     "payload": {
       "id": "test:rule:offline-sklad",
       "tenant_id": "test",
@@ -118,9 +118,89 @@
       "created_at": "2026-03-26T02:16:00+00:00",
       "current_status": "warning",
       "hours_since_last_seen": 0.0,
+      "triggered_at": "2026-03-31T13:16:58.494019+00:00",
       "sensor_name": "CO2 Sklad bez dat",
-      "source": "offline_rule",
-      "triggered_at": "2026-03-30T09:25:56.224355+00:00"
+      "source": "offline_rule"
+    }
+  },
+  "default::A0412D2A10000101:activity": {
+    "is_active": true,
+    "triggered_at": "2026-03-31T13:16:58.447949+00:00",
+    "payload": {
+      "id": "A0412D2A10000101:activity",
+      "sensor_eui": "A0412D2A10000101",
+      "sensor_name": "CO2 Recepcia",
+      "name": "CO2 Recepcia",
+      "severity": "warning",
+      "source": "activity",
+      "kind": "activity",
+      "current_status": "warning",
+      "hours_since_last_seen": 0.0,
+      "reason": "Senzor neposlal dáta v očakávanom čase.",
+      "desc": "Senzor neposlal dáta v očakávanom čase.",
+      "val_str": "0.0 h",
+      "link_url": "/sensors/A0412D2A10000101",
+      "triggered_at": "2026-03-31T13:16:58.447949+00:00"
+    }
+  },
+  "default::A0412D2A10000102:activity": {
+    "is_active": true,
+    "triggered_at": "2026-03-31T13:16:58.447949+00:00",
+    "payload": {
+      "id": "A0412D2A10000102:activity",
+      "sensor_eui": "A0412D2A10000102",
+      "sensor_name": "CO2 Zasadacka",
+      "name": "CO2 Zasadacka",
+      "severity": "warning",
+      "source": "activity",
+      "kind": "activity",
+      "current_status": "warning",
+      "hours_since_last_seen": 0.0,
+      "reason": "Senzor neposlal dáta v očakávanom čase.",
+      "desc": "Senzor neposlal dáta v očakávanom čase.",
+      "val_str": "0.0 h",
+      "link_url": "/sensors/A0412D2A10000102",
+      "triggered_at": "2026-03-31T13:16:58.447949+00:00"
+    }
+  },
+  "default::A0412D1D10000104:activity": {
+    "is_active": true,
+    "triggered_at": "2026-03-31T13:16:58.447949+00:00",
+    "payload": {
+      "id": "A0412D1D10000104:activity",
+      "sensor_eui": "A0412D1D10000104",
+      "sensor_name": "Dvere Hlavny vstup",
+      "name": "Dvere Hlavny vstup",
+      "severity": "warning",
+      "source": "activity",
+      "kind": "activity",
+      "current_status": "stale",
+      "hours_since_last_seen": 0.0,
+      "reason": "Senzor neposlal dáta v očakávanom čase.",
+      "desc": "Senzor neposlal dáta v očakávanom čase.",
+      "val_str": "0.0 h",
+      "link_url": "/sensors/A0412D1D10000104",
+      "triggered_at": "2026-03-31T13:16:58.447949+00:00"
+    }
+  },
+  "default::A0412D2A10000106:activity": {
+    "is_active": true,
+    "triggered_at": "2026-03-31T13:16:58.447949+00:00",
+    "payload": {
+      "id": "A0412D2A10000106:activity",
+      "sensor_eui": "A0412D2A10000106",
+      "sensor_name": "CO2 Nova kancelaria",
+      "name": "CO2 Nova kancelaria",
+      "severity": "warning",
+      "source": "activity",
+      "kind": "activity",
+      "current_status": "warning",
+      "hours_since_last_seen": 0.0,
+      "reason": "Senzor neposlal dáta v očakávanom čase.",
+      "desc": "Senzor neposlal dáta v očakávanom čase.",
+      "val_str": "0.0 h",
+      "link_url": "/sensors/A0412D2A10000106",
+      "triggered_at": "2026-03-31T13:16:58.447949+00:00"
     }
   }
 }

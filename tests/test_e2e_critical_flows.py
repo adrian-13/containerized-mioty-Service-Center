@@ -232,6 +232,26 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         euis = {row.get("eui") for row in bs_payload.get("base_stations", [])}
         self.assertEqual(euis, {"129af3fffe01f125"})
 
+    def test_payload_decoders_route_is_separate_from_administration(self):
+        self._login("admin", "admin", "default")
+
+        admin_resp = self.client.get("/administration")
+        self.assertEqual(admin_resp.status_code, 200, admin_resp.get_data(as_text=True))
+        admin_html = admin_resp.get_data(as_text=True)
+        self.assertNotIn('data-admin-tab-btn="decoders"', admin_html)
+
+        decoder_resp = self.client.get("/payload-decoders")
+        self.assertEqual(decoder_resp.status_code, 200, decoder_resp.get_data(as_text=True))
+        decoder_html = decoder_resp.get_data(as_text=True)
+        self.assertIn('id="decoderProfileList"', decoder_html)
+
+    def test_payload_decoders_route_requires_manage_system_scope(self):
+        self._login("tenant_user", "user", "tenant-a")
+
+        resp = self.client.get("/payload-decoders")
+        self.assertEqual(resp.status_code, 302, resp.get_data(as_text=True))
+        self.assertTrue((resp.headers.get("Location") or "").endswith("/"))
+
     def test_mqtt_test_publish_queues_message(self):
         self._login("admin", "admin", "default")
         fake_mqtt = _FakeMqttClient(base_topic="mioty")

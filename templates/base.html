@@ -536,6 +536,19 @@
             color: var(--text-900);
         }
 
+        .topbar-main {
+            display: flex;
+            align-items: center;
+            gap: 0.72rem;
+            min-width: 0;
+        }
+
+        .topbar-page-copy {
+            display: grid;
+            gap: 0.08rem;
+            min-width: 0;
+        }
+
         .topbar-sub {
             margin: 0.14rem 0 0;
             color: var(--text-500);
@@ -1867,6 +1880,108 @@
             background: rgba(var(--brand-rgb), 0.07);
         }
 
+        [data-role="admin"] .app-topbar {
+            gap: 0.72rem;
+            padding: 0.72rem 1.12rem;
+            border-bottom-color: #e6edf5;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.035);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        [data-role="admin"] .topbar-main {
+            gap: 0.62rem;
+        }
+
+        [data-role="admin"] .topbar-page-icon {
+            width: 1.92rem;
+            height: 1.92rem;
+            border-radius: 0.56rem;
+            background: rgba(var(--brand-rgb), 0.12);
+            box-shadow: none;
+            color: var(--brand-700);
+            font-size: 0.74rem;
+        }
+
+        [data-role="admin"] .topbar-page-copy {
+            gap: 0.04rem;
+        }
+
+        [data-role="admin"] .topbar-crumb {
+            font-size: 0.56rem;
+            letter-spacing: 0.12em;
+            color: #7b8da5;
+        }
+
+        [data-role="admin"] .topbar-title {
+            font-size: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        [data-role="admin"] .topbar-actions {
+            gap: 0.34rem;
+        }
+
+        [data-role="admin"] .topbar-clock,
+        [data-role="admin"] .topbar-tool,
+        [data-role="admin"] .topbar-avatar-chip {
+            min-height: 2.14rem;
+            border-radius: 0.72rem;
+            border-color: #e3ebf4;
+            background: #ffffff;
+            box-shadow: none;
+        }
+
+        [data-role="admin"] .topbar-clock {
+            padding: 0.24rem 0.58rem;
+        }
+
+        [data-role="admin"] .topbar-clock-icon {
+            width: 1.42rem;
+            height: 1.42rem;
+            background: #f2f6fa;
+            color: #50647f;
+        }
+
+        [data-role="admin"] .topbar-clock-time {
+            font-size: 0.84rem;
+        }
+
+        [data-role="admin"] .topbar-clock-date {
+            font-size: 0.6rem;
+            letter-spacing: 0.03em;
+        }
+
+        [data-role="admin"] .topbar-tool {
+            width: 2.08rem;
+            height: 2.08rem;
+            color: #415975;
+        }
+
+        [data-role="admin"] .topbar-tool:hover,
+        [data-role="admin"] .topbar-tool:focus,
+        [data-role="admin"] .topbar-avatar-chip:hover {
+            transform: translateY(-1px);
+            border-color: #d2ddeb;
+            background: #fbfdff;
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
+        }
+
+        [data-role="admin"] .topbar-avatar-chip {
+            padding: 0.22rem 0.5rem 0.22rem 0.22rem;
+        }
+
+        [data-role="admin"] .topbar-avatar {
+            width: 1.64rem;
+            height: 1.64rem;
+            font-size: 0.64rem;
+        }
+
+        [data-role="admin"] .topbar-avatar-name {
+            font-size: 0.72rem;
+        }
+
         /* ── Global smooth animations ── */
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -1994,6 +2109,7 @@
         'administration': 'fa-users-cog',
         'config': 'fa-sliders-h',
         'certificates': 'fa-certificate',
+        'payload_decoders': 'fa-code',
         'documentation': 'fa-book-open'
     } %}
     {% set _page_sections = {
@@ -2012,6 +2128,7 @@
         'administration': t('nav.administration', 'Administration'),
         'config': t('nav.administration', 'Administration'),
         'certificates': t('nav.administration', 'Administration'),
+        'payload_decoders': t('nav.administration', 'Administration'),
         'documentation': t('nav.documentation', 'Documentation')
     } %}
     {% set _topbar_icon = _page_icons.get(endpoint, 'fa-circle-dot') %}
@@ -2124,6 +2241,12 @@
                     <span>{{ t('nav.certificates', 'Certificates') }}</span>
                 </a>
                 {% endif %}
+                {% if current_user and current_user.role == 'admin' and current_user.admin_permissions.get('manage_system') %}
+                <a class="side-nav-link {% if endpoint == 'payload_decoders' %}active{% endif %}" href="{{ url_for('payload_decoders') }}">
+                    <i class="fas fa-code"></i>
+                    <span>{{ t('admin.decoder_profiles', 'Payload decoders') }}</span>
+                </a>
+                {% endif %}
             </div>
             {% endif %}
 
@@ -2171,12 +2294,12 @@
                     </nav>
                 </div>
                 {% else %}
-                <div class="d-flex align-items-center gap-2">
+                <div class="topbar-main">
                     <button class="sidebar-toggle" type="button" onclick="toggleSidebar()" aria-label="{{ t('topbar.toggle_navigation', 'Toggle navigation') }}">
                         <i class="fas fa-bars"></i>
                     </button>
                     <span class="topbar-page-icon" aria-hidden="true"><i class="fas {{ _topbar_icon }}"></i></span>
-                    <div>
+                    <div class="topbar-page-copy">
                         <p class="topbar-crumb">{{ _topbar_section }}</p>
                         <h1 class="topbar-title">{{ page_title }}</h1>
                     </div>

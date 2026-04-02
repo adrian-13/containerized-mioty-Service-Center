@@ -709,7 +709,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
 .dashboard-shell {
     display: grid;
-    gap: 0.75rem;
+    gap: 0.55rem;
 }
 
 @keyframes deck-enter {
@@ -722,28 +722,27 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     border: none;
     border-radius: 0;
     box-shadow: none;
-    padding: 0.3rem 0 0.2rem;
+    padding: 0.12rem 0 0.16rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+    justify-content: flex-start;
+    gap: 0.55rem;
     flex-wrap: wrap;
     position: sticky;
     top: 0;
     z-index: 30;
-    background: rgba(244, 247, 252, 0.88);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    margin: 0 -0.25rem;
-    padding-left: 0.25rem;
-    padding-right: 0.25rem;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    margin: 0;
+    border-bottom: 1px solid rgba(227, 235, 244, 0.92);
 }
 
 .dashboard-utility-actions {
     margin-top: 0;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     flex-wrap: wrap;
 }
 
@@ -753,23 +752,23 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 .dashboard-refresh-btn,
 .dashboard-toolbar-pill,
 .dashboard-layout-menu-btn {
-    min-height: 2.1rem;
-    border: 1px solid #d5deeb;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.55);
+    min-height: 1.96rem;
+    border: 1px solid #e1e8f1;
+    border-radius: 0.72rem;
+    background: #ffffff;
     box-shadow: none;
 }
 
 .dashboard-toolbar-toggle {
     display: inline-flex;
     align-items: center;
-    padding: 0.22rem 0.58rem;
+    padding: 0.16rem 0.5rem;
 }
 
 .dashboard-toolbar-toggle .form-check.form-switch {
     display: inline-flex;
     align-items: center;
-    gap: 0.72rem;
+    gap: 0.56rem;
     margin: 0;
     padding-left: 0;
     min-height: 0;
@@ -782,8 +781,8 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 }
 
 .dashboard-auto-label {
-    color: #5c6f89 !important;
-    font-size: 0.72rem;
+    color: #64758c !important;
+    font-size: 0.7rem;
     font-weight: 700;
     line-height: 1;
     margin: 0 !important;
@@ -792,27 +791,45 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 .control-meta {
     display: inline-flex;
     align-items: center;
-    font-size: 0.7rem;
-    color: #50647f;
+    font-size: 0.68rem;
+    color: #607089;
     font-weight: 700;
     white-space: nowrap;
 }
 
-.dashboard-toolbar-pill { padding: 0.28rem 0.62rem; }
+.dashboard-toolbar-pill {
+    padding: 0.24rem 0.56rem;
+}
 
 .control-meta-cache {
-    color: #39577e;
-    background: linear-gradient(180deg, #f7fbff 0%, #eef5ff 100%);
+    color: #69809c;
+    background: #f8fbff;
 }
 
 .dashboard-refresh-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.38rem;
-    padding: 0.28rem 0.72rem;
-    font-size: 0.76rem;
-    font-weight: 800;
-    color: #243f61;
+    padding: 0.24rem 0.66rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #314964;
+}
+
+.dashboard-refresh-btn:hover,
+.dashboard-refresh-btn:focus,
+.dashboard-toolbar-toggle:hover,
+.dashboard-toolbar-pill:hover {
+    border-color: #d3ddea;
+    background: #fbfdff;
+}
+
+#last-updated {
+    color: #2d4665;
+}
+
+#dashboard-cache-age {
+    opacity: 0.92;
 }
 
 /* ── Main grid ─────────────────────────────────────── */

@@ -16328,6 +16328,13 @@ def config():
 def administration():
     return render_template('administration.html')
 
+
+@app.route('/payload-decoders')
+@login_required
+@admin_scope_required('manage_system')
+def payload_decoders():
+    return render_template('payload_decoders.html')
+
 @app.route('/api/config', methods=['POST'])
 @login_required
 @permission_required('can_edit_config')
