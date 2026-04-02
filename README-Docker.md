@@ -254,6 +254,7 @@ This repository now includes PowerShell scripts:
 
 - `scripts/backup.ps1`
 - `scripts/restore.ps1`
+- `scripts/deploy.ps1`
 
 They are designed for this stack and backup/restore:
 - TimescaleDB (`bssci-timescaledb`)
@@ -340,6 +341,51 @@ The container includes a health check that verifies both TLS and Web UI using th
 Check health status:
 ```bash
 docker-compose ps
+```
+
+## Deploy / Upgrade Playbook
+
+Use `scripts/deploy.ps1` for repeatable upgrades of the service center stack.
+
+What it does:
+1. Optionally creates a pre-deploy backup.
+2. Pulls the selected branch with `--rebase --autostash`.
+3. Rebuilds and restarts the Docker stack.
+4. Waits for the service container to become healthy.
+5. Runs an HTTP smoke test against the login page.
+
+Examples:
+
+```powershell
+# Default deploy from the repo root
+pwsh .\scripts\deploy.ps1
+
+# Create a backup before upgrade
+pwsh .\scripts\deploy.ps1 -BackupBeforeDeploy
+
+# Skip pull/build/smoke when you only need a controlled restart
+pwsh .\scripts\deploy.ps1 -NoPull -NoBuild -NoSmokeTest
+```
+
+Optional overrides:
+
+```powershell
+pwsh .\scripts\deploy.ps1 -Branch release -ServiceName bssci-service-center -SmokeTestUrl http://localhost:5056/login
+```
+
+Rollback:
+
+```powershell
+# Restore from a backup created by the backup script
+pwsh .\scripts\restore.ps1 -BackupPath .\backups\bssci_backup_YYYYMMDD_HHMMSS.zip -Force
+```
+
+Recommended post-deploy checks:
+
+```bash
+docker-compose ps
+curl http://localhost:5056/login
+curl http://localhost:5056/api/timescale/status
 ```
 
 ## Troubleshooting

@@ -185,6 +185,7 @@ Included scripts:
 
 - `scripts/backup.ps1`
 - `scripts/restore.ps1`
+- `scripts/deploy.ps1`
 
 Suggested backup scope:
 
