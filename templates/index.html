@@ -1386,20 +1386,15 @@ body.is-resizing-dashboard-row {
 .gateway-summary-chip { display: inline-flex; align-items: center; gap: 0.24rem; padding: 0.16rem 0.42rem; border-radius: 999px; border: 1px solid #e2eaf3; background: #ffffff; color: #5f738e; font-size: 0.64rem; font-weight: 800; }
 .gateway-item { border-bottom: 1px solid #edf2f7; padding: 0.44rem 0; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .gateway-item:last-child { border-bottom: 0; padding-bottom: 0; }
-.gateway-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex: 1; min-width: 0; }
+.gateway-head { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
 .gateway-name { font-size: 0.83rem; font-weight: 700; color: #213047; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gateway-meta { font-size: 0.71rem; color: #7b8da5; display: inline-flex; align-items: center; gap: 0.34rem; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .gateway-pill { display: inline-flex; align-items: center; gap: 0.22rem; color: #7b8da5; font-size: 0.71rem; font-weight: 600; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.gateway-status { border-radius: 999px; padding: 0.12rem 0.46rem; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; }
-.gateway-status.connected  { background: #14a36f; }
-.gateway-status.connecting { background: #e4a313; color: #253046; }
-.gateway-status.offline    { background: #8e9db1; }
-
 .sensor-summary-row { display: flex; align-items: center; gap: 0.42rem; flex-wrap: wrap; margin-bottom: 0.45rem; }
 .sensor-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.24rem; }
 .sensor-item { border-bottom: 1px solid #edf2f7; padding: 0.44rem 0; display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
 .sensor-item:last-child { border-bottom: 0; padding-bottom: 0; }
-.sensor-item-head { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; flex: 1; min-width: 0; }
+.sensor-item-head { display: flex; align-items: center; gap: 0.4rem; flex: 1; min-width: 0; }
 .sensor-item-main { display: flex; align-items: center; gap: 0.52rem; min-width: 0; flex: 1; }
 .sensor-dot { width: 0.54rem; height: 0.54rem; border-radius: 50%; flex-shrink: 0; display: inline-block; }
 .sensor-dot.online  { background: #14a36f; }
@@ -1408,12 +1403,6 @@ body.is-resizing-dashboard-row {
 .sensor-dot.offline { background: #cb3a42; }
 .sensor-dot.unknown { background: #8e9db1; }
 .sensor-name { font-size: 0.83rem; font-weight: 700; color: #213047; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sensor-status { border-radius: 999px; padding: 0.08rem 0.36rem; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; background: #eef3f8; color: #5f738e; white-space: nowrap; }
-.sensor-status.online  { background: #eaf8f1; color: #0f8d5f; }
-.sensor-status.initial { background: #f1f5f9; color: #64748b; }
-.sensor-status.warn    { background: #fff6e6; color: #a16600; }
-.sensor-status.offline { background: #fff1f3; color: #b6343c; }
-.sensor-status.unknown { background: #f1f5f9; color: #64748b; }
 .sensor-meta { font-size: 0.71rem; color: #7b8da5; display: inline-flex; align-items: center; gap: 0.34rem; white-space: nowrap; margin-left: 0.18rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .sensor-pill { display: inline-flex; align-items: center; gap: 0.22rem; color: #7b8da5; font-size: 0.71rem; font-weight: 600; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
@@ -4312,7 +4301,7 @@ function updateGatewayActions(data) {
         if (summary) {
             summary.innerHTML = `<span class="gateway-summary-chip">0 ${appTranslate('nav.base_stations', 'Base Stations').toLowerCase()}</span>`;
         }
-        list.innerHTML = `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot offline"></span><span class="gateway-name">${appTranslate('dashboard.no_gateways_detected', 'No base stations detected')}</span></div><span class="gateway-status offline">${appTranslate('common.offline', 'offline')}</span></div></li>`;
+        list.innerHTML = `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot offline"></span><span class="gateway-name">${appTranslate('dashboard.no_gateways_detected', 'No base stations detected')}</span></div></div></li>`;
         return;
     }
 
@@ -4329,12 +4318,7 @@ function updateGatewayActions(data) {
         const sensors = toNumber(bs.connected_sensors);
         const eui = String(bs.eui || '');
         const name = escapeHtml(bs.name || shortId(eui, 8));
-        const statusLabel = status === 'connected'
-            ? appTranslate('dashboard.status_connected', 'connected')
-            : (status === 'connecting'
-                ? appTranslate('common.connecting', 'connecting')
-                : appTranslate('common.offline', 'offline'));
-        return `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span><span class="gateway-meta"><span class="gateway-pill">${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span></span></div><span class="gateway-status ${status}">${statusLabel}</span></div></li>`;
+        return `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span><span class="gateway-meta"><span class="gateway-pill">${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span></span></div></div></li>`;
     }).join('');
 }
 
@@ -4381,7 +4365,7 @@ function updateSensorRuntimeList(data) {
     const sensors = normalizeDashboardSensorList(data);
     if (sensors.length === 0) {
         summary.innerHTML = `<span class="gateway-summary-chip">0 ${appTranslate('nav.sensors', 'Sensors').toLowerCase()}</span>`;
-        list.innerHTML = `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot unknown"></span><span class="sensor-name">${appTranslate('dashboard.no_sensors_detected', 'No sensors detected')}</span></div><span class="sensor-status unknown">${appTranslate('dashboard.no_data', 'No data')}</span></div></li>`;
+        list.innerHTML = `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot unknown"></span><span class="sensor-name">${appTranslate('dashboard.no_sensors_detected', 'No sensors detected')}</span></div></div></li>`;
         return;
     }
 
@@ -4400,12 +4384,10 @@ function updateSensorRuntimeList(data) {
         const tier = sensorRuntimeTier(sensor);
         const eui = String(sensor && (sensor.eui || sensor.device_eui || sensor.sensor_id || '') || '');
         const name = escapeHtml(sensor && (sensor.name || sensor.label || shortId(eui, 10)) || shortId(eui, 10));
-        const status = escapeHtml(sensorRuntimeLabel(sensor));
-        const lastSeen = sensorRuntimeTimeAgo(sensor);
-        const subline = lastSeen
-            ? `<span class="sensor-pill">${escapeHtml(lastSeen)}</span>`
-            : `<span class="sensor-pill">${escapeHtml(shortId(eui, 12))}</span>`;
-        return `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot ${tier}"></span><span class="sensor-name">${name}</span><span class="sensor-meta">${subline}</span></div><span class="sensor-status ${tier}">${status}</span></div></li>`;
+        const issueMeta = tier !== 'online'
+            ? `<span class="sensor-meta"><span class="sensor-pill">${escapeHtml(sensorRuntimeLabel(sensor))}</span></span>`
+            : '';
+        return `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot ${tier}"></span><span class="sensor-name">${name}</span>${issueMeta}</div></div></li>`;
     }).join('');
 }
 
