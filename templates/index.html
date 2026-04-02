@@ -3321,6 +3321,22 @@ function fetchJson(url) {
         .catch(() => null);
 }
 
+function getAdminDashboardIncludeDemoData() {
+    if (window.AdminDemoDataPrefs && typeof window.AdminDemoDataPrefs.get === 'function') {
+        return Boolean(window.AdminDemoDataPrefs.get());
+    }
+    return false;
+}
+
+function withAdminDemoQuery(url) {
+    if (!getAdminDashboardIncludeDemoData()) return url;
+    return url + (url.includes('?') ? '&' : '?') + 'include_demo=1';
+}
+
+function getDashboardCacheKey() {
+    return `${DASHBOARD_CACHE_KEY}:demo:${getAdminDashboardIncludeDemoData() ? '1' : '0'}`;
+}
+
 function setDashboardSkeletonState(enabled, options = {}) {
     const active = Boolean(enabled);
     DASHBOARD_SKELETON_TARGETS.forEach((selector) => {
@@ -3394,9 +3410,9 @@ function applyDashboardPayload(payload, meta = {}) {
 
 function fetchDashboardPayload() {
     return Promise.all([
-        fetchJson('/api/customer/dashboard/summary'),
-        fetchJson('/api/sensors'),
-        fetchJson('/api/incidents')
+        fetchJson(withAdminDemoQuery('/api/customer/dashboard/summary')),
+        fetchJson(withAdminDemoQuery('/api/sensors')),
+        fetchJson(withAdminDemoQuery('/api/incidents'))
     ]).then(([dashboardData, sensorsData, incidentsData]) => ({
         statusData: dashboardData && dashboardData.statusData ? dashboardData.statusData : null,
         gatewaysData: dashboardData && dashboardData.gatewaysData ? dashboardData.gatewaysData : null,
@@ -3406,7 +3422,7 @@ function fetchDashboardPayload() {
 }
 
 function fetchDashboardRuntimePayload() {
-    return fetchJson('/api/customer/dashboard/runtime');
+    return fetchJson(withAdminDemoQuery('/api/customer/dashboard/runtime'));
 }
 
 function setTrendState(id, current, previous, labels) {
@@ -4501,7 +4517,7 @@ async function refreshNow(manualTrigger) {
     try {
         if (window.AppPerf && typeof window.AppPerf.swr === 'function') {
             const result = await window.AppPerf.swr(
-                DASHBOARD_CACHE_KEY,
+                getDashboardCacheKey(),
                 fetchDashboardPayload,
                 {
                     ttlMs: DASHBOARD_CACHE_TTL_MS,
@@ -4566,6 +4582,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!document.hidden && Date.now() - Number(DASHBOARD_CACHE_STATE.ts || 0) > 12000) {
             refreshNow(false);
         }
+    });
+    document.addEventListener('app:admin-demo-data-changed', () => {
+        refreshNow(true);
+        scheduleAutoRefresh();
     });
 
     window.addEventListener('resize', () => {

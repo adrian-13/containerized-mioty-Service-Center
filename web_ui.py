@@ -6099,24 +6099,31 @@ def _invalidate_viewer_sensor_list_cache(tenant_id: Optional[str] = None):
         _viewer_sensor_list_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
 
 def _invalidate_customer_dashboard_cache(tenant_id: Optional[str] = None):
-    with _customer_dashboard_cache_lock:
-        if tenant_id is None:
-            _customer_dashboard_cache.clear()
-        else:
-            _customer_dashboard_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
-    with _customer_dashboard_summary_cache_lock:
-        if tenant_id is None:
-            _customer_dashboard_summary_cache.clear()
-        else:
-            _customer_dashboard_summary_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
-    with _customer_dashboard_runtime_cache_lock:
-        if tenant_id is None:
-            _customer_dashboard_runtime_cache.clear()
+    def _purge_dashboard_cache_bucket(bucket, normalized_tenant):
+        if normalized_tenant is None:
+            bucket.clear()
             return
-        _customer_dashboard_runtime_cache.pop(_normalize_tenant_id(tenant_id, fallback=_default_tenant_id()), None)
+        for key in list(bucket.keys()):
+            if str(key) == normalized_tenant or str(key).startswith(f"{normalized_tenant}:demo:"):
+                bucket.pop(key, None)
+
+    normalized_tenant = None if tenant_id is None else _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    with _customer_dashboard_cache_lock:
+        _purge_dashboard_cache_bucket(_customer_dashboard_cache, normalized_tenant)
+    with _customer_dashboard_summary_cache_lock:
+        _purge_dashboard_cache_bucket(_customer_dashboard_summary_cache, normalized_tenant)
+    with _customer_dashboard_runtime_cache_lock:
+        _purge_dashboard_cache_bucket(_customer_dashboard_runtime_cache, normalized_tenant)
+
+
+def _customer_dashboard_cache_key(tenant_id: str) -> str:
+    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    if _is_customer_role(session.get("role", "viewer")):
+        return tenant_key
+    return f"{tenant_key}:demo:{1 if _include_demo_data_requested() else 0}"
 
 def _get_cached_customer_dashboard_payload(tenant_id: str):
-    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    tenant_key = _customer_dashboard_cache_key(tenant_id)
     with _customer_dashboard_cache_lock:
         entry = _customer_dashboard_cache.get(tenant_key)
         if not entry:
@@ -6128,7 +6135,7 @@ def _get_cached_customer_dashboard_payload(tenant_id: str):
         return copy.deepcopy(entry.get("payload") or {})
 
 def _store_cached_customer_dashboard_payload(tenant_id: str, payload: Dict[str, Any]):
-    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    tenant_key = _customer_dashboard_cache_key(tenant_id)
     with _customer_dashboard_cache_lock:
         _customer_dashboard_cache[tenant_key] = {
             "ts": time.time(),
@@ -6136,7 +6143,7 @@ def _store_cached_customer_dashboard_payload(tenant_id: str, payload: Dict[str, 
         }
 
 def _get_cached_customer_dashboard_summary_payload(tenant_id: str):
-    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    tenant_key = _customer_dashboard_cache_key(tenant_id)
     with _customer_dashboard_summary_cache_lock:
         entry = _customer_dashboard_summary_cache.get(tenant_key)
         if not entry:
@@ -6148,7 +6155,7 @@ def _get_cached_customer_dashboard_summary_payload(tenant_id: str):
         return copy.deepcopy(entry.get("payload") or {})
 
 def _store_cached_customer_dashboard_summary_payload(tenant_id: str, payload: Dict[str, Any]):
-    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    tenant_key = _customer_dashboard_cache_key(tenant_id)
     with _customer_dashboard_summary_cache_lock:
         _customer_dashboard_summary_cache[tenant_key] = {
             "ts": time.time(),
@@ -6156,7 +6163,7 @@ def _store_cached_customer_dashboard_summary_payload(tenant_id: str, payload: Di
         }
 
 def _get_cached_customer_dashboard_runtime_payload(tenant_id: str):
-    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    tenant_key = _customer_dashboard_cache_key(tenant_id)
     with _customer_dashboard_runtime_cache_lock:
         entry = _customer_dashboard_runtime_cache.get(tenant_key)
         if not entry:
@@ -6168,7 +6175,7 @@ def _get_cached_customer_dashboard_runtime_payload(tenant_id: str):
         return copy.deepcopy(entry.get("payload") or {})
 
 def _store_cached_customer_dashboard_runtime_payload(tenant_id: str, payload: Dict[str, Any]):
-    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    tenant_key = _customer_dashboard_cache_key(tenant_id)
     with _customer_dashboard_runtime_cache_lock:
         _customer_dashboard_runtime_cache[tenant_key] = {
             "ts": time.time(),
@@ -16945,10 +16952,9 @@ def _load_configured_sensors_index() -> Dict[str, Dict[str, Any]]:
         sensors = []
 
     active_tenant = _active_tenant_id()
+    sensors = _exclude_demo_sensors_for_admin(_filter_sensors_for_tenant(sensors, tenant_id=active_tenant))
     for sensor in sensors:
         if not isinstance(sensor, dict):
-            continue
-        if not _tenant_matches(_tenant_id_from_sensor(sensor), active_tenant):
             continue
         sensor_eui = _normalize_eui_upper(sensor.get("eui", ""))
         if not sensor_eui:
@@ -16983,6 +16989,8 @@ def _collect_network_snapshot() -> Dict[str, Any]:
         if not _tenant_matches(_tenant_id_from_base_station(bs_data), active_tenant):
             continue
         bs_config[bs_eui] = bs_data if isinstance(bs_data, dict) else {}
+    bs_config = _exclude_demo_base_stations_for_admin(bs_config)
+    allowed_bs = set(bs_config.keys())
 
     connected_bs = set()
     bs_health = {}
@@ -16995,22 +17003,32 @@ def _collect_network_snapshot() -> Dict[str, Any]:
     }
     runtime_registered_sensors = set()
     registered_sensor_routes: Dict[str, List[str]] = {}
+    runtime_sensor_config_filtered: List[Dict[str, Any]] = []
+    runtime_sensor_euis: Set[str] = set()
 
     if tls_server_instance:
+        runtime_sensor_config_filtered = _exclude_demo_sensors_for_admin(
+            _filter_sensors_for_tenant(getattr(tls_server_instance, "sensor_config", []) or [], tenant_id=active_tenant)
+        )
+        runtime_sensor_euis = {
+            _normalize_eui_upper(sensor.get("eui", ""))
+            for sensor in runtime_sensor_config_filtered
+            if _normalize_eui_upper(sensor.get("eui", ""))
+        }
         connected_map = getattr(tls_server_instance, "connected_base_stations", {}) or {}
         connected_bs = {
             _normalize_eui_upper(bs_eui)
             for bs_eui in connected_map.values()
-            if _normalize_eui_upper(bs_eui)
+            if _normalize_eui_upper(bs_eui) in allowed_bs
         }
         bs_health = getattr(tls_server_instance, "base_station_health", {}) or {}
         sensor_topology = getattr(tls_server_instance, "sensor_topology", {}) or {}
-        sensor_name_index = _build_sensor_name_index(getattr(tls_server_instance, "sensor_config", []) or [])
+        sensor_name_index = _build_sensor_name_index(runtime_sensor_config_filtered)
         registered_map = getattr(tls_server_instance, "registered_sensors", {}) or {}
         runtime_registered_sensors = {
             _normalize_eui_upper(sensor_eui)
             for sensor_eui in registered_map.keys()
-            if _normalize_eui_upper(sensor_eui)
+            if _normalize_eui_upper(sensor_eui) in configured_sensors or _normalize_eui_upper(sensor_eui) in runtime_sensor_euis
         }
         for sensor_eui_raw, reg_raw in registered_map.items():
             sensor_eui = _normalize_eui_upper(sensor_eui_raw)
@@ -17018,7 +17036,7 @@ def _collect_network_snapshot() -> Dict[str, Any]:
                 continue
 
             # Keep tenant-safe inventory scope when building relation graph.
-            if sensor_eui not in configured_sensors and sensor_eui not in sensor_topology:
+            if sensor_eui not in configured_sensors and sensor_eui not in runtime_sensor_euis:
                 continue
 
             reg_payload = reg_raw if isinstance(reg_raw, dict) else {}
@@ -17068,6 +17086,8 @@ def _collect_network_snapshot() -> Dict[str, Any]:
         sensor_eui = _normalize_eui_upper(sensor_eui_raw)
         if not sensor_eui:
             continue
+        if sensor_eui not in configured_sensors and sensor_eui not in runtime_sensor_euis and sensor_eui not in registered_sensor_routes:
+            continue
 
         topo = topo_raw if isinstance(topo_raw, dict) else {}
         receiving_raw = topo.get("receiving_bases", {})
@@ -17078,6 +17098,8 @@ def _collect_network_snapshot() -> Dict[str, Any]:
         for bs_eui_raw, bs_stats_raw in receiving.items():
             bs_eui = _normalize_eui_upper(bs_eui_raw)
             if not bs_eui:
+                continue
+            if bs_eui not in allowed_bs:
                 continue
 
             all_bs.add(bs_eui)
@@ -17279,16 +17301,22 @@ def _build_coverage_positions_read_payload() -> Dict[str, Any]:
     """Build tenant-filtered coverage positions payload for map-based customer views."""
     positions_file = _coverage_positions_file()
     active_tenant = _active_tenant_id()
+    tenant_sensors = _exclude_demo_sensors_for_admin(
+        _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
+    )
+    tenant_base_stations = _exclude_demo_base_stations_for_admin(
+        _filter_base_stations_for_tenant(
+            load_base_station_config().get("base_stations", {}),
+            tenant_id=active_tenant,
+        )
+    )
     tenant_sensor_keys = {
         f"sensor_{str(sensor.get('eui', '')).strip().upper()}"
-        for sensor in _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
+        for sensor in tenant_sensors
     }
     tenant_bs_keys = {
         f"bs_{str(eui).strip().upper()}"
-        for eui in _filter_base_stations_for_tenant(
-            load_base_station_config().get("base_stations", {}),
-            tenant_id=active_tenant,
-        ).keys()
+        for eui in tenant_base_stations.keys()
     }
     allowed_keys = tenant_sensor_keys | tenant_bs_keys
 
@@ -19335,12 +19363,15 @@ def get_bssci_service_status():
             connected_stations = []
             connecting_stations = []
             active_tenant = _active_tenant_id()
-            allowed_bs = {
-                str(eui).strip().upper()
-                for eui in _filter_base_stations_for_tenant(
+            allowed_bs_config = _exclude_demo_base_stations_for_admin(
+                _filter_base_stations_for_tenant(
                     load_base_station_config().get("base_stations", {}),
                     tenant_id=active_tenant,
-                ).keys()
+                )
+            )
+            allowed_bs = {
+                str(eui).strip().upper()
+                for eui in allowed_bs_config.keys()
             }
             
             if hasattr(tls_server, 'connected_base_stations'):
@@ -19383,7 +19414,9 @@ def get_bssci_service_status():
         registered_sensors = 0
         try:
             # Count sensors from configured inventory instead of runtime status to avoid asyncio issues
-            sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=_active_tenant_id())
+            sensors = _exclude_demo_sensors_for_admin(
+                _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=_active_tenant_id())
+            )
             total_sensors = len(sensors)
             # For now, assume all configured sensors could be registered
             registered_sensors = total_sensors
