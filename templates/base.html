@@ -140,6 +140,7 @@
             overflow-y: auto;
             box-shadow: 10px 0 28px rgba(2, 6, 23, 0.22);
             z-index: 40;
+            transition: width 0.2s ease, padding 0.2s ease;
         }
 
         /* ── Brand ─────────────────────────────────────────── */
@@ -227,6 +228,10 @@
             font-weight: 700;
             transition: color 0.15s ease, background 0.15s ease;
             position: relative;
+        }
+
+        .side-nav-link > span {
+            min-width: 0;
         }
 
         .side-nav-link i {
@@ -358,6 +363,49 @@
         .sidebar-doc-entry,
         .footer-links { display: contents; }
         .logout-link, .sidebar-help-link { display: none; }
+
+        body.sidebar-collapsed .app-sidebar {
+            width: 5rem;
+            padding-left: 0.7rem;
+            padding-right: 0.7rem;
+        }
+
+        body.sidebar-collapsed .brand {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        body.sidebar-collapsed .brand-text,
+        body.sidebar-collapsed .nav-group-title,
+        body.sidebar-collapsed .side-nav-link > span,
+        body.sidebar-collapsed .sidebar-user-text,
+        body.sidebar-collapsed .sidebar-logout-icon {
+            display: none;
+        }
+
+        body.sidebar-collapsed .nav-group {
+            justify-items: center;
+        }
+
+        body.sidebar-collapsed .side-nav-link,
+        body.sidebar-collapsed .sidebar-user-strip {
+            justify-content: center;
+            padding-left: 0.34rem;
+            padding-right: 0.34rem;
+        }
+
+        body.sidebar-collapsed .side-nav-link.active {
+            box-shadow: none;
+        }
+
+        body.sidebar-collapsed .sidebar-user-strip {
+            background: rgba(255,255,255,0.08);
+        }
+
+        body.sidebar-collapsed .sidebar-bottom {
+            align-items: center;
+        }
 
         .app-toast-container {
             position: fixed;
@@ -1719,6 +1767,46 @@
         }
 
         @media (max-width: 1024px) {
+            body.sidebar-collapsed .app-sidebar {
+                width: var(--ui-sidebar-width);
+                padding-left: var(--ui-sidebar-pad-x);
+                padding-right: var(--ui-sidebar-pad-x);
+            }
+
+            body.sidebar-collapsed .brand {
+                justify-content: flex-start;
+                padding-left: 0.42rem;
+                padding-right: 0.42rem;
+            }
+
+            body.sidebar-collapsed .brand-text,
+            body.sidebar-collapsed .sidebar-user-text {
+                display: grid;
+            }
+
+            body.sidebar-collapsed .nav-group-title {
+                display: block;
+            }
+
+            body.sidebar-collapsed .side-nav-link > span {
+                display: inline;
+            }
+
+            body.sidebar-collapsed .sidebar-logout-icon {
+                display: inline-flex;
+            }
+
+            body.sidebar-collapsed .nav-group {
+                justify-items: stretch;
+            }
+
+            body.sidebar-collapsed .side-nav-link,
+            body.sidebar-collapsed .sidebar-user-strip {
+                justify-content: flex-start;
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+
             .app-sidebar {
                 position: fixed;
                 top: 0;
@@ -3504,12 +3592,38 @@
             syncDisplayControls();
         }
 
+        function applySidebarCollapsePreference() {
+            if (APP_IS_CUSTOMER === 'true') return;
+            let collapsed = false;
+            try {
+                collapsed = localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === '1';
+            } catch (error) {
+                collapsed = false;
+            }
+            document.body.classList.toggle('sidebar-collapsed', collapsed && window.innerWidth > 1024);
+        }
+
+        function initSidebarCollapse() {
+            applySidebarCollapsePreference();
+        }
+
         function toggleSidebar(forceOpen) {
-            if (typeof forceOpen === 'boolean') {
-                document.body.classList.toggle('sidebar-open', forceOpen);
+            if (window.innerWidth <= 1024) {
+                if (typeof forceOpen === 'boolean') {
+                    document.body.classList.toggle('sidebar-open', forceOpen);
+                    return;
+                }
+                document.body.classList.toggle('sidebar-open');
                 return;
             }
-            document.body.classList.toggle('sidebar-open');
+
+            const nextCollapsed = !document.body.classList.contains('sidebar-collapsed');
+            document.body.classList.toggle('sidebar-collapsed', nextCollapsed);
+            try {
+                localStorage.setItem(SIDEBAR_COLLAPSE_KEY, nextCollapsed ? '1' : '0');
+            } catch (error) {
+                /* no-op */
+            }
         }
 
         function toggleTopbarUserMenu() {
@@ -3546,6 +3660,7 @@
             if (window.innerWidth > 1024) {
                 document.body.classList.remove('sidebar-open');
             }
+            applySidebarCollapsePreference();
         });
 
         if (window.visualViewport && window.visualViewport.addEventListener) {
@@ -3561,6 +3676,7 @@
         const ADVANCED_MODE_KEY = 'service-center.advanced-mode.v1';
         const VIEWER_GUIDE_KEY = 'service-center.viewer-guide.v1';
         const VIEWER_GUIDE_VERSION = '2026-03';
+        const SIDEBAR_COLLAPSE_KEY = 'service-center.sidebar-collapsed.v1';
 
         function _updateAdvancedModeBtn(isAdvanced) {
             const btn = document.getElementById('advancedModeBtn');
@@ -4081,6 +4197,7 @@
 
         applyDisplayPrefs();
         initDisplaySettings();
+        initSidebarCollapse();
         initTopbarClock();
         initAdvancedMode();
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });

@@ -837,17 +837,18 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     min-height: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 0.68rem;
-    align-items: start;
+    grid-template-columns: minmax(19rem, 23rem) minmax(0, 1fr);
+    gap: 0.8rem;
+    align-items: stretch;
 }
 
-#kpi-grid        { grid-column: 1 / span 12; grid-row: 1; }
-#topology-panel  { grid-column: 1 / span 8;  grid-row: 2; align-self: stretch; }
-#traffic-panel   { grid-column: 9 / span 4;  grid-row: 2; align-self: stretch; }
-#alert-panel     { grid-column: 1 / span 4;  grid-row: 3; }
-#gateway-panel   { grid-column: 5 / span 4;  grid-row: 3; }
-#signal-panel    { grid-column: 9 / span 4;  grid-row: 3; }
+#kpi-grid        { display: none; }
+#gateway-panel   { grid-column: 1; grid-row: 1; }
+#sensor-panel    { grid-column: 1; grid-row: 2; }
+#alert-panel     { grid-column: 1; grid-row: 3; }
+#topology-panel  { grid-column: 2; grid-row: 1 / span 3; align-self: stretch; }
+#traffic-panel   { display: none; }
+#signal-panel    { display: none; }
 
 /* ── Panel wrappers (invisible) ────────────────────── */
 .deck-panel {
@@ -868,10 +869,11 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 /* ── Detail panels — bottom row ─────────────────────── */
 #alert-panel,
 #gateway-panel,
+#sensor-panel,
 #signal-panel {
     background: #ffffff;
-    border-radius: 0.8rem;
-    padding: 0.68rem 0.72rem;
+    border-radius: 1rem;
+    padding: 0.78rem 0.82rem;
     border: 1px solid #e5edf5;
     box-shadow: none;
 }
@@ -936,6 +938,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 #topology-panel .deck-head h5 i { color: #6d819b; }
 #alert-panel .deck-head h5 i    { color: #6d819b; }
 #gateway-panel .deck-head h5 i  { color: #6d819b; }
+#sensor-panel .deck-head h5 i   { color: #6d819b; }
 #signal-panel .deck-head h5 i   { color: #6d819b; }
 #traffic-panel .deck-head h5 i  { color: #6d819b; }
 
@@ -952,12 +955,17 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 32rem;
+    min-height: 42rem;
 }
 
 #topology-panel {
     display: flex;
     flex-direction: column;
+    background: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid #e5edf5;
+    padding: 0.78rem 0.82rem;
+    overflow: hidden;
 }
 
 #alert-panel .deck-body {
@@ -970,6 +978,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
 #alert-panel,
 #gateway-panel,
+#sensor-panel,
 #signal-panel {
     display: flex;
     flex-direction: column;
@@ -977,11 +986,13 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
 #alert-panel .deck-body,
 #gateway-panel .deck-body,
+#sensor-panel .deck-body,
 #signal-panel .deck-body {
     flex: 1;
 }
 
 #gateway-panel .deck-body,
+#sensor-panel .deck-body,
 #signal-panel .deck-body {
     display: grid;
     align-content: start;
@@ -1293,6 +1304,27 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 .gateway-status.connecting { background: #e4a313; color: #253046; }
 .gateway-status.offline    { background: #8e9db1; }
 
+.sensor-summary-row { display: flex; align-items: center; gap: 0.42rem; flex-wrap: wrap; margin-bottom: 0.56rem; }
+.sensor-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.sensor-item { border: 1px solid #e9eff5; border-radius: 0.68rem; background: #fbfcfe; padding: 0.5rem 0.56rem; display: grid; gap: 0.34rem; }
+.sensor-item-head { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
+.sensor-item-main { display: flex; align-items: center; gap: 0.52rem; min-width: 0; }
+.sensor-dot { width: 0.54rem; height: 0.54rem; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.sensor-dot.online  { background: #14a36f; }
+.sensor-dot.initial { background: #7c8fa8; }
+.sensor-dot.warn    { background: #e4a313; }
+.sensor-dot.offline { background: #cb3a42; }
+.sensor-dot.unknown { background: #8e9db1; }
+.sensor-name { font-size: 0.78rem; font-weight: 700; color: #213047; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sensor-status { border-radius: 999px; padding: 0.08rem 0.36rem; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; background: #eef3f8; color: #5f738e; white-space: nowrap; }
+.sensor-status.online  { background: #eaf8f1; color: #0f8d5f; }
+.sensor-status.initial { background: #f1f5f9; color: #64748b; }
+.sensor-status.warn    { background: #fff6e6; color: #a16600; }
+.sensor-status.offline { background: #fff1f3; color: #b6343c; }
+.sensor-status.unknown { background: #f1f5f9; color: #64748b; }
+.sensor-meta { font-size: 0.72rem; color: #607089; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.sensor-pill { display: inline-flex; align-items: center; gap: 0.22rem; padding: 0.14rem 0.38rem; border-radius: 0.52rem; border: 1px solid #e2eaf3; background: #ffffff; color: #647892; font-size: 0.64rem; font-weight: 700; }
+
 /* ═══════════════════════════════════════════════════════
    Signal quality
    ═══════════════════════════════════════════════════════ */
@@ -1374,6 +1406,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 #topology-panel .deck-head-icon { background: transparent; color: #7c8fa8; }
 #alert-panel    .deck-head-icon { background: transparent; color: #7c8fa8; }
 #gateway-panel  .deck-head-icon { background: transparent; color: #7c8fa8; }
+#sensor-panel   .deck-head-icon { background: transparent; color: #7c8fa8; }
 #signal-panel   .deck-head-icon { background: transparent; color: #7c8fa8; }
 #traffic-panel  .deck-head-icon { background: transparent; color: #7c8fa8; }
 
@@ -1511,35 +1544,26 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
 @media (max-width: 1350px) {
     .overview-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-
-    #topology-panel { grid-column: 1 / span 8;  grid-row: 2; }
-    #traffic-panel  { grid-column: 9 / span 4;  grid-row: 2; }
-    #alert-panel    { grid-column: 1 / span 4;  grid-row: 3; }
-    #gateway-panel  { grid-column: 5 / span 4;  grid-row: 3; }
-    #signal-panel   { grid-column: 9 / span 4;  grid-row: 3; }
 }
 
-@media (max-width: 900px) {
-    .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 1100px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
 
-    #kpi-grid       { grid-column: span 2; grid-row: auto; }
-    #topology-panel { grid-column: span 2; grid-row: auto; align-self: auto; }
+    #topology-panel { grid-column: 1; grid-row: 1; }
+    #gateway-panel  { grid-column: 1; grid-row: 2; }
+    #sensor-panel   { grid-column: 1; grid-row: 3; }
+    #alert-panel    { grid-column: 1; grid-row: 4; }
+
     .topology-wrap  { flex: none; min-height: 20rem; height: 20rem; }
-    #traffic-panel  { grid-column: span 2; grid-row: auto; align-self: auto; }
-    #traffic-panel .ops-stat-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
-    #traffic-panel .ops-meta-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
-    #alert-panel    { grid-column: span 1; grid-row: auto; }
-    #gateway-panel  { grid-column: span 1; grid-row: auto; }
-    #signal-panel   { grid-column: span 2; grid-row: auto; }
-
-    .ops-stat-grid, .ops-meta-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
 @media (max-width: 575.98px) {
     .dashboard-grid { grid-template-columns: 1fr; }
 
-    #kpi-grid, #topology-panel, #traffic-panel,
-    #alert-panel, #gateway-panel, #signal-panel { grid-column: span 1; grid-row: auto; }
+    #topology-panel { grid-column: 1; grid-row: 1; }
+    #gateway-panel  { grid-column: 1; grid-row: 2; }
+    #sensor-panel   { grid-column: 1; grid-row: 3; }
+    #alert-panel    { grid-column: 1; grid-row: 4; }
 
     .topology-wrap { height: 16rem; }
     .overview-panel .overview-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -1658,8 +1682,8 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
         <div id="alert-panel" class="deck-panel panel-size-normal layout-widget">
             <div class="deck-head">
-                <h5><span class="deck-head-icon"><i class="fas fa-exclamation-triangle"></i></span>{{ t('dashboard.alert_feed', 'Attention queue') }}</h5>
-                <small>{{ t('dashboard.issues_requiring_attention', 'Critical first, warnings below') }}</small>
+                <h5><span class="deck-head-icon"><i class="fas fa-exclamation-triangle"></i></span>{{ t('viewer.alerts', 'Alerts') }}</h5>
+                <small>{{ t('dashboard.issues_requiring_attention', 'Critical first') }}</small>
             </div>
             <div class="deck-body">
                 <div class="alert-summary-row" id="alert-summary-row"></div>
@@ -1675,8 +1699,8 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
         <div id="gateway-panel" class="deck-panel panel-size-normal layout-widget">
             <div class="deck-head">
-                <h5><span class="deck-head-icon"><i class="fas fa-broadcast-tower"></i></span>{{ t('dashboard.gateway_actions', 'Base station snapshot') }}</h5>
-                <small>{{ t('dashboard.quick_gateway_context', 'Online state, load and addressability') }}</small>
+                <h5><span class="deck-head-icon"><i class="fas fa-broadcast-tower"></i></span>{{ t('nav.base_stations', 'Base Stations') }}</h5>
+                <small>{{ t('dashboard.connected_base_stations', 'Connected overview') }}</small>
             </div>
             <div class="deck-body">
                 <div class="gateway-summary-row" id="gateway-summary-row"></div>
@@ -1690,6 +1714,27 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                     </li>
                 </ul>
                 <div id="bs-euis" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div id="sensor-panel" class="deck-panel panel-size-normal layout-widget">
+            <div class="deck-head">
+                <h5><span class="deck-head-icon"><i class="fas fa-microchip"></i></span>{{ t('nav.sensors', 'Sensors') }}</h5>
+                <small>{{ t('dashboard.sensor_runtime_overview', 'Runtime overview') }}</small>
+            </div>
+            <div class="deck-body">
+                <div class="sensor-summary-row" id="sensor-summary-row"></div>
+                <ul id="sensor-runtime-list" class="sensor-list">
+                    <li class="sensor-item">
+                        <div class="sensor-item-head">
+                            <div class="sensor-item-main">
+                                <span class="sensor-dot unknown"></span>
+                                <span class="sensor-name">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</span>
+                            </div>
+                            <span class="sensor-status unknown">{{ t('dashboard.no_data', 'No data') }}</span>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </div>
 
@@ -3115,6 +3160,7 @@ function applyDashboardPayload(payload, meta = {}) {
     const healthInfo = updateHealthMetrics(latestHealthData || {});
     updateOperationsPanel(trafficInfo, healthInfo, vmCapable);
     updateGatewayActions(latestGatewaysData || {});
+    updateSensorRuntimeList(latestSensorInventoryData || {});
     renderIncidents(latestIncidentsData && Array.isArray(latestIncidentsData.incidents) ? latestIncidentsData.incidents : []);
     previousSnapshot.packetLoss = healthInfo.packetLoss || 0;
     updateLastUpdatedLabel(meta && Number.isFinite(meta.ts) ? meta.ts : undefined);
@@ -4001,7 +4047,7 @@ function updateGatewayActions(data) {
         ].join('');
     }
 
-    list.innerHTML = all.slice(0, 2).map(bs => {
+    list.innerHTML = all.slice(0, 4).map(bs => {
         const rawStatus = String(bs.status || 'offline').toLowerCase();
         const status = rawStatus === 'connected' || rawStatus === 'connecting' ? rawStatus : 'offline';
         const sensors = toNumber(bs.connected_sensors);
@@ -4014,6 +4060,94 @@ function updateGatewayActions(data) {
                 ? appTranslate('common.connecting', 'connecting')
                 : appTranslate('common.offline', 'offline'));
         return `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span></div><span class="gateway-status ${status}">${statusLabel}</span></div><div class="gateway-meta"><span class="gateway-pill"><i class="fas fa-fingerprint" style="opacity:.6;margin-right:.22rem;"></i>${escapeHtml(shortId(eui, 12))}</span><span class="gateway-pill"><i class="fas fa-microchip" style="opacity:.6;margin-right:.22rem;"></i>${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span><span class="gateway-pill"><i class="fas fa-network-wired" style="opacity:.6;margin-right:.22rem;"></i>${ip}</span></div></li>`;
+    }).join('');
+}
+
+function sensorRuntimeTier(sensor) {
+    const lifecycleStatus = String((sensor && sensor.lifecycle_status) || '').toLowerCase();
+    if (lifecycleStatus === 'new' || lifecycleStatus === 'awaiting_first_data') return 'initial';
+    const rawStatus = String((sensor && (sensor.activity_status || sensor.status)) || '').toLowerCase();
+    if (rawStatus === 'online' || rawStatus === 'connected' || rawStatus === 'active' || rawStatus === 'quiet') return 'online';
+    if (rawStatus === 'warn' || rawStatus === 'warning' || rawStatus === 'degraded' || rawStatus === 'stale' || rawStatus === 'auto_detach_pending') return 'warn';
+    if (rawStatus === 'offline' || rawStatus === 'disconnected' || rawStatus === 'inactive' || rawStatus === 'auto_detached') return 'offline';
+    if (rawStatus === 'no_data') return 'initial';
+    return 'unknown';
+}
+
+function sensorRuntimeLabel(sensor) {
+    const tier = sensorRuntimeTier(sensor);
+    if (tier === 'online') return appTranslate('common.online', 'Online');
+    if (tier === 'warn') return appTranslate('dashboard.warning', 'Warning');
+    if (tier === 'offline') return appTranslate('common.offline', 'Offline');
+    if (tier === 'initial') return appTranslate('dashboard.awaiting_first_data_short', 'Waiting');
+    return appTranslate('dashboard.no_data', 'No data');
+}
+
+function sensorRuntimeTimeAgo(sensor) {
+    const raw = sensor && (sensor.last_seen_timestamp || sensor.last_seen || sensor.last_message || sensor.updated_at || 0);
+    if (!raw) return '';
+    const ts = Number(raw);
+    const date = Number.isFinite(ts) && ts > 1e10
+        ? new Date(ts)
+        : (Number.isFinite(ts) && ts > 0 ? new Date(ts * 1000) : new Date(raw));
+    if (Number.isNaN(date.getTime())) return '';
+    const diffSeconds = Math.max(0, Math.round((Date.now() - date.getTime()) / 1000));
+    if (diffSeconds < 60) return appTranslate('dashboard.just_now', 'just now');
+    if (diffSeconds < 3600) return appTranslate('dashboard.minutes_ago', `${Math.round(diffSeconds / 60)} min ago`, { count: Math.round(diffSeconds / 60) });
+    if (diffSeconds < 86400) return appTranslate('dashboard.hours_ago', `${Math.round(diffSeconds / 3600)} h ago`, { count: Math.round(diffSeconds / 3600) });
+    return appTranslate('dashboard.days_ago', `${Math.round(diffSeconds / 86400)} d ago`, { count: Math.round(diffSeconds / 86400) });
+}
+
+function updateSensorRuntimeList(data) {
+    const summary = document.getElementById('sensor-summary-row');
+    const list = document.getElementById('sensor-runtime-list');
+    if (!summary || !list) return;
+
+    const sensors = Array.isArray(data && data.sensors) ? [...data.sensors] : [];
+    if (sensors.length === 0) {
+        summary.innerHTML = `<span class="gateway-summary-chip">${appTranslate('dashboard.no_sensors', 'No sensors yet')}</span>`;
+        list.innerHTML = `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot unknown"></span><span class="sensor-name">${appTranslate('dashboard.no_sensors_detected', 'No sensors detected')}</span></div><span class="sensor-status unknown">${appTranslate('dashboard.no_data', 'No data')}</span></div></li>`;
+        return;
+    }
+
+    const tierOrder = { offline: 0, warn: 1, initial: 2, online: 3, unknown: 4 };
+    const counts = { online: 0, warn: 0, offline: 0, initial: 0, unknown: 0 };
+    sensors.forEach((sensor) => {
+        const tier = sensorRuntimeTier(sensor);
+        counts[tier] = (counts[tier] || 0) + 1;
+    });
+
+    summary.innerHTML = [
+        `<span class="gateway-summary-chip">${appTranslate('dashboard.total_label', 'Total')}: ${sensors.length}</span>`,
+        `<span class="gateway-summary-chip">${appTranslate('common.online', 'Online')}: ${counts.online}</span>`,
+        `<span class="gateway-summary-chip">${appTranslate('dashboard.awaiting_first_data_short', 'Waiting')}: ${counts.initial}</span>`,
+        `<span class="gateway-summary-chip">${appTranslate('common.offline', 'Offline')}: ${counts.offline + counts.warn}</span>`
+    ].join('');
+
+    sensors.sort((a, b) => {
+        const tierDiff = tierOrder[sensorRuntimeTier(a)] - tierOrder[sensorRuntimeTier(b)];
+        if (tierDiff !== 0) return tierDiff;
+        const aName = String(a && (a.name || a.label || a.eui || a.device_eui || '')).toLowerCase();
+        const bName = String(b && (b.name || b.label || b.eui || b.device_eui || '')).toLowerCase();
+        return aName.localeCompare(bName);
+    });
+
+    list.innerHTML = sensors.slice(0, 6).map((sensor) => {
+        const tier = sensorRuntimeTier(sensor);
+        const eui = String(sensor && (sensor.eui || sensor.device_eui || sensor.sensor_id || '') || '');
+        const name = escapeHtml(sensor && (sensor.name || sensor.label || shortId(eui, 10)) || shortId(eui, 10));
+        const status = escapeHtml(sensorRuntimeLabel(sensor));
+        const lastSeen = sensorRuntimeTimeAgo(sensor);
+        const firstMetricKey = sensor && sensor.last_values && typeof sensor.last_values === 'object'
+            ? Object.keys(sensor.last_values).find((key) => !String(key).startsWith('_'))
+            : '';
+        const metricLabel = firstMetricKey ? escapeHtml(String(firstMetricKey).replace(/_/g, ' ')) : '';
+        const meta = [
+            `<span class="sensor-pill"><i class="fas fa-fingerprint" style="opacity:.6;margin-right:.22rem;"></i>${escapeHtml(shortId(eui, 12))}</span>`,
+            lastSeen ? `<span class="sensor-pill"><i class="fas fa-clock" style="opacity:.6;margin-right:.22rem;"></i>${escapeHtml(lastSeen)}</span>` : '',
+            metricLabel ? `<span class="sensor-pill"><i class="fas fa-wave-square" style="opacity:.6;margin-right:.22rem;"></i>${metricLabel}</span>` : ''
+        ].filter(Boolean).join('');
+        return `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot ${tier}"></span><span class="sensor-name">${name}</span></div><span class="sensor-status ${tier}">${status}</span></div><div class="sensor-meta">${meta}</div></li>`;
     }).join('');
 }
 
@@ -4108,7 +4242,7 @@ function renderIncidents(incidents) {
         summary.innerHTML = chips.join('');
     }
 
-    rail.innerHTML = incidents.slice(0, 3).map(item =>
+    rail.innerHTML = incidents.slice(0, 4).map(item =>
         '<li class="rail-item"><span class="rail-dot ' + (item.level === 'danger' ? 'bad' : 'warn') + '"></span><span>' + item.text + '</span><span class="rail-note">' + (item.level === 'danger' ? appTranslate('dashboard.alert_note_critical', 'critical') : appTranslate('dashboard.alert_note_attention', 'attention')) + '</span></li>'
     ).join('');
 }
