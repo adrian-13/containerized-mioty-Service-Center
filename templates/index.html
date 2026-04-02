@@ -710,6 +710,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 .dashboard-shell {
     display: grid;
     gap: 0.55rem;
+    --dashboard-side-width: 360px;
 }
 
 @keyframes deck-enter {
@@ -747,6 +748,38 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 }
 
 .dashboard-utility-tools { display: none; }
+
+.dashboard-width-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 1.96rem;
+    padding: 0.2rem 0.65rem;
+    border: 1px solid #e1e8f1;
+    border-radius: 0.72rem;
+    background: #ffffff;
+}
+
+.dashboard-width-label {
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #607089;
+    white-space: nowrap;
+}
+
+.dashboard-width-range {
+    width: 7.6rem;
+    accent-color: #5d7fa3;
+}
+
+.dashboard-width-value {
+    min-width: 2.3rem;
+    font-size: 0.67rem;
+    font-weight: 800;
+    color: #2f4665;
+    text-align: right;
+}
 
 .dashboard-toolbar-toggle,
 .dashboard-refresh-btn,
@@ -837,16 +870,16 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     min-height: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: minmax(19rem, 23rem) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, var(--dashboard-side-width));
     gap: 0.8rem;
     align-items: stretch;
 }
 
 #kpi-grid        { display: none; }
-#gateway-panel   { grid-column: 1; grid-row: 1; }
-#sensor-panel    { grid-column: 1; grid-row: 2; }
-#alert-panel     { grid-column: 1; grid-row: 3; }
-#topology-panel  { grid-column: 2; grid-row: 1 / span 3; align-self: stretch; }
+#topology-panel  { grid-column: 1; grid-row: 1 / span 3; align-self: stretch; }
+#gateway-panel   { grid-column: 2; grid-row: 1; }
+#sensor-panel    { grid-column: 2; grid-row: 2; }
+#alert-panel     { grid-column: 2; grid-row: 3; }
 #traffic-panel   { display: none; }
 #signal-panel    { display: none; }
 
@@ -1549,6 +1582,10 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 @media (max-width: 1100px) {
     .dashboard-grid { grid-template-columns: 1fr; }
 
+    .dashboard-width-control {
+        display: none;
+    }
+
     #topology-panel { grid-column: 1; grid-row: 1; }
     #gateway-panel  { grid-column: 1; grid-row: 2; }
     #sensor-panel   { grid-column: 1; grid-row: 3; }
@@ -1590,6 +1627,11 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
             <button class="btn btn-sm btn-outline-secondary dashboard-refresh-btn" id="refresh-now"><i class="fas fa-sync"></i> {{ t('common.refresh', 'Refresh') }}</button>
             <span class="dashboard-toolbar-pill control-meta" id="last-updated">{{ t('dashboard.waiting_first_update', 'Waiting for first update...') }}</span>
             <span class="dashboard-toolbar-pill control-meta control-meta-cache" id="dashboard-cache-age">{{ t('dashboard.cache_label', 'Cache') }} -</span>
+            <label class="dashboard-width-control" for="dashboard-width-range">
+                <span class="dashboard-width-label">{{ t('dashboard.panel_width', 'Šírka panelov') }}</span>
+                <input type="range" id="dashboard-width-range" class="dashboard-width-range" min="300" max="520" step="10" value="360">
+                <span class="dashboard-width-value" id="dashboard-width-value">360px</span>
+            </label>
         </div>
     </section>
     <section id="dashboard-canvas" class="dashboard-grid">
@@ -3035,6 +3077,10 @@ const MINI_DEFAULT_CENTER = [48.76785085158725, 18.635382080096264];
 const MINI_DEFAULT_ZOOM = 15;
 const DASHBOARD_CACHE_KEY = 'dashboard_workspace_bundle_v1';
 const DASHBOARD_CACHE_TTL_MS = 8000;
+const DASHBOARD_SIDE_WIDTH_KEY = 'service-center.dashboard.side-width.v1';
+const DASHBOARD_SIDE_WIDTH_MIN = 300;
+const DASHBOARD_SIDE_WIDTH_MAX = 520;
+const DASHBOARD_SIDE_WIDTH_DEFAULT = 360;
 const DASHBOARD_SKELETON_TARGETS = [
     '#dashboard-canvas'
 ];
@@ -3043,6 +3089,58 @@ let miniRuntimeInitialized = false;
 
 function getDashboardGrid() {
     return document.getElementById('dashboard-canvas');
+}
+
+function getDashboardShell() {
+    return document.querySelector('.dashboard-shell');
+}
+
+function clampDashboardSideWidth(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return DASHBOARD_SIDE_WIDTH_DEFAULT;
+    return Math.min(DASHBOARD_SIDE_WIDTH_MAX, Math.max(DASHBOARD_SIDE_WIDTH_MIN, numeric));
+}
+
+function applyDashboardSideWidth(value, options = {}) {
+    const width = clampDashboardSideWidth(value);
+    const shell = getDashboardShell();
+    const input = document.getElementById('dashboard-width-range');
+    const valueEl = document.getElementById('dashboard-width-value');
+    if (shell) {
+        shell.style.setProperty('--dashboard-side-width', `${width}px`);
+    }
+    if (input) {
+        input.value = String(width);
+    }
+    if (valueEl) {
+        valueEl.textContent = `${width}px`;
+    }
+    if (options.persist !== false) {
+        try {
+            localStorage.setItem(DASHBOARD_SIDE_WIDTH_KEY, String(width));
+        } catch (error) {
+            /* no-op */
+        }
+    }
+}
+
+function initDashboardWidthControl() {
+    const input = document.getElementById('dashboard-width-range');
+    if (!input) return;
+
+    let savedWidth = DASHBOARD_SIDE_WIDTH_DEFAULT;
+    try {
+        const raw = localStorage.getItem(DASHBOARD_SIDE_WIDTH_KEY);
+        if (raw !== null) savedWidth = clampDashboardSideWidth(raw);
+    } catch (error) {
+        savedWidth = DASHBOARD_SIDE_WIDTH_DEFAULT;
+    }
+    applyDashboardSideWidth(savedWidth, { persist: false });
+
+    input.addEventListener('input', (event) => {
+        applyDashboardSideWidth(event.target.value);
+        refreshMiniViewportAfterLayoutChange();
+    });
 }
 
 function refreshMiniViewportAfterLayoutChange() {
@@ -4326,6 +4424,7 @@ async function refreshNow(manualTrigger) {
 
 document.addEventListener('DOMContentLoaded', function() {
     bindPanelNavigation();
+    initDashboardWidthControl();
     const dashboardGrid = getDashboardGrid();
     if (dashboardGrid) requestAnimationFrame(() => dashboardGrid.classList.add('layout-ready'));
     if (window.AppPerf && typeof window.AppPerf.observeLazy === 'function') {
