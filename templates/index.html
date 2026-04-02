@@ -714,8 +714,8 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     min-height: calc(100svh - 8.1rem);
     --dashboard-side-width: 420px;
     --dashboard-grid-gap: 0.8rem;
-    --dashboard-sensor-height: 18rem;
-    --dashboard-gateway-height: 10rem;
+    --dashboard-sensor-height: 12rem;
+    --dashboard-gateway-height: 8.5rem;
     --dashboard-rail-handle-size: 12px;
 }
 
@@ -862,11 +862,11 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     height: 100%;
     display: grid;
     grid-template-rows:
-        minmax(12rem, var(--dashboard-sensor-height))
+        minmax(8.75rem, var(--dashboard-sensor-height))
         var(--dashboard-rail-handle-size)
-        minmax(8.5rem, var(--dashboard-gateway-height))
+        minmax(7rem, var(--dashboard-gateway-height))
         var(--dashboard-rail-handle-size)
-        minmax(11rem, 1fr);
+        minmax(9rem, 1fr);
     gap: var(--dashboard-grid-gap);
 }
 
@@ -1397,6 +1397,12 @@ body.is-resizing-dashboard-row {
    Gateway snapshot
    ═══════════════════════════════════════════════════════ */
 .gateway-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.24rem; }
+.gateway-list,
+.sensor-list,
+.rail-list {
+    align-content: start;
+}
+
 .gateway-summary-row { display: flex; align-items: center; gap: 0.42rem; flex-wrap: wrap; margin-bottom: 0.56rem; }
 .gateway-summary-chip { display: inline-flex; align-items: center; gap: 0.24rem; padding: 0.18rem 0.42rem; border-radius: 0.58rem; border: 1px solid #e2eaf3; background: #ffffff; color: #5f738e; font-size: 0.66rem; font-weight: 800; }
 .gateway-item { border-bottom: 1px solid #edf2f7; padding: 0.52rem 0; display: grid; gap: 0.18rem; }
@@ -3034,11 +3040,11 @@ const DASHBOARD_SIDE_WIDTH_MAX = 680;
 const DASHBOARD_SIDE_WIDTH_DEFAULT = 420;
 const DASHBOARD_SENSOR_HEIGHT_KEY = 'service-center.dashboard.sensor-height.v1';
 const DASHBOARD_GATEWAY_HEIGHT_KEY = 'service-center.dashboard.gateway-height.v1';
-const DASHBOARD_SENSOR_HEIGHT_MIN = 180;
-const DASHBOARD_GATEWAY_HEIGHT_MIN = 140;
+const DASHBOARD_SENSOR_HEIGHT_MIN = 140;
+const DASHBOARD_GATEWAY_HEIGHT_MIN = 112;
 const DASHBOARD_ALERT_HEIGHT_MIN = 176;
-const DASHBOARD_SENSOR_HEIGHT_DEFAULT = 288;
-const DASHBOARD_GATEWAY_HEIGHT_DEFAULT = 168;
+const DASHBOARD_SENSOR_HEIGHT_DEFAULT = 192;
+const DASHBOARD_GATEWAY_HEIGHT_DEFAULT = 136;
 const DASHBOARD_RAIL_HANDLE_SIZE = 12;
 const DASHBOARD_SKELETON_TARGETS = [
     '#dashboard-canvas'
