@@ -1394,6 +1394,7 @@ body.is-resizing-dashboard-row {
 .sensor-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.24rem; }
 .sensor-item { border-bottom: 1px solid #edf2f7; padding: 0.44rem 0; display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
 .sensor-item:last-child { border-bottom: 0; padding-bottom: 0; }
+.sensor-item[data-sensor-id] { cursor: context-menu; }
 .sensor-item-head { display: flex; align-items: center; gap: 0.4rem; flex: 1; min-width: 0; }
 .sensor-item-main { display: flex; align-items: center; gap: 0.52rem; min-width: 0; flex: 1; }
 .sensor-dot { width: 0.54rem; height: 0.54rem; border-radius: 50%; flex-shrink: 0; display: inline-block; }
@@ -3355,6 +3356,29 @@ function ensureMiniRuntimeInitialized() {
     }
 }
 
+function initDashboardContextMenus() {
+    const sensorList = document.getElementById('sensor-runtime-list');
+    if (sensorList && sensorList.dataset.contextBound !== '1') {
+        sensorList.dataset.contextBound = '1';
+        sensorList.addEventListener('contextmenu', (event) => {
+            const row = event.target.closest('.sensor-item[data-sensor-id]');
+            if (!row) return;
+            const sensorId = String(row.dataset.sensorId || '').trim();
+            if (!sensorId) return;
+            showMiniCtx(event, [
+                {
+                    icon: 'fa-arrow-up-right-from-square',
+                    primary: true,
+                    label: appTranslate('dashboard.open_sensor_detail', 'Otvoriť detail senzora'),
+                    action: () => {
+                        window.location.href = '/sensors/' + encodeURIComponent(sensorId);
+                    }
+                }
+            ]);
+        });
+    }
+}
+
 function applyDashboardPayload(payload, meta = {}) {
     const data = payload || {};
     const statusData = data.statusData || null;
@@ -4387,7 +4411,7 @@ function updateSensorRuntimeList(data) {
         const issueMeta = tier !== 'online'
             ? `<span class="sensor-meta"><span class="sensor-pill">${escapeHtml(sensorRuntimeLabel(sensor))}</span></span>`
             : '';
-        return `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot ${tier}"></span><span class="sensor-name">${name}</span>${issueMeta}</div></div></li>`;
+        return `<li class="sensor-item" data-sensor-id="${escapeHtml(eui)}"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot ${tier}"></span><span class="sensor-name">${name}</span>${issueMeta}</div></div></li>`;
     }).join('');
 }
 
@@ -4556,6 +4580,7 @@ async function refreshNow(manualTrigger) {
 
 document.addEventListener('DOMContentLoaded', function() {
     bindPanelNavigation();
+    initDashboardContextMenus();
     initDashboardResizer();
     initDashboardRailResizers();
     const dashboardGrid = getDashboardGrid();
