@@ -1386,6 +1386,9 @@ body.is-resizing-dashboard-row {
 .gateway-summary-chip { display: inline-flex; align-items: center; gap: 0.24rem; padding: 0.16rem 0.42rem; border-radius: 999px; border: 1px solid #e2eaf3; background: #ffffff; color: #5f738e; font-size: 0.64rem; font-weight: 800; }
 .gateway-item { border-bottom: 1px solid #edf2f7; padding: 0.44rem 0; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .gateway-item:last-child { border-bottom: 0; padding-bottom: 0; }
+.gateway-item[data-gateway-eui] { cursor: pointer; }
+.gateway-item.is-map-hover,
+.gateway-item.is-map-active { background: #f7fbff; }
 .gateway-head { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
 .gateway-name { font-size: 0.83rem; font-weight: 700; color: #213047; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gateway-meta { font-size: 0.71rem; color: #7b8da5; display: inline-flex; align-items: center; gap: 0.34rem; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -1394,7 +1397,9 @@ body.is-resizing-dashboard-row {
 .sensor-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.24rem; }
 .sensor-item { border-bottom: 1px solid #edf2f7; padding: 0.44rem 0; display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
 .sensor-item:last-child { border-bottom: 0; padding-bottom: 0; }
-.sensor-item[data-sensor-id] { cursor: context-menu; }
+.sensor-item[data-sensor-id] { cursor: pointer; }
+.sensor-item.is-map-hover,
+.sensor-item.is-map-active { background: #f7fbff; }
 .sensor-item-head { display: flex; align-items: center; gap: 0.4rem; flex: 1; min-width: 0; }
 .sensor-item-main { display: flex; align-items: center; gap: 0.52rem; min-width: 0; flex: 1; }
 .sensor-dot { width: 0.54rem; height: 0.54rem; border-radius: 50%; flex-shrink: 0; display: inline-block; }
@@ -2966,6 +2971,9 @@ let miniGraphInitialized = false;
 let miniGraphUserViewLocked = false;
 let miniMapToastTimer = null;
 let miniCtxEl = null;
+let miniCoverageMarkers = {};
+let dashboardMiniHoverKey = '';
+let dashboardMiniActiveKey = '';
 
 const DASHBOARD_CACHE_STATE = {
     source: 'none',
@@ -3227,6 +3235,55 @@ function escapeHtml(value) {
         .replaceAll("'", '&#39;');
 }
 
+function miniMarkerKey(type, eui) {
+    return `${String(type || '').trim().toLowerCase()}:${String(eui || '').trim().toUpperCase()}`;
+}
+
+function setDashboardMiniInteractionState(options = {}) {
+    if (typeof options.hoverKey === 'string') dashboardMiniHoverKey = options.hoverKey;
+    if (typeof options.activeKey === 'string') dashboardMiniActiveKey = options.activeKey;
+
+    document.querySelectorAll('.sensor-item[data-sensor-id], .gateway-item[data-gateway-eui]').forEach((row) => {
+        const sensorId = row.dataset.sensorId ? miniMarkerKey('sensor', row.dataset.sensorId) : '';
+        const gatewayId = row.dataset.gatewayEui ? miniMarkerKey('base_station', row.dataset.gatewayEui) : '';
+        const rowKey = sensorId || gatewayId;
+        row.classList.toggle('is-map-hover', !!rowKey && rowKey === dashboardMiniHoverKey);
+        row.classList.toggle('is-map-active', !!rowKey && rowKey === dashboardMiniActiveKey);
+    });
+
+    Object.entries(miniCoverageMarkers).forEach(([key, marker]) => {
+        if (!marker || !marker.__miniBaseStyle || typeof marker.setStyle !== 'function') return;
+        const isHovered = key === dashboardMiniHoverKey;
+        const isActive = key === dashboardMiniActiveKey;
+        const base = marker.__miniBaseStyle;
+        const radiusBoost = isActive ? 3 : (isHovered ? 2 : 0);
+        marker.setStyle({
+            radius: base.radius + radiusBoost,
+            weight: isActive || isHovered ? base.weight + 1 : base.weight,
+            color: isActive || isHovered ? '#163047' : base.color,
+            fillColor: base.fillColor,
+            fillOpacity: isActive ? 1 : (isHovered ? Math.min(1, base.fillOpacity + 0.03) : base.fillOpacity)
+        });
+        if (isActive || isHovered) {
+            marker.bringToFront?.();
+            marker.openTooltip?.();
+        } else {
+            marker.closeTooltip?.();
+        }
+    });
+}
+
+function focusMiniMarker(key) {
+    const marker = miniCoverageMarkers[key];
+    if (!marker || !miniOsmMap) return;
+    const latLng = marker.getLatLng?.();
+    if (latLng) {
+        miniOsmMap.setView(latLng, Math.max(miniOsmMap.getZoom(), 16), { animate: true });
+    }
+    marker.openTooltip?.();
+    setDashboardMiniInteractionState({ activeKey: key });
+}
+
 function closeMiniCtx() {
     if (miniCtxEl) {
         miniCtxEl.remove();
@@ -3377,6 +3434,48 @@ function initDashboardContextMenus() {
             ]);
         });
     }
+
+    const bindRailInteractions = (listEl, rowSelector, resolveKey) => {
+        if (!listEl || listEl.dataset.mapInteractionBound === '1') return;
+        listEl.dataset.mapInteractionBound = '1';
+
+        listEl.addEventListener('pointerover', (event) => {
+            const row = event.target.closest(rowSelector);
+            if (!row) return;
+            const key = resolveKey(row);
+            if (!key) return;
+            setDashboardMiniInteractionState({ hoverKey: key });
+        });
+
+        listEl.addEventListener('pointerout', (event) => {
+            const row = event.target.closest(rowSelector);
+            if (!row) return;
+            const nextRow = event.relatedTarget && event.relatedTarget.closest ? event.relatedTarget.closest(rowSelector) : null;
+            if (nextRow === row) return;
+            setDashboardMiniInteractionState({ hoverKey: '' });
+        });
+
+        listEl.addEventListener('click', (event) => {
+            const row = event.target.closest(rowSelector);
+            if (!row) return;
+            const key = resolveKey(row);
+            if (!key) return;
+            focusMiniMarker(key);
+        });
+    };
+
+    bindRailInteractions(
+        sensorList,
+        '.sensor-item[data-sensor-id]',
+        (row) => miniMarkerKey('sensor', row.dataset.sensorId || '')
+    );
+
+    const gatewayList = document.getElementById('gateway-action-list');
+    bindRailInteractions(
+        gatewayList,
+        '.gateway-item[data-gateway-eui]',
+        (row) => miniMarkerKey('base_station', row.dataset.gatewayEui || '')
+    );
 }
 
 function applyDashboardPayload(payload, meta = {}) {
@@ -3870,6 +3969,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
     if (!miniOsmMap || !miniCoverageLayer) return;
 
     miniCoverageLayer.clearLayers();
+    miniCoverageMarkers = {};
 
     const positions = coverageState && coverageState.positions && typeof coverageState.positions === 'object'
         ? coverageState.positions
@@ -3889,6 +3989,14 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
             fillColor: isBs ? '#e97c13' : '#1ca8c9',
             fillOpacity: 0.95
         });
+        marker.__miniBaseStyle = {
+            radius: isBs ? 8 : 6,
+            color: isBs ? '#b95d07' : '#005a6b',
+            weight: 2,
+            fillColor: isBs ? '#e97c13' : '#1ca8c9',
+            fillOpacity: 0.95
+        };
+        marker.__miniKey = miniMarkerKey(node.type, node.eui || '');
 
         const label = node.label || shortId(node.eui || '', 10);
         marker.bindTooltip(
@@ -3901,6 +4009,9 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
             }
         );
         marker.addTo(miniCoverageLayer);
+        if (marker.__miniKey) {
+            miniCoverageMarkers[marker.__miniKey] = marker;
+        }
         markerCoords.push([pos.lat, pos.lng]);
     });
 
@@ -3944,6 +4055,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
     }
 
     updateMiniMapPositionLabel();
+    setDashboardMiniInteractionState({});
 }
 
 function updateTopologyPanel(data) {
@@ -4342,7 +4454,7 @@ function updateGatewayActions(data) {
         const sensors = toNumber(bs.connected_sensors);
         const eui = String(bs.eui || '');
         const name = escapeHtml(bs.name || shortId(eui, 8));
-        return `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span><span class="gateway-meta"><span class="gateway-pill">${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span></span></div></div></li>`;
+        return `<li class="gateway-item" data-gateway-eui="${escapeHtml(eui)}"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span><span class="gateway-meta"><span class="gateway-pill">${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span></span></div></div></li>`;
     }).join('');
 }
 
