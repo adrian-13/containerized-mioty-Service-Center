@@ -711,6 +711,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     display: grid;
     gap: 0.55rem;
     --dashboard-side-width: 360px;
+    --dashboard-grid-gap: 0.8rem;
 }
 
 @keyframes deck-enter {
@@ -748,38 +749,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 }
 
 .dashboard-utility-tools { display: none; }
-
-.dashboard-width-control {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    min-height: 1.96rem;
-    padding: 0.2rem 0.65rem;
-    border: 1px solid #e1e8f1;
-    border-radius: 0.72rem;
-    background: #ffffff;
-}
-
-.dashboard-width-label {
-    margin: 0;
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: #607089;
-    white-space: nowrap;
-}
-
-.dashboard-width-range {
-    width: 7.6rem;
-    accent-color: #5d7fa3;
-}
-
-.dashboard-width-value {
-    min-width: 2.3rem;
-    font-size: 0.67rem;
-    font-weight: 800;
-    color: #2f4665;
-    text-align: right;
-}
 
 .dashboard-toolbar-toggle,
 .dashboard-refresh-btn,
@@ -871,8 +840,9 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     padding: 0;
     display: grid;
     grid-template-columns: minmax(18rem, var(--dashboard-side-width)) minmax(0, 1fr);
-    gap: 0.8rem;
+    gap: var(--dashboard-grid-gap);
     align-items: stretch;
+    position: relative;
 }
 
 #kpi-grid        { display: none; }
@@ -885,7 +855,41 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     min-height: 42rem;
     display: grid;
     grid-template-rows: minmax(0, 1.25fr) auto minmax(12rem, 0.9fr);
-    gap: 0.8rem;
+    gap: var(--dashboard-grid-gap);
+}
+
+.dashboard-resizer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--dashboard-side-width) + (var(--dashboard-grid-gap) / 2));
+    width: 16px;
+    transform: translateX(-50%);
+    cursor: col-resize;
+    z-index: 8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+}
+
+.dashboard-resizer::before {
+    content: "";
+    width: 2px;
+    height: 100%;
+    border-radius: 999px;
+    background: transparent;
+    transition: background 0.15s ease;
+}
+
+.dashboard-resizer:hover::before,
+body.is-resizing-dashboard .dashboard-resizer::before {
+    background: #cfd9e6;
+}
+
+body.is-resizing-dashboard {
+    cursor: col-resize;
+    user-select: none;
 }
 
 /* ── Panel wrappers (invisible) ────────────────────── */
@@ -1602,10 +1606,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
 @media (max-width: 1100px) {
     .dashboard-grid { grid-template-columns: 1fr; }
-
-    .dashboard-width-control {
-        display: none;
-    }
+    .dashboard-resizer { display: none; }
 
     #topology-panel { grid-column: 1; grid-row: 1; }
     #dashboard-side-rail { grid-column: 1; grid-row: 2; min-height: 0; grid-template-rows: auto; }
@@ -1644,11 +1645,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
             <button class="btn btn-sm btn-outline-secondary dashboard-refresh-btn" id="refresh-now"><i class="fas fa-sync"></i> {{ t('common.refresh', 'Refresh') }}</button>
             <span class="dashboard-toolbar-pill control-meta" id="last-updated">{{ t('dashboard.waiting_first_update', 'Waiting for first update...') }}</span>
             <span class="dashboard-toolbar-pill control-meta control-meta-cache" id="dashboard-cache-age">{{ t('dashboard.cache_label', 'Cache') }} -</span>
-            <label class="dashboard-width-control" for="dashboard-width-range">
-                <span class="dashboard-width-label">{{ t('dashboard.panel_width', 'Šírka panelov') }}</span>
-                <input type="range" id="dashboard-width-range" class="dashboard-width-range" min="300" max="520" step="10" value="360">
-                <span class="dashboard-width-value" id="dashboard-width-value">360px</span>
-            </label>
         </div>
     </section>
     <section id="dashboard-canvas" class="dashboard-grid">
@@ -1771,6 +1767,8 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
             </div>
         </aside>
 
+        <div id="dashboard-resizer" class="dashboard-resizer" aria-hidden="true"></div>
+
         <div id="topology-panel" class="deck-panel clickable panel-size-normal layout-widget" data-nav="/network">
             <div class="deck-head">
                 <h5><span class="deck-head-icon"><i class="fas fa-project-diagram"></i></span>{{ t('dashboard.live_topology_canvas', 'Live Topology Canvas') }}</h5>
@@ -1799,138 +1797,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
             </div>
         </div>
 
-        <div id="signal-panel" class="deck-panel clickable panel-size-normal layout-widget" data-nav="/health">
-            <div class="deck-head">
-                <h5><span class="deck-head-icon"><i class="fas fa-signal"></i></span>{{ t('dashboard.signal_quality_distribution', 'Signal Quality Distribution') }}</h5>
-                <small>{{ t('dashboard.open_health_analytics', 'Open health analytics') }}</small>
-            </div>
-            <div class="deck-body">
-                <div id="signal-content" class="is-hidden">
-                    <div class="signal-bar">
-                        <span class="signal-label" style="color: #14a36f;">{{ t('dashboard.excellent', 'Excellent') }}</span>
-                        <div class="signal-track"><div class="signal-fill" id="signal-excellent" style="background: #14a36f;"></div></div>
-                        <span class="signal-val" id="signal-excellent-val">0</span>
-                    </div>
-                    <div class="signal-bar">
-                        <span class="signal-label" style="color: #1ab884;">{{ t('dashboard.good', 'Good') }}</span>
-                        <div class="signal-track"><div class="signal-fill" id="signal-good" style="background: #1ab884;"></div></div>
-                        <span class="signal-val" id="signal-good-val">0</span>
-                    </div>
-                    <div class="signal-bar">
-                        <span class="signal-label" style="color: #e4a313;">{{ t('dashboard.fair', 'Fair') }}</span>
-                        <div class="signal-track"><div class="signal-fill" id="signal-fair" style="background: #e4a313;"></div></div>
-                        <span class="signal-val" id="signal-fair-val">0</span>
-                    </div>
-                    <div class="signal-bar">
-                        <span class="signal-label" style="color: #f58634;">{{ t('dashboard.poor', 'Poor') }}</span>
-                        <div class="signal-track"><div class="signal-fill" id="signal-poor" style="background: #f58634;"></div></div>
-                        <span class="signal-val" id="signal-poor-val">0</span>
-                    </div>
-                    <div class="signal-bar">
-                        <span class="signal-label" style="color: #cb3a42;">{{ t('dashboard.critical', 'Critical') }}</span>
-                        <div class="signal-track"><div class="signal-fill" id="signal-critical" style="background: #cb3a42;"></div></div>
-                        <span class="signal-val" id="signal-critical-val">0</span>
-                    </div>
-                    <div class="stat-grid">
-                        <div class="stat-chip">
-                            <div class="stat-value" id="avg-snr">--</div>
-                            <div class="stat-label">{{ t('dashboard.avg_snr', 'Avg SNR') }}</div>
-                        </div>
-                        <div class="stat-chip">
-                            <div class="stat-value" id="avg-rssi">--</div>
-                            <div class="stat-label">{{ t('dashboard.avg_rssi', 'Avg RSSI') }}</div>
-                        </div>
-                        <div class="stat-chip">
-                            <div class="stat-value" id="avg-loss">--</div>
-                            <div class="stat-label">{{ t('dashboard.avg_loss', 'Avg Loss') }}</div>
-                        </div>
-                    </div>
-                    <div class="signal-issues">
-                        <h6>{{ t('dashboard.top_problem_sensors', 'Top Problem Sensors') }}</h6>
-                        <ul id="problem-sensors" class="problem-list">
-                            <li>{{ t('dashboard.no_sensor_incidents', 'No sensor incidents detected yet.') }}</li>
-                        </ul>
-                    </div>
-                </div>
-                <div id="signal-no-data" class="signal-no-data is-visible">
-                    <span class="signal-no-data-icon"><i class="fas fa-signal"></i></span>
-                    <p class="signal-no-data-title">{{ t('dashboard.no_signal_data', 'No signal data yet') }}</p>
-                    <p class="signal-no-data-note">{{ t('dashboard.connect_bs_for_signal', 'Connect a base station to start seeing signal quality.') }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="traffic-panel" class="deck-panel clickable panel-size-normal layout-widget" data-nav="/health">
-            <div class="deck-head">
-                <h5><span class="deck-head-icon"><i class="fas fa-chart-line"></i></span>{{ t('dashboard.traffic_capacity', 'Traffic and Capacity') }}</h5>
-                <small>{{ t('dashboard.open_system_health', 'Open system health') }}</small>
-            </div>
-            <div class="deck-body">
-                <div class="ops-hero">
-                    <div class="ops-hero-copy">
-                        <span class="ops-hero-title">{{ t('dashboard.ops_snapshot_title', 'Operational traffic snapshot') }}</span>
-                        <span class="ops-hero-note" id="traffic-note">{{ t('dashboard.trend_collecting_baseline', 'Trend: collecting baseline') }}</span>
-                    </div>
-                    <span class="ops-health-badge" id="traffic-status-badge">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</span>
-                </div>
-                <div class="ops-stat-grid">
-                    <div class="ops-stat-card icon-blue">
-                        <div class="ops-stat-head">
-                            <div class="ops-stat-label">{{ t('dashboard.packets_per_hour', 'Packets/hr') }}</div>
-                            <span class="ops-stat-icon"><i class="fas fa-paper-plane"></i></span>
-                        </div>
-                        <div class="ops-stat-value" id="gauge-packets">0</div>
-                        <div class="ops-stat-note" id="traffic-rate-note">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</div>
-                    </div>
-                    <div class="ops-stat-card icon-red">
-                        <div class="ops-stat-head">
-                            <div class="ops-stat-label">{{ t('dashboard.packet_loss', 'Packet Loss') }}</div>
-                            <span class="ops-stat-icon"><i class="fas fa-exclamation-triangle"></i></span>
-                        </div>
-                        <div class="ops-stat-value" id="gauge-loss">0%</div>
-                        <div class="ops-stat-note" id="traffic-delivery-note">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</div>
-                    </div>
-                    <div class="ops-stat-card icon-teal">
-                        <div class="ops-stat-head">
-                            <div class="ops-stat-label">{{ t('dashboard.active_sensors', 'Active Sensors') }}</div>
-                            <span class="ops-stat-icon"><i class="fas fa-microchip"></i></span>
-                        </div>
-                        <div class="ops-stat-value" id="active-sensors-today">0</div>
-                        <div class="ops-stat-note" id="traffic-sensors-note">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</div>
-                    </div>
-                    <div class="ops-stat-card icon-amber">
-                        <div class="ops-stat-head">
-                            <div class="ops-stat-label">{{ t('dashboard.awaiting_first_data', 'Awaiting first data') }}</div>
-                            <span class="ops-stat-icon"><i class="fas fa-hourglass-half"></i></span>
-                        </div>
-                        <div class="ops-stat-value" id="awaiting-sensors-today">0</div>
-                        <div class="ops-stat-note" id="traffic-initial-note">{{ t('dashboard.no_initial_sensors_note', 'No sensors are waiting for first data.') }}</div>
-                    </div>
-                    <div class="ops-stat-card icon-indigo">
-                        <div class="ops-stat-head">
-                            <div class="ops-stat-label">{{ t('dashboard.live_links', 'Live Links') }}</div>
-                            <span class="ops-stat-icon"><i class="fas fa-project-diagram"></i></span>
-                        </div>
-                        <div class="ops-stat-value" id="total-connections">0</div>
-                        <div class="ops-stat-note" id="traffic-links-note">{{ t('dashboard.waiting_for_data', 'Waiting for data...') }}</div>
-                    </div>
-                </div>
-                <div class="ops-meta-grid">
-                    <div class="ops-meta-card">
-                        <div class="ops-meta-label">{{ t('dashboard.messages_today', 'Messages Today') }}</div>
-                        <div class="ops-meta-value" id="total-messages">0</div>
-                    </div>
-                    <div class="ops-meta-card">
-                        <div class="ops-meta-label">{{ t('dashboard.peak_label', 'Peak') }}</div>
-                        <div class="ops-meta-value" id="traffic-peak">--</div>
-                    </div>
-                    <div class="ops-meta-card">
-                        <div class="ops-meta-label">{{ t('dashboard.vm_capable_bs', 'VM-capable BS') }}</div>
-                        <div class="ops-meta-value" id="gauge-vm">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </section>
 
 </div>
@@ -3123,16 +2989,8 @@ function clampDashboardSideWidth(value) {
 function applyDashboardSideWidth(value, options = {}) {
     const width = clampDashboardSideWidth(value);
     const shell = getDashboardShell();
-    const input = document.getElementById('dashboard-width-range');
-    const valueEl = document.getElementById('dashboard-width-value');
     if (shell) {
         shell.style.setProperty('--dashboard-side-width', `${width}px`);
-    }
-    if (input) {
-        input.value = String(width);
-    }
-    if (valueEl) {
-        valueEl.textContent = `${width}px`;
     }
     if (options.persist !== false) {
         try {
@@ -3143,10 +3001,8 @@ function applyDashboardSideWidth(value, options = {}) {
     }
 }
 
-function initDashboardWidthControl() {
-    const input = document.getElementById('dashboard-width-range');
-    if (!input) return;
-
+function initDashboardResizer() {
+    const handle = document.getElementById('dashboard-resizer');
     let savedWidth = DASHBOARD_SIDE_WIDTH_DEFAULT;
     try {
         const raw = localStorage.getItem(DASHBOARD_SIDE_WIDTH_KEY);
@@ -3155,10 +3011,36 @@ function initDashboardWidthControl() {
         savedWidth = DASHBOARD_SIDE_WIDTH_DEFAULT;
     }
     applyDashboardSideWidth(savedWidth, { persist: false });
+    if (!handle) return;
 
-    input.addEventListener('input', (event) => {
-        applyDashboardSideWidth(event.target.value);
+    const updateFromPointer = (clientX) => {
+        const grid = getDashboardGrid();
+        if (!grid) return;
+        const rect = grid.getBoundingClientRect();
+        const nextWidth = clampDashboardSideWidth(clientX - rect.left);
+        applyDashboardSideWidth(nextWidth);
         refreshMiniViewportAfterLayoutChange();
+    };
+
+    const onPointerMove = (event) => {
+        updateFromPointer(event.clientX);
+    };
+
+    const stopDrag = () => {
+        document.body.classList.remove('is-resizing-dashboard');
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', stopDrag);
+        window.removeEventListener('pointercancel', stopDrag);
+    };
+
+    handle.addEventListener('pointerdown', (event) => {
+        if (window.innerWidth <= 1100) return;
+        event.preventDefault();
+        document.body.classList.add('is-resizing-dashboard');
+        handle.setPointerCapture?.(event.pointerId);
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', stopDrag);
+        window.addEventListener('pointercancel', stopDrag);
     });
 }
 
@@ -3797,7 +3679,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
 function updateTopologyPanel(data) {
     if (!data || !data.success) return;
 
-    document.getElementById('total-connections').textContent = (data.edges || []).length;
+    const totalConnectionsEl = document.getElementById('total-connections');
+    if (totalConnectionsEl) totalConnectionsEl.textContent = (data.edges || []).length;
     if (!cyMini) return;
 
     const preserveUserView = miniGraphInitialized && miniGraphUserViewLocked;
@@ -3921,7 +3804,7 @@ function updateStatusCards(data) {
 function updateVmMetrics(data) {
     const vmCapable = data && data.vm_capable_base_stations ? data.vm_capable_base_stations.length : 0;
     const gaugeVm = document.getElementById('gauge-vm');
-    gaugeVm.textContent = vmCapable;
+    if (gaugeVm) gaugeVm.textContent = vmCapable;
     return vmCapable;
 }
 
@@ -3929,7 +3812,8 @@ function updateTrafficMetrics(data) {
     const metrics = data && data.metrics ? data.metrics : {};
     const totalMessages = toNumber(metrics.messages_in);
     const droppedMessages = toNumber(metrics.messages_dropped);
-    document.getElementById('total-messages').textContent = totalMessages.toLocaleString();
+    const totalMessagesEl = document.getElementById('total-messages');
+    if (totalMessagesEl) totalMessagesEl.textContent = totalMessages.toLocaleString();
 
     let packetsPerHour = 0;
     if (metrics.start_time) {
@@ -3939,7 +3823,8 @@ function updateTrafficMetrics(data) {
         packetsPerHour = Math.round(totalMessages / 24);
     }
 
-    document.getElementById('gauge-packets').textContent = packetsPerHour.toLocaleString();
+    const gaugePacketsEl = document.getElementById('gauge-packets');
+    if (gaugePacketsEl) gaugePacketsEl.textContent = packetsPerHour.toLocaleString();
 
     let dedupRatio = 0;
     if (totalMessages > 0) dedupRatio = (droppedMessages / totalMessages) * 100;
@@ -3952,7 +3837,8 @@ function updateTrafficMetrics(data) {
     if (history.length > 0) {
         peakMessages = Math.max(...history.map(item => toNumber(item.messages_in)), totalMessages);
     }
-    document.getElementById('traffic-peak').textContent = peakMessages.toLocaleString();
+    const trafficPeakEl = document.getElementById('traffic-peak');
+    if (trafficPeakEl) trafficPeakEl.textContent = peakMessages.toLocaleString();
 
     return {
         dedupRatio,
@@ -4018,7 +3904,8 @@ function updateHealthMetrics(data) {
     if (!data || !data.success) return { packetLoss: 0 };
 
     if (data.system) {
-        document.getElementById('active-sensors-today').textContent = toNumber(data.system.active_sensors);
+        const activeSensorsEl = document.getElementById('active-sensors-today');
+        if (activeSensorsEl) activeSensorsEl.textContent = toNumber(data.system.active_sensors);
     }
 
     let packetLoss = data.system && data.system.overall_packet_loss_rate
@@ -4026,7 +3913,7 @@ function updateHealthMetrics(data) {
         : 0;
 
     const gaugeLoss = document.getElementById('gauge-loss');
-    gaugeLoss.textContent = packetLoss.toFixed(1) + '%';
+    if (gaugeLoss) gaugeLoss.textContent = packetLoss.toFixed(1) + '%';
 
     const distribution = data.signal_distribution || {};
     const total = Object.values(distribution).reduce((a, b) => a + toNumber(b), 0);
@@ -4038,8 +3925,10 @@ function updateHealthMetrics(data) {
 
     const mapBar = (fillId, valId, key) => {
         const value = toNumber(distribution[key]);
-        document.getElementById(valId).textContent = value;
-        document.getElementById(fillId).style.width = total > 0 ? ((value / total) * 100) + '%' : '0%';
+        const valEl = document.getElementById(valId);
+        const fillEl = document.getElementById(fillId);
+        if (valEl) valEl.textContent = value;
+        if (fillEl) fillEl.style.width = total > 0 ? ((value / total) * 100) + '%' : '0%';
     };
     mapBar('signal-excellent', 'signal-excellent-val', 'excellent');
     mapBar('signal-good', 'signal-good-val', 'good');
@@ -4051,31 +3940,40 @@ function updateHealthMetrics(data) {
         const avgSnr = data.sensors.reduce((acc, s) => acc + toNumber(s.avg_snr), 0) / data.sensors.length;
         const avgRssi = data.sensors.reduce((acc, s) => acc + toNumber(s.avg_rssi), 0) / data.sensors.length;
         const avgLoss = data.sensors.reduce((acc, s) => acc + toNumber(s.packet_loss_rate), 0) / data.sensors.length;
-        document.getElementById('avg-snr').textContent = Math.round(avgSnr) + ' dB';
-        document.getElementById('avg-rssi').textContent = Math.round(avgRssi) + ' dBm';
-        document.getElementById('avg-loss').textContent = avgLoss.toFixed(1) + '%';
+        const avgSnrEl = document.getElementById('avg-snr');
+        const avgRssiEl = document.getElementById('avg-rssi');
+        const avgLossEl = document.getElementById('avg-loss');
+        if (avgSnrEl) avgSnrEl.textContent = Math.round(avgSnr) + ' dB';
+        if (avgRssiEl) avgRssiEl.textContent = Math.round(avgRssi) + ' dBm';
+        if (avgLossEl) avgLossEl.textContent = avgLoss.toFixed(1) + '%';
 
         const topIssues = [...data.sensors]
             .filter(s => toNumber(s.packet_loss_rate) > 0)
             .sort((a, b) => toNumber(b.packet_loss_rate) - toNumber(a.packet_loss_rate))
             .slice(0, 3);
         const issueList = document.getElementById('problem-sensors');
-        issueList.innerHTML = topIssues.length === 0
-            ? '<li>' + appTranslate('dashboard.no_sensor_incidents_short', 'No sensor incidents detected.') + '</li>'
-            : topIssues.map(item => {
-                const issueText = 'loss ' + toNumber(item.packet_loss_rate).toFixed(1) + '% | SNR ' + toNumber(item.avg_snr).toFixed(1) + ' dB';
-                return '<li><strong>' + escapeHtml(shortId(item.eui, 8)) + '</strong> ' + appTranslate('dashboard.problem_sensor_row', issueText, {
-                    loss: toNumber(item.packet_loss_rate).toFixed(1),
-                    snr: toNumber(item.avg_snr).toFixed(1)
-                }) + '</li>';
-            }).join('');
+        if (issueList) {
+            issueList.innerHTML = topIssues.length === 0
+                ? '<li>' + appTranslate('dashboard.no_sensor_incidents_short', 'No sensor incidents detected.') + '</li>'
+                : topIssues.map(item => {
+                    const issueText = 'loss ' + toNumber(item.packet_loss_rate).toFixed(1) + '% | SNR ' + toNumber(item.avg_snr).toFixed(1) + ' dB';
+                    return '<li><strong>' + escapeHtml(shortId(item.eui, 8)) + '</strong> ' + appTranslate('dashboard.problem_sensor_row', issueText, {
+                        loss: toNumber(item.packet_loss_rate).toFixed(1),
+                        snr: toNumber(item.avg_snr).toFixed(1)
+                    }) + '</li>';
+                }).join('');
+        }
 
         packetLoss = avgLoss;
     } else {
-        document.getElementById('avg-snr').textContent = '--';
-        document.getElementById('avg-rssi').textContent = '--';
-        document.getElementById('avg-loss').textContent = '--';
-        document.getElementById('problem-sensors').innerHTML = '<li>' + appTranslate('dashboard.no_sensor_incidents', 'No sensor incidents detected yet.') + '</li>';
+        const avgSnrEl = document.getElementById('avg-snr');
+        const avgRssiEl = document.getElementById('avg-rssi');
+        const avgLossEl = document.getElementById('avg-loss');
+        const issueList = document.getElementById('problem-sensors');
+        if (avgSnrEl) avgSnrEl.textContent = '--';
+        if (avgRssiEl) avgRssiEl.textContent = '--';
+        if (avgLossEl) avgLossEl.textContent = '--';
+        if (issueList) issueList.innerHTML = '<li>' + appTranslate('dashboard.no_sensor_incidents', 'No sensor incidents detected yet.') + '</li>';
     }
 
     return { packetLoss };
@@ -4098,6 +3996,7 @@ function updateOperationsPanel(trafficInfo, healthInfo, vmCapable) {
     if (trafficPanelEl) trafficPanelEl.classList.toggle('ops-empty', connectedBs === 0);
 
     const badge = document.getElementById('traffic-status-badge');
+    if (!badge) return;
     badge.classList.remove('is-success', 'is-warning', 'is-danger');
     if (connectedBs === 0) {
         badge.classList.add('is-danger');
@@ -4437,7 +4336,7 @@ async function refreshNow(manualTrigger) {
 
 document.addEventListener('DOMContentLoaded', function() {
     bindPanelNavigation();
-    initDashboardWidthControl();
+    initDashboardResizer();
     const dashboardGrid = getDashboardGrid();
     if (dashboardGrid) requestAnimationFrame(() => dashboardGrid.classList.add('layout-ready'));
     if (window.AppPerf && typeof window.AppPerf.observeLazy === 'function') {
