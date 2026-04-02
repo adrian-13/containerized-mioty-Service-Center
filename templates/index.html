@@ -1384,12 +1384,12 @@ body.is-resizing-dashboard-row {
 
 .gateway-summary-row { display: flex; align-items: center; gap: 0.42rem; flex-wrap: wrap; margin-bottom: 0.45rem; }
 .gateway-summary-chip { display: inline-flex; align-items: center; gap: 0.24rem; padding: 0.16rem 0.42rem; border-radius: 999px; border: 1px solid #e2eaf3; background: #ffffff; color: #5f738e; font-size: 0.64rem; font-weight: 800; }
-.gateway-item { border-bottom: 1px solid #edf2f7; padding: 0.52rem 0; display: grid; gap: 0.18rem; }
+.gateway-item { border-bottom: 1px solid #edf2f7; padding: 0.44rem 0; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .gateway-item:last-child { border-bottom: 0; padding-bottom: 0; }
-.gateway-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-.gateway-name { font-size: 0.83rem; font-weight: 700; color: #213047; }
-.gateway-meta { font-size: 0.71rem; color: #7b8da5; display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.gateway-pill { display: inline-flex; align-items: center; gap: 0.22rem; color: #7b8da5; font-size: 0.71rem; font-weight: 600; }
+.gateway-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex: 1; min-width: 0; }
+.gateway-name { font-size: 0.83rem; font-weight: 700; color: #213047; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gateway-meta { font-size: 0.71rem; color: #7b8da5; display: inline-flex; align-items: center; gap: 0.34rem; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.gateway-pill { display: inline-flex; align-items: center; gap: 0.22rem; color: #7b8da5; font-size: 0.71rem; font-weight: 600; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .gateway-status { border-radius: 999px; padding: 0.12rem 0.46rem; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; }
 .gateway-status.connected  { background: #14a36f; }
 .gateway-status.connecting { background: #e4a313; color: #253046; }
@@ -1397,10 +1397,10 @@ body.is-resizing-dashboard-row {
 
 .sensor-summary-row { display: flex; align-items: center; gap: 0.42rem; flex-wrap: wrap; margin-bottom: 0.45rem; }
 .sensor-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.24rem; }
-.sensor-item { border-bottom: 1px solid #edf2f7; padding: 0.52rem 0; display: grid; gap: 0.18rem; }
+.sensor-item { border-bottom: 1px solid #edf2f7; padding: 0.44rem 0; display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
 .sensor-item:last-child { border-bottom: 0; padding-bottom: 0; }
-.sensor-item-head { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
-.sensor-item-main { display: flex; align-items: center; gap: 0.52rem; min-width: 0; }
+.sensor-item-head { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; flex: 1; min-width: 0; }
+.sensor-item-main { display: flex; align-items: center; gap: 0.52rem; min-width: 0; flex: 1; }
 .sensor-dot { width: 0.54rem; height: 0.54rem; border-radius: 50%; flex-shrink: 0; display: inline-block; }
 .sensor-dot.online  { background: #14a36f; }
 .sensor-dot.initial { background: #7c8fa8; }
@@ -1414,8 +1414,8 @@ body.is-resizing-dashboard-row {
 .sensor-status.warn    { background: #fff6e6; color: #a16600; }
 .sensor-status.offline { background: #fff1f3; color: #b6343c; }
 .sensor-status.unknown { background: #f1f5f9; color: #64748b; }
-.sensor-meta { font-size: 0.71rem; color: #7b8da5; display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.sensor-pill { display: inline-flex; align-items: center; gap: 0.22rem; color: #7b8da5; font-size: 0.71rem; font-weight: 600; }
+.sensor-meta { font-size: 0.71rem; color: #7b8da5; display: inline-flex; align-items: center; gap: 0.34rem; white-space: nowrap; margin-left: 0.18rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sensor-pill { display: inline-flex; align-items: center; gap: 0.22rem; color: #7b8da5; font-size: 0.71rem; font-weight: 600; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 /* ═══════════════════════════════════════════════════════
    Signal quality
@@ -4334,7 +4334,7 @@ function updateGatewayActions(data) {
             : (status === 'connecting'
                 ? appTranslate('common.connecting', 'connecting')
                 : appTranslate('common.offline', 'offline'));
-        return `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span></div><span class="gateway-status ${status}">${statusLabel}</span></div><div class="gateway-meta"><span class="gateway-pill">${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span></div></li>`;
+        return `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span><span class="gateway-meta"><span class="gateway-pill">${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span></span></div><span class="gateway-status ${status}">${statusLabel}</span></div></li>`;
     }).join('');
 }
 
@@ -4405,7 +4405,7 @@ function updateSensorRuntimeList(data) {
         const subline = lastSeen
             ? `<span class="sensor-pill">${escapeHtml(lastSeen)}</span>`
             : `<span class="sensor-pill">${escapeHtml(shortId(eui, 12))}</span>`;
-        return `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot ${tier}"></span><span class="sensor-name">${name}</span></div><span class="sensor-status ${tier}">${status}</span></div><div class="sensor-meta">${subline}</div></li>`;
+        return `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot ${tier}"></span><span class="sensor-name">${name}</span><span class="sensor-meta">${subline}</span></div><span class="sensor-status ${tier}">${status}</span></div></li>`;
     }).join('');
 }
 
