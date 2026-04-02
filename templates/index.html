@@ -709,9 +709,14 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
 .dashboard-shell {
     display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     gap: 0.55rem;
-    --dashboard-side-width: 360px;
+    min-height: calc(100svh - 8.1rem);
+    --dashboard-side-width: 420px;
     --dashboard-grid-gap: 0.8rem;
+    --dashboard-sensor-height: 18rem;
+    --dashboard-gateway-height: 10rem;
+    --dashboard-rail-handle-size: 12px;
 }
 
 @keyframes deck-enter {
@@ -837,6 +842,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 /* ── Main grid ─────────────────────────────────────── */
 .dashboard-grid {
     min-height: 0;
+    height: 100%;
     padding: 0;
     display: grid;
     grid-template-columns: minmax(18rem, var(--dashboard-side-width)) minmax(0, 1fr);
@@ -852,9 +858,15 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 #signal-panel    { display: none; }
 
 .dashboard-side-rail {
-    min-height: 42rem;
+    min-height: 0;
+    height: 100%;
     display: grid;
-    grid-template-rows: minmax(0, 1.25fr) auto minmax(12rem, 0.9fr);
+    grid-template-rows:
+        minmax(12rem, var(--dashboard-sensor-height))
+        var(--dashboard-rail-handle-size)
+        minmax(8.5rem, var(--dashboard-gateway-height))
+        var(--dashboard-rail-handle-size)
+        minmax(11rem, 1fr);
     gap: var(--dashboard-grid-gap);
 }
 
@@ -889,6 +901,36 @@ body.is-resizing-dashboard .dashboard-resizer::before {
 
 body.is-resizing-dashboard {
     cursor: col-resize;
+    user-select: none;
+}
+
+.dashboard-rail-resizer {
+    position: relative;
+    cursor: row-resize;
+    touch-action: none;
+    z-index: 3;
+}
+
+.dashboard-rail-resizer::before {
+    content: "";
+    position: absolute;
+    left: 0.6rem;
+    right: 0.6rem;
+    top: 50%;
+    height: 2px;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    background: transparent;
+    transition: background 0.15s ease;
+}
+
+.dashboard-rail-resizer:hover::before,
+body.is-resizing-dashboard-row .dashboard-rail-resizer::before {
+    background: #cfd9e6;
+}
+
+body.is-resizing-dashboard-row {
+    cursor: row-resize;
     user-select: none;
 }
 
@@ -1003,7 +1045,7 @@ body.is-resizing-dashboard {
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 42rem;
+    min-height: 0;
 }
 
 #topology-panel {
@@ -1014,6 +1056,8 @@ body.is-resizing-dashboard {
     border: 1px solid #e5edf5;
     padding: 0.78rem 0.82rem;
     overflow: hidden;
+    min-height: 0;
+    height: 100%;
 }
 
 #topology-panel .deck-head {
@@ -1054,6 +1098,11 @@ body.is-resizing-dashboard {
     align-content: start;
     overflow: auto;
     overscroll-behavior: contain;
+}
+
+.topology-wrap {
+    flex: 1;
+    min-height: 0;
 }
 
 #traffic-panel .deck-body {
@@ -1607,9 +1656,16 @@ body.is-resizing-dashboard {
 @media (max-width: 1100px) {
     .dashboard-grid { grid-template-columns: 1fr; }
     .dashboard-resizer { display: none; }
+    .dashboard-rail-resizer { display: none; }
 
     #topology-panel { grid-column: 1; grid-row: 1; }
-    #dashboard-side-rail { grid-column: 1; grid-row: 2; min-height: 0; grid-template-rows: auto; }
+    #dashboard-side-rail {
+        grid-column: 1;
+        grid-row: 2;
+        min-height: 0;
+        height: auto;
+        grid-template-rows: auto auto auto;
+    }
 
     .topology-wrap  { flex: none; min-height: 20rem; height: 20rem; }
 }
@@ -1618,7 +1674,13 @@ body.is-resizing-dashboard {
     .dashboard-grid { grid-template-columns: 1fr; }
 
     #topology-panel { grid-column: 1; grid-row: 1; }
-    #dashboard-side-rail { grid-column: 1; grid-row: 2; min-height: 0; grid-template-rows: auto; }
+    #dashboard-side-rail {
+        grid-column: 1;
+        grid-row: 2;
+        min-height: 0;
+        height: auto;
+        grid-template-rows: auto auto auto;
+    }
 
     .topology-wrap { height: 16rem; }
     .overview-panel .overview-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -1729,6 +1791,8 @@ body.is-resizing-dashboard {
                 </div>
             </div>
 
+            <div id="dashboard-gateway-resizer-top" class="dashboard-rail-resizer" aria-hidden="true"></div>
+
             <div id="gateway-panel" class="deck-panel panel-size-normal layout-widget">
                 <div class="deck-head">
                     <h5><span class="deck-head-icon"><i class="fas fa-broadcast-tower"></i></span>{{ t('nav.base_stations', 'Base Stations') }}</h5>
@@ -1748,6 +1812,8 @@ body.is-resizing-dashboard {
                     <div id="bs-euis" style="display:none;"></div>
                 </div>
             </div>
+
+            <div id="dashboard-gateway-resizer-bottom" class="dashboard-rail-resizer" aria-hidden="true"></div>
 
             <div id="alert-panel" class="deck-panel panel-size-normal layout-widget">
                 <div class="deck-head">
@@ -2963,9 +3029,17 @@ const MINI_DEFAULT_ZOOM = 15;
 const DASHBOARD_CACHE_KEY = 'dashboard_workspace_bundle_v1';
 const DASHBOARD_CACHE_TTL_MS = 8000;
 const DASHBOARD_SIDE_WIDTH_KEY = 'service-center.dashboard.side-width.v1';
-const DASHBOARD_SIDE_WIDTH_MIN = 300;
-const DASHBOARD_SIDE_WIDTH_MAX = 520;
-const DASHBOARD_SIDE_WIDTH_DEFAULT = 360;
+const DASHBOARD_SIDE_WIDTH_MIN = 320;
+const DASHBOARD_SIDE_WIDTH_MAX = 680;
+const DASHBOARD_SIDE_WIDTH_DEFAULT = 420;
+const DASHBOARD_SENSOR_HEIGHT_KEY = 'service-center.dashboard.sensor-height.v1';
+const DASHBOARD_GATEWAY_HEIGHT_KEY = 'service-center.dashboard.gateway-height.v1';
+const DASHBOARD_SENSOR_HEIGHT_MIN = 180;
+const DASHBOARD_GATEWAY_HEIGHT_MIN = 140;
+const DASHBOARD_ALERT_HEIGHT_MIN = 176;
+const DASHBOARD_SENSOR_HEIGHT_DEFAULT = 288;
+const DASHBOARD_GATEWAY_HEIGHT_DEFAULT = 168;
+const DASHBOARD_RAIL_HANDLE_SIZE = 12;
 const DASHBOARD_SKELETON_TARGETS = [
     '#dashboard-canvas'
 ];
@@ -2978,6 +3052,10 @@ function getDashboardGrid() {
 
 function getDashboardShell() {
     return document.querySelector('.dashboard-shell');
+}
+
+function getDashboardSideRail() {
+    return document.getElementById('dashboard-side-rail');
 }
 
 function clampDashboardSideWidth(value) {
@@ -2995,6 +3073,50 @@ function applyDashboardSideWidth(value, options = {}) {
     if (options.persist !== false) {
         try {
             localStorage.setItem(DASHBOARD_SIDE_WIDTH_KEY, String(width));
+        } catch (error) {
+            /* no-op */
+        }
+    }
+}
+
+function clampDashboardRailHeights(sensorHeight, gatewayHeight) {
+    const rail = getDashboardSideRail();
+    let nextSensor = Number(sensorHeight);
+    let nextGateway = Number(gatewayHeight);
+    if (!Number.isFinite(nextSensor)) nextSensor = DASHBOARD_SENSOR_HEIGHT_DEFAULT;
+    if (!Number.isFinite(nextGateway)) nextGateway = DASHBOARD_GATEWAY_HEIGHT_DEFAULT;
+
+    const railHeight = rail ? rail.getBoundingClientRect().height : 0;
+    if (railHeight > 0) {
+        const maxSensor = Math.max(
+            DASHBOARD_SENSOR_HEIGHT_MIN,
+            railHeight - DASHBOARD_GATEWAY_HEIGHT_MIN - DASHBOARD_ALERT_HEIGHT_MIN - (DASHBOARD_RAIL_HANDLE_SIZE * 2)
+        );
+        nextSensor = Math.min(maxSensor, Math.max(DASHBOARD_SENSOR_HEIGHT_MIN, nextSensor));
+
+        const maxGateway = Math.max(
+            DASHBOARD_GATEWAY_HEIGHT_MIN,
+            railHeight - nextSensor - DASHBOARD_ALERT_HEIGHT_MIN - (DASHBOARD_RAIL_HANDLE_SIZE * 2)
+        );
+        nextGateway = Math.min(maxGateway, Math.max(DASHBOARD_GATEWAY_HEIGHT_MIN, nextGateway));
+    } else {
+        nextSensor = Math.max(DASHBOARD_SENSOR_HEIGHT_MIN, nextSensor);
+        nextGateway = Math.max(DASHBOARD_GATEWAY_HEIGHT_MIN, nextGateway);
+    }
+
+    return { sensorHeight: nextSensor, gatewayHeight: nextGateway };
+}
+
+function applyDashboardRailHeights(sensorHeight, gatewayHeight, options = {}) {
+    const shell = getDashboardShell();
+    if (!shell) return;
+    const next = clampDashboardRailHeights(sensorHeight, gatewayHeight);
+    shell.style.setProperty('--dashboard-sensor-height', `${next.sensorHeight}px`);
+    shell.style.setProperty('--dashboard-gateway-height', `${next.gatewayHeight}px`);
+    if (options.persist !== false) {
+        try {
+            localStorage.setItem(DASHBOARD_SENSOR_HEIGHT_KEY, String(next.sensorHeight));
+            localStorage.setItem(DASHBOARD_GATEWAY_HEIGHT_KEY, String(next.gatewayHeight));
         } catch (error) {
             /* no-op */
         }
@@ -3041,6 +3163,76 @@ function initDashboardResizer() {
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerup', stopDrag);
         window.addEventListener('pointercancel', stopDrag);
+    });
+}
+
+function initDashboardRailResizers() {
+    const topHandle = document.getElementById('dashboard-gateway-resizer-top');
+    const bottomHandle = document.getElementById('dashboard-gateway-resizer-bottom');
+    const gatewayPanel = document.getElementById('gateway-panel');
+    const rail = getDashboardSideRail();
+
+    let savedSensorHeight = DASHBOARD_SENSOR_HEIGHT_DEFAULT;
+    let savedGatewayHeight = DASHBOARD_GATEWAY_HEIGHT_DEFAULT;
+    try {
+        const rawSensor = localStorage.getItem(DASHBOARD_SENSOR_HEIGHT_KEY);
+        const rawGateway = localStorage.getItem(DASHBOARD_GATEWAY_HEIGHT_KEY);
+        if (rawSensor !== null) savedSensorHeight = Number(rawSensor);
+        if (rawGateway !== null) savedGatewayHeight = Number(rawGateway);
+    } catch (error) {
+        savedSensorHeight = DASHBOARD_SENSOR_HEIGHT_DEFAULT;
+        savedGatewayHeight = DASHBOARD_GATEWAY_HEIGHT_DEFAULT;
+    }
+    applyDashboardRailHeights(savedSensorHeight, savedGatewayHeight, { persist: false });
+
+    if (!topHandle || !bottomHandle || !gatewayPanel || !rail) return;
+
+    const onTopPointerMove = (event) => {
+        const railRect = rail.getBoundingClientRect();
+        const nextSensorHeight = event.clientY - railRect.top - (DASHBOARD_RAIL_HANDLE_SIZE / 2);
+        const currentGatewayHeight = parseFloat(getComputedStyle(getDashboardShell()).getPropertyValue('--dashboard-gateway-height')) || DASHBOARD_GATEWAY_HEIGHT_DEFAULT;
+        applyDashboardRailHeights(nextSensorHeight, currentGatewayHeight);
+    };
+
+    const onBottomPointerMove = (event) => {
+        const gatewayRect = gatewayPanel.getBoundingClientRect();
+        const currentSensorHeight = parseFloat(getComputedStyle(getDashboardShell()).getPropertyValue('--dashboard-sensor-height')) || DASHBOARD_SENSOR_HEIGHT_DEFAULT;
+        const nextGatewayHeight = event.clientY - gatewayRect.top;
+        applyDashboardRailHeights(currentSensorHeight, nextGatewayHeight);
+    };
+
+    const stopTopDrag = () => {
+        document.body.classList.remove('is-resizing-dashboard-row');
+        window.removeEventListener('pointermove', onTopPointerMove);
+        window.removeEventListener('pointerup', stopTopDrag);
+        window.removeEventListener('pointercancel', stopTopDrag);
+    };
+
+    const stopBottomDrag = () => {
+        document.body.classList.remove('is-resizing-dashboard-row');
+        window.removeEventListener('pointermove', onBottomPointerMove);
+        window.removeEventListener('pointerup', stopBottomDrag);
+        window.removeEventListener('pointercancel', stopBottomDrag);
+    };
+
+    topHandle.addEventListener('pointerdown', (event) => {
+        if (window.innerWidth <= 1100) return;
+        event.preventDefault();
+        document.body.classList.add('is-resizing-dashboard-row');
+        topHandle.setPointerCapture?.(event.pointerId);
+        window.addEventListener('pointermove', onTopPointerMove);
+        window.addEventListener('pointerup', stopTopDrag);
+        window.addEventListener('pointercancel', stopTopDrag);
+    });
+
+    bottomHandle.addEventListener('pointerdown', (event) => {
+        if (window.innerWidth <= 1100) return;
+        event.preventDefault();
+        document.body.classList.add('is-resizing-dashboard-row');
+        bottomHandle.setPointerCapture?.(event.pointerId);
+        window.addEventListener('pointermove', onBottomPointerMove);
+        window.addEventListener('pointerup', stopBottomDrag);
+        window.addEventListener('pointercancel', stopBottomDrag);
     });
 }
 
@@ -4337,6 +4529,7 @@ async function refreshNow(manualTrigger) {
 document.addEventListener('DOMContentLoaded', function() {
     bindPanelNavigation();
     initDashboardResizer();
+    initDashboardRailResizers();
     const dashboardGrid = getDashboardGrid();
     if (dashboardGrid) requestAnimationFrame(() => dashboardGrid.classList.add('layout-ready'));
     if (window.AppPerf && typeof window.AppPerf.observeLazy === 'function') {
@@ -4357,6 +4550,12 @@ document.addEventListener('DOMContentLoaded', function() {
     scheduleAutoRefresh();
 
     window.addEventListener('resize', () => {
+        const shell = getDashboardShell();
+        if (shell && window.innerWidth > 1100) {
+            const sensorHeight = parseFloat(getComputedStyle(shell).getPropertyValue('--dashboard-sensor-height')) || DASHBOARD_SENSOR_HEIGHT_DEFAULT;
+            const gatewayHeight = parseFloat(getComputedStyle(shell).getPropertyValue('--dashboard-gateway-height')) || DASHBOARD_GATEWAY_HEIGHT_DEFAULT;
+            applyDashboardRailHeights(sensorHeight, gatewayHeight, { persist: false });
+        }
         refreshMiniViewportAfterLayoutChange();
     });
     document.addEventListener('app:display-prefs-changed', () => {
