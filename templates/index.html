@@ -709,9 +709,9 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
 .dashboard-shell {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    gap: 0.12rem;
-    min-height: calc(100svh - 8.1rem);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
+    min-height: calc(100svh - 7rem);
     --dashboard-side-width: 420px;
     --dashboard-grid-gap: 0.12rem;
     --dashboard-sensor-height: 12rem;
@@ -725,120 +725,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 }
 
 /* ── Toolbar ───────────────────────────────────────── */
-.dashboard-utility {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0.12rem 0 0.16rem;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.55rem;
-    flex-wrap: wrap;
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    margin: 0;
-    border-bottom: 1px solid rgba(227, 235, 244, 0.92);
-}
-
-.dashboard-utility-actions {
-    margin-top: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-}
-
-.dashboard-utility-tools { display: none; }
-
-.dashboard-toolbar-toggle,
-.dashboard-refresh-btn,
-.dashboard-toolbar-pill,
-.dashboard-layout-menu-btn {
-    min-height: 1.96rem;
-    border: 1px solid #e1e8f1;
-    border-radius: 0.72rem;
-    background: #ffffff;
-    box-shadow: none;
-}
-
-.dashboard-toolbar-toggle {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.16rem 0.5rem;
-}
-
-.dashboard-toolbar-toggle .form-check.form-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.56rem;
-    margin: 0;
-    padding-left: 0;
-    min-height: 0;
-}
-
-.dashboard-toolbar-toggle .form-check-input {
-    margin: 0;
-    float: none;
-    flex-shrink: 0;
-}
-
-.dashboard-auto-label {
-    color: #64758c !important;
-    font-size: 0.7rem;
-    font-weight: 700;
-    line-height: 1;
-    margin: 0 !important;
-}
-
-.control-meta {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.68rem;
-    color: #607089;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.dashboard-toolbar-pill {
-    padding: 0.24rem 0.56rem;
-}
-
-.control-meta-cache {
-    color: #69809c;
-    background: #f8fbff;
-}
-
-.dashboard-refresh-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.38rem;
-    padding: 0.24rem 0.66rem;
-    font-size: 0.74rem;
-    font-weight: 700;
-    color: #314964;
-}
-
-.dashboard-refresh-btn:hover,
-.dashboard-refresh-btn:focus,
-.dashboard-toolbar-toggle:hover,
-.dashboard-toolbar-pill:hover {
-    border-color: #d3ddea;
-    background: #fbfdff;
-}
-
-#last-updated {
-    color: #2d4665;
-}
-
-#dashboard-cache-age {
-    opacity: 0.92;
-}
-
 /* ── Main grid ─────────────────────────────────────── */
 .dashboard-grid {
     min-height: 0;
@@ -1701,26 +1587,12 @@ body.is-resizing-dashboard-row {
     .overview-grid,
     .stat-grid, .ops-stat-grid, .ops-meta-grid { grid-template-columns: 1fr; }
 
-    .dashboard-utility-actions { width: 100%; justify-content: flex-start; }
     .topology-map-position { display: none; }
 }
 
 </style>
 
 <div class="dashboard-shell">
-    <section class="dashboard-utility">
-        <div class="dashboard-utility-actions">
-            <div class="dashboard-toolbar-toggle">
-            <div class="form-check form-switch m-0">
-                <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" checked>
-                <label class="form-check-label dashboard-auto-label ms-1" for="auto-refresh-toggle">{{ t('dashboard.auto_refresh', 'Auto-refresh') }}</label>
-            </div>
-            </div>
-            <button class="btn btn-sm btn-outline-secondary dashboard-refresh-btn" id="refresh-now"><i class="fas fa-sync"></i> {{ t('common.refresh', 'Refresh') }}</button>
-            <span class="dashboard-toolbar-pill control-meta" id="last-updated">{{ t('dashboard.waiting_first_update', 'Waiting for first update...') }}</span>
-            <span class="dashboard-toolbar-pill control-meta control-meta-cache" id="dashboard-cache-age">{{ t('dashboard.cache_label', 'Cache') }} -</span>
-        </div>
-    </section>
     <section id="dashboard-canvas" class="dashboard-grid">
         <section id="kpi-grid" class="deck-panel panel-size-normal layout-widget overview-panel">
             <div class="deck-head">
@@ -3001,7 +2873,6 @@ let cyMini = null;
 let miniOsmMap = null;
 let miniCoverageLayer = null;
 let refreshTimer = null;
-let autoRefreshEnabled = true;
 let miniTopologyView = 'map';
 let latestTopologyData = null;
 let latestCoverageState = null;
@@ -3016,7 +2887,6 @@ let miniCoverageViewInitialized = false;
 let miniMapSaveStatusTimer = null;
 let miniGraphInitialized = false;
 let miniGraphUserViewLocked = false;
-let dashboardCacheTickTimer = null;
 
 const DASHBOARD_CACHE_STATE = {
     source: 'none',
@@ -3366,8 +3236,6 @@ function applyDashboardPayload(payload, meta = {}) {
     updateLastUpdatedLabel(meta && Number.isFinite(meta.ts) ? meta.ts : undefined);
     updateDashboardCacheIndicator(meta);
     dashboardHydrated = true;
-    finishRefreshBar();
-    if (autoRefreshEnabled) startRefreshBar();
 }
 
 function fetchDashboardPayload() {
@@ -3429,7 +3297,9 @@ function setTrendNumeric(id, current, previous, suffix) {
 
 function updateLastUpdatedLabel(timestamp) {
     const when = Number.isFinite(Number(timestamp)) ? new Date(Number(timestamp)) : new Date();
-    document.getElementById('last-updated').textContent = appTranslate('dashboard.last_updated_time', `Updated ${AppTime.formatTime(when)}`, {
+    const el = document.getElementById('last-updated');
+    if (!el) return;
+    el.textContent = appTranslate('dashboard.last_updated_time', `Updated ${AppTime.formatTime(when)}`, {
         time: AppTime.formatTime(when)
     });
 }
@@ -4441,22 +4311,16 @@ function renderIncidents(incidents) {
 }
 
 /* ── Refresh progress bar ──────────────────────────── */
-function startRefreshBar() {
-    return;
-}
-
-function finishRefreshBar() {
-    return;
-}
-
 function scheduleAutoRefresh() {
     if (refreshTimer) {
-        clearInterval(refreshTimer);
+        clearTimeout(refreshTimer);
         refreshTimer = null;
     }
-    if (autoRefreshEnabled) {
-        refreshTimer = setInterval(() => refreshNow(false), 5000);
-    }
+    const delay = document.hidden ? 18000 : 6500 + Math.round(Math.random() * 1500);
+    refreshTimer = window.setTimeout(async () => {
+        await refreshNow(false);
+        scheduleAutoRefresh();
+    }, delay);
 }
 
 async function refreshNow(manualTrigger) {
@@ -4510,10 +4374,6 @@ async function refreshNow(manualTrigger) {
     } catch (error) {
         console.error('Dashboard refresh failed:', error);
         setDashboardSkeletonState(false);
-    } finally {
-        if (manualTrigger) {
-            document.getElementById('refresh-now')?.blur();
-        }
     }
 }
 
@@ -4528,17 +4388,15 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         ensureMiniRuntimeInitialized();
     }
-    document.getElementById('refresh-now').addEventListener('click', () => refreshNow(true));
-    document.getElementById('auto-refresh-toggle').addEventListener('change', function(e) {
-        autoRefreshEnabled = e.target.checked;
-        scheduleAutoRefresh();
-    });
-
-    dashboardCacheTickTimer = setInterval(renderDashboardCacheIndicator, 1000);
     setDashboardSkeletonState(true, { soft: true });
-    startRefreshBar();
     refreshNow(false);
     scheduleAutoRefresh();
+    document.addEventListener('visibilitychange', () => {
+        scheduleAutoRefresh();
+        if (!document.hidden && Date.now() - Number(DASHBOARD_CACHE_STATE.ts || 0) > 12000) {
+            refreshNow(false);
+        }
+    });
 
     window.addEventListener('resize', () => {
         const shell = getDashboardShell();
