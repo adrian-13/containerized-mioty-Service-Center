@@ -958,7 +958,10 @@ body.is-resizing-dashboard-row {
 }
 
 #topology-panel .topology-head-actions {
-    display: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-left: auto;
 }
 
 #alert-panel .deck-body {
@@ -996,6 +999,7 @@ body.is-resizing-dashboard-row {
 .topology-wrap {
     flex: 1;
     min-height: 0;
+    position: relative;
 }
 
 #traffic-panel .deck-body {
@@ -1203,6 +1207,12 @@ body.is-resizing-dashboard-row {
     gap: 0.38rem;
 }
 
+#topology-panel .topology-mini-switch,
+#topology-panel .topology-head-actions small,
+#topology-panel .topology-mini-save {
+    display: none;
+}
+
 .topology-map-position {
     font-size: 0.64rem;
     font-weight: 700;
@@ -1230,6 +1240,82 @@ body.is-resizing-dashboard-row {
 .topology-mini-save-status { font-size: 0.64rem; font-weight: 700; color: var(--text-500); white-space: nowrap; }
 .topology-mini-save-status.ok  { color: #0f9d69; }
 .topology-mini-save-status.err { color: #cb3a42; }
+
+.topology-map-toast {
+    position: absolute;
+    left: 50%;
+    bottom: 0.8rem;
+    transform: translateX(-50%);
+    z-index: 24;
+    background: rgba(15, 23, 42, 0.84);
+    color: #ffffff;
+    border-radius: 0.55rem;
+    padding: 0.36rem 0.82rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.2);
+    animation: scToastIn 0.16s ease;
+}
+
+.sc-ctx {
+    position: fixed;
+    z-index: 9000;
+    background: #ffffff;
+    border: 1px solid #d6dfec;
+    border-radius: 0.72rem;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
+    padding: 0.32rem 0;
+    min-width: 172px;
+    outline: none;
+    animation: scCtxIn 0.1s ease;
+}
+
+@keyframes scCtxIn {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.sc-ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.46rem 0.9rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1e2d3d;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s, color 0.1s;
+}
+
+.sc-ctx-item:hover {
+    background: #f3f7fe;
+    color: #1c3a5e;
+}
+
+.sc-ctx-item.is-primary {
+    color: var(--brand-600);
+}
+
+.sc-ctx-item.is-primary:hover {
+    background: rgba(var(--brand-rgb), 0.09);
+    color: var(--brand-700);
+}
+
+.sc-ctx-item i {
+    width: 0.9rem;
+    text-align: center;
+    font-size: 0.78rem;
+    opacity: 0.72;
+    flex-shrink: 0;
+}
+
+@keyframes scToastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
 
 .network-canvas {
     border: 1px solid #e5edf5;
@@ -2888,6 +2974,8 @@ let miniCoverageViewInitialized = false;
 let miniMapSaveStatusTimer = null;
 let miniGraphInitialized = false;
 let miniGraphUserViewLocked = false;
+let miniMapToastTimer = null;
+let miniCtxEl = null;
 
 const DASHBOARD_CACHE_STATE = {
     source: 'none',
@@ -3149,6 +3237,78 @@ function escapeHtml(value) {
         .replaceAll("'", '&#39;');
 }
 
+function closeMiniCtx() {
+    if (miniCtxEl) {
+        miniCtxEl.remove();
+        miniCtxEl = null;
+    }
+}
+
+function showMiniCtx(eventLike, items) {
+    if (!eventLike || !Array.isArray(items) || items.length === 0) return;
+    if (typeof eventLike.preventDefault === 'function') eventLike.preventDefault();
+    if (typeof eventLike.stopPropagation === 'function') eventLike.stopPropagation();
+    closeMiniCtx();
+
+    const menu = document.createElement('div');
+    menu.className = 'sc-ctx';
+    menu.tabIndex = -1;
+
+    items.forEach((item) => {
+        const node = document.createElement('div');
+        node.className = 'sc-ctx-item' + (item.primary ? ' is-primary' : '');
+        node.innerHTML = '<i class="fas ' + escapeHtml(item.icon || 'fa-circle') + '"></i>' + escapeHtml(item.label || '');
+        node.addEventListener('click', () => {
+            closeMiniCtx();
+            if (typeof item.action === 'function') item.action();
+        });
+        menu.appendChild(node);
+    });
+
+    document.body.appendChild(menu);
+    miniCtxEl = menu;
+
+    const menuWidth = menu.offsetWidth;
+    const menuHeight = menu.offsetHeight;
+    const maxX = window.innerWidth - menuWidth - 8;
+    const maxY = window.innerHeight - menuHeight - 8;
+    const x = Math.max(8, Math.min(Number(eventLike.clientX || 0), maxX));
+    const y = Math.max(8, Math.min(Number(eventLike.clientY || 0), maxY));
+
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+    menu.focus();
+}
+
+function showMiniMapToast(message, duration = 2200) {
+    const host = document.querySelector('#topology-panel .topology-wrap');
+    if (!host || !message) return;
+
+    const existing = host.querySelector('.topology-map-toast');
+    if (existing) existing.remove();
+    if (miniMapToastTimer) {
+        clearTimeout(miniMapToastTimer);
+        miniMapToastTimer = null;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'topology-map-toast';
+    toast.textContent = message;
+    host.appendChild(toast);
+
+    miniMapToastTimer = window.setTimeout(() => {
+        toast.remove();
+        miniMapToastTimer = null;
+    }, duration);
+}
+
+document.addEventListener('click', closeMiniCtx);
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeMiniCtx();
+    }
+});
+
 function shortId(value, size = 8) {
     const text = String(value ?? '');
     if (!text) return 'unknown';
@@ -3181,14 +3341,7 @@ function ensureMiniRuntimeInitialized() {
     initMiniNetwork();
     miniRuntimeInitialized = true;
 
-    let savedView = 'map';
-    try {
-        const rawView = localStorage.getItem(DASHBOARD_MINI_VIEW_KEY);
-        if (rawView === 'graph' || rawView === 'map') savedView = rawView;
-    } catch (error) {
-        savedView = 'map';
-    }
-    setMiniTopologyView(savedView);
+    setMiniTopologyView('map');
     refreshMiniViewportAfterLayoutChange();
 
     if (latestTopologyData || latestCoverageState || latestSensorInventoryData) {
@@ -3428,12 +3581,25 @@ function initMiniCoverageMap() {
     miniOsmMap.setView(MINI_DEFAULT_CENTER, MINI_DEFAULT_ZOOM);
     updateMiniMapPositionLabel();
     miniOsmMap.on('moveend zoomend', updateMiniMapPositionLabel);
+    miniOsmMap.on('contextmenu', (event) => {
+        L.DomEvent.preventDefault(event.originalEvent);
+        L.DomEvent.stopPropagation(event.originalEvent);
+        showMiniCtx(event.originalEvent, [
+            {
+                icon: 'fa-map-pin',
+                primary: true,
+                label: appTranslate('dashboard.set_default_map_view', 'Nastaviť ako východzí pohľad'),
+                action: () => saveMiniMapView()
+            }
+        ]);
+    });
     bindMiniMapSaveControl();
 
     mapContainer.addEventListener('click', (event) => event.stopPropagation());
     mapContainer.addEventListener('mousedown', (event) => event.stopPropagation());
     mapContainer.addEventListener('dblclick', (event) => event.stopPropagation());
     mapContainer.addEventListener('wheel', (event) => event.stopPropagation());
+    mapContainer.addEventListener('contextmenu', (event) => event.stopPropagation());
 }
 
 function enhanceMiniMapZoomButtons(mapInstance) {
@@ -3546,14 +3712,17 @@ async function saveMiniMapView() {
             } catch (error) {
                 // ignore JSON parse issues
             }
-            setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed', `Save failed: ${errorText}`, { error: errorText }));
+            setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed', `Uloženie zlyhalo: ${errorText}`, { error: errorText }));
+            showMiniMapToast(appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'), 2200);
             return;
         }
         latestCoverageState = payload;
         miniCoverageViewInitialized = true;
-        setMiniMapSaveStatus('ok', appTranslate('dashboard.view_saved', 'View saved'));
+        setMiniMapSaveStatus('ok', appTranslate('dashboard.view_saved', 'Pohľad uložený'));
+        showMiniMapToast(appTranslate('dashboard.view_saved_toast', 'Pohľad uložený'), 2000);
     } catch (error) {
-        setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed_short', 'Save failed'));
+        setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'));
+        showMiniMapToast(appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'), 2200);
     }
 }
 
