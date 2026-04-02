@@ -1022,7 +1022,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     gap: 0.14rem;
     position: relative;
     overflow: hidden;
-    min-height: 6.35rem;
+    min-height: 5.55rem;
     transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
 }
 
@@ -1086,15 +1086,22 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     font-weight: 800;
     color: #13253d;
     letter-spacing: -0.02em;
-    margin-top: 0.12rem;
+}
+
+.overview-card-summary {
+    display: flex;
+    align-items: baseline;
+    gap: 0.42rem;
+    flex-wrap: wrap;
+    margin-top: 0.22rem;
 }
 
 .overview-card-detail {
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     font-weight: 700;
     color: #5f738e;
-    margin-top: 0.1rem;
     line-height: 1.35;
+    white-space: nowrap;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1575,8 +1582,10 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                                 <span class="overview-card-title">{{ t('dashboard.tls_server', 'TLS Server') }}</span>
                                 <span class="overview-card-icon"><i class="fas fa-lock"></i></span>
                             </div>
-                            <div class="overview-card-value" id="tls-status">--</div>
-                            <div class="overview-card-detail" id="tls-detail">{{ t('dashboard.port_label', 'Port') }} --</div>
+                            <div class="overview-card-summary">
+                                <div class="overview-card-value" id="tls-status">--</div>
+                                <div class="overview-card-detail" id="tls-detail">{{ t('dashboard.port_label', 'Port') }} --</div>
+                            </div>
                         </div>
                     </a>
                     <a href="/config" class="kpi-link">
@@ -1585,8 +1594,10 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                                 <span class="overview-card-title">{{ t('dashboard.mqtt_broker', 'MQTT Broker') }}</span>
                                 <span class="overview-card-icon"><i class="fas fa-cloud"></i></span>
                             </div>
-                            <div class="overview-card-value" id="mqtt-status">--</div>
-                            <div class="overview-card-detail" id="mqtt-detail">--</div>
+                            <div class="overview-card-summary">
+                                <div class="overview-card-value" id="mqtt-status">--</div>
+                                <div class="overview-card-detail" id="mqtt-detail">--</div>
+                            </div>
                         </div>
                     </a>
                     <a href="/base-stations" class="kpi-link">
@@ -1595,8 +1606,10 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                                 <span class="overview-card-title">{{ t('nav.base_stations', 'Base Stations') }}</span>
                                 <span class="overview-card-icon"><i class="fas fa-broadcast-tower"></i></span>
                             </div>
-                            <div class="overview-card-value" id="bs-count">0</div>
-                            <div class="overview-card-detail" id="bs-detail">{{ t('dashboard.connected_gateways', 'Connected base stations') }}</div>
+                            <div class="overview-card-summary">
+                                <div class="overview-card-value" id="bs-count">0</div>
+                                <div class="overview-card-detail" id="bs-detail">{{ t('dashboard.connected_gateways', 'Connected base stations') }}</div>
+                            </div>
                         </div>
                     </a>
                     <a href="/sensors" class="kpi-link">
@@ -1605,8 +1618,10 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                                 <span class="overview-card-title">{{ t('nav.sensors', 'Sensors') }}</span>
                                 <span class="overview-card-icon"><i class="fas fa-microchip"></i></span>
                             </div>
-                            <div class="overview-card-value" id="sensor-count">0</div>
-                            <div class="overview-card-detail" id="sensor-detail">0 {{ t('dashboard.configured', 'configured') }}</div>
+                            <div class="overview-card-summary">
+                                <div class="overview-card-value" id="sensor-count">0</div>
+                                <div class="overview-card-detail" id="sensor-detail">0 {{ t('dashboard.configured', 'configured') }}</div>
+                            </div>
                         </div>
                     </a>
                 </div>
