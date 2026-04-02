@@ -1009,6 +1009,12 @@ body.is-resizing-dashboard-row {
     font-size: 0.66rem;
 }
 
+#sensor-panel .deck-head small,
+#gateway-panel .deck-head small,
+#alert-panel .deck-head small {
+    display: none;
+}
+
 .deck-head-link {
     display: inline-flex;
     align-items: center;
@@ -1378,17 +1384,17 @@ body.is-resizing-dashboard-row {
 /* ═══════════════════════════════════════════════════════
    Alert feed
    ═══════════════════════════════════════════════════════ */
-.rail-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.34rem; }
+.rail-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.28rem; }
 .rail-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.52rem; border-bottom: 1px solid #eef3f8; padding-bottom: 0.36rem; font-size: 0.76rem; }
 .rail-item:last-child { border-bottom: 0; padding-bottom: 0; }
 .rail-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #93a3ba; }
 .rail-dot.good { background: #14a36f; }
 .rail-dot.warn { background: #e4a313; }
 .rail-dot.bad  { background: #cb3a42; }
-.rail-note { font-size: 0.74rem; color: #5f7088; text-align: right; }
+.rail-note { font-size: 0.7rem; color: #90a0b5; text-align: right; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
 
-.alert-summary-row { display: flex; align-items: center; gap: 0.36rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-.alert-counter { display: inline-flex; align-items: center; gap: 0.24rem; padding: 0.18rem 0.44rem; border-radius: 0.58rem; border: 1px solid #e2eaf3; background: #ffffff; color: #5f738e; font-size: 0.66rem; font-weight: 800; }
+.alert-summary-row { display: flex; align-items: center; gap: 0.36rem; flex-wrap: wrap; margin-bottom: 0.45rem; }
+.alert-counter { display: inline-flex; align-items: center; gap: 0.24rem; padding: 0.16rem 0.42rem; border-radius: 999px; border: 1px solid #e2eaf3; background: #ffffff; color: #5f738e; font-size: 0.64rem; font-weight: 800; }
 .alert-counter.is-danger  { border-color: #efc1c5; background: #fff3f4; color: #b2323a; }
 .alert-counter.is-warning { border-color: #f4d7ab; background: #fff8ec; color: #a06700; }
 .alert-counter.is-good    { border-color: #c6e5d6; background: #effcf5; color: #0f8e5f; }
@@ -1403,8 +1409,8 @@ body.is-resizing-dashboard-row {
     align-content: start;
 }
 
-.gateway-summary-row { display: flex; align-items: center; gap: 0.42rem; flex-wrap: wrap; margin-bottom: 0.56rem; }
-.gateway-summary-chip { display: inline-flex; align-items: center; gap: 0.24rem; padding: 0.18rem 0.42rem; border-radius: 0.58rem; border: 1px solid #e2eaf3; background: #ffffff; color: #5f738e; font-size: 0.66rem; font-weight: 800; }
+.gateway-summary-row { display: flex; align-items: center; gap: 0.42rem; flex-wrap: wrap; margin-bottom: 0.45rem; }
+.gateway-summary-chip { display: inline-flex; align-items: center; gap: 0.24rem; padding: 0.16rem 0.42rem; border-radius: 999px; border: 1px solid #e2eaf3; background: #ffffff; color: #5f738e; font-size: 0.64rem; font-weight: 800; }
 .gateway-item { border-bottom: 1px solid #edf2f7; padding: 0.52rem 0; display: grid; gap: 0.18rem; }
 .gateway-item:last-child { border-bottom: 0; padding-bottom: 0; }
 .gateway-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
@@ -1416,7 +1422,7 @@ body.is-resizing-dashboard-row {
 .gateway-status.connecting { background: #e4a313; color: #253046; }
 .gateway-status.offline    { background: #8e9db1; }
 
-.sensor-summary-row { display: flex; align-items: center; gap: 0.42rem; flex-wrap: wrap; margin-bottom: 0.56rem; }
+.sensor-summary-row { display: flex; align-items: center; gap: 0.42rem; flex-wrap: wrap; margin-bottom: 0.45rem; }
 .sensor-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.24rem; }
 .sensor-item { border-bottom: 1px solid #edf2f7; padding: 0.52rem 0; display: grid; gap: 0.18rem; }
 .sensor-item:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -1629,13 +1635,13 @@ body.is-resizing-dashboard-row {
     align-items: center;
     justify-content: center;
     text-align: center;
-    gap: 0.55rem;
+    gap: 0.45rem;
     flex: 1;
-    padding: 1.1rem 0.8rem;
+    padding: 0.8rem 0.6rem;
 }
 .all-clear-icon {
-    width: 2.8rem;
-    height: 2.8rem;
+    width: 2.2rem;
+    height: 2.2rem;
     border-radius: 50%;
     background: rgba(16, 185, 129, 0.12);
     color: #0d9466;
@@ -1646,7 +1652,7 @@ body.is-resizing-dashboard-row {
     box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.07);
 }
 .all-clear-title { margin: 0; font-size: 0.88rem; font-weight: 800; color: #183d2f; }
-.all-clear-note  { margin: 0; font-size: 0.72rem; color: #496b59; }
+.all-clear-note  { margin: 0; font-size: 0.72rem; color: #496b59; max-width: 20rem; }
 
 /* ═══════════════════════════════════════════════════════
    Responsive
@@ -1779,7 +1785,6 @@ body.is-resizing-dashboard-row {
             <div id="sensor-panel" class="deck-panel panel-size-normal layout-widget">
                 <div class="deck-head">
                     <h5><span class="deck-head-icon"><i class="fas fa-microchip"></i></span>{{ t('nav.sensors', 'Sensors') }}</h5>
-                    <small>{{ t('dashboard.sensor_runtime_overview', 'Runtime overview') }}</small>
                 </div>
                 <div class="deck-body">
                     <div class="sensor-summary-row" id="sensor-summary-row"></div>
@@ -1802,7 +1807,6 @@ body.is-resizing-dashboard-row {
             <div id="gateway-panel" class="deck-panel panel-size-normal layout-widget">
                 <div class="deck-head">
                     <h5><span class="deck-head-icon"><i class="fas fa-broadcast-tower"></i></span>{{ t('nav.base_stations', 'Base Stations') }}</h5>
-                    <small>{{ t('dashboard.connected_base_stations', 'Connected overview') }}</small>
                 </div>
                 <div class="deck-body">
                     <div class="gateway-summary-row" id="gateway-summary-row"></div>
@@ -1824,7 +1828,6 @@ body.is-resizing-dashboard-row {
             <div id="alert-panel" class="deck-panel panel-size-normal layout-widget">
                 <div class="deck-head">
                     <h5><span class="deck-head-icon"><i class="fas fa-exclamation-triangle"></i></span>{{ t('viewer.alerts', 'Alerts') }}</h5>
-                    <small>{{ t('dashboard.issues_requiring_attention', 'Critical first') }}</small>
                 </div>
                 <div class="deck-body">
                     <div class="alert-summary-row" id="alert-summary-row"></div>
@@ -4242,30 +4245,23 @@ function updateGatewayActions(data) {
     const summary = document.getElementById('gateway-summary-row');
     if (!data || !data.success || !Array.isArray(data.base_stations) || data.base_stations.length === 0) {
         if (summary) {
-            summary.innerHTML = `<span class="gateway-summary-chip">${appTranslate('dashboard.no_gateways_yet', 'No base stations yet')}</span>`;
+            summary.innerHTML = `<span class="gateway-summary-chip">0 ${appTranslate('nav.base_stations', 'Base Stations').toLowerCase()}</span>`;
         }
-        list.innerHTML = `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot offline"></span><span class="gateway-name">${appTranslate('dashboard.no_gateways_detected', 'No base stations detected')}</span></div><span class="gateway-status offline">${appTranslate('common.offline', 'offline')}</span></div><div class="gateway-meta"><span>${appTranslate('dashboard.check_base_station_config', 'Check base station configuration.')}</span></div></li>`;
+        list.innerHTML = `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot offline"></span><span class="gateway-name">${appTranslate('dashboard.no_gateways_detected', 'No base stations detected')}</span></div><span class="gateway-status offline">${appTranslate('common.offline', 'offline')}</span></div></li>`;
         return;
     }
 
     const all = data.base_stations || [];
     const connectedTotal = all.filter(bs => String(bs.status || '').toLowerCase() === 'connected').length;
     const connectingTotal = all.filter(bs => String(bs.status || '').toLowerCase() === 'connecting').length;
-    const offlineTotal = Math.max(0, all.length - connectedTotal - connectingTotal);
     if (summary) {
-        summary.innerHTML = [
-            `<span class="gateway-summary-chip">${appTranslate('dashboard.total_label', 'Total')}: ${all.length}</span>`,
-            `<span class="gateway-summary-chip">${appTranslate('common.connected', 'Connected')}: ${connectedTotal}</span>`,
-            `<span class="gateway-summary-chip">${appTranslate('common.connecting', 'Connecting')}: ${connectingTotal}</span>`,
-            `<span class="gateway-summary-chip">${appTranslate('common.offline', 'Offline')}: ${offlineTotal}</span>`
-        ].join('');
+        summary.innerHTML = `<span class="gateway-summary-chip">${all.length} ${appTranslate('nav.base_stations', 'Base Stations').toLowerCase()}</span>`;
     }
 
     list.innerHTML = all.slice(0, 4).map(bs => {
         const rawStatus = String(bs.status || 'offline').toLowerCase();
         const status = rawStatus === 'connected' || rawStatus === 'connecting' ? rawStatus : 'offline';
         const sensors = toNumber(bs.connected_sensors);
-        const ip = escapeHtml(bs.configured_ip || appTranslate('dashboard.no_ip', 'no IP'));
         const eui = String(bs.eui || '');
         const name = escapeHtml(bs.name || shortId(eui, 8));
         const statusLabel = status === 'connected'
@@ -4273,7 +4269,7 @@ function updateGatewayActions(data) {
             : (status === 'connecting'
                 ? appTranslate('common.connecting', 'connecting')
                 : appTranslate('common.offline', 'offline'));
-        return `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span></div><span class="gateway-status ${status}">${statusLabel}</span></div><div class="gateway-meta"><span class="gateway-pill">${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span><span class="gateway-pill">${ip}</span></div></li>`;
+        return `<li class="gateway-item"><div class="gateway-head"><div class="gateway-head-left"><span class="gateway-dot ${status}"></span><span class="gateway-name">${name}</span></div><span class="gateway-status ${status}">${statusLabel}</span></div><div class="gateway-meta"><span class="gateway-pill">${appTranslate('dashboard.sensor_count_meta', `${sensors} sensors`, { count: sensors })}</span></div></li>`;
     }).join('');
 }
 
@@ -4319,24 +4315,13 @@ function updateSensorRuntimeList(data) {
 
     const sensors = Array.isArray(data && data.sensors) ? [...data.sensors] : [];
     if (sensors.length === 0) {
-        summary.innerHTML = `<span class="gateway-summary-chip">${appTranslate('dashboard.no_sensors', 'No sensors yet')}</span>`;
+        summary.innerHTML = `<span class="gateway-summary-chip">0 ${appTranslate('nav.sensors', 'Sensors').toLowerCase()}</span>`;
         list.innerHTML = `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot unknown"></span><span class="sensor-name">${appTranslate('dashboard.no_sensors_detected', 'No sensors detected')}</span></div><span class="sensor-status unknown">${appTranslate('dashboard.no_data', 'No data')}</span></div></li>`;
         return;
     }
 
     const tierOrder = { offline: 0, warn: 1, initial: 2, online: 3, unknown: 4 };
-    const counts = { online: 0, warn: 0, offline: 0, initial: 0, unknown: 0 };
-    sensors.forEach((sensor) => {
-        const tier = sensorRuntimeTier(sensor);
-        counts[tier] = (counts[tier] || 0) + 1;
-    });
-
-    summary.innerHTML = [
-        `<span class="gateway-summary-chip">${appTranslate('dashboard.total_label', 'Total')}: ${sensors.length}</span>`,
-        `<span class="gateway-summary-chip">${appTranslate('common.online', 'Online')}: ${counts.online}</span>`,
-        `<span class="gateway-summary-chip">${appTranslate('dashboard.awaiting_first_data_short', 'Waiting')}: ${counts.initial}</span>`,
-        `<span class="gateway-summary-chip">${appTranslate('common.offline', 'Offline')}: ${counts.offline + counts.warn}</span>`
-    ].join('');
+    summary.innerHTML = `<span class="gateway-summary-chip">${sensors.length} ${appTranslate('nav.sensors', 'Sensors').toLowerCase()}</span>`;
 
     sensors.sort((a, b) => {
         const tierDiff = tierOrder[sensorRuntimeTier(a)] - tierOrder[sensorRuntimeTier(b)];
@@ -4427,14 +4412,14 @@ function renderIncidents(incidents) {
 
     if (!incidents || incidents.length === 0) {
         if (summary) {
-            summary.innerHTML = '<span class="alert-counter is-good"><i class="fas fa-check me-1"></i>' + appTranslate('dashboard.system_healthy', 'System healthy') + '</span>';
+            summary.innerHTML = '<span class="alert-counter is-good">' + appTranslate('dashboard.system_healthy', 'System healthy') + '</span>';
         }
         rail.className = 'rail-list is-all-clear';
         rail.innerHTML =
             '<li class="all-clear-state">' +
-            '<span class="all-clear-icon"><i class="fas fa-shield-halved"></i></span>' +
+            '<span class="all-clear-icon"><i class="fas fa-check"></i></span>' +
             '<p class="all-clear-title">' + appTranslate('dashboard.all_clear_title', 'Všetko je v poriadku') + '</p>' +
-            '<p class="all-clear-note">' + appTranslate('dashboard.all_clear_note', 'Momentálne nie sú zistené žiadne upozornenia.') + '</p>' +
+            '<p class="all-clear-note">' + appTranslate('dashboard.all_clear_note_short', 'Žiadne upozornenia.') + '</p>' +
             '</li>';
         return;
     }
@@ -4443,11 +4428,11 @@ function renderIncidents(incidents) {
     const criticalCount = incidents.filter(item => item.level === 'danger').length;
     const warningCount = incidents.filter(item => item.level !== 'danger').length;
     if (summary) {
-        const chips = [];
-        if (criticalCount > 0) chips.push('<span class="alert-counter is-danger">' + appTranslate('dashboard.critical', 'Critical') + ': ' + criticalCount + '</span>');
-        if (warningCount > 0) chips.push('<span class="alert-counter is-warning">' + appTranslate('dashboard.warning', 'Warning') + ': ' + warningCount + '</span>');
-        if (chips.length === 0) chips.push('<span class="alert-counter is-good">' + appTranslate('dashboard.no_critical_incidents', 'No critical incidents detected') + '</span>');
-        summary.innerHTML = chips.join('');
+        if (criticalCount > 0) {
+            summary.innerHTML = '<span class="alert-counter is-danger">' + criticalCount + ' ' + appTranslate('viewer.alerts', 'Alerts').toLowerCase() + '</span>';
+        } else {
+            summary.innerHTML = '<span class="alert-counter is-warning">' + warningCount + ' ' + appTranslate('viewer.alerts', 'Alerts').toLowerCase() + '</span>';
+        }
     }
 
     rail.innerHTML = incidents.slice(0, 4).map(item =>
