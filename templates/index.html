@@ -3282,6 +3282,8 @@ function focusMiniMarker(key) {
     }
     marker.openTooltip?.();
     setDashboardMiniInteractionState({ activeKey: key });
+    const row = marker.__miniRowSelector ? document.querySelector(marker.__miniRowSelector) : null;
+    row?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
 }
 
 function closeMiniCtx() {
@@ -3996,9 +3998,17 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
             fillColor: isBs ? '#e97c13' : '#1ca8c9',
             fillOpacity: 0.95
         };
-        marker.__miniKey = miniMarkerKey(node.type, node.eui || '');
-
         const label = node.label || shortId(node.eui || '', 10);
+        marker.__miniKey = miniMarkerKey(node.type, node.eui || '');
+        marker.__miniNode = {
+            type: String(node.type || ''),
+            eui: String(node.eui || '').trim().toUpperCase(),
+            label
+        };
+        marker.__miniRowSelector = isBs
+            ? `.gateway-item[data-gateway-eui="${escapeHtml(String(node.eui || '').trim().toUpperCase())}"]`
+            : `.sensor-item[data-sensor-id="${escapeHtml(String(node.eui || '').trim().toUpperCase())}"]`;
+
         marker.bindTooltip(
             isBs
                 ? appTranslate('dashboard.base_station_tooltip', `Base Station: ${label}`, { label })
@@ -4008,6 +4018,37 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
             offset: [0, -6]
             }
         );
+        marker.on('mouseover', () => {
+            setDashboardMiniInteractionState({ hoverKey: marker.__miniKey || '' });
+        });
+        marker.on('mouseout', () => {
+            setDashboardMiniInteractionState({ hoverKey: '' });
+        });
+        marker.on('click', () => {
+            focusMiniMarker(marker.__miniKey || '');
+        });
+        marker.on('contextmenu', (event) => {
+            L.DomEvent.preventDefault(event.originalEvent);
+            L.DomEvent.stopPropagation(event.originalEvent);
+            const markerType = marker.__miniNode && marker.__miniNode.type === 'base_station' ? 'base_station' : 'sensor';
+            const markerEui = marker.__miniNode ? marker.__miniNode.eui : '';
+            const detailUrl = markerType === 'base_station'
+                ? '/base-stations/' + encodeURIComponent(markerEui)
+                : '/sensors/' + encodeURIComponent(markerEui);
+            const detailLabel = markerType === 'base_station'
+                ? appTranslate('dashboard.open_base_station_detail', 'Otvoriť detail stanice')
+                : appTranslate('dashboard.open_sensor_detail', 'Otvoriť detail senzora');
+            showMiniCtx(event.originalEvent, [
+                {
+                    icon: 'fa-arrow-up-right-from-square',
+                    primary: true,
+                    label: detailLabel,
+                    action: () => {
+                        window.location.href = detailUrl;
+                    }
+                }
+            ]);
+        });
         marker.addTo(miniCoverageLayer);
         if (marker.__miniKey) {
             miniCoverageMarkers[marker.__miniKey] = marker;
