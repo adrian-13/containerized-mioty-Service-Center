@@ -4106,7 +4106,7 @@ function updateTrafficMetrics(data) {
 }
 
 function countInitialSensors(data) {
-    const sensors = Array.isArray(data && data.sensors) ? data.sensors : [];
+    const sensors = normalizeDashboardSensorList(data);
     return sensors.reduce((count, sensor) => {
         const lifecycleStatus = String((sensor && sensor.lifecycle_status) || '').toLowerCase();
         if (lifecycleStatus === 'new' || lifecycleStatus === 'awaiting_first_data') return count + 1;
@@ -4117,7 +4117,7 @@ function countInitialSensors(data) {
 }
 
 function countNonInitialSensors(data) {
-    const sensors = Array.isArray(data && data.sensors) ? data.sensors : [];
+    const sensors = normalizeDashboardSensorList(data);
     return sensors.reduce((count, sensor) => {
         const lifecycleStatus = String((sensor && sensor.lifecycle_status) || '').toLowerCase();
         if (lifecycleStatus === 'new' || lifecycleStatus === 'awaiting_first_data') return count;
@@ -4138,8 +4138,17 @@ function updateSensorLifecycleMetrics(data) {
     return initialSensors;
 }
 
+function normalizeDashboardSensorList(data) {
+    if (Array.isArray(data)) return [...data];
+    if (data && Array.isArray(data.sensors)) return [...data.sensors];
+    if (data && typeof data === 'object' && !data.error) {
+        return Object.values(data).filter((sensor) => sensor && typeof sensor === 'object' && !Array.isArray(sensor));
+    }
+    return [];
+}
+
 function updateSensorOverviewMetrics(data) {
-    const sensors = Array.isArray(data && data.sensors) ? data.sensors : [];
+    const sensors = normalizeDashboardSensorList(data);
     const totalSensors = sensors.length;
     const initialSensors = countInitialSensors(data);
     const liveSensors = Math.max(totalSensors - initialSensors, 0);
@@ -4369,7 +4378,7 @@ function updateSensorRuntimeList(data) {
     const list = document.getElementById('sensor-runtime-list');
     if (!summary || !list) return;
 
-    const sensors = Array.isArray(data && data.sensors) ? [...data.sensors] : [];
+    const sensors = normalizeDashboardSensorList(data);
     if (sensors.length === 0) {
         summary.innerHTML = `<span class="gateway-summary-chip">0 ${appTranslate('nav.sensors', 'Sensors').toLowerCase()}</span>`;
         list.innerHTML = `<li class="sensor-item"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot unknown"></span><span class="sensor-name">${appTranslate('dashboard.no_sensors_detected', 'No sensors detected')}</span></div><span class="sensor-status unknown">${appTranslate('dashboard.no_data', 'No data')}</span></div></li>`;
