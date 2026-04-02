@@ -1022,7 +1022,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     gap: 0.14rem;
     position: relative;
     overflow: hidden;
-    min-height: 7.4rem;
+    min-height: 6.35rem;
     transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
 }
 
@@ -1086,100 +1086,16 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     font-weight: 800;
     color: #13253d;
     letter-spacing: -0.02em;
-    margin-top: 0.04rem;
+    margin-top: 0.12rem;
 }
 
 .overview-card-detail {
-    font-size: 0.69rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    color: #39516f;
-    margin-top: 0.06rem;
+    color: #5f738e;
+    margin-top: 0.1rem;
+    line-height: 1.35;
 }
-
-.overview-card-note {
-    font-size: 0.64rem;
-    color: #71859e;
-    margin-top: 0.04rem;
-    min-height: 1.7em;
-}
-
-.overview-footer {
-    display: flex;
-    align-items: center;
-    gap: 0.72rem;
-    background: linear-gradient(135deg, rgba(235, 126, 23, 0.05) 0%, rgba(255, 255, 255, 0.4) 60%);
-    border-radius: 0.75rem;
-    padding: 0.68rem 0.84rem 0.68rem 0.96rem;
-    border: 1px solid rgba(235, 126, 23, 0.22);
-    border-left: 3px solid var(--brand-500);
-}
-
-.overview-focus-card {
-    flex: 1 1 0;
-    min-width: 0;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    padding: 0;
-    display: grid;
-    gap: 0.12rem;
-}
-
-.overview-focus-head {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-}
-
-.overview-summary-label {
-    display: block;
-    font-size: 0.66rem;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    font-weight: 800;
-    color: #69809c;
-}
-
-.overview-summary-value {
-    display: block;
-    font-size: 0.82rem;
-    font-weight: 800;
-    color: #20344f;
-    overflow-wrap: anywhere;
-}
-
-.overview-rail {
-    display: flex;
-    gap: 0;
-    flex-shrink: 0;
-    border-left: 1px solid rgba(210, 218, 234, 0.8);
-    padding-left: 0.72rem;
-}
-
-.overview-pill {
-    border-left: 2px solid #d0daea;
-    border-radius: 0;
-    background: transparent;
-    padding: 0.14rem 0.72rem 0.14rem 0.56rem;
-    min-width: 6.5rem;
-}
-
-.overview-posture-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.24rem 0.56rem;
-    border-radius: 999px;
-    border: 1px solid #d9e3f1;
-    background: #ffffff;
-    color: #345173;
-    font-size: 0.68rem;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.overview-posture-badge.is-warning { border-color: #f2d5a3; background: #fff8ed; color: #a16600; }
-.overview-posture-badge.is-danger  { border-color: #efc4c8; background: #fff4f5; color: #b6343c; }
-.overview-posture-badge.is-success { border-color: #c4e3d4; background: #eefaf4; color: #0f8d5f; }
 
 /* ═══════════════════════════════════════════════════════
    Legacy KPI cards (unused, kept for compatibility)
@@ -1559,31 +1475,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 .layout-empty { border: 1px dashed #cdd8e7; border-radius: 0.9rem; background: rgba(255,255,255,0.5); color: #53657e; padding: 0.9rem; text-align: center; font-size: 0.82rem; font-weight: 700; }
 .is-hidden { display: none !important; }
 
-/* ── Refresh countdown bar ──────────────────────────── */
-.refresh-bar {
-    height: 2px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--brand-500, #e97c13) 0%, #6366f1 100%);
-    transform-origin: left center;
-    transform: scaleX(1);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    margin: 0 0 0.25rem;
-}
-.refresh-bar.is-counting {
-    opacity: 1;
-    animation: refresh-drain 5s linear forwards;
-}
-.refresh-bar.is-fading {
-    opacity: 0;
-    transform: scaleX(0);
-    transition: opacity 0.35s ease, transform 0.35s ease;
-}
-@keyframes refresh-drain {
-    from { transform: scaleX(1); }
-    to   { transform: scaleX(0); }
-}
-
 /* ── Alert all-clear state ──────────────────────────── */
 .rail-list.is-all-clear { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .all-clear-state {
@@ -1611,28 +1502,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 .all-clear-title { margin: 0; font-size: 0.88rem; font-weight: 800; color: #183d2f; }
 .all-clear-note  { margin: 0; font-size: 0.72rem; color: #496b59; }
 
-/* ── KPI sparklines ─────────────────────────────────── */
-.kpi-spark {
-    display: block;
-    width: 100%;
-    height: 18px;
-    margin-top: 0.34rem;
-    overflow: visible;
-    opacity: 0.9;
-}
-.kpi-spark-line {
-    fill: none;
-    stroke-width: 1.65;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.5;
-}
-.kpi-spark-dot {
-    opacity: 0.82;
-}
-.overview-card .kpi-spark-line { stroke: var(--overview-accent); }
-.overview-card .kpi-spark-dot  { fill: var(--overview-accent); }
-
 /* ═══════════════════════════════════════════════════════
    Responsive
    ═══════════════════════════════════════════════════════ */
@@ -1642,7 +1511,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 
 @media (max-width: 1350px) {
     .overview-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .overview-footer { flex-wrap: wrap; }
 
     #topology-panel { grid-column: 1 / span 8;  grid-row: 2; }
     #traffic-panel  { grid-column: 9 / span 4;  grid-row: 2; }
@@ -1664,7 +1532,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     #gateway-panel  { grid-column: span 1; grid-row: auto; }
     #signal-panel   { grid-column: span 2; grid-row: auto; }
 
-    .overview-panel .overview-footer { flex-wrap: wrap; }
     .ops-stat-grid, .ops-meta-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
@@ -1678,7 +1545,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     .overview-panel .overview-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .signal-bar { grid-template-columns: 64px 1fr 28px; }
 
-    .overview-grid, .overview-footer, .overview-rail,
+    .overview-grid,
     .stat-grid, .ops-stat-grid, .ops-meta-grid { grid-template-columns: 1fr; }
 
     .dashboard-utility-actions { width: 100%; justify-content: flex-start; }
@@ -1701,8 +1568,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
             <span class="dashboard-toolbar-pill control-meta control-meta-cache" id="dashboard-cache-age">{{ t('dashboard.cache_label', 'Cache') }} -</span>
         </div>
     </section>
-    <div id="refresh-bar" class="refresh-bar" role="progressbar" aria-hidden="true"></div>
-
     <section id="dashboard-canvas" class="dashboard-grid">
         <section id="kpi-grid" class="deck-panel panel-size-normal layout-widget overview-panel">
             <div class="deck-head">
@@ -1719,8 +1584,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                             </div>
                             <div class="overview-card-value" id="tls-status">--</div>
                             <div class="overview-card-detail" id="tls-detail">{{ t('dashboard.port_label', 'Port') }} --</div>
-                            <div class="overview-card-note" id="tls-note">{{ t('dashboard.baseline_establishing', 'Baseline establishing...') }}</div>
-                            <svg id="tls-spark" class="kpi-spark" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"></svg>
                         </div>
                     </a>
                     <a href="/config" class="kpi-link">
@@ -1731,8 +1594,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                             </div>
                             <div class="overview-card-value" id="mqtt-status">--</div>
                             <div class="overview-card-detail" id="mqtt-detail">--</div>
-                            <div class="overview-card-note" id="mqtt-note">{{ t('dashboard.baseline_establishing', 'Baseline establishing...') }}</div>
-                            <svg id="mqtt-spark" class="kpi-spark" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"></svg>
                         </div>
                     </a>
                     <a href="/base-stations" class="kpi-link">
@@ -1743,8 +1604,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                             </div>
                             <div class="overview-card-value" id="bs-count">0</div>
                             <div class="overview-card-detail" id="bs-detail">{{ t('dashboard.connected_gateways', 'Connected base stations') }}</div>
-                            <div class="overview-card-note" id="bs-note">{{ t('dashboard.baseline_establishing', 'Baseline establishing...') }}</div>
-                            <svg id="bs-spark" class="kpi-spark" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"></svg>
                         </div>
                     </a>
                     <a href="/sensors" class="kpi-link">
@@ -1755,8 +1614,6 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                             </div>
                             <div class="overview-card-value" id="sensor-count">0</div>
                             <div class="overview-card-detail" id="sensor-detail">0 {{ t('dashboard.configured', 'configured') }}</div>
-                            <div class="overview-card-note" id="sensor-note">{{ t('dashboard.baseline_establishing', 'Baseline establishing...') }}</div>
-                            <svg id="sensor-spark" class="kpi-spark" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"></svg>
                         </div>
                     </a>
                 </div>
@@ -3847,9 +3704,6 @@ function updateStatusCards(data) {
     document.getElementById('tls-detail').textContent = tlsActive
         ? `${appTranslate('dashboard.port_label', 'Port')} ${data.tls_server.listening_port || '--'}`
         : appTranslate('common.not_connected', 'Not connected');
-    document.getElementById('tls-note').textContent = tlsActive
-        ? appTranslate('dashboard.stable_online', 'Stable online')
-        : appTranslate('dashboard.still_offline', 'Still offline');
     previousSnapshot.tlsActive = tlsActive;
 
     const mqttCard = document.getElementById('mqtt-card');
@@ -3858,7 +3712,6 @@ function updateStatusCards(data) {
         mqttCard.classList.add('is-muted');
         document.getElementById('mqtt-status').textContent = appTranslate('common.disabled', 'Disabled');
         document.getElementById('mqtt-detail').textContent = appTranslate('dashboard.transport_disabled_note', 'Disabled in configuration');
-        document.getElementById('mqtt-note').textContent = appTranslate('dashboard.transport_disabled', 'Transport disabled');
         previousSnapshot.mqttActive = null;
     } else {
         mqttCard.classList.add(mqttActive ? 'is-success' : 'is-danger');
@@ -3866,11 +3719,8 @@ function updateStatusCards(data) {
             ? appTranslate('dashboard.status_connected', 'Connected')
             : appTranslate('dashboard.status_disconnected', 'Disconnected');
         document.getElementById('mqtt-detail').textContent = mqttActive
-            ? (data.mqtt_broker.broker_host || '--')
+            ? appTranslate('dashboard.transport_ready_compact', 'Transport ready')
             : appTranslate('common.not_connected', 'No connection');
-        document.getElementById('mqtt-note').textContent = mqttActive
-            ? appTranslate('dashboard.stable_connection', 'Stable connection')
-            : appTranslate('dashboard.still_disconnected', 'Still disconnected');
         previousSnapshot.mqttActive = mqttActive;
     }
 
@@ -3879,30 +3729,22 @@ function updateStatusCards(data) {
     bsCard.classList.add(bsCount > 0 ? 'is-warning' : 'is-danger');
     document.getElementById('bs-count').textContent = bsCount;
     document.getElementById('bs-detail').textContent = appTranslate(
-        'dashboard.connected_connecting_summary',
-        `${bsCount} connected · ${connectingCount} connecting`,
-        { connected: bsCount, connecting: connectingCount }
+        connectingCount > 0 ? 'dashboard.connected_connecting_compact' : 'dashboard.connected_only_compact',
+        connectingCount > 0 ? `${bsCount} connected · +${connectingCount} connecting` : `${bsCount} connected`,
+        { connected: bsCount, connecting: connectingCount, count: bsCount }
     );
-    document.getElementById('bs-note').textContent = bsCount > 0
-        ? appTranslate('dashboard.base_station_route_live', 'Live routes are available')
-        : appTranslate('dashboard.no_connected_base_stations', 'Žiadne pripojené základňové stanice');
     previousSnapshot.connectedBs = bsCount;
 
     const sensorCard = document.getElementById('sensor-card');
     sensorCard.classList.remove('is-success', 'is-warning', 'is-danger', 'is-cool', 'is-muted');
     sensorCard.classList.add(registeredSensors > 0 ? 'is-cool' : 'is-muted');
-    document.getElementById('sensor-count').textContent = registeredSensors;
+    document.getElementById('sensor-count').textContent = totalSensors;
     document.getElementById('sensor-detail').textContent = appTranslate(
-        'dashboard.live_configured_summary',
-        `${registeredSensors} live · ${totalSensors} configured`,
-        { live: registeredSensors, count: totalSensors }
+        'dashboard.live_configured_summary_compact',
+        `${registeredSensors} live`,
+        { live: registeredSensors }
     );
-    document.getElementById('sensor-note').textContent = registeredSensors > 0
-        ? appTranslate('dashboard.sensor_routes_observed', 'Recent telemetry observed')
-        : appTranslate('dashboard.no_sensor_traffic_yet', 'No recent sensor traffic');
     previousSnapshot.registeredSensors = registeredSensors;
-
-    updateSparklines(tlsActive, mqttEnabled ? mqttActive : null, bsCount, registeredSensors);
 }
 
 function updateVmMetrics(data) {
@@ -3994,17 +3836,10 @@ function updateSensorOverviewMetrics(data) {
     const detailEl = document.getElementById('sensor-detail');
     if (detailEl) {
         detailEl.textContent = appTranslate(
-            'dashboard.live_configured_summary_initial',
-            `${liveSensors} live · ${totalSensors} configured · ${initialSensors} awaiting first data`,
-            { live: liveSensors, count: totalSensors, awaiting: initialSensors }
+            'dashboard.live_configured_summary_compact',
+            `${liveSensors} live`,
+            { live: liveSensors }
         );
-    }
-
-    const noteEl = document.getElementById('sensor-note');
-    if (noteEl) {
-        noteEl.textContent = initialSensors > 0
-            ? appTranslate('dashboard.awaiting_first_data_short', `${initialSensors} waiting for data`, { count: initialSensors })
-            : appTranslate('dashboard.no_initial_sensors_short', 'No sensors waiting for data');
     }
 }
 
@@ -4272,68 +4107,11 @@ function renderIncidents(incidents) {
 
 /* ── Refresh progress bar ──────────────────────────── */
 function startRefreshBar() {
-    const bar = document.getElementById('refresh-bar');
-    if (!bar) return;
-    bar.classList.remove('is-counting', 'is-fading');
-    void bar.offsetWidth; // force reflow to restart animation
-    bar.classList.add('is-counting');
+    return;
 }
 
 function finishRefreshBar() {
-    const bar = document.getElementById('refresh-bar');
-    if (!bar) return;
-    bar.classList.remove('is-counting');
-    bar.classList.add('is-fading');
-    setTimeout(() => bar.classList.remove('is-fading'), 400);
-}
-
-/* ── KPI sparklines ────────────────────────────────── */
-const SPARK_MAX_POINTS = 10;
-const kpiSparkHistory = {
-    tls:    [],
-    mqtt:   [],
-    bs:     [],
-    sensor: []
-};
-
-function pushSparkValue(key, value) {
-    kpiSparkHistory[key].push(value);
-    if (kpiSparkHistory[key].length > SPARK_MAX_POINTS) {
-        kpiSparkHistory[key].shift();
-    }
-}
-
-function renderSparkline(svgId, values) {
-    const svg = document.getElementById(svgId);
-    if (!svg || values.length < 2) { if (svg) svg.innerHTML = ''; return; }
-
-    const W = 100, H = 20, PAD = 2;
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min || 1;
-
-    const toX = (i) => PAD + (i / (values.length - 1)) * (W - PAD * 2);
-    const toY = (v) => H - PAD - ((v - min) / range) * (H - PAD * 2);
-
-    const points = values.map((v, i) => `${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
-    const lastX = toX(values.length - 1).toFixed(1);
-    const lastY = toY(values[values.length - 1]).toFixed(1);
-
-    svg.innerHTML =
-        `<polyline class="kpi-spark-line" points="${points}"/>` +
-        `<circle class="kpi-spark-dot" cx="${lastX}" cy="${lastY}" r="2.2"/>`;
-}
-
-function updateSparklines(tlsActive, mqttActive, bsCount, sensorCount) {
-    pushSparkValue('tls',    tlsActive  ? 1 : 0);
-    pushSparkValue('mqtt',   mqttActive ? 1 : 0);
-    pushSparkValue('bs',     bsCount);
-    pushSparkValue('sensor', sensorCount);
-
-    renderSparkline('tls-spark',    kpiSparkHistory.tls);
-    renderSparkline('mqtt-spark',   kpiSparkHistory.mqtt);
-    renderSparkline('bs-spark',     kpiSparkHistory.bs);
-    renderSparkline('sensor-spark', kpiSparkHistory.sensor);
+    return;
 }
 
 function scheduleAutoRefresh() {
