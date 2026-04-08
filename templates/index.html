@@ -2359,7 +2359,8 @@ function updateMap(sensors) {
                 saveBtn.addEventListener('click', function() {
                     const pending = _pendingLatLng[id];
                     if (!pending) return;
-                    marker.closePopup();
+                    setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
+                    marker.openPopup();
                     fetch('/api/sensors/' + encodeURIComponent(id) + '/gps', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
@@ -2371,6 +2372,7 @@ function updateMap(sensors) {
                             const sr = allSensors.find(function(x) { return sensorId(x) === id; });
                             if (sr) { sr.gps_lat = pending.lat; sr.gps_lng = pending.lng; }
                             showMapToast('\u2713 Poloha uložená', 2400);
+                            marker.setLatLng([pending.lat, pending.lng]);
                         } else {
                             marker.setLatLng([pending._origLat, pending._origLng]);
                             showMapToast('\u2717 ' + (d.message || 'Chyba uloženia'), 2400);
@@ -2393,7 +2395,8 @@ function updateMap(sensors) {
                     const pending = _pendingLatLng[id];
                     if (pending) marker.setLatLng([pending._origLat, pending._origLng]);
                     delete _pendingLatLng[id];
-                    marker.closePopup();
+                    setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
+                    marker.openPopup();
                     lockMarker();
                     showMapToast('Presunutie zrušené', 1800);
                 });
@@ -4482,6 +4485,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
             if (!key) return;
             setDashboardMiniInteractionState({ activeKey: key, hoverKey: '' });
             marker.closeTooltip?.();
+            marker.openPopup?.();
             const row = marker.__miniRowSelector ? document.querySelector(marker.__miniRowSelector) : null;
             row?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
         });
@@ -4537,8 +4541,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
                         }
                         delete miniPendingLatLng[markerKey];
                         lockMarker();
-                        updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
-                        setTimeout(() => focusMiniMarker(markerKey), 60);
+                        setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
+                        marker.openPopup();
                     });
                 });
             }
@@ -4549,10 +4553,9 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
                     if (pending) marker.setLatLng([pending._origLat, pending._origLng]);
                     delete miniPendingLatLng[markerKey];
                     lockMarker();
-                    marker.closePopup();
+                    setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
+                    marker.openPopup();
                     showMiniMapToast('Presunutie zrušené', 1800);
-                    updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
-                    setTimeout(() => focusMiniMarker(markerKey), 60);
                 });
             }
         });
@@ -4561,6 +4564,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
         });
         marker.on('dragstart', () => {
             marker.closePopup();
+            setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
             if (!miniPendingLatLng[markerKey]) {
                 const current = marker.getLatLng();
                 miniPendingLatLng[markerKey] = { _origLat: current.lat, _origLng: current.lng, lat: current.lat, lng: current.lng };
