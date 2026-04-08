@@ -4366,21 +4366,30 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
                 ? appTranslate('dashboard.base_station_tooltip', `Base Station: ${label}`, { label })
                 : appTranslate('dashboard.sensor_tooltip', `Sensor: ${label}`, { label }),
             {
-            direction: 'top',
-            offset: [0, -6]
+                direction: 'top',
+                offset: [0, -6]
             }
         );
+        const resolveMarkerVisualStyle = () => getMiniMarkerBaseStyle({
+            ...node,
+            marker_color: marker.__miniNode ? String(marker.__miniNode.marker_color || '').trim() : ''
+        });
+        const refreshMarkerVisual = (isUnlocked = false) => {
+            const nextStyle = resolveMarkerVisualStyle();
+            marker.__miniBaseStyle = { ...nextStyle };
+            marker.setIcon(makeMiniMarkerIcon(nextStyle.fillColor, isUnlocked));
+        };
         const lockMarker = () => {
             miniMarkerUnlocked[markerKey] = false;
             marker.dragging?.disable?.();
-            marker.setIcon(makeMiniMarkerIcon(markerStyle.fillColor, false));
+            refreshMarkerVisual(false);
             marker.setPopupContent(buildMiniMarkerPopupHtml(label, shortEui, detailUrl, popupId));
         };
 
         const unlockMarker = () => {
             miniMarkerUnlocked[markerKey] = true;
             marker.dragging?.enable?.();
-            marker.setIcon(makeMiniMarkerIcon(markerStyle.fillColor, true));
+            refreshMarkerVisual(true);
             if (!miniPendingLatLng[markerKey]) {
                 const current = marker.getLatLng();
                 miniPendingLatLng[markerKey] = { _origLat: current.lat, _origLng: current.lng, lat: current.lat, lng: current.lng };
@@ -4435,15 +4444,18 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
                                     .catch(() => ({ ok: false, data: { error: appTranslate('runtime.network_error', 'Chyba siete.') } }))
                                     .then((result) => {
                                         if (result.ok && result.data && result.data.success) {
+                                            if (marker.__miniNode) {
+                                                marker.__miniNode.marker_color = color ? String(color) : '';
+                                            }
                                             updateMiniSensorMarkerColor(markerEui, color);
-                                            updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
+                                            refreshMarkerVisual(!!miniMarkerUnlocked[markerKey]);
+                                            setDashboardMiniInteractionState({});
                                             showMiniMapToast(
                                                 color
                                                     ? appTranslate('dashboard.marker_color_saved', 'Farba markera uložená')
                                                     : appTranslate('dashboard.marker_color_reset_done', 'Predvolená farba obnovená'),
                                                 2200
                                             );
-                                            setTimeout(() => focusMiniMarker(markerKey), 60);
                                         } else {
                                             showMiniMapToast(
                                                 '✕ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uložiť farbu'))),
