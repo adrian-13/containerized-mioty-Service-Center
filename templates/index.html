@@ -468,91 +468,75 @@
 }
 .sc-leaflet-popup .leaflet-popup-close-button:hover { color: #13263f !important; }
 /* Popup buttons */
-.sc-leaflet-popup .leaflet-popup-content .sc-popup-detail {
+.sc-popup-detail {
     flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .3rem;
-    min-height: 2.34rem;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-500) 92%, white 8%), var(--brand-500));
-    color: #fff; border-radius: .78rem; padding: .34rem .7rem;
-    font-size: .74rem; font-weight: 800; text-decoration: none; border: none; cursor: pointer;
-    box-shadow: 0 8px 18px rgba(var(--brand-rgb), .16);
-    transition: background .12s, box-shadow .12s, transform .12s;
+    background: var(--brand-500); color: #fff; border-radius: .42rem; padding: .34rem .5rem;
+    font-size: .72rem; font-weight: 800; text-decoration: none; border: none; cursor: pointer;
+    transition: background .12s, box-shadow .12s;
 }
-.sc-leaflet-popup .leaflet-popup-content .sc-popup-detail:hover {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-600) 95%, white 5%), var(--brand-600));
-    box-shadow: 0 10px 18px rgba(var(--brand-rgb), .2);
-    transform: translateY(-1px);
-}
-.sc-leaflet-popup .leaflet-popup-content .sc-popup-dots {
+.sc-popup-detail:hover { background: var(--brand-600); box-shadow: 0 2px 8px rgba(var(--brand-rgb), .2); }
+.sc-popup-dots {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-width: 2.3rem;
     height: 2.3rem;
-    background: linear-gradient(180deg, #ffffff, #f4f7fb);
-    border: 1px solid #d8e1ee;
-    border-radius: .78rem;
+    background: #f4f7fb;
+    border: 1px solid #d9e3ef;
+    border-radius: .72rem;
     cursor: pointer;
     padding: 0 .62rem;
     font-size: .92rem;
     line-height: 1;
-    font-weight: 800;
-    color: #44566c;
+    color: #5f738e;
     flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, .06);
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    transition: background .12s, color .12s, border-color .12s, transform .12s, box-shadow .12s;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background .12s, color .12s, border-color .12s, transform .12s;
 }
-.sc-leaflet-popup .leaflet-popup-content .sc-popup-dots:hover {
-    background: #eef4fb;
-    border-color: #c7d5e6;
-    color: #13263f;
-    box-shadow: 0 6px 14px rgba(15, 23, 42, .1);
-    transform: translateY(-1px);
+.sc-popup-dots:hover {
+    background: #ecf3fb;
+    border-color: #c8d7e8;
+    color: #1e293b;
 }
-.sc-leaflet-popup .leaflet-popup-content .sc-popup-save {
+.sc-popup-save {
     flex: 1;
     min-height: 2.3rem;
-    background: linear-gradient(180deg, #1db55a, #159847);
+    background: #16a34a;
     color: #fff;
-    border: 1px solid #159847;
-    border-radius: .78rem;
+    border: 1px solid #16a34a;
+    border-radius: .72rem;
     padding: .34rem .72rem;
-    font-size: .74rem;
+    font-size: .72rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 10px 18px rgba(21, 152, 71, .18);
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    transition: background .12s, box-shadow .12s, border-color .12s, transform .12s;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background .12s, box-shadow .12s, border-color .12s;
 }
-.sc-leaflet-popup .leaflet-popup-content .sc-popup-save:hover {
-    background: linear-gradient(180deg, #16a34a, #15803d);
-    box-shadow: 0 12px 20px rgba(21, 152, 71, .22);
-    transform: translateY(-1px);
-}
-.sc-leaflet-popup .leaflet-popup-content .sc-popup-cancel {
+.sc-popup-save:hover { background: #15803d; box-shadow: 0 2px 8px rgba(22, 163, 74, .2); }
+.sc-popup-cancel {
     flex: 1;
     min-height: 2.3rem;
-    background: linear-gradient(180deg, #ffffff, #f4f7fb);
+    background: #f4f7fb;
     color: #425466;
-    border: 1px solid #d8e1ee;
-    border-radius: .78rem;
+    border: 1px solid #d9e3ef;
+    border-radius: .72rem;
     padding: .34rem .72rem;
-    font-size: .74rem;
+    font-size: .72rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, .06);
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    transition: background .12s, color .12s, border-color .12s, transform .12s, box-shadow .12s;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background .12s, color .12s, border-color .12s;
 }
-.sc-leaflet-popup .leaflet-popup-content .sc-popup-cancel:hover {
-    background: #eef4fb;
-    border-color: #c7d5e6;
+.sc-popup-cancel:hover {
+    background: #ecf3fb;
+    border-color: #c8d7e8;
     color: #1e293b;
-    box-shadow: 0 6px 14px rgba(15, 23, 42, .1);
-    transform: translateY(-1px);
 }
 /* ── Context menu ── */
 .sc-ctx {
@@ -3763,6 +3747,26 @@ window.scHandleMiniPopupAction = function(action, popupId, event) {
     handler(event || null);
     return false;
 };
+
+function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
+    return buildPopupHtml(
+        escapeHtml(name),
+        shortEui ? escapeHtml(shortEui) : '',
+        escapeHtml(href),
+        escapeHtml(popupId),
+        null,
+        ''
+    );
+}
+
+function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
+    return buildPopupUnlockedHtml(
+        escapeHtml(name),
+        shortEui ? escapeHtml(shortEui) : '',
+        escapeHtml(popupId),
+        hasMoved
+    );
+}
 
 function getAdminDashboardIncludeDemoData() {
     if (window.AdminDemoDataPrefs && typeof window.AdminDemoDataPrefs.get === 'function') {
