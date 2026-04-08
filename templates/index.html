@@ -370,13 +370,20 @@
     .mview-statusbar { gap: 1rem; flex-wrap: wrap; height: auto; padding: 0.6rem 1rem; }
 }
 /* ── Map markers ── */
-.sc-map-marker { background: none !important; border: none !important; }
+.sc-map-marker {
+    background: none !important;
+    border: none !important;
+    width: 20px !important;
+    height: 20px !important;
+}
 .sc-map-pin {
-    width: 20px; height: 20px; border-radius: 50%;
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
     border: 2.5px solid rgba(255,255,255,.92);
     box-shadow: 0 2px 7px rgba(0,0,0,.28);
     transition: transform .15s, box-shadow .15s;
-}
     cursor: grab;
 }
 .sc-map-pin:active { cursor: grabbing; }
@@ -4449,86 +4456,6 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
         });
         marker.on('click', () => {
             focusMiniMarker(marker.__miniKey || '');
-        });
-        marker.on('contextmenu', (event) => {
-            if (event && event.originalEvent) {
-                L.DomEvent.preventDefault(event.originalEvent);
-                L.DomEvent.stop(event.originalEvent);
-            }
-            const markerType = marker.__miniNode && marker.__miniNode.type === 'base_station' ? 'base_station' : 'sensor';
-            const markerEui = marker.__miniNode ? marker.__miniNode.eui : '';
-            const detailUrl = markerType === 'base_station'
-                ? '/base-stations/' + encodeURIComponent(markerEui)
-                : '/sensors/' + encodeURIComponent(markerEui);
-            const detailLabel = markerType === 'base_station'
-                ? appTranslate('dashboard.open_base_station_detail', 'Otvoriť detail stanice')
-                : appTranslate('dashboard.open_sensor_detail', 'Otvoriť detail senzora');
-            const menuItems = [
-                {
-                    icon: 'fa-arrow-up-right-from-square',
-                    primary: true,
-                    label: detailLabel,
-                    action: () => {
-                        window.location.href = detailUrl;
-                    }
-                },
-                {
-                    icon: 'fa-crosshairs',
-                    label: appTranslate('dashboard.focus_marker', 'Vycentrovať marker'),
-                    action: () => {
-                        focusMiniMarker(marker.__miniKey || '');
-                    }
-                },
-                {
-                    icon: 'fa-location-dot',
-                    label: appTranslate('dashboard.move_marker', 'Premiestniť na mape'),
-                    action: () => {
-                        startMiniMarkerPlacement(marker.__miniNode);
-                    }
-                }
-            ];
-            if (markerType === 'sensor') {
-                menuItems.splice(2, 0, {
-                    icon: 'fa-palette',
-                    label: appTranslate('dashboard.change_marker_color', 'Zmeniť farbu'),
-                    action: () => {
-                        const originalEvent = event.originalEvent || {};
-                        const clientX = Number(originalEvent.clientX || 0);
-                        const clientY = Number(originalEvent.clientY || 0);
-                        const currentColor = marker.__miniNode ? marker.__miniNode.marker_color : '';
-                        window.setTimeout(() => {
-                            showMiniColorPop(clientX, clientY, currentColor || null, (color) => {
-                                fetch('/api/sensors/' + encodeURIComponent(markerEui) + '/marker-color', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ color: color || '' })
-                                })
-                                    .then((response) => response.json().then((data) => ({ ok: response.ok, data })).catch(() => ({ ok: response.ok, data: null })))
-                                    .catch(() => ({ ok: false, data: { error: appTranslate('runtime.network_error', 'Chyba siete.') } }))
-                                    .then((result) => {
-                                        if (result.ok && result.data && result.data.success) {
-                                            updateMiniSensorMarkerColor(markerEui, color);
-                                            updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
-                                            showMiniMapToast(
-                                                color
-                                                    ? appTranslate('dashboard.marker_color_saved', 'Farba markera uložená')
-                                                    : appTranslate('dashboard.marker_color_reset_done', 'Predvolená farba obnovená'),
-                                                2200
-                                            );
-                                            setTimeout(() => focusMiniMarker(miniMarkerKey('sensor', markerEui)), 60);
-                                        } else {
-                                            showMiniMapToast(
-                                                '✕ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uložiť farbu'))),
-                                                2600
-                                            );
-                                        }
-                                    });
-                            });
-                        }, 80);
-                    }
-                });
-            }
-            showMiniCtx(event.originalEvent, menuItems);
         });
         marker.off('contextmenu');
         marker.on('popupopen', () => {
