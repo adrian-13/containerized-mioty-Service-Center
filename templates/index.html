@@ -3705,6 +3705,38 @@ function fetchJson(url) {
         .catch(() => null);
 }
 
+function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
+    const brandBg = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
+    const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
+    const dotsBtnStyle = 'display:inline-flex;align-items:center;justify-content:center;min-width:2.34rem;height:2.34rem;padding:0 .62rem;border-radius:.72rem;border:1px solid #d9e3ef;background:#f4f7fb;color:#5f738e;box-shadow:none;outline:none;appearance:none;-webkit-appearance:none;font:800 .94rem/1 Manrope,system-ui,sans-serif;cursor:pointer;flex-shrink:0';
+    return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
+        + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + escapeHtml(name) + '</div>'
+        + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.36rem">' + escapeHtml(shortEui) + '</div>' : '')
+        + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
+        + '<div style="display:flex;align-items:center;gap:.36rem">'
+        + '<a href="' + escapeHtml(href) + '" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;background:' + brandBg + ';color:#fff;border-radius:.72rem;padding:.42rem .68rem;font-size:.74rem;font-weight:800;text-decoration:none;border:none;letter-spacing:.01em;transition:background .12s" onmouseover="this.style.background=\'' + brandHov + '\'" onmouseout="this.style.background=\'' + brandBg + '\'">Detail →</a>'
+        + '<button id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots" title="Mo&#382;nosti" style="' + dotsBtnStyle + '">⋯</button>'
+        + '</div>'
+        + '</div>';
+}
+
+function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
+    const hintText = hasMoved ? '✓ Premiestnen&#253; - ulo&#382;i&#357;?' : '↕ Presu&#328;te marker na nov&#250; polohu';
+    const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
+    const saveBtnStyle = 'flex:1;min-height:2.34rem;padding:.36rem .78rem;border-radius:.72rem;border:1px solid #16a34a;background:#16a34a;color:#fff;box-shadow:none;outline:none;appearance:none;-webkit-appearance:none;font:800 .76rem/1 Manrope,system-ui,sans-serif;cursor:pointer';
+    const cancelBtnStyle = 'flex:1;min-height:2.34rem;padding:.36rem .78rem;border-radius:.72rem;border:1px solid #d9e3ef;background:#f4f7fb;color:#425466;box-shadow:none;outline:none;appearance:none;-webkit-appearance:none;font:700 .76rem/1 Manrope,system-ui,sans-serif;cursor:pointer';
+    return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
+        + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + escapeHtml(name) + '</div>'
+        + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.24rem">' + escapeHtml(shortEui) + '</div>' : '')
+        + '<div style="font-size:.69rem;font-weight:700;color:' + hintColor + ';margin-bottom:.3rem">' + hintText + '</div>'
+        + '<div style="border-top:1px solid #edf2f9;margin:.28rem 0 .36rem"></div>'
+        + '<div style="display:flex;gap:.38rem">'
+        + (hasMoved ? '<button id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save" style="' + saveBtnStyle + '">Ulo&#382;i&#357; polohu</button>' : '')
+        + '<button id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel" style="' + cancelBtnStyle + '">Zru&#353;i&#357;</button>'
+        + '</div>'
+        + '</div>';
+}
+
 function getAdminDashboardIncludeDemoData() {
     if (window.AdminDemoDataPrefs && typeof window.AdminDemoDataPrefs.get === 'function') {
         return Boolean(window.AdminDemoDataPrefs.get());
