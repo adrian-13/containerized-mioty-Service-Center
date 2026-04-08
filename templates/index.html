@@ -3930,6 +3930,8 @@ function initMiniCoverageMap() {
     updateMiniMapPositionLabel();
     miniOsmMap.on('moveend zoomend', updateMiniMapPositionLabel);
     miniOsmMap.on('click', (event) => {
+        closeMiniCtx();
+        closeMiniColorPop();
         if (!miniPlacementMode) return;
         saveMiniMarkerPlacement(event.latlng.lat, event.latlng.lng);
     });
@@ -3963,8 +3965,18 @@ function initMiniCoverageMap() {
     });
     bindMiniMapSaveControl();
 
-    mapContainer.addEventListener('click', (event) => event.stopPropagation());
-    mapContainer.addEventListener('mousedown', (event) => event.stopPropagation());
+    mapContainer.addEventListener('click', (event) => {
+        closeMiniCtx();
+        closeMiniColorPop();
+        event.stopPropagation();
+    });
+    mapContainer.addEventListener('mousedown', (event) => {
+        if (event.button === 0) {
+            closeMiniCtx();
+            closeMiniColorPop();
+        }
+        event.stopPropagation();
+    });
     mapContainer.addEventListener('dblclick', (event) => event.stopPropagation());
     mapContainer.addEventListener('wheel', (event) => event.stopPropagation());
     mapContainer.addEventListener('contextmenu', (event) => event.stopPropagation());
@@ -4245,7 +4257,10 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
 
         const isBs = node.type === 'base_station';
         const markerStyle = getMiniMarkerBaseStyle(node);
-        const marker = L.circleMarker([pos.lat, pos.lng], markerStyle);
+        const marker = L.circleMarker([pos.lat, pos.lng], {
+            ...markerStyle,
+            bubblingMouseEvents: false
+        });
         marker.__miniBaseStyle = { ...markerStyle };
         const label = node.label || shortId(node.eui || '', 10);
         marker.__miniKey = miniMarkerKey(node.type, node.eui || '');
@@ -4278,8 +4293,10 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
             focusMiniMarker(marker.__miniKey || '');
         });
         marker.on('contextmenu', (event) => {
-            L.DomEvent.preventDefault(event.originalEvent);
-            L.DomEvent.stopPropagation(event.originalEvent);
+            if (event && event.originalEvent) {
+                L.DomEvent.preventDefault(event.originalEvent);
+                L.DomEvent.stop(event.originalEvent);
+            }
             const markerType = marker.__miniNode && marker.__miniNode.type === 'base_station' ? 'base_station' : 'sensor';
             const markerEui = marker.__miniNode ? marker.__miniNode.eui : '';
             const detailUrl = markerType === 'base_station'
