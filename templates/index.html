@@ -4368,6 +4368,21 @@ function resolveMiniMarkerPosition(positions, node) {
         }
     }
 
+    const fallbackLat = Number(
+        node && node.gps_lat != null ? node.gps_lat
+            : (node && node.latitude != null ? node.latitude
+                : (node && node.lat != null ? node.lat : NaN))
+    );
+    const fallbackLng = Number(
+        node && node.gps_lng != null ? node.gps_lng
+            : (node && node.longitude != null ? node.longitude
+                : (node && node.lon != null ? node.lon
+                    : (node && node.lng != null ? node.lng : NaN)))
+    );
+    if (Number.isFinite(fallbackLat) && Number.isFinite(fallbackLng)) {
+        return { lat: fallbackLat, lng: fallbackLng };
+    }
+
     return null;
 }
 
@@ -4390,7 +4405,9 @@ function buildMiniMapNodes(topologyData, sensorInventoryData) {
             return {
                 ...node,
                 label: String((sensor && sensor.name) || node.label || eui.slice(0, 8) + '...'),
-                marker_color: sensor && sensor.marker_color ? String(sensor.marker_color) : (node.marker_color || '')
+                marker_color: sensor && sensor.marker_color ? String(sensor.marker_color) : (node.marker_color || ''),
+                gps_lat: sensor && sensor.gps_lat != null ? sensor.gps_lat : node.gps_lat,
+                gps_lng: sensor && sensor.gps_lng != null ? sensor.gps_lng : node.gps_lng
             };
         })
         : [];
@@ -4410,6 +4427,8 @@ function buildMiniMapNodes(topologyData, sensorInventoryData) {
                 eui,
                 label: String((sensor && sensor.name) || eui.slice(0, 8) + '...'),
                 marker_color: sensor && sensor.marker_color ? String(sensor.marker_color) : '',
+                gps_lat: sensor && sensor.gps_lat != null ? sensor.gps_lat : null,
+                gps_lng: sensor && sensor.gps_lng != null ? sensor.gps_lng : null,
                 inventory_only: true
             });
             knownSensorEuis.add(eui);

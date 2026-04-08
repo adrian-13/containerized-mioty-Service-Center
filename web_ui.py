@@ -16943,7 +16943,7 @@ def _load_configured_sensors_index() -> Dict[str, Dict[str, Any]]:
     """
     Load configured sensors from the DB-first inventory store.
     Returns mapping:
-      EUI_UPPER -> {"name": str, "tags": list[str], "bidi": bool, "payload_decoder": str, "attached_base_stations": list[str]}
+      EUI_UPPER -> {"name": str, "tags": list[str], "bidi": bool, "payload_decoder": str, "attached_base_stations": list[str], "gps_lat": Any, "gps_lng": Any}
     """
     result: Dict[str, Dict[str, Any]] = {}
     try:
@@ -16968,6 +16968,8 @@ def _load_configured_sensors_index() -> Dict[str, Dict[str, Any]]:
             "attached_base_stations": _normalize_base_station_route_list(
                 sensor.get("attached_base_stations", [])
             ),
+            "gps_lat": sensor.get("gps_lat"),
+            "gps_lng": sensor.get("gps_lng"),
         }
     return result
 
@@ -17153,6 +17155,8 @@ def _collect_network_snapshot() -> Dict[str, Any]:
             "type": "sensor",
             "eui": sensor_eui,
             "label": configured_sensors.get(sensor_eui, {}).get("name", sensor_name_index.get(sensor_eui, f"{sensor_eui[:8]}...")),
+            "gps_lat": configured_sensors.get(sensor_eui, {}).get("gps_lat"),
+            "gps_lng": configured_sensors.get(sensor_eui, {}).get("gps_lng"),
             "primary_bs": primary_bs,
             "receiver_count": receiver_count,
             "live_receiver_count": len(coverage_receiving),
@@ -17177,6 +17181,8 @@ def _collect_network_snapshot() -> Dict[str, Any]:
             "type": "sensor",
             "eui": sensor_eui,
             "label": str(sensor_meta.get("name", f"{sensor_eui[:8]}...")),
+            "gps_lat": sensor_meta.get("gps_lat"),
+            "gps_lng": sensor_meta.get("gps_lng"),
             "primary_bs": primary_bs,
             "receiver_count": len(assigned_bases),
             "live_receiver_count": 0,
@@ -17245,6 +17251,8 @@ def _collect_network_snapshot() -> Dict[str, Any]:
             "type": "base_station",
             "eui": bs_eui,
             "label": bs_name if bs_name else f"{bs_eui[:8]}...",
+            "gps_lat": bs_cfg.get("gps_lat"),
+            "gps_lng": bs_cfg.get("gps_lng"),
             "connected": bs_eui in connected_bs,
             "cpu": round(_safe_float(health.get("cpu", 0.0), 0.0), 1),
             "memory": round(_safe_float(health.get("memory", 0.0), 0.0), 1),
