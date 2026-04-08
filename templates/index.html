@@ -370,17 +370,23 @@
     .mview-statusbar { gap: 1rem; flex-wrap: wrap; height: auto; padding: 0.6rem 1rem; }
 }
 /* ── Map markers ── */
-.sc-map-marker {
+.sc-map-marker,
+.leaflet-marker-icon.sc-map-marker,
+.leaflet-div-icon.sc-map-marker {
     background: none !important;
+    background-color: transparent !important;
     border: none !important;
+    box-shadow: none !important;
     width: 20px !important;
     height: 20px !important;
+    overflow: visible !important;
 }
 .sc-map-pin {
     display: block;
     width: 20px;
     height: 20px;
     border-radius: 50%;
+    background-color: #1ca8c9;
     border: 2.5px solid rgba(255,255,255,.92);
     box-shadow: 0 2px 7px rgba(0,0,0,.28);
     transition: transform .15s, box-shadow .15s;
@@ -3603,8 +3609,9 @@ function shortId(value, size = 8) {
 
 function makeMiniMarkerIcon(color, unlocked) {
     const border = unlocked ? 'border:2.5px solid #eb7e17;' : 'border:2.5px solid rgba(255,255,255,.92);';
+    const fill = String(color || '#1ca8c9').trim() || '#1ca8c9';
     return L.divIcon({
-        html: '<div class="sc-map-pin" style="background:' + escapeHtml(color || '#1ca8c9') + ';' + border + '"></div>',
+        html: '<div class="sc-map-pin" style="background-color:' + fill + ';' + border + '"></div>',
         className: 'sc-map-marker',
         iconSize: [20, 20],
         iconAnchor: [10, 10],
