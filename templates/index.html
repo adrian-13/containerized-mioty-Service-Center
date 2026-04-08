@@ -385,12 +385,9 @@
     display: block;
     width: 20px;
     height: 20px;
-    border-radius: 50%;
-    background-color: #1ca8c9;
-    border: 2.5px solid rgba(255,255,255,.92);
-    box-shadow: 0 2px 7px rgba(0,0,0,.28);
     transition: transform .15s, box-shadow .15s;
     cursor: grab;
+    overflow: visible;
 }
 .sc-map-pin:active { cursor: grabbing; }
 .sc-map-pin.is-highlighted { transform: scale(1.35); box-shadow: 0 3px 12px rgba(0,0,0,.38); z-index: 1000; }
@@ -3608,21 +3605,15 @@ function shortId(value, size = 8) {
 }
 
 function makeMiniMarkerIcon(color, unlocked) {
-    const border = unlocked ? 'border:2.5px solid #eb7e17;' : 'border:2.5px solid rgba(255,255,255,.92);';
     const fill = String(color || '#1ca8c9').trim() || '#1ca8c9';
-    const pinStyle = [
-        'display:block',
-        'width:20px',
-        'height:20px',
-        'border-radius:50%',
-        'box-sizing:border-box',
-        'background-color:' + fill,
-        border.replace(/;$/, ''),
-        'box-shadow:0 2px 7px rgba(0,0,0,.28)',
-        'cursor:grab'
-    ].join(';') + ';';
+    const stroke = unlocked ? '#eb7e17' : 'rgba(255,255,255,.92)';
+    const svg = [
+        '<svg class="sc-map-pin" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">',
+        '<circle cx="10" cy="10" r="7.25" fill="', fill, '" stroke="', stroke, '" stroke-width="2.5"></circle>',
+        '</svg>'
+    ].join('');
     return L.divIcon({
-        html: '<div class="sc-map-pin" style="' + pinStyle + '"></div>',
+        html: svg,
         className: 'sc-map-marker',
         iconSize: [20, 20],
         iconAnchor: [10, 10],
