@@ -468,75 +468,91 @@
 }
 .sc-leaflet-popup .leaflet-popup-close-button:hover { color: #13263f !important; }
 /* Popup buttons */
-.sc-popup-detail {
+.sc-leaflet-popup .leaflet-popup-content .sc-popup-detail {
     flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .3rem;
-    background: var(--brand-500); color: #fff; border-radius: .42rem; padding: .34rem .5rem;
-    font-size: .72rem; font-weight: 800; text-decoration: none; border: none; cursor: pointer;
-    transition: background .12s, box-shadow .12s;
+    min-height: 2.34rem;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-500) 92%, white 8%), var(--brand-500));
+    color: #fff; border-radius: .78rem; padding: .34rem .7rem;
+    font-size: .74rem; font-weight: 800; text-decoration: none; border: none; cursor: pointer;
+    box-shadow: 0 8px 18px rgba(var(--brand-rgb), .16);
+    transition: background .12s, box-shadow .12s, transform .12s;
 }
-.sc-popup-detail:hover { background: var(--brand-600); box-shadow: 0 2px 8px rgba(var(--brand-rgb), .2); }
-.sc-popup-dots {
+.sc-leaflet-popup .leaflet-popup-content .sc-popup-detail:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-600) 95%, white 5%), var(--brand-600));
+    box-shadow: 0 10px 18px rgba(var(--brand-rgb), .2);
+    transform: translateY(-1px);
+}
+.sc-leaflet-popup .leaflet-popup-content .sc-popup-dots {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-width: 2.3rem;
     height: 2.3rem;
-    background: #f4f7fb;
-    border: 1px solid #d9e3ef;
-    border-radius: .72rem;
+    background: linear-gradient(180deg, #ffffff, #f4f7fb);
+    border: 1px solid #d8e1ee;
+    border-radius: .78rem;
     cursor: pointer;
     padding: 0 .62rem;
     font-size: .92rem;
     line-height: 1;
-    color: #5f738e;
+    font-weight: 800;
+    color: #44566c;
     flex-shrink: 0;
-    box-shadow: none;
-    appearance: none;
-    -webkit-appearance: none;
-    transition: background .12s, color .12s, border-color .12s, transform .12s;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, .06);
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    transition: background .12s, color .12s, border-color .12s, transform .12s, box-shadow .12s;
 }
-.sc-popup-dots:hover {
-    background: #ecf3fb;
-    border-color: #c8d7e8;
-    color: #1e293b;
+.sc-leaflet-popup .leaflet-popup-content .sc-popup-dots:hover {
+    background: #eef4fb;
+    border-color: #c7d5e6;
+    color: #13263f;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, .1);
+    transform: translateY(-1px);
 }
-.sc-popup-save {
+.sc-leaflet-popup .leaflet-popup-content .sc-popup-save {
     flex: 1;
     min-height: 2.3rem;
-    background: #16a34a;
+    background: linear-gradient(180deg, #1db55a, #159847);
     color: #fff;
-    border: 1px solid #16a34a;
-    border-radius: .72rem;
+    border: 1px solid #159847;
+    border-radius: .78rem;
     padding: .34rem .72rem;
-    font-size: .72rem;
+    font-size: .74rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: none;
-    appearance: none;
-    -webkit-appearance: none;
-    transition: background .12s, box-shadow .12s, border-color .12s;
+    box-shadow: 0 10px 18px rgba(21, 152, 71, .18);
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    transition: background .12s, box-shadow .12s, border-color .12s, transform .12s;
 }
-.sc-popup-save:hover { background: #15803d; box-shadow: 0 2px 8px rgba(22, 163, 74, .2); }
-.sc-popup-cancel {
+.sc-leaflet-popup .leaflet-popup-content .sc-popup-save:hover {
+    background: linear-gradient(180deg, #16a34a, #15803d);
+    box-shadow: 0 12px 20px rgba(21, 152, 71, .22);
+    transform: translateY(-1px);
+}
+.sc-leaflet-popup .leaflet-popup-content .sc-popup-cancel {
     flex: 1;
     min-height: 2.3rem;
-    background: #f4f7fb;
+    background: linear-gradient(180deg, #ffffff, #f4f7fb);
     color: #425466;
-    border: 1px solid #d9e3ef;
-    border-radius: .72rem;
+    border: 1px solid #d8e1ee;
+    border-radius: .78rem;
     padding: .34rem .72rem;
-    font-size: .72rem;
+    font-size: .74rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: none;
-    appearance: none;
-    -webkit-appearance: none;
-    transition: background .12s, color .12s, border-color .12s;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, .06);
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    transition: background .12s, color .12s, border-color .12s, transform .12s, box-shadow .12s;
 }
-.sc-popup-cancel:hover {
-    background: #ecf3fb;
-    border-color: #c8d7e8;
+.sc-leaflet-popup .leaflet-popup-content .sc-popup-cancel:hover {
+    background: #eef4fb;
+    border-color: #c7d5e6;
     color: #1e293b;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, .1);
+    transform: translateY(-1px);
 }
 /* ── Context menu ── */
 .sc-ctx {
@@ -3706,16 +3722,13 @@ function fetchJson(url) {
 }
 
 function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
-    const brandBg = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
-    const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
-    const dotsBtnStyle = 'display:inline-flex;align-items:center;justify-content:center;min-width:2.34rem;height:2.34rem;padding:0 .62rem;border-radius:.72rem;border:1px solid #d9e3ef;background:#f4f7fb;color:#5f738e;box-shadow:none;outline:none;appearance:none;-webkit-appearance:none;font:800 .94rem/1 Manrope,system-ui,sans-serif;cursor:pointer;flex-shrink:0';
     return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
         + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + escapeHtml(name) + '</div>'
         + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.36rem">' + escapeHtml(shortEui) + '</div>' : '')
         + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
         + '<div style="display:flex;align-items:center;gap:.36rem">'
-        + '<a href="' + escapeHtml(href) + '" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;background:' + brandBg + ';color:#fff;border-radius:.72rem;padding:.42rem .68rem;font-size:.74rem;font-weight:800;text-decoration:none;border:none;letter-spacing:.01em;transition:background .12s" onmouseover="this.style.background=\'' + brandHov + '\'" onmouseout="this.style.background=\'' + brandBg + '\'">Detail →</a>'
-        + '<button id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots" title="Mo&#382;nosti" style="' + dotsBtnStyle + '">⋯</button>'
+        + '<a href="' + escapeHtml(href) + '" class="sc-popup-detail">Detail →</a>'
+        + '<button type="button" id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots" title="Mo&#382;nosti" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'dots\', \'' + escapeHtml(popupId) + '\', event)">⋯</button>'
         + '</div>'
         + '</div>';
 }
@@ -3723,19 +3736,33 @@ function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
 function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
     const hintText = hasMoved ? '✓ Premiestnen&#253; - ulo&#382;i&#357;?' : '↕ Presu&#328;te marker na nov&#250; polohu';
     const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
-    const saveBtnStyle = 'flex:1;min-height:2.34rem;padding:.36rem .78rem;border-radius:.72rem;border:1px solid #16a34a;background:#16a34a;color:#fff;box-shadow:none;outline:none;appearance:none;-webkit-appearance:none;font:800 .76rem/1 Manrope,system-ui,sans-serif;cursor:pointer';
-    const cancelBtnStyle = 'flex:1;min-height:2.34rem;padding:.36rem .78rem;border-radius:.72rem;border:1px solid #d9e3ef;background:#f4f7fb;color:#425466;box-shadow:none;outline:none;appearance:none;-webkit-appearance:none;font:700 .76rem/1 Manrope,system-ui,sans-serif;cursor:pointer';
     return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
         + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + escapeHtml(name) + '</div>'
         + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.24rem">' + escapeHtml(shortEui) + '</div>' : '')
         + '<div style="font-size:.69rem;font-weight:700;color:' + hintColor + ';margin-bottom:.3rem">' + hintText + '</div>'
         + '<div style="border-top:1px solid #edf2f9;margin:.28rem 0 .36rem"></div>'
         + '<div style="display:flex;gap:.38rem">'
-        + (hasMoved ? '<button id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save" style="' + saveBtnStyle + '">Ulo&#382;i&#357; polohu</button>' : '')
-        + '<button id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel" style="' + cancelBtnStyle + '">Zru&#353;i&#357;</button>'
+        + (hasMoved ? '<button type="button" id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'save\', \'' + escapeHtml(popupId) + '\', event)">Ulo&#382;i&#357; polohu</button>' : '')
+        + '<button type="button" id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'cancel\', \'' + escapeHtml(popupId) + '\', event)">Zru&#353;i&#357;</button>'
         + '</div>'
         + '</div>';
 }
+
+window.__scMiniPopupActions = window.__scMiniPopupActions || Object.create(null);
+window.scHandleMiniPopupAction = function(action, popupId, event) {
+    if (event) {
+        event.preventDefault?.();
+        event.stopPropagation?.();
+        event.stopImmediatePropagation?.();
+        event.cancelBubble = true;
+    }
+    const registry = window.__scMiniPopupActions || {};
+    const actions = registry[popupId];
+    const handler = actions && typeof actions[action] === 'function' ? actions[action] : null;
+    if (!handler) return false;
+    handler(event || null);
+    return false;
+};
 
 function getAdminDashboardIncludeDemoData() {
     if (window.AdminDemoDataPrefs && typeof window.AdminDemoDataPrefs.get === 'function') {
@@ -4548,6 +4575,65 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
                 });
             }
             return items;
+        };
+        window.__scMiniPopupActions[popupId] = {
+            dots: () => {
+                const dotsBtn = document.getElementById('sc-popup-dots-' + popupId);
+                if (!dotsBtn) return;
+                const rect = dotsBtn.getBoundingClientRect();
+                showMiniCtx(
+                    {
+                        clientX: rect.left,
+                        clientY: rect.bottom + 4,
+                        preventDefault() {},
+                        stopPropagation() {}
+                    },
+                    markerContextItems(rect.left, rect.bottom + 8)
+                );
+            },
+            save: () => {
+                const pending = miniPendingLatLng[markerKey];
+                if (!pending) return;
+                marker.closePopup();
+                persistMiniMarkerPosition(marker.__miniNode, pending.lat, pending.lng)
+                    .then((result) => {
+                        if (result.ok && result.data && result.data.success) {
+                            updateMiniCoveragePosition(marker.__miniNode, pending.lat, pending.lng);
+                            if (!isBs && latestSensorInventoryData && typeof latestSensorInventoryData === 'object') {
+                                const sensor = latestSensorInventoryData[markerEui] || latestSensorInventoryData[markerEui.toLowerCase()];
+                                if (sensor && typeof sensor === 'object') {
+                                    sensor.gps_lat = pending.lat;
+                                    sensor.gps_lng = pending.lng;
+                                }
+                            }
+                            showMiniMapToast('✓ Poloha uložená', 2400);
+                        } else {
+                            marker.setLatLng([pending._origLat, pending._origLng]);
+                            showMiniMapToast('✕ ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba uloženia')), 2400);
+                        }
+                        delete miniPendingLatLng[markerKey];
+                        lockMarker();
+                        setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
+                        marker.openPopup();
+                    })
+                    .catch(() => {
+                        marker.setLatLng([pending._origLat, pending._origLng]);
+                        delete miniPendingLatLng[markerKey];
+                        lockMarker();
+                        setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
+                        marker.openPopup();
+                        showMiniMapToast('✕ Chyba uloženia', 2400);
+                    });
+            },
+            cancel: () => {
+                const pending = miniPendingLatLng[markerKey];
+                if (pending) marker.setLatLng([pending._origLat, pending._origLng]);
+                delete miniPendingLatLng[markerKey];
+                lockMarker();
+                setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
+                marker.openPopup();
+                showMiniMapToast('Presunutie zrušené', 1800);
+            }
         };
 
         marker.on('mouseover', () => {
