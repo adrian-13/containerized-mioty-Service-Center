@@ -476,24 +476,68 @@
 }
 .sc-popup-detail:hover { background: var(--brand-600); box-shadow: 0 2px 8px rgba(var(--brand-rgb), .2); }
 .sc-popup-dots {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: #f1f5f9; border: none; cursor: pointer; border-radius: .42rem;
-    padding: .34rem .55rem; font-size: .88rem; line-height: 1; color: #64748b; flex-shrink: 0;
-    transition: background .12s, color .12s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.3rem;
+    height: 2.3rem;
+    background: #f4f7fb;
+    border: 1px solid #d9e3ef;
+    border-radius: .72rem;
+    cursor: pointer;
+    padding: 0 .62rem;
+    font-size: .92rem;
+    line-height: 1;
+    color: #5f738e;
+    flex-shrink: 0;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background .12s, color .12s, border-color .12s, transform .12s;
 }
-.sc-popup-dots:hover { background: #e2e8f0; color: #1e293b; }
+.sc-popup-dots:hover {
+    background: #ecf3fb;
+    border-color: #c8d7e8;
+    color: #1e293b;
+}
 .sc-popup-save {
-    flex: 1; background: #16a34a; color: #fff; border: none; border-radius: .42rem;
-    padding: .34rem .5rem; font-size: .72rem; font-weight: 800; cursor: pointer;
-    transition: background .12s, box-shadow .12s;
+    flex: 1;
+    min-height: 2.3rem;
+    background: #16a34a;
+    color: #fff;
+    border: 1px solid #16a34a;
+    border-radius: .72rem;
+    padding: .34rem .72rem;
+    font-size: .72rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background .12s, box-shadow .12s, border-color .12s;
 }
 .sc-popup-save:hover { background: #15803d; box-shadow: 0 2px 8px rgba(22, 163, 74, .2); }
 .sc-popup-cancel {
-    flex: 1; background: #f1f5f9; color: #374151; border: none; border-radius: .42rem;
-    padding: .34rem .5rem; font-size: .72rem; font-weight: 700; cursor: pointer;
-    transition: background .12s, color .12s;
+    flex: 1;
+    min-height: 2.3rem;
+    background: #f4f7fb;
+    color: #425466;
+    border: 1px solid #d9e3ef;
+    border-radius: .72rem;
+    padding: .34rem .72rem;
+    font-size: .72rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background .12s, color .12s, border-color .12s;
 }
-.sc-popup-cancel:hover { background: #e2e8f0; color: #1e293b; }
+.sc-popup-cancel:hover {
+    background: #ecf3fb;
+    border-color: #c8d7e8;
+    color: #1e293b;
+}
 /* ── Context menu ── */
 .sc-ctx {
     position: fixed; z-index: 9000;
