@@ -3290,7 +3290,8 @@ function setDashboardMiniInteractionState(options = {}) {
                 pin.classList.toggle('is-highlighted', isActive || isHovered);
             }
         }
-        if (isActive || isHovered) {
+        const hasOpenPopup = typeof marker.isPopupOpen === 'function' ? marker.isPopupOpen() : false;
+        if (isHovered && !isActive && !hasOpenPopup) {
             marker.bringToFront?.();
             marker.openTooltip?.();
         } else {
@@ -3306,8 +3307,9 @@ function focusMiniMarker(key) {
     if (latLng) {
         miniOsmMap.setView(latLng, Math.max(miniOsmMap.getZoom(), 16), { animate: true });
     }
-    marker.openTooltip?.();
-    setDashboardMiniInteractionState({ activeKey: key });
+    setDashboardMiniInteractionState({ activeKey: key, hoverKey: '' });
+    marker.closeTooltip?.();
+    marker.openPopup?.();
     const row = marker.__miniRowSelector ? document.querySelector(marker.__miniRowSelector) : null;
     row?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
 }
@@ -4464,10 +4466,17 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
             setDashboardMiniInteractionState({ hoverKey: '' });
         });
         marker.on('click', () => {
-            focusMiniMarker(marker.__miniKey || '');
+            const key = marker.__miniKey || '';
+            if (!key) return;
+            setDashboardMiniInteractionState({ activeKey: key, hoverKey: '' });
+            marker.closeTooltip?.();
+            const row = marker.__miniRowSelector ? document.querySelector(marker.__miniRowSelector) : null;
+            row?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
         });
         marker.off('contextmenu');
         marker.on('popupopen', () => {
+            setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
+            marker.closeTooltip?.();
             const popupEl = document.querySelector('.leaflet-popup');
             if (popupEl) {
                 popupEl.addEventListener('contextmenu', (popupEvent) => {
@@ -4534,6 +4543,9 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
                     setTimeout(() => focusMiniMarker(markerKey), 60);
                 });
             }
+        });
+        marker.on('popupclose', () => {
+            marker.closeTooltip?.();
         });
         marker.on('dragstart', () => {
             marker.closePopup();
