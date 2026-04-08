@@ -3610,8 +3610,19 @@ function shortId(value, size = 8) {
 function makeMiniMarkerIcon(color, unlocked) {
     const border = unlocked ? 'border:2.5px solid #eb7e17;' : 'border:2.5px solid rgba(255,255,255,.92);';
     const fill = String(color || '#1ca8c9').trim() || '#1ca8c9';
+    const pinStyle = [
+        'display:block',
+        'width:20px',
+        'height:20px',
+        'border-radius:50%',
+        'box-sizing:border-box',
+        'background-color:' + fill,
+        border.replace(/;$/, ''),
+        'box-shadow:0 2px 7px rgba(0,0,0,.28)',
+        'cursor:grab'
+    ].join(';') + ';';
     return L.divIcon({
-        html: '<div class="sc-map-pin" style="background-color:' + fill + ';' + border + '"></div>',
+        html: '<div class="sc-map-pin" style="' + pinStyle + '"></div>',
         className: 'sc-map-marker',
         iconSize: [20, 20],
         iconAnchor: [10, 10],
