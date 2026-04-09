@@ -3290,6 +3290,56 @@ def _exclude_demo_base_stations_for_admin(base_stations):
         if not _is_demo_tenant_id(_tenant_id_from_base_station(payload))
     }
 
+
+def _filter_sensors_for_active_scope(sensors, tenant_id=None):
+    active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
+    scoped = _filter_sensors_for_tenant(sensors, tenant_id=active_tenant)
+    scoped = _exclude_demo_sensors_for_admin(scoped)
+    if _is_customer_role(session.get("role", "viewer")) or not _include_demo_data_requested():
+        return scoped
+    if _is_global_tenant_scope(active_tenant):
+        return scoped
+
+    demo_ids = _demo_tenant_ids()
+    seen = {str((sensor or {}).get("eui", "")).strip().upper() for sensor in scoped if isinstance(sensor, dict)}
+    merged = list(scoped)
+    for sensor in (sensors or []):
+        if not isinstance(sensor, dict):
+            continue
+        sensor_tenant = _tenant_id_from_sensor(sensor)
+        if sensor_tenant not in demo_ids:
+            continue
+        eui = str(sensor.get("eui", "")).strip().upper()
+        if not eui or eui in seen:
+            continue
+        payload = dict(sensor)
+        payload["tenant_id"] = sensor_tenant
+        merged.append(payload)
+        seen.add(eui)
+    return merged
+
+
+def _filter_base_stations_for_active_scope(base_stations, tenant_id=None):
+    active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
+    scoped = _filter_base_stations_for_tenant(base_stations, tenant_id=active_tenant)
+    scoped = _exclude_demo_base_stations_for_admin(scoped)
+    if _is_customer_role(session.get("role", "viewer")) or not _include_demo_data_requested():
+        return scoped
+    if _is_global_tenant_scope(active_tenant):
+        return scoped
+
+    demo_ids = _demo_tenant_ids()
+    merged = dict(scoped or {})
+    for eui, bs_data in (base_stations or {}).items():
+        if not isinstance(bs_data, dict):
+            continue
+        bs_tenant = _tenant_id_from_base_station(bs_data)
+        if bs_tenant not in demo_ids:
+            continue
+        merged[eui] = dict(bs_data)
+        merged[eui]["tenant_id"] = bs_tenant
+    return merged
+
 def _is_super_admin(user=None):
     if isinstance(user, dict):
         role = _normalize_user_role(user.get("role", "viewer"))
@@ -6118,9 +6168,10 @@ def _invalidate_customer_dashboard_cache(tenant_id: Optional[str] = None):
 
 def _customer_dashboard_cache_key(tenant_id: str) -> str:
     tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    version = "v2"
     if _is_customer_role(session.get("role", "viewer")):
-        return tenant_key
-    return f"{tenant_key}:demo:{1 if _include_demo_data_requested() else 0}"
+        return f"{tenant_key}:{version}"
+    return f"{tenant_key}:demo:{1 if _include_demo_data_requested() else 0}:{version}"
 
 def _get_cached_customer_dashboard_payload(tenant_id: str):
     tenant_key = _customer_dashboard_cache_key(tenant_id)
@@ -13664,8 +13715,7 @@ def get_sensors():
         # Load configured sensors from the DB-first store (with recovery-file fallback)
         sensor_status = {}
         try:
-            sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
-            sensors = _exclude_demo_sensors_for_admin(sensors)
+            sensors = _filter_sensors_for_active_scope(_load_all_sensors(), tenant_id=active_tenant)
             print(f"Loaded {len(sensors)} configured sensors for tenant '{active_tenant}'")
                 
             # Initialize sensor status from configured inventory
@@ -16952,7 +17002,7 @@ def _load_configured_sensors_index() -> Dict[str, Dict[str, Any]]:
         sensors = []
 
     active_tenant = _active_tenant_id()
-    sensors = _exclude_demo_sensors_for_admin(_filter_sensors_for_tenant(sensors, tenant_id=active_tenant))
+    sensors = _filter_sensors_for_active_scope(sensors, tenant_id=active_tenant)
     for sensor in sensors:
         if not isinstance(sensor, dict):
             continue
@@ -16983,15 +17033,13 @@ def _collect_network_snapshot() -> Dict[str, Any]:
 
     active_tenant = _active_tenant_id()
     bs_config_raw = load_base_station_config().get("base_stations", {}) or {}
+    bs_config_filtered = _filter_base_stations_for_active_scope(bs_config_raw, tenant_id=active_tenant)
     bs_config = {}
-    for eui_key, bs_data in bs_config_raw.items():
+    for eui_key, bs_data in bs_config_filtered.items():
         bs_eui = _normalize_eui_upper(eui_key)
         if not bs_eui:
             continue
-        if not _tenant_matches(_tenant_id_from_base_station(bs_data), active_tenant):
-            continue
         bs_config[bs_eui] = bs_data if isinstance(bs_data, dict) else {}
-    bs_config = _exclude_demo_base_stations_for_admin(bs_config)
     allowed_bs = set(bs_config.keys())
 
     connected_bs = set()
@@ -17009,8 +17057,9 @@ def _collect_network_snapshot() -> Dict[str, Any]:
     runtime_sensor_euis: Set[str] = set()
 
     if tls_server_instance:
-        runtime_sensor_config_filtered = _exclude_demo_sensors_for_admin(
-            _filter_sensors_for_tenant(getattr(tls_server_instance, "sensor_config", []) or [], tenant_id=active_tenant)
+        runtime_sensor_config_filtered = _filter_sensors_for_active_scope(
+            getattr(tls_server_instance, "sensor_config", []) or [],
+            tenant_id=active_tenant,
         )
         runtime_sensor_euis = {
             _normalize_eui_upper(sensor.get("eui", ""))
@@ -17309,14 +17358,10 @@ def _build_coverage_positions_read_payload() -> Dict[str, Any]:
     """Build tenant-filtered coverage positions payload for map-based customer views."""
     positions_file = _coverage_positions_file()
     active_tenant = _active_tenant_id()
-    tenant_sensors = _exclude_demo_sensors_for_admin(
-        _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
-    )
-    tenant_base_stations = _exclude_demo_base_stations_for_admin(
-        _filter_base_stations_for_tenant(
-            load_base_station_config().get("base_stations", {}),
-            tenant_id=active_tenant,
-        )
+    tenant_sensors = _filter_sensors_for_active_scope(_load_all_sensors(), tenant_id=active_tenant)
+    tenant_base_stations = _filter_base_stations_for_active_scope(
+        load_base_station_config().get("base_stations", {}),
+        tenant_id=active_tenant,
     )
     tenant_sensor_keys = {
         f"sensor_{str(sensor.get('eui', '')).strip().upper()}"
