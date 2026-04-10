@@ -758,6 +758,31 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 {% else %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
+/* ── Map markers (shared with mini OSM map) ── */
+.sc-map-marker,
+.leaflet-marker-icon.sc-map-marker,
+.leaflet-div-icon.sc-map-marker {
+    background: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 20px !important;
+    height: 20px !important;
+    overflow: visible !important;
+}
+.sc-map-pin {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    transition: transform .15s, box-shadow .15s;
+    cursor: grab;
+    overflow: visible;
+}
+.sc-map-pin:active { cursor: grabbing; }
+.sc-map-pin.is-highlighted { transform: scale(1.35); box-shadow: 0 3px 12px rgba(0,0,0,.38); z-index: 1000; }
+.sc-map-pin.is-dragging { transform: scale(1.2); cursor: grabbing; opacity: .85; }
+
 /* ═══════════════════════════════════════════════════════
    Dashboard — clean flat layout
    ═══════════════════════════════════════════════════════ */
