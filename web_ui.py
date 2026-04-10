@@ -3286,20 +3286,22 @@ def _include_demo_data_requested() -> bool:
 def _exclude_demo_sensors_for_admin(sensors):
     if _is_customer_role(session.get("role", "viewer")) or _include_demo_data_requested():
         return list(sensors or [])
+    demo_ids = _demo_tenant_ids()
     return [
         sensor
         for sensor in (sensors or [])
-        if not _is_demo_tenant_id(_tenant_id_from_sensor(sensor))
+        if _tenant_id_from_sensor(sensor) not in demo_ids
     ]
 
 
 def _exclude_demo_base_stations_for_admin(base_stations):
     if _is_customer_role(session.get("role", "viewer")) or _include_demo_data_requested():
         return dict(base_stations or {})
+    demo_ids = _demo_tenant_ids()
     return {
         eui: payload
         for eui, payload in (base_stations or {}).items()
-        if not _is_demo_tenant_id(_tenant_id_from_base_station(payload))
+        if _tenant_id_from_base_station(payload) not in demo_ids
     }
 
 
