@@ -3250,12 +3250,24 @@ def _normalize_tenant_registry_entry(entry, fallback_tenant_id=None):
 
 def _demo_tenant_ids() -> set[str]:
     try:
+        registry_map = _tenant_registry_map()
         demo_ids = {
             tenant_id
-            for tenant_id, entry in _tenant_registry_map().items()
+            for tenant_id, entry in registry_map.items()
             if _normalize_demo_tenant_flag((entry or {}).get("is_demo"), tenant_id)
         }
-        demo_ids.add("test")
+        for sensor in _load_all_sensors():
+            if not isinstance(sensor, dict):
+                continue
+            tenant_id = _tenant_id_from_sensor(sensor)
+            if _normalize_demo_tenant_flag((registry_map.get(tenant_id) or {}).get("is_demo"), tenant_id):
+                demo_ids.add(tenant_id)
+        for base_station in (load_base_station_config().get("base_stations", {}) or {}).values():
+            if not isinstance(base_station, dict):
+                continue
+            tenant_id = _tenant_id_from_base_station(base_station)
+            if _normalize_demo_tenant_flag((registry_map.get(tenant_id) or {}).get("is_demo"), tenant_id):
+                demo_ids.add(tenant_id)
         return demo_ids
     except Exception:
         return {"test"}
@@ -6157,7 +6169,7 @@ def _invalidate_customer_dashboard_cache(tenant_id: Optional[str] = None):
             if str(key) == normalized_tenant or str(key).startswith(f"{normalized_tenant}:demo:"):
                 bucket.pop(key, None)
 
-    normalized_tenant = None if tenant_id is None else _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    normalized_tenant = None if tenant_id is None else _dashboard_scope_cache_key(tenant_id)
     with _customer_dashboard_cache_lock:
         _purge_dashboard_cache_bucket(_customer_dashboard_cache, normalized_tenant)
     with _customer_dashboard_summary_cache_lock:
@@ -6166,8 +6178,14 @@ def _invalidate_customer_dashboard_cache(tenant_id: Optional[str] = None):
         _purge_dashboard_cache_bucket(_customer_dashboard_runtime_cache, normalized_tenant)
 
 
+def _dashboard_scope_cache_key(tenant_id: Optional[str]) -> str:
+    if _is_global_tenant_scope(tenant_id):
+        return "__global__"
+    return _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+
+
 def _customer_dashboard_cache_key(tenant_id: str) -> str:
-    tenant_key = _normalize_tenant_id(tenant_id, fallback=_default_tenant_id())
+    tenant_key = _dashboard_scope_cache_key(tenant_id)
     version = "v2"
     if _is_customer_role(session.get("role", "viewer")):
         return f"{tenant_key}:{version}"

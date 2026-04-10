@@ -3062,6 +3062,8 @@ const DASHBOARD_MINI_VIEW_KEY = 'service-center.dashboard.topology-mini-view.v1'
 const MINI_DEFAULT_CENTER = [48.76785085158725, 18.635382080096264];
 const MINI_DEFAULT_ZOOM = 15;
 const DASHBOARD_CACHE_KEY = 'dashboard_workspace_bundle_v1';
+const DASHBOARD_CACHE_ROLE = {{ (current_user.role if current_user else 'guest')|tojson }};
+const DASHBOARD_CACHE_SCOPE = {{ (current_user.tenant_id if current_user else '')|tojson }};
 const DASHBOARD_CACHE_TTL_MS = 8000;
 const DASHBOARD_SIDE_WIDTH_KEY = 'service-center.dashboard.side-width.v1';
 const DASHBOARD_SIDE_WIDTH_MIN = 320;
@@ -3772,7 +3774,9 @@ function withAdminDemoQuery(url) {
 }
 
 function getDashboardCacheKey() {
-    return `${DASHBOARD_CACHE_KEY}:demo:${getAdminDashboardIncludeDemoData() ? '1' : '0'}`;
+    const scope = String(DASHBOARD_CACHE_SCOPE || '').trim() || '__global__';
+    const role = String(DASHBOARD_CACHE_ROLE || 'guest').trim() || 'guest';
+    return `${DASHBOARD_CACHE_KEY}:${role}:${scope}:demo:${getAdminDashboardIncludeDemoData() ? '1' : '0'}`;
 }
 
 function setDashboardSkeletonState(enabled, options = {}) {

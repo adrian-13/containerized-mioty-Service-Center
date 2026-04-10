@@ -5,6 +5,7 @@ import tempfile
 import unittest
 
 import web_ui
+from flask import session
 
 
 class _FakeMqttClient:
@@ -231,6 +232,68 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertTrue(bs_payload.get("success"))
         euis = {row.get("eui") for row in bs_payload.get("base_stations", [])}
         self.assertEqual(euis, {"129af3fffe01f125"})
+
+    def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):
+        with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
+            session["username"] = "admin"
+            session["role"] = "admin"
+            session["tenant_id"] = ""
+            global_key = web_ui._customer_dashboard_cache_key("")
+
+        with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
+            session["username"] = "tenant_user"
+            session["role"] = "user"
+            session["tenant_id"] = "default"
+            default_key = web_ui._customer_dashboard_cache_key("default")
+
+        self.assertNotEqual(global_key, default_key)
+        self.assertIn("__global__", global_key)
+
+    def test_demo_tenant_detected_from_inventory_without_registry_entry(self):
+        self._write_json(
+            self.sensor_file,
+            [
+                {
+                    "eui": "00124B001CBCE171",
+                    "nwKey": "00112233445566778899AABBCCDDEEFF",
+                    "shortAddr": "A171",
+                    "bidi": False,
+                    "name": "Default tenant sensor",
+                    "tenant_id": "default",
+                    "gps_lat": 48.1,
+                    "gps_lng": 17.1,
+                },
+                {
+                    "eui": "00124B001CBCE199",
+                    "nwKey": "00112233445566778899AABBCCDDEE99",
+                    "shortAddr": "A199",
+                    "bidi": False,
+                    "name": "Implicit demo sensor",
+                    "tenant_id": "test",
+                    "gps_lat": 48.2,
+                    "gps_lng": 17.2,
+                },
+            ],
+        )
+
+        with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
+            session["username"] = "admin"
+            session["role"] = "admin"
+            session["tenant_id"] = ""
+            hidden_payload = web_ui._build_customer_dashboard_runtime_payload()
+            hidden_nodes = hidden_payload["topologyData"]["nodes"]
+
+        with web_ui.app.test_request_context("/api/customer/dashboard/runtime?include_demo=1"):
+            session["username"] = "admin"
+            session["role"] = "admin"
+            session["tenant_id"] = ""
+            visible_payload = web_ui._build_customer_dashboard_runtime_payload()
+            visible_nodes = visible_payload["topologyData"]["nodes"]
+
+        hidden_sensor_euis = {node.get("eui") for node in hidden_nodes if node.get("type") == "sensor"}
+        visible_sensor_euis = {node.get("eui") for node in visible_nodes if node.get("type") == "sensor"}
+        self.assertNotIn("00124B001CBCE199", hidden_sensor_euis)
+        self.assertIn("00124B001CBCE199", visible_sensor_euis)
 
     def test_payload_decoders_route_is_separate_from_administration(self):
         self._login("admin", "admin", "default")
