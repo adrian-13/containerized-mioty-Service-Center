@@ -3313,10 +3313,14 @@ def _exclude_demo_base_stations_for_admin(base_stations):
 def _filter_sensors_for_active_scope(sensors, tenant_id=None):
     active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     scoped = _filter_sensors_for_tenant(sensors, tenant_id=active_tenant)
+    # Global admin scope (no tenant restriction) must see ALL sensors regardless of
+    # whether their tenant is flagged as demo.  Demo exclusion only applies when the
+    # admin is already scoped to a specific tenant, so "test"-tenant sensors remain
+    # visible on the network map and dashboard map for a super-admin.
+    if _is_global_tenant_scope(active_tenant):
+        return scoped
     scoped = _exclude_demo_sensors_for_admin(scoped)
     if _is_customer_role(session.get("role", "viewer")) or not _include_demo_data_requested():
-        return scoped
-    if _is_global_tenant_scope(active_tenant):
         return scoped
 
     demo_ids = _demo_tenant_ids()
@@ -3341,10 +3345,12 @@ def _filter_sensors_for_active_scope(sensors, tenant_id=None):
 def _filter_base_stations_for_active_scope(base_stations, tenant_id=None):
     active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     scoped = _filter_base_stations_for_tenant(base_stations, tenant_id=active_tenant)
+    # Global admin scope must see ALL base stations regardless of demo flag,
+    # consistent with the sensor filter behaviour above.
+    if _is_global_tenant_scope(active_tenant):
+        return scoped
     scoped = _exclude_demo_base_stations_for_admin(scoped)
     if _is_customer_role(session.get("role", "viewer")) or not _include_demo_data_requested():
-        return scoped
-    if _is_global_tenant_scope(active_tenant):
         return scoped
 
     demo_ids = _demo_tenant_ids()
