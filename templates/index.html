@@ -3660,7 +3660,15 @@ function shortId(value, size = 8) {
 }
 
 function makeMiniMarkerIcon(color, unlocked) {
-    return makeMarkerIcon(String(color || '#1ca8c9').trim() || '#1ca8c9', unlocked);
+    const c = String(color || '#1ca8c9').trim() || '#1ca8c9';
+    const border = unlocked ? 'border:2.5px solid #eb7e17;' : 'border:2.5px solid rgba(255,255,255,.92);';
+    return L.divIcon({
+        html: '<div class="sc-map-pin" style="background:' + c + ';' + border + '"></div>',
+        className: 'sc-map-marker',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, -14]
+    });
 }
 
 function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
