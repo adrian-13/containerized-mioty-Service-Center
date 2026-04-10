@@ -3280,7 +3280,12 @@ def _is_demo_tenant_id(tenant_id) -> bool:
 def _include_demo_data_requested() -> bool:
     if _is_customer_role(session.get("role", "viewer")):
         return True
-    return str(request.args.get("include_demo", "") or "").strip().lower() in {"1", "true", "yes", "on"}
+    # Skontrolujeme URL parameter
+    if str(request.args.get("include_demo", "") or "").strip().lower() in {"1", "true", "yes", "on"}:
+        return True
+    # Skontrolujeme uložené preferencie v profile používateľa
+    user = get_current_user()
+    return bool(user and user.get("ui_preferences", {}).get("admin_include_demo_data"))
 
 
 def _exclude_demo_sensors_for_admin(sensors):
@@ -20953,4 +20958,3 @@ def restart_service():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
