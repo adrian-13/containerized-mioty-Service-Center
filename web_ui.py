@@ -1,4 +1,4 @@
-import csv
+﻿import csv
 import copy
 import secrets
 import io
@@ -17383,11 +17383,22 @@ def _build_coverage_positions_read_payload() -> Dict[str, Any]:
     """Build tenant-filtered coverage positions payload for map-based customer views."""
     positions_file = _coverage_positions_file()
     active_tenant = _active_tenant_id()
-    tenant_sensors = _filter_sensors_for_active_scope(_load_all_sensors(), tenant_id=active_tenant)
-    tenant_base_stations = _filter_base_stations_for_active_scope(
-        load_base_station_config().get("base_stations", {}),
-        tenant_id=active_tenant,
-    )
+    # For global admin scope (active_tenant == ""), use the raw tenant filter without
+    # demo-exclusion so that sensors in any tenant (including auto-demo tenants like
+    # "test") are visible on the admin dashboard map.  Customer roles keep strict
+    # per-tenant filtering via _filter_sensors_for_active_scope.
+    if _is_global_tenant_scope(active_tenant):
+        tenant_sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
+        tenant_base_stations = _filter_base_stations_for_tenant(
+            load_base_station_config().get("base_stations", {}),
+            tenant_id=active_tenant,
+        )
+    else:
+        tenant_sensors = _filter_sensors_for_active_scope(_load_all_sensors(), tenant_id=active_tenant)
+        tenant_base_stations = _filter_base_stations_for_active_scope(
+            load_base_station_config().get("base_stations", {}),
+            tenant_id=active_tenant,
+        )
     tenant_sensor_keys = {
         f"sensor_{str(sensor.get('eui', '')).strip().upper()}"
         for sensor in tenant_sensors
