@@ -385,6 +385,7 @@
     display: block;
     width: 20px;
     height: 20px;
+    border-radius: 50%;
     transition: transform .15s, box-shadow .15s;
     cursor: grab;
     overflow: visible;
@@ -3655,14 +3656,9 @@ function shortId(value, size = 8) {
 
 function makeMiniMarkerIcon(color, unlocked) {
     const fill = String(color || '#1ca8c9').trim() || '#1ca8c9';
-    const stroke = unlocked ? '#eb7e17' : 'rgba(255,255,255,.92)';
-    const svg = [
-        '<svg class="sc-map-pin" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">',
-        '<circle cx="10" cy="10" r="7.25" fill="', fill, '" stroke="', stroke, '" stroke-width="2.5"></circle>',
-        '</svg>'
-    ].join('');
+    const border = unlocked ? 'border:2.5px solid #eb7e17;' : 'border:2.5px solid rgba(255,255,255,.92);';
     return L.divIcon({
-        html: svg,
+        html: '<div class="sc-map-pin" style="background:' + fill + ';' + border + '"></div>',
         className: 'sc-map-marker',
         iconSize: [20, 20],
         iconAnchor: [10, 10],
