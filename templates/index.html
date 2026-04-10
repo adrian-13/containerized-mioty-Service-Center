@@ -1471,6 +1471,8 @@ body.is-resizing-dashboard-row {
 .sensor-name { font-size: 0.83rem; font-weight: 700; color: #213047; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sensor-meta { font-size: 0.71rem; color: #7b8da5; display: inline-flex; align-items: center; gap: 0.34rem; white-space: nowrap; margin-left: 0.18rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .sensor-pill { display: inline-flex; align-items: center; gap: 0.22rem; color: #7b8da5; font-size: 0.71rem; font-weight: 600; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sensor-flag { display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem; border-radius: 50%; flex-shrink: 0; font-size: 0.56rem; }
+.sensor-flag.is-warning { color: #b7791f; background: #fff7db; border: 1px solid #f2d48f; }
 
 /* ═══════════════════════════════════════════════════════
    Signal quality
@@ -3582,6 +3584,7 @@ function saveMiniMarkerPlacement(lat, lng) {
                         sensor.gps_lat = nextLat;
                         sensor.gps_lng = nextLng;
                     }
+                    updateSensorRuntimeList(latestSensorInventoryData || {});
                 }
                 updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
                 const markerKey = miniMarkerKey(miniPlacementMode.type, miniPlacementMode.eui);
@@ -3818,7 +3821,26 @@ function initDashboardContextMenus() {
             if (!row) return;
             const sensorId = String(row.dataset.sensorId || '').trim();
             if (!sensorId) return;
+            const sensor = latestSensorInventoryData && typeof latestSensorInventoryData === 'object'
+                ? (latestSensorInventoryData[sensorId] || latestSensorInventoryData[sensorId.toLowerCase()] || null)
+                : null;
+            const placementLabel = sensorHasDashboardMapLocation(sensor || { eui: sensorId })
+                ? appTranslate('dashboard.reposition_on_map', 'Upraviť polohu na mape')
+                : appTranslate('dashboard.place_on_map', 'Umiestniť na mapu');
             showMiniCtx(event, [
+                {
+                    icon: 'fa-location-dot',
+                    label: placementLabel,
+                    action: () => {
+                        ensureMiniRuntimeInitialized();
+                        setMiniTopologyView('map');
+                        startMiniMarkerPlacement({
+                            type: 'sensor',
+                            eui: sensorId,
+                            label: sensor && (sensor.name || sensor.label) ? String(sensor.name || sensor.label) : sensorId
+                        });
+                    }
+                },
                 {
                     icon: 'fa-arrow-up-right-from-square',
                     primary: true,
@@ -5046,6 +5068,26 @@ function normalizeDashboardSensorList(data) {
     return [];
 }
 
+function sensorHasDashboardMapLocation(sensor) {
+    if (!sensor || typeof sensor !== 'object') return false;
+    const eui = String(sensor.eui || sensor.device_eui || sensor.sensor_id || '').trim().toUpperCase();
+    if (!eui) return false;
+    const positions = latestCoverageState && latestCoverageState.positions && typeof latestCoverageState.positions === 'object'
+        ? latestCoverageState.positions
+        : {};
+    return !!resolveMiniMarkerPosition(positions, {
+        type: 'sensor',
+        eui,
+        gps_lat: sensor.gps_lat,
+        gps_lng: sensor.gps_lng,
+        latitude: sensor.latitude,
+        longitude: sensor.longitude,
+        lat: sensor.lat,
+        lon: sensor.lon,
+        lng: sensor.lng
+    });
+}
+
 function updateSensorOverviewMetrics(data) {
     const sensors = normalizeDashboardSensorList(data);
     const totalSensors = sensors.length;
@@ -5294,10 +5336,14 @@ function updateSensorRuntimeList(data) {
         const tier = sensorRuntimeTier(sensor);
         const eui = String(sensor && (sensor.eui || sensor.device_eui || sensor.sensor_id || '') || '');
         const name = escapeHtml(sensor && (sensor.name || sensor.label || shortId(eui, 10)) || shortId(eui, 10));
+        const missingLocation = !sensorHasDashboardMapLocation(sensor);
+        const locationMeta = missingLocation
+            ? `<span class="sensor-flag is-warning" title="${escapeHtml(appTranslate('network.gps_not_configured', 'GPS nie je nakonfigurované'))}"><i class="fas fa-exclamation"></i></span>`
+            : '';
         const issueMeta = tier !== 'online'
             ? `<span class="sensor-meta"><span class="sensor-pill">${escapeHtml(sensorRuntimeLabel(sensor))}</span></span>`
             : '';
-        return `<li class="sensor-item" data-sensor-id="${escapeHtml(eui)}"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot ${tier}"></span><span class="sensor-name">${name}</span>${issueMeta}</div></div></li>`;
+        return `<li class="sensor-item" data-sensor-id="${escapeHtml(eui)}"><div class="sensor-item-head"><div class="sensor-item-main"><span class="sensor-dot ${tier}"></span><span class="sensor-name">${name}</span>${locationMeta}${issueMeta}</div></div></li>`;
     }).join('');
 }
 
