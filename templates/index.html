@@ -3049,6 +3049,7 @@ let miniTopologyView = 'map';
 let latestTopologyData = null;
 let latestCoverageState = null;
 let latestSensorInventoryData = null;
+let latestBaseStationInventoryData = null;
 let latestStatusData = null;
 let latestVmData = null;
 let latestTrafficData = null;
@@ -3613,7 +3614,12 @@ function saveMiniMarkerPlacement(lat, lng) {
                     }
                     updateSensorRuntimeList(latestSensorInventoryData || {});
                 }
-                updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
+                updateMiniCoverageMap(
+                    latestTopologyData || {},
+                    latestCoverageState || {},
+                    latestSensorInventoryData || {},
+                    latestBaseStationInventoryData || {}
+                );
                 const markerKey = miniMarkerKey(miniPlacementMode.type, miniPlacementMode.eui);
                 miniPlacementMode = null;
                 updateMiniPlacementUi();
@@ -3835,9 +3841,14 @@ function ensureMiniRuntimeInitialized() {
     setMiniTopologyView('map');
     refreshMiniViewportAfterLayoutChange();
 
-    if (latestTopologyData || latestCoverageState || latestSensorInventoryData) {
+    if (latestTopologyData || latestCoverageState || latestSensorInventoryData || latestBaseStationInventoryData) {
         updateTopologyPanel(latestTopologyData || {});
-        updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
+        updateMiniCoverageMap(
+            latestTopologyData || {},
+            latestCoverageState || {},
+            latestSensorInventoryData || {},
+            latestBaseStationInventoryData || {}
+        );
     }
 }
 
@@ -3935,11 +3946,13 @@ function applyDashboardPayload(payload, meta = {}) {
     const gatewaysData = data.gatewaysData || null;
     const coverageState = data.coverageState || null;
     const sensorsData = data.sensorsData || null;
+    const baseStationsData = data.baseStationsData || null;
     const incidentsData = data.incidentsData || null;
 
     if (topologyData) latestTopologyData = topologyData;
     if (coverageState) latestCoverageState = coverageState;
     if (sensorsData) latestSensorInventoryData = sensorsData;
+    if (baseStationsData) latestBaseStationInventoryData = baseStationsData;
     if (statusData) latestStatusData = statusData;
     if (vmData) latestVmData = vmData;
     if (trafficData) latestTrafficData = trafficData;
@@ -3948,9 +3961,14 @@ function applyDashboardPayload(payload, meta = {}) {
     if (incidentsData) latestIncidentsData = incidentsData;
 
     if (latestStatusData) updateStatusCards(latestStatusData);
-    if (miniRuntimeInitialized && (latestTopologyData || latestCoverageState || latestSensorInventoryData)) {
+    if (miniRuntimeInitialized && (latestTopologyData || latestCoverageState || latestSensorInventoryData || latestBaseStationInventoryData)) {
         updateTopologyPanel(latestTopologyData || {});
-        updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
+        updateMiniCoverageMap(
+            latestTopologyData || {},
+            latestCoverageState || {},
+            latestSensorInventoryData || {},
+            latestBaseStationInventoryData || {}
+        );
     }
     const vmCapable = updateVmMetrics(latestVmData || {});
     const trafficInfo = updateTrafficMetrics(latestTrafficData || {});
@@ -3970,11 +3988,13 @@ function applyDashboardPayload(payload, meta = {}) {
 function fetchDashboardPayload() {
     return Promise.all([
         fetchJson(withAdminDemoQuery('/api/customer/dashboard/summary')),
+        fetchJson(withAdminDemoQuery('/api/base_stations')),
         fetchJson(withAdminDemoQuery('/api/sensors')),
         fetchJson(withAdminDemoQuery('/api/incidents'))
-    ]).then(([dashboardData, sensorsData, incidentsData]) => ({
+    ]).then(([dashboardData, baseStationsData, sensorsData, incidentsData]) => ({
         statusData: dashboardData && dashboardData.statusData ? dashboardData.statusData : null,
         gatewaysData: dashboardData && dashboardData.gatewaysData ? dashboardData.gatewaysData : null,
+        baseStationsData,
         sensorsData,
         incidentsData
     }));
@@ -4382,7 +4402,12 @@ function setMiniTopologyView(view) {
     } else if (miniTopologyView === 'map' && miniOsmMap) {
         requestAnimationFrame(() => miniOsmMap.invalidateSize());
         if (latestTopologyData || latestCoverageState) {
-            updateMiniCoverageMap(latestTopologyData || {}, latestCoverageState || {}, latestSensorInventoryData || {});
+            updateMiniCoverageMap(
+                latestTopologyData || {},
+                latestCoverageState || {},
+                latestSensorInventoryData || {},
+                latestBaseStationInventoryData || {}
+            );
         } else {
             updateMiniMapPositionLabel();
         }
@@ -4441,59 +4466,91 @@ function resolveMiniMarkerPosition(positions, node) {
     return null;
 }
 
-function buildMiniMapNodes(topologyData, sensorInventoryData) {
-    const inventoryByEui = new Map();
-    if (sensorInventoryData && typeof sensorInventoryData === 'object') {
-        Object.entries(sensorInventoryData).forEach(([euiKey, sensor]) => {
-            const eui = String((sensor && sensor.eui) || euiKey || '').trim().toUpperCase();
-            if (!eui) return;
-            inventoryByEui.set(eui, sensor || {});
-        });
-    }
-
-    const nodes = Array.isArray(topologyData && topologyData.nodes)
-        ? topologyData.nodes.map((node) => {
-            if (!node || node.type !== 'sensor') return node;
-            const eui = String(node.eui || '').trim().toUpperCase();
-            const sensor = inventoryByEui.get(eui);
-            if (!sensor) return node;
-            return {
-                ...node,
-                label: String((sensor && sensor.name) || node.label || eui.slice(0, 8) + '...'),
-                marker_color: sensor && sensor.marker_color ? String(sensor.marker_color) : (node.marker_color || ''),
-                gps_lat: sensor && sensor.gps_lat != null ? sensor.gps_lat : node.gps_lat,
-                gps_lng: sensor && sensor.gps_lng != null ? sensor.gps_lng : node.gps_lng
-            };
-        })
-        : [];
-    const knownSensorEuis = new Set(
-        nodes
-            .filter(node => node && node.type === 'sensor')
-            .map(node => String(node.eui || '').trim().toUpperCase())
-            .filter(Boolean)
-    );
-
-    if (inventoryByEui.size > 0) {
-        inventoryByEui.forEach((sensor, eui) => {
-            if (!eui || knownSensorEuis.has(eui)) return;
-            nodes.push({
-                id: `sensor_${eui}`,
-                type: 'sensor',
+function normalizeDashboardBaseStationList(data) {
+    if (Array.isArray(data)) return [...data];
+    if (data && Array.isArray(data.base_stations)) return [...data.base_stations];
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+        return Object.entries(data)
+            .filter(([key]) => key !== 'success' && key !== 'error' && key !== 'message')
+            .map(([eui, baseStation]) => ({
                 eui,
-                label: String((sensor && sensor.name) || eui.slice(0, 8) + '...'),
-                marker_color: sensor && sensor.marker_color ? String(sensor.marker_color) : '',
-                gps_lat: sensor && sensor.gps_lat != null ? sensor.gps_lat : null,
-                gps_lng: sensor && sensor.gps_lng != null ? sensor.gps_lng : null,
-                inventory_only: true
-            });
-            knownSensorEuis.add(eui);
+                EUI: eui,
+                ...(baseStation || {})
+            }));
+    }
+    return [];
+}
+
+function buildMiniMapNodes(topologyData, sensorInventoryData, baseStationInventoryData) {
+    const topologyByKey = new Map();
+    if (Array.isArray(topologyData && topologyData.nodes)) {
+        topologyData.nodes.forEach((node) => {
+            const type = node && node.type === 'base_station'
+                ? 'base_station'
+                : (node && node.type === 'sensor' ? 'sensor' : '');
+            const eui = String((node && node.eui) || '').trim().toUpperCase();
+            if (!type || !eui) return;
+            topologyByKey.set(miniMarkerKey(type, eui), { ...(node || {}), type, eui });
         });
     }
+
+    const nodes = [];
+    const seen = new Set();
+    const addNode = (type, eui, payload = {}) => {
+        const normalizedType = type === 'base_station' ? 'base_station' : 'sensor';
+        const normalizedEui = String(eui || '').trim().toUpperCase();
+        if (!normalizedEui) return;
+        const key = miniMarkerKey(normalizedType, normalizedEui);
+        if (seen.has(key)) return;
+
+        const topoNode = topologyByKey.get(key) || {};
+        const merged = {
+            ...topoNode,
+            ...(payload || {}),
+            id: topoNode.id || `${normalizedType === 'base_station' ? 'bs' : 'sensor'}_${normalizedEui}`,
+            type: normalizedType,
+            eui: normalizedEui
+        };
+        if (!merged.label) {
+            merged.label = String(
+                merged.name
+                || topoNode.label
+                || payload.label
+                || normalizedEui.slice(0, 8) + '...'
+            );
+        }
+        nodes.push(merged);
+        seen.add(key);
+    };
+
+    normalizeDashboardBaseStationList(baseStationInventoryData).forEach((baseStation) => {
+        const eui = String((baseStation && (baseStation.eui || baseStation.EUI)) || '').trim().toUpperCase();
+        if (!eui) return;
+        addNode('base_station', eui, {
+            ...baseStation,
+            label: String((baseStation && baseStation.name) || eui.slice(0, 8) + '...')
+        });
+    });
+
+    normalizeDashboardSensorList(sensorInventoryData).forEach((sensor) => {
+        const eui = String((sensor && (sensor.eui || sensor.device_eui || sensor.sensor_id)) || '').trim().toUpperCase();
+        if (!eui) return;
+        addNode('sensor', eui, {
+            ...sensor,
+            label: String((sensor && (sensor.name || sensor.label)) || eui.slice(0, 8) + '...'),
+            marker_color: sensor && sensor.marker_color ? String(sensor.marker_color) : ''
+        });
+    });
+
+    topologyByKey.forEach((node, key) => {
+        if (seen.has(key)) return;
+        addNode(node.type, node.eui, node);
+    });
 
     return nodes;
 }
 
-function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData) {
+function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData, baseStationInventoryData) {
     if (!miniOsmMap || !miniCoverageLayer) return;
 
     miniCoverageLayer.clearLayers();
@@ -4502,7 +4559,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData)
     const positions = coverageState && coverageState.positions && typeof coverageState.positions === 'object'
         ? coverageState.positions
         : {};
-    const nodes = buildMiniMapNodes(topologyData, sensorInventoryData);
+    const nodes = buildMiniMapNodes(topologyData, sensorInventoryData, baseStationInventoryData);
 
     const markerCoords = [];
     nodes.forEach(node => {
@@ -5557,6 +5614,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('app:admin-demo-data-changed', () => {
         latestTopologyData = null;
         latestCoverageState = null;
+        latestSensorInventoryData = null;
+        latestBaseStationInventoryData = null;
         miniCoverageMarkers = {};
         refreshNow(true);
         scheduleAutoRefresh();
