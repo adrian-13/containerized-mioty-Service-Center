@@ -3933,6 +3933,14 @@ function fetchDashboardRuntimePayload() {
     return fetchJson(withAdminDemoQuery('/api/customer/dashboard/runtime'));
 }
 
+async function hydrateDashboardRuntimePayload(source = 'network-runtime') {
+    const runtimePayload = await fetchDashboardRuntimePayload();
+    if (runtimePayload) {
+        applyDashboardPayload(runtimePayload, { ts: Date.now(), source });
+    }
+    return runtimePayload;
+}
+
 function setTrendState(id, current, previous, labels) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -5422,13 +5430,7 @@ async function refreshNow(manualTrigger) {
                     onFresh: (freshPayload, meta) => {
                         applyDashboardPayload(freshPayload, { ...(meta || {}), source: 'network' });
                         setDashboardSkeletonState(false);
-                        fetchDashboardRuntimePayload()
-                            .then((runtimePayload) => {
-                                if (runtimePayload) {
-                                    applyDashboardPayload(runtimePayload, { ts: Date.now(), source: 'network-runtime' });
-                                }
-                            })
-                            .catch(() => {});
+                        hydrateDashboardRuntimePayload('network-runtime').catch(() => {});
                     },
                     onError: () => {
                         setDashboardSkeletonState(false);
@@ -5441,14 +5443,14 @@ async function refreshNow(manualTrigger) {
                     source: result.source && String(result.source).startsWith('cache') ? 'cache' : 'network'
                 });
             }
+            if (forceFetch) {
+                await hydrateDashboardRuntimePayload('network-runtime-force');
+            }
         } else {
             const payload = await fetchDashboardPayload();
             applyDashboardPayload(payload, { ts: Date.now(), source: 'network' });
             setDashboardSkeletonState(false);
-            const runtimePayload = await fetchDashboardRuntimePayload();
-            if (runtimePayload) {
-                applyDashboardPayload(runtimePayload, { ts: Date.now(), source: 'network-runtime' });
-            }
+            await hydrateDashboardRuntimePayload('network-runtime');
         }
     } catch (error) {
         console.error('Dashboard refresh failed:', error);
@@ -5478,6 +5480,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     document.addEventListener('app:admin-demo-data-changed', () => {
+        latestTopologyData = null;
+        latestCoverageState = null;
+        miniCoverageMarkers = {};
         refreshNow(true);
         scheduleAutoRefresh();
     });
