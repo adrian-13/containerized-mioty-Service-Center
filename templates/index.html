@@ -3074,6 +3074,7 @@ let latestHealthData = null;
 let latestGatewaysData = null;
 let latestIncidentsData = null;
 let miniCoverageViewInitialized = false;
+let miniCoverageInitializedWithoutMarkers = false;
 let miniMapSaveStatusTimer = null;
 let miniGraphInitialized = false;
 let miniGraphUserViewLocked = false;
@@ -5009,12 +5010,15 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
         if (savedView) {
             miniOsmMap.setView(savedView.center, savedView.zoom);
             miniCoverageViewInitialized = true;
+            miniCoverageInitializedWithoutMarkers = markerCoords.length === 0;
         } else if (markerCoords.length > 0) {
             const initialBounds = L.latLngBounds(markerCoords);
             miniOsmMap.fitBounds(initialBounds, { padding: [28, 28], maxZoom: 17 });
             miniCoverageViewInitialized = true;
+            miniCoverageInitializedWithoutMarkers = false;
         } else {
             miniOsmMap.setView(MINI_DEFAULT_CENTER, MINI_DEFAULT_ZOOM);
+            miniCoverageInitializedWithoutMarkers = true;
         }
     }
 
@@ -5028,6 +5032,11 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
     });
 
     if (markerCoords.length > 0) {
+        if (miniCoverageInitializedWithoutMarkers) {
+            const initialBounds = L.latLngBounds(markerCoords);
+            miniOsmMap.fitBounds(initialBounds, { padding: [28, 28], maxZoom: 17 });
+            miniCoverageInitializedWithoutMarkers = false;
+        }
         setMiniEmptyState('', '', false);
     } else {
             if (savedView && !miniCoverageViewInitialized) {
