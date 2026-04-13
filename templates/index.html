@@ -3081,6 +3081,8 @@ let miniMapToastTimer = null;
 let miniCtxEl = null;
 let miniColorPopEl = null;
 let miniCoverageMarkers = {};
+let miniMapRenderSignature = null;
+let miniGraphRenderSignature = null;
 let dashboardMiniHoverKey = '';
 let dashboardMiniActiveKey = '';
 let miniMarkerUnlocked = {};
@@ -3858,16 +3860,6 @@ function ensureMiniRuntimeInitialized() {
 
     setMiniTopologyView('map');
     refreshMiniViewportAfterLayoutChange();
-
-    if (latestTopologyData || latestCoverageState || latestSensorInventoryData || latestBaseStationInventoryData) {
-        updateTopologyPanel(latestTopologyData || {});
-        updateMiniCoverageMap(
-            latestTopologyData || {},
-            latestCoverageState || {},
-            latestSensorInventoryData || {},
-            latestBaseStationInventoryData || {}
-        );
-    }
 }
 
 function initDashboardContextMenus() {
@@ -3980,13 +3972,16 @@ function applyDashboardPayload(payload, meta = {}) {
 
     if (latestStatusData) updateStatusCards(latestStatusData);
     if (miniRuntimeInitialized && (latestTopologyData || latestCoverageState || latestSensorInventoryData || latestBaseStationInventoryData)) {
-        updateTopologyPanel(latestTopologyData || {});
-        updateMiniCoverageMap(
-            latestTopologyData || {},
-            latestCoverageState || {},
-            latestSensorInventoryData || {},
-            latestBaseStationInventoryData || {}
-        );
+        if (miniTopologyView === 'graph') {
+            updateTopologyPanel(latestTopologyData || {});
+        } else {
+            updateMiniCoverageMap(
+                latestTopologyData || {},
+                latestCoverageState || {},
+                latestSensorInventoryData || {},
+                latestBaseStationInventoryData || {}
+            );
+        }
     }
     const vmCapable = updateVmMetrics(latestVmData || {});
     const trafficInfo = updateTrafficMetrics(latestTrafficData || {});
@@ -4583,31 +4578,80 @@ function buildMiniMapNodes(topologyData, sensorInventoryData, baseStationInvento
     return nodes;
 }
 
+function buildMiniMapRenderSignature(nodeEntries) {
+    if (!Array.isArray(nodeEntries)) return '[]';
+    const parts = nodeEntries.map((entry) => {
+        const node = entry && entry.node ? entry.node : {};
+        const pos = entry && entry.pos ? entry.pos : null;
+        const type = node && node.type === 'base_station' ? 'base_station' : 'sensor';
+        const eui = String((node && node.eui) || '').trim().toUpperCase();
+        const label = String((node && node.label) || '').trim();
+        const markerColor = String((node && node.marker_color) || '').trim();
+        const lat = pos && Number.isFinite(Number(pos.lat)) ? Number(pos.lat).toFixed(6) : '';
+        const lng = pos && Number.isFinite(Number(pos.lng)) ? Number(pos.lng).toFixed(6) : '';
+        return [type, eui, label, markerColor, lat, lng].join('|');
+    });
+    parts.sort();
+    return JSON.stringify(parts);
+}
+
+function buildMiniGraphRenderSignature(data) {
+    const nodes = Array.isArray(data && data.nodes)
+        ? data.nodes.map((node) => [
+            String((node && node.id) || ''),
+            String((node && node.type) || ''),
+            String((node && node.eui) || '').trim().toUpperCase(),
+            String((node && node.label) || ''),
+            node && node.connected ? '1' : '0'
+        ].join('|'))
+        : [];
+    const edges = Array.isArray(data && data.edges)
+        ? data.edges.map((edge) => [
+            String((edge && edge.id) || ''),
+            String((edge && edge.source) || ''),
+            String((edge && edge.target) || ''),
+            edge && edge.primary ? '1' : '0'
+        ].join('|'))
+        : [];
+    nodes.sort();
+    edges.sort();
+    return JSON.stringify({ nodes, edges });
+}
+
 function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData, baseStationInventoryData) {
     if (!miniOsmMap || !miniCoverageLayer) return;
-
-    miniCoverageLayer.clearLayers();
-    miniCoverageMarkers = {};
 
     const positions = coverageState && coverageState.positions && typeof coverageState.positions === 'object'
         ? coverageState.positions
         : {};
     const nodes = buildMiniMapNodes(topologyData, sensorInventoryData, baseStationInventoryData);
+    const nodeEntries = nodes.map((node) => ({
+        node,
+        pos: resolveMiniMarkerPosition(positions, node)
+    }));
+    const connectedBs = latestStatusData && latestStatusData.base_stations
+        ? toNumber(latestStatusData.base_stations.total_connected)
+        : 0;
+    const nextSignature = `${buildMiniMapRenderSignature(nodeEntries)}|bs:${connectedBs}`;
+    if (nextSignature === miniMapRenderSignature) return;
+    miniMapRenderSignature = nextSignature;
+
+    miniCoverageLayer.clearLayers();
+    miniCoverageMarkers = {};
+
     let baseTotal = 0;
     let sensorTotal = 0;
     let baseShown = 0;
     let sensorShown = 0;
 
     const markerCoords = [];
-    nodes.forEach(node => {
+    nodeEntries.forEach(({ node, pos }) => {
         const isBs = node.type === 'base_station';
         if (isBs) {
             baseTotal += 1;
         } else {
             sensorTotal += 1;
         }
-
-        const pos = resolveMiniMarkerPosition(positions, node);
         if (!pos) return;
 
         if (isBs) {
@@ -4972,13 +5016,10 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
     if (markerCoords.length > 0) {
         setMiniEmptyState('', '', false);
     } else {
-        const connectedBs = latestStatusData && latestStatusData.base_stations
-            ? toNumber(latestStatusData.base_stations.total_connected)
-            : 0;
-        if (savedView && !miniCoverageViewInitialized) {
-            miniOsmMap.setView(savedView.center, savedView.zoom);
-            miniCoverageViewInitialized = true;
-        }
+            if (savedView && !miniCoverageViewInitialized) {
+                miniOsmMap.setView(savedView.center, savedView.zoom);
+                miniCoverageViewInitialized = true;
+            }
         if (connectedBs === 0) {
             setMiniEmptyState(
                 appTranslate('dashboard.connect_base_station_first', 'Connect a base station first'),
@@ -5004,6 +5045,13 @@ function updateTopologyPanel(data) {
     const totalConnectionsEl = document.getElementById('total-connections');
     if (totalConnectionsEl) totalConnectionsEl.textContent = (data.edges || []).length;
     if (!cyMini) return;
+
+    const connectedBs = latestStatusData && latestStatusData.base_stations
+        ? toNumber(latestStatusData.base_stations.total_connected)
+        : 0;
+    const nextGraphSignature = `${buildMiniGraphRenderSignature(data)}|bs:${connectedBs}`;
+    if (nextGraphSignature === miniGraphRenderSignature) return;
+    miniGraphRenderSignature = nextGraphSignature;
 
     const preserveUserView = miniGraphInitialized && miniGraphUserViewLocked;
     const prevZoom = preserveUserView ? cyMini.zoom() : null;
@@ -5043,9 +5091,6 @@ function updateTopologyPanel(data) {
 
     if (miniTopologyView === 'graph') {
         const hasTopology = (data.nodes || []).length > 1;
-        const connectedBs = latestStatusData && latestStatusData.base_stations
-            ? toNumber(latestStatusData.base_stations.total_connected)
-            : 0;
         if (!hasTopology && connectedBs === 0) {
             setMiniEmptyState(
                 appTranslate('dashboard.connect_base_station_first', 'Connect a base station first'),
@@ -5675,6 +5720,8 @@ document.addEventListener('DOMContentLoaded', function() {
         latestSensorInventoryData = null;
         latestBaseStationInventoryData = null;
         miniCoverageMarkers = {};
+        miniMapRenderSignature = null;
+        miniGraphRenderSignature = null;
         refreshNow(true);
         scheduleAutoRefresh();
     });
