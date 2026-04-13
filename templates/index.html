@@ -1304,6 +1304,17 @@ body.is-resizing-dashboard-row {
     white-space: nowrap;
 }
 
+.topology-map-summary {
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: #60748d;
+    border: 1px solid #e3ebf4;
+    background: #ffffff;
+    border-radius: 0.62rem;
+    padding: 0.14rem 0.38rem;
+    white-space: nowrap;
+}
+
 .topology-mini-save {
     border: 1px solid #e3ebf4;
     border-radius: 0.62rem;
@@ -1895,6 +1906,7 @@ body.is-resizing-dashboard-row {
                     </div>
                     <div class="topology-map-tools">
                         <span class="topology-map-position" id="mini-map-position">{{ t('dashboard.map_position_placeholder', 'Lat --, Lng --, Z --') }}</span>
+                        <span class="topology-map-summary" id="mini-map-summary">{{ t('dashboard.map_summary_placeholder', 'BS 0/0 · Sensors 0/0') }}</span>
                         <button type="button" class="topology-mini-save" id="mini-map-save-btn">{{ t('dashboard.save_view', 'Save view') }}</button>
                         <span class="topology-mini-save-status" id="mini-map-save-status"></span>
                     </div>
@@ -4298,6 +4310,21 @@ function updateMiniMapPositionLabel() {
     });
 }
 
+function updateMiniMapSummary(summary = null) {
+    const label = document.getElementById('mini-map-summary');
+    if (!label) return;
+
+    const data = summary && typeof summary === 'object' ? summary : {};
+    const baseShown = Number(data.baseShown || 0);
+    const baseTotal = Number(data.baseTotal || 0);
+    const sensorShown = Number(data.sensorShown || 0);
+    const sensorTotal = Number(data.sensorTotal || 0);
+    const demoActive = !!data.demoActive;
+    const demoSuffix = demoActive ? ' · demo' : '';
+
+    label.textContent = `BS ${baseShown}/${baseTotal} · Sensors ${sensorShown}/${sensorTotal}${demoSuffix}`;
+}
+
 function setMiniMapSaveStatus(kind, text) {
     const node = document.getElementById('mini-map-save-status');
     if (!node) return;
@@ -4560,13 +4587,29 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
         ? coverageState.positions
         : {};
     const nodes = buildMiniMapNodes(topologyData, sensorInventoryData, baseStationInventoryData);
+    let baseTotal = 0;
+    let sensorTotal = 0;
+    let baseShown = 0;
+    let sensorShown = 0;
 
     const markerCoords = [];
     nodes.forEach(node => {
+        const isBs = node.type === 'base_station';
+        if (isBs) {
+            baseTotal += 1;
+        } else {
+            sensorTotal += 1;
+        }
+
         const pos = resolveMiniMarkerPosition(positions, node);
         if (!pos) return;
 
-        const isBs = node.type === 'base_station';
+        if (isBs) {
+            baseShown += 1;
+        } else {
+            sensorShown += 1;
+        }
+
         const markerStyle = getMiniMarkerBaseStyle(node);
         const markerKey = miniMarkerKey(node.type, node.eui || '');
         const popupId = markerKey.replace(/[^a-z0-9_-]+/gi, '-');
@@ -4910,6 +4953,13 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
     }
 
     setDashboardMiniInteractionState({});
+    updateMiniMapSummary({
+        baseShown,
+        baseTotal,
+        sensorShown,
+        sensorTotal,
+        demoActive: getAdminDashboardIncludeDemoData()
+    });
 
     if (markerCoords.length > 0) {
         setMiniEmptyState('', '', false);

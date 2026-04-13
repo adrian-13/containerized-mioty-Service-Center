@@ -20180,7 +20180,7 @@ def api_base_stations():
         active_tenant = _active_tenant_id()
         _sync_coverage_positions_to_inventory(tenant_id=active_tenant, only_missing=True)
         raw_bs_config = load_base_station_config().get("base_stations", {})
-        bs_config = _filter_base_stations_for_tenant(raw_bs_config, tenant_id=active_tenant)
+        bs_config = _filter_base_stations_for_active_scope(raw_bs_config, tenant_id=active_tenant)
 
         # Normalize configured entries by EUI to prevent duplicate records caused by case/format drift.
         normalized_config = {}
