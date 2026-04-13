@@ -5,7 +5,7 @@
 {% if is_customer_user %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-/* ── Viewer dashboard ── */
+/* â”€â”€ Viewer dashboard â”€â”€ */
 .mview-page {
     display: flex;
     flex-direction: column;
@@ -13,9 +13,9 @@
     height: calc(100vh - 60px);
     overflow: hidden;
 }
-/* ── Split ── */
+/* â”€â”€ Split â”€â”€ */
 .mview-split { display: flex; flex: 1; min-height: 0; overflow: hidden; }
-/* ── List panel ── */
+/* â”€â”€ List panel â”€â”€ */
 .mview-list-panel {
     width: 380px;
     flex-shrink: 0;
@@ -131,7 +131,7 @@
 .mview-user-dropdown-item.is-danger:hover {
     background: rgba(220, 53, 69, 0.08);
 }
-/* ── Filter pills ── */
+/* â”€â”€ Filter pills â”€â”€ */
 .mview-filters {
     display: flex;
     gap: 0.35rem;
@@ -161,7 +161,7 @@
 .mview-filter.is-active.f-offline { background: #cb3a42; border-color: #cb3a42; }
 .mview-filter.is-active.f-initial { background: #64748b; border-color: #64748b; }
 .mview-filter-count { opacity: 0.75; }
-/* ── Sensor rows ── */
+/* â”€â”€ Sensor rows â”€â”€ */
 .mview-list-body { overflow-y: auto; flex: 3; min-height: 0; }
 .mview-sensor-row {
     display: flex;
@@ -212,7 +212,7 @@
     border-color: #bfd4f0;
     color: #163047;
 }
-/* ── Dots & badges ── */
+/* â”€â”€ Dots & badges â”€â”€ */
 .mview-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; flex-shrink: 0; }
 .mview-dot.online  { background: #0f9d69; }
 .mview-dot.warn    { background: #e4a313; }
@@ -225,7 +225,7 @@
 .mview-badge.offline { background: #fde8e9; color: #a12b32; }
 .mview-badge.initial { background: #eef2f7; color: #52647d; }
 .mview-badge.unknown { background: #f0f4fa; color: #64748b; }
-/* ── Metric chips ── */
+/* â”€â”€ Metric chips â”€â”€ */
 .mview-metrics { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.22rem; }
 .mview-metric-chip {
     display: inline-flex; align-items: baseline; gap: 0.2rem;
@@ -235,7 +235,7 @@
 }
 .mview-metric-chip .mval { font-weight: 800; color: #0f2135; }
 .mview-metric-chip .munit { font-size: 0.6rem; color: #7a8fa8; margin-left: 0.06rem; }
-/* Expand button — shown only on narrow panel */
+/* Expand button â€” shown only on narrow panel */
 .mview-expand-btn {
     display: none; align-items: center; justify-content: center;
     width: 1.5rem; height: 1.5rem; border-radius: 50%;
@@ -261,7 +261,7 @@
 .mview-list-panel.is-narrow .mview-expand-btn { display: inline-flex; }
 /* Hide sub text on narrow when there are metrics */
 .mview-list-panel.is-narrow .mview-sensor-row.has-metrics .mview-sensor-sub { display: none; }
-/* ── Resizer ── */
+/* â”€â”€ Resizer â”€â”€ */
 .mview-resizer {
     width: 5px;
     flex-shrink: 0;
@@ -278,11 +278,11 @@
 }
 .mview-resizer:hover,
 .mview-resizer.is-dragging { background: var(--brand-500, #3b7dd8); }
-/* ── Map panel ── */
+/* â”€â”€ Map panel â”€â”€ */
 .mview-map-panel { flex: 1; min-width: 0; position: relative; }
 #mview-map { height: 100%; width: 100%; }
 #mview-map .leaflet-control-attribution { font-size: 0.6rem; }
-/* ── Vertical resizer (list ↕ alerts) ── */
+/* â”€â”€ Vertical resizer (list â†• alerts) â”€â”€ */
 .mview-vresizer {
     height: 5px;
     flex-shrink: 0;
@@ -299,7 +299,7 @@
 }
 .mview-vresizer:hover,
 .mview-vresizer.is-dragging { background: var(--brand-500, #eb7e17); }
-/* ── Alerts panel ── */
+/* â”€â”€ Alerts panel â”€â”€ */
 .mview-alerts-panel {
     border-top: 2px solid #e8eef6;
     flex: 1;
@@ -360,7 +360,7 @@
 .mview-alert-name { font-size: .8rem; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mview-alert-desc { font-size: .68rem; color: #94a3b8; margin-top: .04rem; }
 .mview-alerts-empty { padding: .85rem; text-align: center; font-size: .75rem; color: #b0bec5; }
-/* ── Mobile ── */
+/* â”€â”€ Mobile â”€â”€ */
 @media (max-width: 767px) {
     .mview-page { height: auto; overflow: visible; }
     .mview-split { flex-direction: column; overflow: visible; }
@@ -369,7 +369,7 @@
     .mview-map-panel { height: 55vw; min-height: 260px; }
     .mview-statusbar { gap: 1rem; flex-wrap: wrap; height: auto; padding: 0.6rem 1rem; }
 }
-/* ── Map markers ── */
+/* â”€â”€ Map markers â”€â”€ */
 .sc-map-marker,
 .leaflet-marker-icon.sc-map-marker,
 .leaflet-div-icon.sc-map-marker {
@@ -482,7 +482,7 @@
 .sc-color-swatch.is-active { border-color: #1e293b; }
 .sc-color-reset { font-size: .68rem; font-weight: 700; color: #7a8fa8; cursor: pointer; padding: .16rem .06rem 0; text-align: center; }
 .sc-color-reset:hover { color: #dc2626; }
-/* ── Leaflet popup override ── */
+/* â”€â”€ Leaflet popup override â”€â”€ */
 .sc-leaflet-popup .leaflet-popup-content-wrapper {
     border-radius: .88rem !important;
     box-shadow: 0 8px 28px rgba(15,23,42,.18) !important;
@@ -570,7 +570,7 @@
     border-color: #c8d7e8;
     color: #1e293b;
 }
-/* ── Context menu ── */
+/* â”€â”€ Context menu â”€â”€ */
 .sc-ctx {
     position: fixed; z-index: 9000;
     background: #fff; border: 1px solid #d6dfec; border-radius: .72rem;
@@ -594,7 +594,7 @@
 .sc-ctx-sep { height: 1px; background: #edf2f9; margin: .24rem 0; }
 .mview-alert-row { cursor: context-menu; }
 
-/* ── Smooth animations system ── */
+/* â”€â”€ Smooth animations system â”€â”€ */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -624,7 +624,7 @@
     100% { background-position: 1000px 0; }
 }
 
-/* List items animation — only on first load, not on refresh */
+/* List items animation â€” only on first load, not on refresh */
 #mviewSensorList.is-initial .mview-sensor-row {
     animation: fadeInUp .18s ease-out;
 }
@@ -633,7 +633,7 @@
     animation: fadeInUp .16s ease-out;
 }
 
-/* Sensor dot status pulse — instant response */
+/* Sensor dot status pulse â€” instant response */
 .mview-sensor-dot {
     transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
 }
@@ -641,7 +641,7 @@
     transform: scale(1.3);
 }
 
-/* Filter buttons smooth transition — instant response */
+/* Filter buttons smooth transition â€” instant response */
 .mview-filter {
     transition: all .1s cubic-bezier(.4, 0, .2, 1);
 }
@@ -653,7 +653,7 @@
     transform: scale(1.04);
 }
 
-/* Status badges smooth animations — instant response */
+/* Status badges smooth animations â€” instant response */
 .mview-status-badge {
     transition: all .08s ease;
 }
@@ -671,7 +671,7 @@
     animation: fadeIn .08s ease-out;
 }
 
-/* Smooth hover effects on interactive elements — instant response */
+/* Smooth hover effects on interactive elements â€” instant response */
 button, a[href], .mview-sensor-row, .mview-alert-row {
     transition: all .08s ease;
 }
@@ -705,18 +705,18 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     animation: fadeIn .08s ease-out;
 }
 
-/* Status chip animations — instant response */
+/* Status chip animations â€” instant response */
 .sensor-status-chip {
     transition: all .08s ease;
     animation: slideInLeft .15s ease-out;
 }
 
-/* Tab/panel transitions — instant response */
+/* Tab/panel transitions â€” instant response */
 .sensor-detail-tabpanel {
     animation: fadeIn .12s ease-out;
 }
 
-/* Alert badge pulse when active — instant response */
+/* Alert badge pulse when active â€” instant response */
 .mview-alerts-badge {
     transition: all .08s ease;
 }
@@ -734,20 +734,20 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                     <input type="text"
                            id="mviewSearch"
                            class="mview-search"
-                           placeholder="{{ t('common.search', 'Hľadať...') }}"
+                           placeholder="{{ t('common.search', 'HÄľadaĹĄ...') }}"
                            oninput="mviewHandleSearchInput()"
                            autocomplete="off">
                 </div>
             </div>
             <div class="mview-filters" id="mviewFilters">
                 <button class="mview-filter is-active" data-filter="all" onclick="mviewSetFilter('all')">
-                    {{ t('common.all', 'Všetky') }} <span class="mview-filter-count" id="mviewFiltAll">0</span>
+                    {{ t('common.all', 'VĹˇetky') }} <span class="mview-filter-count" id="mviewFiltAll">0</span>
                 </button>
                 <button class="mview-filter f-online" data-filter="online" onclick="mviewSetFilter('online')">
                     <span class="mview-dot online"></span> Online <span class="mview-filter-count" id="mviewFiltOnline">0</span>
                 </button>
                 <button class="mview-filter f-initial" data-filter="initial" onclick="mviewSetFilter('initial')">
-                    <span class="mview-dot initial"></span> Čaká na dáta <span class="mview-filter-count" id="mviewFiltInitial">0</span>
+                    <span class="mview-dot initial"></span> ÄŚakĂˇ na dĂˇta <span class="mview-filter-count" id="mviewFiltInitial">0</span>
                 </button>
                 <button class="mview-filter f-warn" data-filter="warn" onclick="mviewSetFilter('warn')">
                     <span class="mview-dot warn"></span> Upozornenie <span class="mview-filter-count" id="mviewFiltWarn">0</span>
@@ -757,7 +757,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                 </button>
             </div>
             <div class="mview-list-body" id="mviewSensorList">
-                <div class="text-center text-muted py-4" style="font-size:0.85rem;">{{ t('runtime.loading', 'Načítavam...') }}</div>
+                <div class="text-center text-muted py-4" style="font-size:0.85rem;">{{ t('runtime.loading', 'NaÄŤĂ­tavam...') }}</div>
             </div>
             <div class="mview-vresizer" id="mviewVResizer"></div>
             <div class="mview-alerts-panel">
@@ -766,7 +766,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                     <span class="mview-alerts-badge" id="mviewAlertsBadge"></span>
                 </div>
                 <div class="mview-alerts-body" id="mviewAlerts">
-                    <div class="mview-alerts-empty">Žiadne upozornenia</div>
+                    <div class="mview-alerts-empty">Ĺ˝iadne upozornenia</div>
                 </div>
             </div>
         </div>
@@ -775,10 +775,10 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
             <div class="mview-placement-bar" id="mviewPlacementBar">
                 <div class="mview-placement-copy">
                     <div class="mview-placement-title">{{ t('dashboard.place_sensor_on_map_title', 'Umiestnenie senzora na mapu') }}</div>
-                    <div class="mview-placement-note"><span id="mviewPlacementSensorName"></span> · {{ t('dashboard.place_sensor_on_map_note', 'Kliknite do mapy na miesto, kde sa senzor nachádza.') }}</div>
+                    <div class="mview-placement-note"><span id="mviewPlacementSensorName"></span> Â· {{ t('dashboard.place_sensor_on_map_note', 'Kliknite do mapy na miesto, kde sa senzor nachĂˇdza.') }}</div>
                 </div>
                 <div class="mview-placement-actions">
-                    <button type="button" class="mview-placement-cancel" onclick="cancelPlacement(true)">{{ t('common.cancel', 'Zrušiť') }}</button>
+                    <button type="button" class="mview-placement-cancel" onclick="cancelPlacement(true)">{{ t('common.cancel', 'ZruĹˇiĹĄ') }}</button>
                 </div>
             </div>
             <div id="mview-map"></div>
@@ -789,7 +789,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 {% else %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-/* ── Map markers (shared with mini OSM map) ── */
+/* â”€â”€ Map markers (shared with mini OSM map) â”€â”€ */
 .sc-map-marker,
 .leaflet-marker-icon.sc-map-marker,
 .leaflet-div-icon.sc-map-marker {
@@ -843,9 +843,9 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
 .sc-map-pin.is-highlighted { transform: scale(1.16); box-shadow: 0 0 0 3px rgba(255,255,255,.98), 0 0 0 7px rgba(15,23,42,.10), 0 12px 24px rgba(15,23,42,.42); z-index: 1000; }
 .sc-map-pin.is-dragging { transform: scale(1.08); cursor: grabbing; opacity: .92; }
 
-/* ═══════════════════════════════════════════════════════
-   Dashboard — clean flat layout
-   ═══════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Dashboard â€” clean flat layout
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .dashboard-shell {
     display: grid;
@@ -865,8 +865,8 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Toolbar ───────────────────────────────────────── */
-/* ── Main grid ─────────────────────────────────────── */
+/* â”€â”€ Toolbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* â”€â”€ Main grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dashboard-grid {
     min-height: 0;
     height: 100%;
@@ -961,7 +961,7 @@ body.is-resizing-dashboard-row {
     user-select: none;
 }
 
-/* ── Panel wrappers (invisible) ────────────────────── */
+/* â”€â”€ Panel wrappers (invisible) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .deck-panel {
     border: none;
     border-radius: 0;
@@ -977,7 +977,7 @@ body.is-resizing-dashboard-row {
 .deck-panel.clickable { cursor: pointer; }
 .deck-panel.clickable:hover { transform: none; box-shadow: none; }
 
-/* ── Detail panels — bottom row ─────────────────────── */
+/* â”€â”€ Detail panels â€” bottom row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #alert-panel,
 #gateway-panel,
 #sensor-panel,
@@ -995,7 +995,7 @@ body.is-resizing-dashboard-row {
     min-height: 0;
 }
 
-/* ── Traffic panel — narrow sidebar adaptations ─────── */
+/* â”€â”€ Traffic panel â€” narrow sidebar adaptations â”€â”€â”€â”€â”€â”€â”€ */
 #traffic-panel {
     background: #ffffff;
     border-radius: 0.8rem;
@@ -1012,7 +1012,7 @@ body.is-resizing-dashboard-row {
     border: 1px solid #e5edf5;
 }
 
-/* ── Section headers ───────────────────────────────── */
+/* â”€â”€ Section headers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .deck-head {
     display: flex;
     align-items: center;
@@ -1056,7 +1056,7 @@ body.is-resizing-dashboard-row {
 .deck-head-link:hover,
 .deck-head-link:focus { color: #324a68; }
 
-/* ── Panel head icon colors ────────────────────────── */
+/* â”€â”€ Panel head icon colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #kpi-grid .deck-head h5 i       { color: #6d819b; }
 #topology-panel .deck-head h5 i { color: #6d819b; }
 #alert-panel .deck-head h5 i    { color: #6d819b; }
@@ -1065,7 +1065,7 @@ body.is-resizing-dashboard-row {
 #signal-panel .deck-head h5 i   { color: #6d819b; }
 #traffic-panel .deck-head h5 i  { color: #6d819b; }
 
-/* ── Panel body ────────────────────────────────────── */
+/* â”€â”€ Panel body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .deck-body {
     padding: 0;
     border-radius: 0;
@@ -1147,9 +1147,9 @@ body.is-resizing-dashboard-row {
     overscroll-behavior: contain;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Overview section
-   ═══════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .overview-panel .deck-body {
     display: flex;
     flex-direction: column;
@@ -1257,9 +1257,9 @@ body.is-resizing-dashboard-row {
     white-space: nowrap;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Legacy KPI cards (unused, kept for compatibility)
-   ═══════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
@@ -1302,9 +1302,9 @@ body.is-resizing-dashboard-row {
 .kpi-trend.neutral { color: #6b7a91; }
 .status-card.success .kpi-trend, .status-card.danger .kpi-trend, .status-card.warm .kpi-trend, .status-card.cool .kpi-trend { color: rgba(255,255,255,0.93); }
 
-/* ═══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Topology / Map
-   ═══════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .topology-head-actions {
     display: inline-flex;
     align-items: center;
@@ -1510,9 +1510,9 @@ body.is-resizing-dashboard-row {
 .topology-empty-title { font-size: 0.86rem; font-weight: 800; color: #273549; margin: 0; }
 .topology-empty-note { margin: 0.35rem 0 0; color: #5e6f87; font-size: 0.78rem; }
 
-/* ═══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Alert feed
-   ═══════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .rail-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.28rem; }
 .rail-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.52rem; border-bottom: 1px solid #eef3f8; padding-bottom: 0.36rem; font-size: 0.76rem; }
 .rail-item:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -1528,9 +1528,9 @@ body.is-resizing-dashboard-row {
 .alert-counter.is-warning { border-color: #f4d7ab; background: #fff8ec; color: #a06700; }
 .alert-counter.is-good    { border-color: #c6e5d6; background: #effcf5; color: #0f8e5f; }
 
-/* ═══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Gateway snapshot
-   ═══════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .gateway-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.24rem; }
 .gateway-list,
 .sensor-list,
@@ -1570,9 +1570,9 @@ body.is-resizing-dashboard-row {
 .sensor-flag { display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem; border-radius: 50%; flex-shrink: 0; font-size: 0.56rem; }
 .sensor-flag.is-warning { color: #b7791f; background: #fff7db; border: 1px solid #f2d48f; }
 
-/* ═══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Signal quality
-   ═══════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .signal-bar { display: grid; grid-template-columns: 72px 1fr 30px; align-items: center; gap: 0.35rem; margin-bottom: 0.34rem; }
 .signal-label { font-size: 0.7rem; font-weight: 700; }
 .signal-track { height: 0.72rem; border: 1px solid #e2eaf3; border-radius: 999px; background: #f1f5f9; overflow: hidden; }
@@ -1610,7 +1610,7 @@ body.is-resizing-dashboard-row {
 .signal-no-data-title { font-size: 0.83rem; font-weight: 700; color: #3a4d65; margin: 0; }
 .signal-no-data-note  { font-size: 0.72rem; color: #607089; margin: 0; }
 
-/* ── Live indicator dot ─────────────────────────── */
+/* â”€â”€ Live indicator dot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .live-dot {
     display: inline-block;
     width: 0.46rem;
@@ -1622,7 +1622,7 @@ body.is-resizing-dashboard-row {
     flex-shrink: 0;
 }
 
-/* ── Gateway status dot ─────────────────────────── */
+/* â”€â”€ Gateway status dot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .gateway-dot {
     width: 0.54rem;
     height: 0.54rem;
@@ -1635,7 +1635,7 @@ body.is-resizing-dashboard-row {
 .gateway-dot.offline    { background: #8e9db1; }
 .gateway-head-left { display: flex; align-items: center; gap: 0.52rem; min-width: 0; }
 
-/* ── Deck-head icon container ───────────────────── */
+/* â”€â”€ Deck-head icon container â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .deck-head-icon {
     display: inline-flex;
     align-items: center;
@@ -1655,7 +1655,7 @@ body.is-resizing-dashboard-row {
 #signal-panel   .deck-head-icon { background: transparent; color: #7c8fa8; }
 #traffic-panel  .deck-head-icon { background: transparent; color: #7c8fa8; }
 
-/* ── Traffic stat card with icon ────────────────── */
+/* â”€â”€ Traffic stat card with icon â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .ops-stat-head {
     display: flex;
     align-items: center;
@@ -1681,9 +1681,9 @@ body.is-resizing-dashboard-row {
 .ops-stat-card.icon-amber  .ops-stat-icon { background: #f3f6fa; color: #70849d; }
 .ops-stat-card.icon-indigo .ops-stat-icon { background: #f3f6fa; color: #70849d; }
 
-/* ═══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Traffic & Capacity
-   ═══════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .ops-hero { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-bottom: 0.5rem; }
 .ops-hero-copy { display: grid; gap: 0.18rem; min-width: 0; }
 .ops-hero-title { font-size: 0.88rem; font-weight: 800; color: #223756; }
@@ -1705,7 +1705,7 @@ body.is-resizing-dashboard-row {
 .ops-meta-label { font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; color: #67809c; }
 .ops-meta-value { font-size: 0.9rem; font-weight: 800; color: #223756; }
 
-/* Traffic panel — sidebar vertical layout */
+/* Traffic panel â€” sidebar vertical layout */
 #traffic-panel {
     display: flex;
     flex-direction: column;
@@ -1722,15 +1722,15 @@ body.is-resizing-dashboard-row {
 #traffic-panel .ops-stat-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 #traffic-panel .ops-meta-grid { margin-top: 0; grid-template-columns: repeat(2, minmax(0,1fr)); }
 
-/* Traffic empty state — when no base stations connected */
+/* Traffic empty state â€” when no base stations connected */
 #traffic-panel.ops-empty .ops-stat-value,
 #traffic-panel.ops-empty .ops-meta-value { color: #8ea3bf; font-weight: 700; }
 #traffic-panel.ops-empty .ops-stat-card  { background: #f8fafc; border-color: #e5edf5; }
 #traffic-panel.ops-empty .ops-meta-card  { background: #f8fafc; border-color: #e5edf5; }
 
-/* ═══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Misc / Helpers
-   ═══════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .side-column { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 0.9rem; align-content: start; }
 .health-list { display: grid; gap: 0.46rem; }
 .health-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.56rem; padding-bottom: 0.45rem; border-bottom: 1px solid #ebf1f8; }
@@ -1753,7 +1753,7 @@ body.is-resizing-dashboard-row {
 .layout-empty { border: 1px dashed #cdd8e7; border-radius: 0.9rem; background: rgba(255,255,255,0.5); color: #53657e; padding: 0.9rem; text-align: center; font-size: 0.82rem; font-weight: 700; }
 .is-hidden { display: none !important; }
 
-/* ── Alert all-clear state ──────────────────────────── */
+/* â”€â”€ Alert all-clear state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .rail-list.is-all-clear { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .all-clear-state {
     display: flex;
@@ -1780,9 +1780,9 @@ body.is-resizing-dashboard-row {
 .all-clear-title { margin: 0; font-size: 0.88rem; font-weight: 800; color: #183d2f; }
 .all-clear-note  { margin: 0; font-size: 0.72rem; color: #496b59; max-width: 20rem; }
 
-/* ═══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Responsive
-   ═══════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @media (prefers-reduced-motion: reduce) {
     .status-card, .deck-panel { animation: none; transition: none; }
 }
@@ -1966,7 +1966,7 @@ body.is-resizing-dashboard-row {
                     </div>
                     <div class="topology-map-tools">
                         <span class="topology-map-position" id="mini-map-position">{{ t('dashboard.map_position_placeholder', 'Lat --, Lng --, Z --') }}</span>
-                        <span class="topology-map-summary" id="mini-map-summary">{{ t('dashboard.map_summary_placeholder', 'BS 0/0 · Sensors 0/0') }}</span>
+                        <span class="topology-map-summary" id="mini-map-summary">{{ t('dashboard.map_summary_placeholder', 'BS 0/0 Â· Sensors 0/0') }}</span>
                         <button type="button" class="topology-mini-save" id="mini-map-save-btn">{{ t('dashboard.save_view', 'Save view') }}</button>
                         <span class="topology-mini-save-status" id="mini-map-save-status"></span>
                     </div>
@@ -2018,27 +2018,27 @@ function SENSOR_TIER(sensor) {
     return STATUS_TIER_RAW(sensor && (sensor.activity_status || sensor.status));
 }
 const STATUS_LABELS = {
-    new: 'Nový', awaiting_first_data: 'Čaká na prvé dáta',
-    active: 'Aktívny', online: 'Online', connected: 'Online', quiet: 'Pokojový stav',
-    warning: 'Upozornenie', warn: 'Upozornenie', degraded: 'Upozornenie', stale: 'Bez udalosti dlhšie', auto_detach_pending: 'Odpája sa',
-    offline: 'Offline', disconnected: 'Offline', inactive: 'Offline', auto_detached: 'Odpojený',
-    no_data: 'Bez dát', unknown: 'Neznámy'
+    new: 'NovĂ˝', awaiting_first_data: 'ÄŚakĂˇ na prvĂ© dĂˇta',
+    active: 'AktĂ­vny', online: 'Online', connected: 'Online', quiet: 'PokojovĂ˝ stav',
+    warning: 'Upozornenie', warn: 'Upozornenie', degraded: 'Upozornenie', stale: 'Bez udalosti dlhĹˇie', auto_detach_pending: 'OdpĂˇja sa',
+    offline: 'Offline', disconnected: 'Offline', inactive: 'Offline', auto_detached: 'OdpojenĂ˝',
+    no_data: 'Bez dĂˇt', unknown: 'NeznĂˇmy'
 };
 function SENSOR_STATUS_LABEL(sensor) {
     const raw = sensor && (sensor.lifecycle_status || sensor.activity_status || sensor.status);
-    if (!raw) return 'Neznámy';
+    if (!raw) return 'NeznĂˇmy';
     return STATUS_LABELS[String(raw).toLowerCase()] || STATUS_LABELS[raw] || String(raw);
 }
 
 const MSKIP = new Set(['co2_last_calibration_ppm','days_to_next_calibration','co2_error','calibration_not_done','temperature_2_c','humidity_2_pct','pressure_pa','altitude_m']);
-const MLABEL = {co2_1_ppm:'CO₂',temperature_1_c:'Teplota',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm',open_count:'Otvorenia'};
+const MLABEL = {co2_1_ppm:'COâ‚‚',temperature_1_c:'Teplota',humidity_1_pct:'VlhkosĹĄ',battery_v_est:'BatĂ©ria',any_alarm_active:'Alarm',open_count:'Otvorenia'};
 function mLabel(k) { return MLABEL[k] || k.replace(/_/g,' '); }
 function mFmt(k, v) {
-    if (typeof v === 'boolean') return [v ? 'ÁNO' : 'NIE', ''];
+    if (typeof v === 'boolean') return [v ? 'ĂNO' : 'NIE', ''];
     const n = Number(v);
     if (!Number.isFinite(n)) return [String(v), ''];
     if (k.endsWith('_ppm'))   return [Math.round(n).toString(), 'ppm'];
-    if (k.endsWith('_c'))     return [n.toFixed(1), '°C'];
+    if (k.endsWith('_c'))     return [n.toFixed(1), 'Â°C'];
     if (k.endsWith('_pct'))   return [Math.round(n).toString(), '%'];
     if (k.endsWith('_v_est') || k.endsWith('_v')) return [n.toFixed(2), 'V'];
     return [String(n), ''];
@@ -2068,7 +2068,7 @@ function timeAgo(ts) {
     const d = new Date(ts);
     if (isNaN(d)) return null;
     const sec = Math.round((Date.now() - d) / 1000);
-    if (sec < 10)  return 'práve teraz';
+    if (sec < 10)  return 'prĂˇve teraz';
     if (sec < 60)  return 'pred ' + sec + ' s';
     const min = Math.round(sec / 60);
     if (min < 60)  return 'pred ' + min + ' min';
@@ -2089,7 +2089,7 @@ function valueLine(s) {
 
 let mviewMap = null;
 let mviewLayer = null;
-let sensorMarkers = {};   // id → L.circleMarker
+let sensorMarkers = {};   // id â†’ L.circleMarker
 let allSensors = [];
 let currentFilter = 'all';
 let currentSearchQuery = '';
@@ -2152,7 +2152,7 @@ function cancelPlacement(showToast) {
     if (!placementMode) return;
     placementMode = null;
     updatePlacementUi();
-    if (showToast) showMapToast(dashboardTr('dashboard.place_sensor_cancelled', 'Umiestnenie senzora zrušené'), 2200);
+    if (showToast) showMapToast(dashboardTr('dashboard.place_sensor_cancelled', 'Umiestnenie senzora zruĹˇenĂ©'), 2200);
 }
 window.cancelPlacement = cancelPlacement;
 function startPlacement(id, options) {
@@ -2166,7 +2166,7 @@ function startPlacement(id, options) {
         const current = geoOf(sensor);
         if (current) mviewMap.setView(current, Math.max(mviewMap.getZoom(), 15));
     }
-    showMapToast(dashboardTr('dashboard.place_sensor_prompt', 'Kliknite do mapy a poloha senzora sa uloží.'), 3200);
+    showMapToast(dashboardTr('dashboard.place_sensor_prompt', 'Kliknite do mapy a poloha senzora sa uloĹľĂ­.'), 3200);
 }
 window.startPlacement = startPlacement;
 function savePlacementFromMap(id, lat, lng) {
@@ -2189,10 +2189,10 @@ function savePlacementFromMap(id, lat, lng) {
             const filtered = applyFilter(allSensors);
             renderList(filtered);
             updateMap(filtered);
-            showMapToast(dashboardTr('dashboard.place_sensor_saved', 'Poloha senzora uložená'), 2400);
+            showMapToast(dashboardTr('dashboard.place_sensor_saved', 'Poloha senzora uloĹľenĂˇ'), 2400);
             setTimeout(function() { focusOnMap(id); }, 80);
         } else {
-            showMapToast('\u2717 ' + ((res.data && (res.data.message || res.data.error)) || dashboardTr('dashboard.place_sensor_save_failed', 'Nepodarilo sa uložiť polohu')), 2600);
+            showMapToast('\u2717 ' + ((res.data && (res.data.message || res.data.error)) || dashboardTr('dashboard.place_sensor_save_failed', 'Nepodarilo sa uloĹľiĹĄ polohu')), 2600);
         }
     });
 }
@@ -2207,7 +2207,7 @@ function handleSensorRowClick(id) {
 }
 window.handleSensorRowClick = handleSensorRowClick;
 
-/* ── Map ── */
+/* â”€â”€ Map â”€â”€ */
 const _mapViewKey = 'sc.map-view.v1';
 
 function saveMapView() {
@@ -2253,22 +2253,22 @@ function initMap() {
         L.DomEvent.stopPropagation(e.originalEvent);
         if (placementMode) {
             showCtx(e.originalEvent, [
-                { icon: 'fa-location-dot', primary: true, label: dashboardTr('dashboard.place_sensor_here', 'Umiestniť senzor sem'), action: function() { savePlacementFromMap(placementMode.id, e.latlng.lat, e.latlng.lng); } },
-                { icon: 'fa-xmark', label: dashboardTr('common.cancel', 'Zrušiť'), action: function() { cancelPlacement(true); } },
+                { icon: 'fa-location-dot', primary: true, label: dashboardTr('dashboard.place_sensor_here', 'UmiestniĹĄ senzor sem'), action: function() { savePlacementFromMap(placementMode.id, e.latlng.lat, e.latlng.lng); } },
+                { icon: 'fa-xmark', label: dashboardTr('common.cancel', 'ZruĹˇiĹĄ'), action: function() { cancelPlacement(true); } },
             ]);
             return;
         }
         showCtx(e.originalEvent, [
-            { icon: 'fa-map-pin', label: 'Nastaviť ako východzí pohľad',
-                action: function() { saveMapView(); showMapToast('\u2713 Pohľad uložený', 2000); } },
+            { icon: 'fa-map-pin', label: 'NastaviĹĄ ako vĂ˝chodzĂ­ pohÄľad',
+                action: function() { saveMapView(); showMapToast('\u2713 PohÄľad uloĹľenĂ˝', 2000); } },
         ]);
     });
 }
 
-// ── Marker helpers ────────────────────────────────────────────────────────────
+// â”€â”€ Marker helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const MARKER_PALETTE = ['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891b2','#db2777','#374151','#f59e0b','#059669'];
-const _markerUnlocked = {};  // id → true when drag is enabled
-const _pendingLatLng  = {};  // id → {_origLat,_origLng,lat,lng} pending confirm
+const _markerUnlocked = {};  // id â†’ true when drag is enabled
+const _pendingLatLng  = {};  // id â†’ {_origLat,_origLng,lat,lng} pending confirm
 
 function makeMarkerIcon(color, unlocked, kind = 'sensor') {
     const c = String(color || '#1ca8c9').trim() || '#1ca8c9';
@@ -2304,58 +2304,7 @@ let _colorPopEl = null;
 function closeColorPop() { if (_colorPopEl) { _colorPopEl.remove(); _colorPopEl = null; } }
 
 function showColorPop(x, y, currentColor, onPick) {
-    closeColorPop();
-    const pop = document.createElement('div');
-    pop.className = 'sc-color-pop';
-    pop.innerHTML = '<div class="sc-color-pop-title">Farba markera</div>';
-    const swatches = document.createElement('div');
-    swatches.className = 'sc-color-swatches';
-    MARKER_PALETTE.forEach(function(c) {
-        const sw = document.createElement('div');
-        sw.className = 'sc-color-swatch' + (c === currentColor ? ' is-active' : '');
-        sw.style.background = c;
-        sw.title = c;
-        sw.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-        sw.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            closeColorPop();
-            if (typeof onPick === 'function') onPick(c);
-        });
-        swatches.appendChild(sw);
-    });
-    pop.appendChild(swatches);
-    const reset = document.createElement('div');
-    reset.className = 'sc-color-reset';
-    reset.textContent = 'Obnoviť predvolenú';
-    reset.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    });
-    reset.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        closeColorPop();
-        if (typeof onPick === 'function') onPick(null);
-    });
-    pop.appendChild(reset);
-    document.body.appendChild(pop);
-    _colorPopEl = pop;
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const pw = pop.offsetWidth || 180, ph = pop.offsetHeight || 120;
-    const nextLeft = Math.max(8, Math.min(Number(x || 0), vw - pw - 8));
-    const nextTop = (Number(y || 0) + ph + 8 > vh)
-        ? Math.max(8, Number(y || 0) - ph - 8)
-        : Math.max(8, Number(y || 0));
-    pop.style.left = nextLeft + 'px';
-    pop.style.top = nextTop + 'px';
-    function onDocClick(e) {
-        if (!pop.contains(e.target)) { closeColorPop(); document.removeEventListener('mousedown', onDocClick); }
-    }
-    setTimeout(function() { document.addEventListener('mousedown', onDocClick); }, 50);
+    openNativeMarkerColorPicker(currentColor, onPick);
 }
 
 function persistSensorMarkerColor(sensorEui, color) {
@@ -2376,7 +2325,37 @@ function persistSensorMarkerColor(sensorEui, color) {
     });
 }
 
-// Normal popup: status + name + EUI + [Detail →] [⋯]
+function openNativeMarkerColorPicker(currentColor, onPick) {
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = /^#[0-9a-fA-F]{6}$/.test(String(currentColor || '').trim()) ? String(currentColor).trim() : '#1ca8c9';
+    input.style.position = 'fixed';
+    input.style.left = '-9999px';
+    input.style.top = '-9999px';
+    input.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(input);
+
+    const cleanup = () => {
+        input.removeEventListener('change', onChange);
+        input.removeEventListener('input', onChange);
+        input.remove();
+    };
+    const onChange = () => {
+        const next = String(input.value || '').trim();
+        cleanup();
+        if (typeof onPick === 'function') onPick(next || null);
+    };
+
+    input.addEventListener('change', onChange);
+    input.addEventListener('input', onChange);
+    if (typeof input.showPicker === 'function') {
+        input.showPicker();
+    } else {
+        input.click();
+    }
+}
+
+// Normal popup: status + name + EUI + [Detail â†’] [â‹Ż]
 function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
     const brandBg  = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
     const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
@@ -2389,14 +2368,14 @@ function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
         + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
         + '<div style="display:flex;align-items:center;gap:.36rem">'
             + '<a href="' + href + '" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;background:' + brandBg + ';color:#fff;border-radius:.42rem;padding:.38rem .6rem;font-size:.74rem;font-weight:800;text-decoration:none;border:none;letter-spacing:.01em;transition:background .12s" onmouseover="this.style.background=\'' + brandHov + '\'" onmouseout="this.style.background=\'' + brandBg + '\'">Detail \u2192</a>'
-            + '<button id="sc-popup-dots-' + mid + '" class="sc-popup-dots" title="Možnosti">\u22ef</button>'
+            + '<button id="sc-popup-dots-' + mid + '" class="sc-popup-dots" title="MoĹľnosti">\u22ef</button>'
         + '</div>'
         + '</div>';
 }
 
-// Unlocked popup: name + EUI + hint + [Uložiť polohu] [Zrušiť]
+// Unlocked popup: name + EUI + hint + [UloĹľiĹĄ polohu] [ZruĹˇiĹĄ]
 function buildPopupUnlockedHtml(name, shortEui, mid, hasMoved) {
-    const hintText = hasMoved ? '\u2713 Premiestnený \u2014 uložiť?' : '\u2195 Presuňte marker na novú polohu';
+    const hintText = hasMoved ? '\u2713 PremiestnenĂ˝ \u2014 uloĹľiĹĄ?' : '\u2195 PresuĹte marker na novĂş polohu';
     const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
     return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
         + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + name + '</div>'
@@ -2404,8 +2383,8 @@ function buildPopupUnlockedHtml(name, shortEui, mid, hasMoved) {
         + '<div style="font-size:.69rem;font-weight:700;color:' + hintColor + ';margin-bottom:.3rem">' + hintText + '</div>'
         + '<div style="border-top:1px solid #edf2f9;margin:.28rem 0 .36rem"></div>'
         + '<div style="display:flex;gap:.38rem">'
-            + (hasMoved ? '<button id="sc-popup-save-' + mid + '" class="sc-popup-save">Uložiť polohu</button>' : '')
-            + '<button id="sc-popup-cancel-' + mid + '" class="sc-popup-cancel">Zrušiť</button>'
+            + (hasMoved ? '<button id="sc-popup-save-' + mid + '" class="sc-popup-save">UloĹľiĹĄ polohu</button>' : '')
+            + '<button id="sc-popup-cancel-' + mid + '" class="sc-popup-cancel">ZruĹˇiĹĄ</button>'
         + '</div>'
         + '</div>';
 }
@@ -2418,7 +2397,7 @@ function updateMap(sensors) {
         if (sensorMarkers[id]) {
             const pending = _pendingLatLng[id];
             sensorMarkers[id].setLatLng([pending._origLat, pending._origLng]);
-            showMapToast('Presunutie zrušené (čas vypršal)', 1800);
+            showMapToast('Presunutie zruĹˇenĂ© (ÄŤas vyprĹˇal)', 1800);
         }
         delete _pendingLatLng[id];
         _markerUnlocked[id] = false;
@@ -2472,19 +2451,19 @@ function updateMap(sensors) {
                 _pendingLatLng[id] = { _origLat: cur.lat, _origLng: cur.lng, lat: cur.lat, lng: cur.lng };
             }
             marker.setPopupContent(buildPopupUnlockedHtml(name, shortEui, id, false));
-            showMapToast('Presúvanie odomknuté \u2014 presuňte marker', 2800);
+            showMapToast('PresĂşvanie odomknutĂ© \u2014 presuĹte marker', 2800);
         }
 
-        // Shared context menu items for right-click and ⋯ button
+        // Shared context menu items for right-click and â‹Ż button
         function markerCtxItems(cx, cy) {
             const isDragOn = !!_markerUnlocked[id];
             return [
                 { icon: 'fa-arrow-up-right-from-square', label: 'Detail senzora',
                     action: function() { window.location.href = '/sensors/' + encodeURIComponent(id); } },
                 { icon: isDragOn ? 'fa-lock' : 'fa-lock-open',
-                    label: isDragOn ? 'Zamknúť polohu' : 'Odomknúť presúvanie',
+                    label: isDragOn ? 'ZamknĂşĹĄ polohu' : 'OdomknĂşĹĄ presĂşvanie',
                     action: function() { if (!!_markerUnlocked[id]) lockMarker(); else unlockMarker(); } },
-                { icon: 'fa-palette', label: 'Zmeniť farbu',
+                { icon: 'fa-palette', label: 'ZmeniĹĄ farbu',
                     action: function() {
                         setTimeout(function() {
                             showColorPop(cx, cy, s.marker_color || null, function(color) {
@@ -2492,7 +2471,7 @@ function updateMap(sensors) {
                                     if (result.ok && result.data && result.data.success) {
                                         if (color) s.marker_color = color; else delete s.marker_color;
                                         marker.setIcon(makeMarkerIcon(color || statusColor, !!_markerUnlocked[id], 'sensor'));
-                                        showMapToast(color ? '\u2713 Farba zmenená' : '\u2713 Farba obnovená', 2000);
+                                        showMapToast(color ? '\u2713 Farba zmenenĂˇ' : '\u2713 Farba obnovenĂˇ', 2000);
                                     } else {
                                         showMapToast('\u2717 ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba')), 2200);
                                     }
@@ -2501,7 +2480,7 @@ function updateMap(sensors) {
                         }, 80);
                     } },
                 '-',
-                { icon: 'fa-circle-plus', primary: true, label: 'Pridať upozornenie',
+                { icon: 'fa-circle-plus', primary: true, label: 'PridaĹĄ upozornenie',
                     action: function() { window.location.href = buildNewAlertRuleUrl(id); } },
             ];
         }
@@ -2517,7 +2496,7 @@ function updateMap(sensors) {
                 });
             }
 
-            // ⋯ dots button (normal popup)
+            // â‹Ż dots button (normal popup)
             const dotsBtn = document.getElementById('sc-popup-dots-' + id);
             if (dotsBtn) {
                 dotsBtn.addEventListener('click', function(e) {
@@ -2550,11 +2529,11 @@ function updateMap(sensors) {
                         if (d.success) {
                             const sr = allSensors.find(function(x) { return sensorId(x) === id; });
                             if (sr) { sr.gps_lat = pending.lat; sr.gps_lng = pending.lng; }
-                            showMapToast('\u2713 Poloha uložená', 2400);
+                            showMapToast('\u2713 Poloha uloĹľenĂˇ', 2400);
                             marker.setLatLng([pending.lat, pending.lng]);
                         } else {
                             marker.setLatLng([pending._origLat, pending._origLng]);
-                            showMapToast('\u2717 ' + (d.message || 'Chyba uloženia'), 2400);
+                            showMapToast('\u2717 ' + (d.message || 'Chyba uloĹľenia'), 2400);
                         }
                         delete _pendingLatLng[id];
                         lockMarker();
@@ -2562,7 +2541,7 @@ function updateMap(sensors) {
                     .catch(function() {
                         const pending2 = _pendingLatLng[id];
                         if (pending2) marker.setLatLng([pending2._origLat, pending2._origLng]);
-                        showMapToast('\u2717 Chyba uloženia', 2400);
+                        showMapToast('\u2717 Chyba uloĹľenia', 2400);
                         delete _pendingLatLng[id];
                         lockMarker();
                     });
@@ -2576,7 +2555,7 @@ function updateMap(sensors) {
                     delete _pendingLatLng[id];
                     marker.openPopup();
                     lockMarker();
-                    showMapToast('Presunutie zrušené', 1800);
+                    showMapToast('Presunutie zruĹˇenĂ©', 1800);
                 });
             }
         });
@@ -2594,7 +2573,7 @@ function updateMap(sensors) {
 
         marker.on('dragend', function(e) {
             const ll = e.target.getLatLng();
-            // Update pending position but KEEP unlocked — user may drag again
+            // Update pending position but KEEP unlocked â€” user may drag again
             if (_pendingLatLng[id]) { _pendingLatLng[id].lat = ll.lat; _pendingLatLng[id].lng = ll.lng; }
             // Show unlocked popup with save/cancel
             marker.setPopupContent(buildPopupUnlockedHtml(name, shortEui, id, true));
@@ -2613,11 +2592,11 @@ function updateMap(sensors) {
         bounds.push(latlng);
     });
 
-    // Don't reset map view — user controls zoom/pan, saved to localStorage
+    // Don't reset map view â€” user controls zoom/pan, saved to localStorage
 }
-// ── End marker helpers ────────────────────────────────────────────────────────
+// â”€â”€ End marker helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-/* ── List ↔ Map linking ── */
+/* â”€â”€ List â†” Map linking â”€â”€ */
 function highlightRow(id) {
     document.querySelectorAll('.mview-sensor-row').forEach(function(r) {
         r.classList.toggle('is-highlighted', r.dataset.sensorId === id);
@@ -2642,7 +2621,7 @@ function focusOnMap(id) {
 }
 window.focusOnMap = focusOnMap;
 
-/* ── Filter ── */
+/* â”€â”€ Filter â”€â”€ */
 function applyFilter(sensors) {
     return sensors.filter(function(s) {
         if (currentFilter !== 'all' && SENSOR_TIER(s) !== currentFilter) return false;
@@ -2670,13 +2649,13 @@ function handleSearchInput() {
 }
 window.mviewHandleSearchInput = handleSearchInput;
 
-/* ── Render list ── */
+/* â”€â”€ Render list â”€â”€ */
 function renderList(sensors) {
     const el = document.getElementById('mviewSensorList');
     if (!el) return;
     if (!sensors.length) {
         el.innerHTML = '<div class="text-center text-muted py-4" style="font-size:0.85rem;">' +
-            (currentFilter === 'all' && !currentSearchQuery ? 'Žiadne senzory' : 'Žiadne výsledky') + '</div>';
+            (currentFilter === 'all' && !currentSearchQuery ? 'Ĺ˝iadne senzory' : 'Ĺ˝iadne vĂ˝sledky') + '</div>';
         return;
     }
     const _listFirst = !el.dataset.initialized;
@@ -2684,7 +2663,7 @@ function renderList(sensors) {
         const raw    = s.activity_status || s.status || 'unknown';
         const tier   = SENSOR_TIER(s);
         const name   = esc(s.name || s.eui || s.device_eui || s.sensor_id || '\u2014');
-        const _tierLabel = { online: 'Online', initial: 'Čaká na dáta', warn: 'Upozornenie', offline: 'Offline' };
+        const _tierLabel = { online: 'Online', initial: 'ÄŚakĂˇ na dĂˇta', warn: 'Upozornenie', offline: 'Offline' };
         const slabel = esc(_tierLabel[tier] || SENSOR_STATUS_LABEL(s));
         const id     = sensorId(s);
         const href   = '/sensors/' + esc(id);
@@ -2693,7 +2672,7 @@ function renderList(sensors) {
         const hasMetrics = chips.length > 0;
         const needsPlacement = !hasSensorGeo(s);
         const placeBtn = needsPlacement
-            ? '<button type="button" class="mview-row-action" onclick="event.stopPropagation();startPlacement(\'' + esc(id) + '\')"><i class="fas fa-location-dot"></i><span>' + esc(dashboardTr('dashboard.place_on_map', 'Umiestniť')) + '</span></button>'
+            ? '<button type="button" class="mview-row-action" onclick="event.stopPropagation();startPlacement(\'' + esc(id) + '\')"><i class="fas fa-location-dot"></i><span>' + esc(dashboardTr('dashboard.place_on_map', 'UmiestniĹĄ')) + '</span></button>'
             : '';
         return '<div class="mview-sensor-row' + (hasMetrics ? ' has-metrics' : '') + '" data-sensor-id="' + esc(id) + '" onclick="handleSensorRowClick(\'' + esc(id) + '\')">' +
             '<span class="mview-dot ' + tier + '"></span>' +
@@ -2704,7 +2683,7 @@ function renderList(sensors) {
             '</span>' +
             '<span class="mview-badge ' + tier + '">' + slabel + '</span>' +
             placeBtn +
-            (hasMetrics ? '<button class="mview-expand-btn" onclick="toggleMetricsDrop(\'' + esc(id) + '\',event)" title="Zobraziť metriky"><i class="fas fa-chevron-down"></i></button>' : '') +
+            (hasMetrics ? '<button class="mview-expand-btn" onclick="toggleMetricsDrop(\'' + esc(id) + '\',event)" title="ZobraziĹĄ metriky"><i class="fas fa-chevron-down"></i></button>' : '') +
             '<a href="' + href + '" class="mview-sensor-link" onclick="event.stopPropagation()" title="Detail">' +
                 '<i class="fas fa-chevron-right"></i>' +
             '</a>' +
@@ -2718,7 +2697,7 @@ function renderList(sensors) {
     }
 }
 
-/* ── Metric drop toggle ── */
+/* â”€â”€ Metric drop toggle â”€â”€ */
 function toggleMetricsDrop(id, e) {
     e.stopPropagation();
     const drop = document.getElementById('mdrop-' + id);
@@ -2729,7 +2708,7 @@ function toggleMetricsDrop(id, e) {
 }
 window.toggleMetricsDrop = toggleMetricsDrop;
 
-/* ── User menu toggle ── */
+/* â”€â”€ User menu toggle â”€â”€ */
 function toggleUserMenu() {
     const dropdown = document.getElementById('mviewUserDropdown');
     if (!dropdown) return;
@@ -2750,7 +2729,7 @@ function closeUserMenuOnClick(e) {
     }
 }
 
-/* ── Panel width → narrow class ── */
+/* â”€â”€ Panel width â†’ narrow class â”€â”€ */
 function initNarrowObserver() {
     const panel = document.querySelector('.mview-list-panel');
     if (!panel || typeof ResizeObserver === 'undefined') return;
@@ -2760,16 +2739,16 @@ function initNarrowObserver() {
     }).observe(panel);
 }
 
-/* ── Live tick ── */
+/* â”€â”€ Live tick â”€â”€ */
 function startTick() {
     if (tickTimer) clearInterval(tickTimer);
     lastLoadTs = Date.now();
 }
 
-/* ── Alerts ── */
-const COND_LABEL_DASH = {'gt':'>','gte':'≥','lt':'<','lte':'≤','eq':'='};
-const METRIC_UNIT_DASH = {co2_1_ppm:'ppm',co2_2_ppm:'ppm',temperature_1_c:'°C',temperature_2_c:'°C',humidity_1_pct:'%',battery_v_est:'V'};
-const METRIC_NAMES_DASH = {co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm aktívny',alarm_count:'Počet alarmov',open_count:'Počet otvorení'};
+/* â”€â”€ Alerts â”€â”€ */
+const COND_LABEL_DASH = {'gt':'>','gte':'â‰Ą','lt':'<','lte':'â‰¤','eq':'='};
+const METRIC_UNIT_DASH = {co2_1_ppm:'ppm',co2_2_ppm:'ppm',temperature_1_c:'Â°C',temperature_2_c:'Â°C',humidity_1_pct:'%',battery_v_est:'V'};
+const METRIC_NAMES_DASH = {co2_1_ppm:'COâ‚‚',co2_2_ppm:'COâ‚‚ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'VlhkosĹĄ',battery_v_est:'BatĂ©ria',any_alarm_active:'Alarm aktĂ­vny',alarm_count:'PoÄŤet alarmov',open_count:'PoÄŤet otvorenĂ­'};
 
 function renderAlerts() {
     const body  = document.getElementById('mviewAlerts');
@@ -2795,7 +2774,7 @@ function renderAlerts() {
             }
             const _alertFirst = !body.dataset.initialized;
             if (!visible.length) {
-                body.innerHTML = '<div class="mview-alerts-empty">Žiadne upozornenia</div>';
+                body.innerHTML = '<div class="mview-alerts-empty">Ĺ˝iadne upozornenia</div>';
                 return;
             }
             body.innerHTML = visible.map(function(item) {
@@ -2821,7 +2800,7 @@ function renderAlerts() {
         });
 }
 
-/* ── Load ── */
+/* â”€â”€ Load â”€â”€ */
 function load() {
     fetch('/api/sensors')
         .then(function(r) { return r.ok ? r.json() : null; })
@@ -2831,7 +2810,7 @@ function load() {
                 : (data && Array.isArray(data.sensors) ? data.sensors
                 : (data && typeof data === 'object' && !data.error ? Object.values(data) : []));
 
-            // Sort: offline → warn → online
+            // Sort: offline â†’ warn â†’ online
             raw.sort(function(a, b) {
                 return (TIER_ORDER[SENSOR_TIER(a)] ?? 4) - (TIER_ORDER[SENSOR_TIER(b)] ?? 4);
             });
@@ -2876,7 +2855,7 @@ function load() {
         });
 }
 
-/* ── Resizable panel ── */
+/* â”€â”€ Resizable panel â”€â”€ */
 const MVIEW_WIDTH_KEY = 'service-center.mview-list-width.v1';
 
 function initResizer() {
@@ -2943,7 +2922,7 @@ function initResizer() {
     }, { passive: true });
 }
 
-/* ── Vertical resizer (list ↕ alerts) ── */
+/* â”€â”€ Vertical resizer (list â†• alerts) â”€â”€ */
 const MVIEW_ALERTS_HEIGHT_KEY = 'service-center.mview-alerts-height.v1';
 
 function initVResizer() {
@@ -3010,7 +2989,7 @@ function initVResizer() {
     }, { passive: true });
 }
 
-// ── Context menu ────────────────────────────────────────────────────────────
+// â”€â”€ Context menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SC_ACKS_KEY = 'sc.alert-acks.v1';
 
 function _loadAcks() {
@@ -3094,17 +3073,17 @@ function initContextMenus() {
                 const eui = row.dataset.sensorId || '';
                 const sensor = getSensorById(eui);
                 const placementLabel = sensor && hasSensorGeo(sensor)
-                    ? dashboardTr('dashboard.reposition_on_map', 'Upraviť polohu na mape')
-                    : dashboardTr('dashboard.place_on_map', 'Umiestniť na mapu');
+                    ? dashboardTr('dashboard.reposition_on_map', 'UpraviĹĄ polohu na mape')
+                    : dashboardTr('dashboard.place_on_map', 'UmiestniĹĄ na mapu');
                 showCtx(e, [
                     { icon: 'fa-location-dot', label: placementLabel, action: function() { startPlacement(eui); } },
-                    { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť detail', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
-                    { icon: 'fa-circle-plus', primary: true, label: 'Pridať upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(eui); } },
+                    { icon: 'fa-arrow-up-right-from-square', label: 'OtvoriĹĄ detail', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
+                    { icon: 'fa-circle-plus', primary: true, label: 'PridaĹĄ upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(eui); } },
                 ]);
             } else {
                 // Empty area
                 showCtx(e, [
-                    { icon: 'fa-plus', label: 'Pridať senzor', action: function() { window.location.href = '/sensors?add=1'; } },
+                    { icon: 'fa-plus', label: 'PridaĹĄ senzor', action: function() { window.location.href = '/sensors?add=1'; } },
                 ]);
             }
         });
@@ -3119,21 +3098,21 @@ function initContextMenus() {
                 const eui    = row.dataset.eui    || '';
                 const ackKey = row.dataset.ackKey || '';
                 showCtx(e, [
-                    { icon: 'fa-clock-rotate-left', label: 'Potvrdiť na 4 hodiny',  action: function() { if (ackKey) { ackAlert(ackKey, 4);  renderAlerts(allSensors); } } },
-                    { icon: 'fa-check-double',       label: 'Potvrdiť na 24 hodín', action: function() { if (ackKey) { ackAlert(ackKey, 24); renderAlerts(allSensors); } } },
+                    { icon: 'fa-clock-rotate-left', label: 'PotvrdiĹĄ na 4 hodiny',  action: function() { if (ackKey) { ackAlert(ackKey, 4);  renderAlerts(allSensors); } } },
+                    { icon: 'fa-check-double',       label: 'PotvrdiĹĄ na 24 hodĂ­n', action: function() { if (ackKey) { ackAlert(ackKey, 24); renderAlerts(allSensors); } } },
                     '-',
-                    { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť senzor', action: function() { if (eui) window.location.href = '/sensors/' + encodeURIComponent(eui); } },
+                    { icon: 'fa-arrow-up-right-from-square', label: 'OtvoriĹĄ senzor', action: function() { if (eui) window.location.href = '/sensors/' + encodeURIComponent(eui); } },
                 ]);
             } else {
                 // Empty area / header
                 showCtx(e, [
-                    { icon: 'fa-circle-plus', primary: true, label: 'Pridať upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(''); } },
+                    { icon: 'fa-circle-plus', primary: true, label: 'PridaĹĄ upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(''); } },
                 ]);
             }
         });
     }
 }
-// ── End context menu ─────────────────────────────────────────────────────────
+// â”€â”€ End context menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 initResizer();
 initVResizer();
@@ -3516,68 +3495,7 @@ function closeMiniColorPop() {
 }
 
 function showMiniColorPop(x, y, currentColor, onPick) {
-    closeMiniColorPop();
-
-    const palette = Array.isArray(window.MARKER_PALETTE) && window.MARKER_PALETTE.length
-        ? window.MARKER_PALETTE
-        : ['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891b2','#db2777','#374151','#f59e0b','#059669'];
-    const pop = document.createElement('div');
-    pop.className = 'sc-color-pop';
-    pop.innerHTML = '<div class="sc-color-pop-title">' + escapeHtml(appTranslate('dashboard.marker_color', 'Farba markera')) + '</div>';
-
-    const swatches = document.createElement('div');
-    swatches.className = 'sc-color-swatches';
-    palette.forEach((color) => {
-        const swatch = document.createElement('div');
-        swatch.className = 'sc-color-swatch' + (color === currentColor ? ' is-active' : '');
-        swatch.style.background = color;
-        swatch.title = color;
-        swatch.addEventListener('mousedown', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-        });
-        swatch.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            closeMiniColorPop();
-            if (typeof onPick === 'function') onPick(color);
-        });
-        swatches.appendChild(swatch);
-    });
-    pop.appendChild(swatches);
-
-    const reset = document.createElement('div');
-    reset.className = 'sc-color-reset';
-    reset.textContent = appTranslate('dashboard.marker_color_reset', 'Obnoviť predvolenú');
-    reset.addEventListener('mousedown', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-    });
-    reset.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        closeMiniColorPop();
-        if (typeof onPick === 'function') onPick(null);
-    });
-    pop.appendChild(reset);
-    pop.addEventListener('click', (event) => event.stopPropagation());
-    pop.addEventListener('contextmenu', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-    });
-    document.body.appendChild(pop);
-    miniColorPopEl = pop;
-
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const pw = pop.offsetWidth || 180;
-    const ph = pop.offsetHeight || 120;
-    const nextLeft = Math.max(8, Math.min(Number(x || 0), vw - pw - 8));
-    const nextTop = (Number(y || 0) + ph + 8 > vh)
-        ? Math.max(8, Number(y || 0) - ph - 8)
-        : Math.max(8, Number(y || 0));
-    pop.style.left = nextLeft + 'px';
-    pop.style.top = nextTop + 'px';
+    openNativeMarkerColorPicker(currentColor, onPick);
 }
 
 function showMiniCtx(eventLike, items) {
@@ -3684,7 +3602,7 @@ function cancelMiniMarkerPlacement(showToast = false) {
     miniPlacementMode = null;
     updateMiniPlacementUi();
     if (showToast) {
-        showMiniMapToast(appTranslate('dashboard.marker_move_cancelled', 'Premiestnenie zrušené'), 2200);
+        showMiniMapToast(appTranslate('dashboard.marker_move_cancelled', 'Premiestnenie zruĹˇenĂ©'), 2200);
     }
 }
 
@@ -3698,7 +3616,7 @@ function startMiniMarkerPlacement(node) {
     updateMiniPlacementUi();
     focusMiniMarker(miniMarkerKey(miniPlacementMode.type, miniPlacementMode.eui));
     showMiniMapToast(
-        appTranslate('dashboard.marker_move_prompt', 'Kliknite do mapy a nová poloha sa uloží.'),
+        appTranslate('dashboard.marker_move_prompt', 'Kliknite do mapy a novĂˇ poloha sa uloĹľĂ­.'),
         3200
     );
 }
@@ -3746,11 +3664,11 @@ function saveMiniMarkerPlacement(lat, lng) {
                 const markerKey = miniMarkerKey(miniPlacementMode.type, miniPlacementMode.eui);
                 miniPlacementMode = null;
                 updateMiniPlacementUi();
-                showMiniMapToast(appTranslate('dashboard.marker_move_saved', 'Poloha uložená'), 2300);
+                showMiniMapToast(appTranslate('dashboard.marker_move_saved', 'Poloha uloĹľenĂˇ'), 2300);
                 setTimeout(() => focusMiniMarker(markerKey), 60);
             } else {
                 showMiniMapToast(
-                    '✕ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_move_failed', 'Nepodarilo sa uložiť polohu'))),
+                    'âś• ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_move_failed', 'Nepodarilo sa uloĹľiĹĄ polohu'))),
                     2600
                 );
             }
@@ -3837,14 +3755,14 @@ function buildMiniMarkerPopupHtml_legacy(name, shortEui, href, popupId) {
         + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.36rem">' + escapeHtml(shortEui) + '</div>' : '')
         + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
         + '<div style="display:flex;align-items:center;gap:.36rem">'
-        + '<a href="' + escapeHtml(href) + '" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;background:' + brandBg + ';color:#fff;border-radius:.42rem;padding:.38rem .6rem;font-size:.74rem;font-weight:800;text-decoration:none;border:none;letter-spacing:.01em;transition:background .12s" onmouseover="this.style.background=\'' + brandHov + '\'" onmouseout="this.style.background=\'' + brandBg + '\'">Detail →</a>'
-        + '<button id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots" title="Možnosti">⋯</button>'
+        + '<a href="' + escapeHtml(href) + '" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;background:' + brandBg + ';color:#fff;border-radius:.42rem;padding:.38rem .6rem;font-size:.74rem;font-weight:800;text-decoration:none;border:none;letter-spacing:.01em;transition:background .12s" onmouseover="this.style.background=\'' + brandHov + '\'" onmouseout="this.style.background=\'' + brandBg + '\'">Detail â†’</a>'
+        + '<button id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots" title="MoĹľnosti">â‹Ż</button>'
         + '</div>'
         + '</div>';
 }
 
 function buildMiniMarkerUnlockedPopupHtml_legacy(name, shortEui, popupId, hasMoved) {
-    const hintText = hasMoved ? '✓ Premiestnený — uložiť?' : '↕ Presuňte marker na novú polohu';
+    const hintText = hasMoved ? 'âś“ PremiestnenĂ˝ â€” uloĹľiĹĄ?' : 'â†• PresuĹte marker na novĂş polohu';
     const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
     return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
         + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + escapeHtml(name) + '</div>'
@@ -3852,8 +3770,8 @@ function buildMiniMarkerUnlockedPopupHtml_legacy(name, shortEui, popupId, hasMov
         + '<div style="font-size:.69rem;font-weight:700;color:' + hintColor + ';margin-bottom:.3rem">' + hintText + '</div>'
         + '<div style="border-top:1px solid #edf2f9;margin:.28rem 0 .36rem"></div>'
         + '<div style="display:flex;gap:.38rem">'
-        + (hasMoved ? '<button id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save">Uložiť polohu</button>' : '')
-        + '<button id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel">Zrušiť</button>'
+        + (hasMoved ? '<button id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save">UloĹľiĹĄ polohu</button>' : '')
+        + '<button id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel">ZruĹˇiĹĄ</button>'
         + '</div>'
         + '</div>';
 }
@@ -3870,14 +3788,14 @@ function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
         + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.36rem">' + escapeHtml(shortEui) + '</div>' : '')
         + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
         + '<div style="display:flex;align-items:center;gap:.36rem">'
-        + '<a href="' + escapeHtml(href) + '" class="sc-popup-detail">Detail →</a>'
-        + '<button type="button" id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots" title="Mo&#382;nosti" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'dots\', \'' + escapeHtml(popupId) + '\', event)">⋯</button>'
+        + '<a href="' + escapeHtml(href) + '" class="sc-popup-detail">Detail â†’</a>'
+        + '<button type="button" id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots" title="Mo&#382;nosti" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'dots\', \'' + escapeHtml(popupId) + '\', event)">â‹Ż</button>'
         + '</div>'
         + '</div>';
 }
 
 function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
-    const hintText = hasMoved ? '✓ Premiestnen&#253; - ulo&#382;i&#357;?' : '↕ Presu&#328;te marker na nov&#250; polohu';
+    const hintText = hasMoved ? 'âś“ Premiestnen&#253; - ulo&#382;i&#357;?' : 'â†• Presu&#328;te marker na nov&#250; polohu';
     const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
     return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
         + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + escapeHtml(name) + '</div>'
@@ -3976,8 +3894,8 @@ function initDashboardContextMenus() {
                 ? (latestSensorInventoryData[sensorId] || latestSensorInventoryData[sensorId.toLowerCase()] || null)
                 : null;
             const placementLabel = sensorHasDashboardMapLocation(sensor || { eui: sensorId })
-                ? appTranslate('dashboard.reposition_on_map', 'Upraviť polohu na mape')
-                : appTranslate('dashboard.place_on_map', 'Umiestniť na mapu');
+                ? appTranslate('dashboard.reposition_on_map', 'UpraviĹĄ polohu na mape')
+                : appTranslate('dashboard.place_on_map', 'UmiestniĹĄ na mapu');
             showMiniCtx(event, [
                 {
                     icon: 'fa-location-dot',
@@ -3995,7 +3913,7 @@ function initDashboardContextMenus() {
                 {
                     icon: 'fa-arrow-up-right-from-square',
                     primary: true,
-                    label: appTranslate('dashboard.open_sensor_detail', 'Otvoriť detail senzora'),
+                    label: appTranslate('dashboard.open_sensor_detail', 'OtvoriĹĄ detail senzora'),
                     action: () => {
                         window.location.href = '/sensors/' + encodeURIComponent(sensorId);
                     }
@@ -4317,12 +4235,12 @@ function initMiniCoverageMap() {
                 {
                     icon: 'fa-location-dot',
                     primary: true,
-                    label: appTranslate('dashboard.place_marker_here', 'Umiestniť marker sem'),
+                    label: appTranslate('dashboard.place_marker_here', 'UmiestniĹĄ marker sem'),
                     action: () => saveMiniMarkerPlacement(event.latlng.lat, event.latlng.lng)
                 },
                 {
                     icon: 'fa-xmark',
-                    label: appTranslate('common.cancel', 'Zrušiť'),
+                    label: appTranslate('common.cancel', 'ZruĹˇiĹĄ'),
                     action: () => cancelMiniMarkerPlacement(true)
                 }
             ]);
@@ -4332,7 +4250,7 @@ function initMiniCoverageMap() {
             {
                 icon: 'fa-map-pin',
                 primary: true,
-                label: appTranslate('dashboard.set_default_map_view', 'Nastaviť ako východzí pohľad'),
+                label: appTranslate('dashboard.set_default_map_view', 'NastaviĹĄ ako vĂ˝chodzĂ­ pohÄľad'),
                 action: () => saveMiniMapView()
             }
         ]);
@@ -4427,9 +4345,9 @@ function updateMiniMapSummary(summary = null) {
     const sensorShown = Number(data.sensorShown || 0);
     const sensorTotal = Number(data.sensorTotal || 0);
     const demoActive = !!data.demoActive;
-    const demoSuffix = demoActive ? ' · demo' : '';
+    const demoSuffix = demoActive ? ' Â· demo' : '';
 
-    label.textContent = `BS ${baseShown}/${baseTotal} · Sensors ${sensorShown}/${sensorTotal}${demoSuffix}`;
+    label.textContent = `BS ${baseShown}/${baseTotal} Â· Sensors ${sensorShown}/${sensorTotal}${demoSuffix}`;
 }
 
 function setMiniMapSaveStatus(kind, text) {
@@ -4482,17 +4400,17 @@ async function saveMiniMapView() {
             } catch (error) {
                 // ignore JSON parse issues
             }
-            setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed', `Uloženie zlyhalo: ${errorText}`, { error: errorText }));
-            showMiniMapToast(appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'), 2200);
+            setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed', `UloĹľenie zlyhalo: ${errorText}`, { error: errorText }));
+            showMiniMapToast(appTranslate('dashboard.save_failed_short', 'UloĹľenie zlyhalo'), 2200);
             return;
         }
         latestCoverageState = payload;
         miniCoverageViewInitialized = true;
-        setMiniMapSaveStatus('ok', appTranslate('dashboard.view_saved', 'Pohľad uložený'));
-        showMiniMapToast(appTranslate('dashboard.view_saved_toast', 'Pohľad uložený'), 2000);
+        setMiniMapSaveStatus('ok', appTranslate('dashboard.view_saved', 'PohÄľad uloĹľenĂ˝'));
+        showMiniMapToast(appTranslate('dashboard.view_saved_toast', 'PohÄľad uloĹľenĂ˝'), 2000);
     } catch (error) {
-        setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'));
-        showMiniMapToast(appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'), 2200);
+        setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed_short', 'UloĹľenie zlyhalo'));
+        showMiniMapToast(appTranslate('dashboard.save_failed_short', 'UloĹľenie zlyhalo'), 2200);
     }
 }
 
@@ -4838,12 +4756,12 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
             }
             marker.setPopupContent(buildMiniMarkerUnlockedPopupHtml(label, shortEui, popupId, false));
             marker.openPopup();
-            showMiniMapToast('Presúvanie odomknuté — presuňte marker', 2800);
+            showMiniMapToast('PresĂşvanie odomknutĂ© â€” presuĹte marker', 2800);
         };
         const markerContextItems = (clientX, clientY) => {
             const detailLabel = isBs
-                ? appTranslate('dashboard.open_base_station_detail', 'Otvoriť detail stanice')
-                : appTranslate('dashboard.open_sensor_detail', 'Otvoriť detail senzora');
+                ? appTranslate('dashboard.open_base_station_detail', 'OtvoriĹĄ detail stanice')
+                : appTranslate('dashboard.open_sensor_detail', 'OtvoriĹĄ detail senzora');
             const isDragOn = !!miniMarkerUnlocked[markerKey];
             const items = [
                 {
@@ -4857,8 +4775,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                 {
                     icon: isDragOn ? 'fa-lock' : 'fa-lock-open',
                     label: isDragOn
-                        ? appTranslate('dashboard.lock_marker_position', 'Zamknúť polohu')
-                        : appTranslate('dashboard.unlock_marker_move', 'Odomknúť presúvanie'),
+                        ? appTranslate('dashboard.lock_marker_position', 'ZamknĂşĹĄ polohu')
+                        : appTranslate('dashboard.unlock_marker_move', 'OdomknĂşĹĄ presĂşvanie'),
                     action: () => {
                         if (miniMarkerUnlocked[markerKey]) {
                             delete miniPendingLatLng[markerKey];
@@ -4872,7 +4790,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
             if (!isBs) {
                 items.splice(1, 0, {
                     icon: 'fa-palette',
-                    label: appTranslate('dashboard.change_marker_color', 'Zmeniť farbu'),
+                    label: appTranslate('dashboard.change_marker_color', 'ZmeniĹĄ farbu'),
                     action: () => {
                         const currentColor = marker.__miniNode ? marker.__miniNode.marker_color : '';
                         window.setTimeout(() => {
@@ -4880,7 +4798,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                 persistSensorMarkerColor(markerEui, color).then((result) => {
                                     if (!(result.ok && result.data && result.data.success)) {
                                         showMiniMapToast(
-                                            '✕ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uložiť farbu'))),
+                                            'âś• ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uloĹľiĹĄ farbu'))),
                                             2600
                                         );
                                         return;
@@ -4901,8 +4819,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                         setDashboardMiniInteractionState({});
                                         showMiniMapToast(
                                             color
-                                                ? appTranslate('dashboard.marker_color_saved', 'Farba markera uložená')
-                                                : appTranslate('dashboard.marker_color_reset_done', 'Predvolená farba obnovená'),
+                                                ? appTranslate('dashboard.marker_color_saved', 'Farba markera uloĹľenĂˇ')
+                                                : appTranslate('dashboard.marker_color_reset_done', 'PredvolenĂˇ farba obnovenĂˇ'),
                                             2200
                                         );
                                     };
@@ -4952,10 +4870,10 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                     sensor.gps_lng = pending.lng;
                                 }
                             }
-                            showMiniMapToast('✓ Poloha uložená', 2400);
+                            showMiniMapToast('âś“ Poloha uloĹľenĂˇ', 2400);
                         } else {
                             marker.setLatLng([pending._origLat, pending._origLng]);
-                            showMiniMapToast('✕ ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba uloženia')), 2400);
+                            showMiniMapToast('âś• ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba uloĹľenia')), 2400);
                         }
                         delete miniPendingLatLng[markerKey];
                         lockMarker();
@@ -4968,7 +4886,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                         lockMarker();
                         setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
                         marker.openPopup();
-                        showMiniMapToast('✕ Chyba uloženia', 2400);
+                        showMiniMapToast('âś• Chyba uloĹľenia', 2400);
                     });
             },
             cancel: () => {
@@ -4978,7 +4896,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                 lockMarker();
                 setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
                 marker.openPopup();
-                showMiniMapToast('Presunutie zrušené', 1800);
+                showMiniMapToast('Presunutie zruĹˇenĂ©', 1800);
             }
         };
 
@@ -5042,10 +4960,10 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                     sensor.gps_lng = pending.lng;
                                 }
                             }
-                            showMiniMapToast('✓ Poloha uložená', 2400);
+                            showMiniMapToast('âś“ Poloha uloĹľenĂˇ', 2400);
                         } else {
                             marker.setLatLng([pending._origLat, pending._origLng]);
-                            showMiniMapToast('✕ ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba uloženia')), 2400);
+                            showMiniMapToast('âś• ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba uloĹľenia')), 2400);
                         }
                         delete miniPendingLatLng[markerKey];
                         lockMarker();
@@ -5063,7 +4981,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                     lockMarker();
                     setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
                     marker.openPopup();
-                    showMiniMapToast('Presunutie zrušené', 1800);
+                    showMiniMapToast('Presunutie zruĹˇenĂ©', 1800);
                 });
             }
         });
@@ -5275,7 +5193,7 @@ function updateStatusCards(data) {
     document.getElementById('bs-count').textContent = bsCount;
     document.getElementById('bs-detail').textContent = appTranslate(
         connectingCount > 0 ? 'dashboard.connected_connecting_compact' : 'dashboard.connected_only_compact',
-        connectingCount > 0 ? `${bsCount} connected · +${connectingCount} connecting` : `${bsCount} connected`,
+        connectingCount > 0 ? `${bsCount} connected Â· +${connectingCount} connecting` : `${bsCount} connected`,
         { connected: bsCount, connecting: connectingCount, count: bsCount }
     );
     previousSnapshot.connectedBs = bsCount;
@@ -5651,7 +5569,7 @@ function updateSensorRuntimeList(data) {
         const name = escapeHtml(sensor && (sensor.name || sensor.label || shortId(eui, 10)) || shortId(eui, 10));
         const missingLocation = !sensorHasDashboardMapLocation(sensor);
         const locationMeta = missingLocation
-            ? `<span class="sensor-flag is-warning" title="${escapeHtml(appTranslate('network.gps_not_configured', 'GPS nie je nakonfigurované'))}"><i class="fas fa-exclamation"></i></span>`
+            ? `<span class="sensor-flag is-warning" title="${escapeHtml(appTranslate('network.gps_not_configured', 'GPS nie je nakonfigurovanĂ©'))}"><i class="fas fa-exclamation"></i></span>`
             : '';
         const issueMeta = tier !== 'online'
             ? `<span class="sensor-meta"><span class="sensor-pill">${escapeHtml(sensorRuntimeLabel(sensor))}</span></span>`
@@ -5673,7 +5591,7 @@ function buildIncidents(status, healthPacketLoss, vmCapable, trafficInfo) {
 
     if (!tlsActive) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_tls_offline', 'TLS server is offline.') });
     if (mqttEnabled && !mqttActive) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_mqtt_disconnected', 'MQTT broker is disconnected.') });
-    if (connectedBs === 0) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_no_connected_bs', 'Nie je pripojená žiadna základňová stanica.') });
+    if (connectedBs === 0) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_no_connected_bs', 'Nie je pripojenĂˇ Ĺľiadna zĂˇkladĹovĂˇ stanica.') });
     if (initialSensors > 0) incidents.push({
         level: 'warn',
         text: appTranslate('dashboard.incident_initial_sensors_pending', `${initialSensors} sensors are still waiting for first data.`, {
@@ -5734,8 +5652,8 @@ function renderIncidents(incidents) {
         rail.innerHTML =
             '<li class="all-clear-state">' +
             '<span class="all-clear-icon"><i class="fas fa-check"></i></span>' +
-            '<p class="all-clear-title">' + appTranslate('dashboard.all_clear_title', 'Všetko je v poriadku') + '</p>' +
-            '<p class="all-clear-note">' + appTranslate('dashboard.all_clear_note_short', 'Žiadne upozornenia.') + '</p>' +
+            '<p class="all-clear-title">' + appTranslate('dashboard.all_clear_title', 'VĹˇetko je v poriadku') + '</p>' +
+            '<p class="all-clear-note">' + appTranslate('dashboard.all_clear_note_short', 'Ĺ˝iadne upozornenia.') + '</p>' +
             '</li>';
         return;
     }
@@ -5756,7 +5674,7 @@ function renderIncidents(incidents) {
     ).join('');
 }
 
-/* ── Refresh progress bar ──────────────────────────── */
+/* â”€â”€ Refresh progress bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function scheduleAutoRefresh() {
     if (refreshTimer) {
         clearTimeout(refreshTimer);
@@ -5867,3 +5785,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 {% endif %}
 {% endblock %}
+
