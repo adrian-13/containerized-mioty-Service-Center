@@ -2331,8 +2331,13 @@ function openNativeMarkerColorPicker(currentColor, onPick) {
     input.type = 'color';
     input.value = /^#[0-9a-fA-F]{6}$/.test(String(currentColor || '').trim()) ? String(currentColor).trim() : '#1ca8c9';
     input.style.position = 'fixed';
-    input.style.left = '-9999px';
-    input.style.top = '-9999px';
+    input.style.left = '12px';
+    input.style.top = '12px';
+    input.style.width = '2px';
+    input.style.height = '2px';
+    input.style.opacity = '0.01';
+    input.style.zIndex = '2147483647';
+    input.style.pointerEvents = 'none';
     input.setAttribute('aria-hidden', 'true');
     document.body.appendChild(input);
 
@@ -2349,9 +2354,13 @@ function openNativeMarkerColorPicker(currentColor, onPick) {
 
     input.addEventListener('change', onChange);
     input.addEventListener('input', onChange);
-    if (typeof input.showPicker === 'function') {
-        input.showPicker();
-    } else {
+    try {
+        if (typeof input.showPicker === 'function') {
+            input.showPicker();
+        } else {
+            input.click();
+        }
+    } catch (err) {
         input.click();
     }
 }
@@ -2466,8 +2475,7 @@ function updateMap(sensors) {
                     action: function() { if (!!_markerUnlocked[id]) lockMarker(); else unlockMarker(); } },
                 { icon: 'fa-palette', label: 'Zmeni? farbu',
                     action: function() {
-                        setTimeout(function() {
-                            showColorPop(cx, cy, s.marker_color || null, function(color) {
+                        showColorPop(cx, cy, s.marker_color || null, function(color) {
                                 persistSensorMarkerColor(id, color).then(function(result) {
                                     if (result.ok && result.data && result.data.success) {
                                         if (color) s.marker_color = color; else delete s.marker_color;
@@ -2478,7 +2486,7 @@ function updateMap(sensors) {
                                     }
                                 });
                             });
-                        }, 80);
+
                     } },
                 '-',
                 { icon: 'fa-circle-plus', primary: true, label: 'Prida? upozornenie',
@@ -4796,8 +4804,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                     label: appTranslate('dashboard.change_marker_color', 'Zmeniť farbu'),
                     action: () => {
                         const currentColor = marker.__miniNode ? marker.__miniNode.marker_color : '';
-                        window.setTimeout(() => {
-                            showMiniColorPop(clientX, clientY, currentColor || null, (color) => {
+                        showMiniColorPop(clientX, clientY, currentColor || null, (color) => {
                                 persistSensorMarkerColor(markerEui, color).then((result) => {
                                     if (!(result.ok && result.data && result.data.success)) {
                                         showMiniMapToast(
@@ -4837,7 +4844,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                         .finally(finish);
                                 });
                             });
-                        }, 80);
+
                     }
                 });
             }
@@ -5788,4 +5795,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 {% endif %}
 {% endblock %}
-
