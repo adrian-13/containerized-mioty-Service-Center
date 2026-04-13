@@ -897,8 +897,7 @@ function closeColorPop() { if (_colorPopEl) { _colorPopEl.remove(); _colorPopEl 
 function showColorPop(x, y, currentColor, onPick) {
     closeColorPop();
     const pop = document.createElement('div');
-    pop.className = 'sc-color-pop';
-    pop.innerHTML = '<div class="sc-color-pop-title">Farba markera</div>';
+    pop.className = 'sc-color-pop sc-color-pop-compact';
     const swatches = document.createElement('div');
     swatches.className = 'sc-color-swatches';
     MARKER_PALETTE.forEach(function(c) {
@@ -906,32 +905,38 @@ function showColorPop(x, y, currentColor, onPick) {
         sw.className = 'sc-color-swatch' + (c === currentColor ? ' is-active' : '');
         sw.style.background = c;
         sw.title = c;
+        sw.setAttribute('aria-label', c);
         sw.addEventListener('mousedown', function(e) {
             e.stopPropagation();
             closeColorPop();
-            onPick(c);
+            if (typeof onPick === 'function') onPick(c);
         });
         swatches.appendChild(sw);
     });
     pop.appendChild(swatches);
-    const reset = document.createElement('div');
-    reset.className = 'sc-color-reset';
-    reset.textContent = 'Obnoviť predvolenú';
-    reset.addEventListener('mousedown', function(e) { e.stopPropagation(); closeColorPop(); onPick(null); });
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'sc-color-reset-icon';
+    reset.title = 'Obnovi? predvolen? farbu';
+    reset.setAttribute('aria-label', 'Obnovi? predvolen? farbu');
+    reset.textContent = '?';
+    reset.addEventListener('mousedown', function(e) { e.stopPropagation(); closeColorPop(); if (typeof onPick === 'function') onPick(null); });
     pop.appendChild(reset);
     document.body.appendChild(pop);
     _colorPopEl = pop;
     const vw = window.innerWidth, vh = window.innerHeight;
     const pw = pop.offsetWidth || 180, ph = pop.offsetHeight || 120;
-    pop.style.left = Math.min(x, vw - pw - 8) + 'px';
-    pop.style.top  = Math.min(y, vh - ph - 8) + 'px';
+    const left = Math.max(8, Math.min(Number(x || 0), vw - pw - 8));
+    const top = Math.max(8, Math.min(Number(y || 0), vh - ph - 8));
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
     function onDocClick(e) {
         if (!pop.contains(e.target)) { closeColorPop(); document.removeEventListener('mousedown', onDocClick); }
     }
     setTimeout(function() { document.addEventListener('mousedown', onDocClick); }, 50);
 }
 
-// Normal popup: status + name + EUI + [Detail →] [⋯]
+// Normal popup: status + name + EUI + [Detail ???] [???]
 function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
     const brandBg  = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
     const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';

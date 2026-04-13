@@ -472,6 +472,7 @@
     box-shadow: 0 8px 28px rgba(15,23,42,.18); padding: .56rem .64rem;
     display: flex; flex-direction: column; gap: .36rem;
 }
+.sc-color-pop-compact { padding: .45rem .5rem; gap: .42rem; }
 .sc-color-pop-title { font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #7a8fa8; padding: 0 .06rem .18rem; }
 .sc-color-swatches { display: grid; grid-template-columns: repeat(5,1.5rem); gap: .3rem; }
 .sc-color-swatch {
@@ -482,6 +483,20 @@
 .sc-color-swatch.is-active { border-color: #1e293b; }
 .sc-color-reset { font-size: .68rem; font-weight: 700; color: #7a8fa8; cursor: pointer; padding: .16rem .06rem 0; text-align: center; }
 .sc-color-reset:hover { color: #dc2626; }
+.sc-color-reset-icon {
+    align-self: flex-end;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid #d6dfec;
+    border-radius: .36rem;
+    background: #f4f7fb;
+    color: #425466;
+    font-size: .76rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+.sc-color-reset-icon:hover { background: #ecf3fb; color: #1e293b; }
 /* â”€â”€ Leaflet popup override â”€â”€ */
 .sc-leaflet-popup .leaflet-popup-content-wrapper {
     border-radius: .88rem !important;
@@ -2304,8 +2319,57 @@ let _colorPopEl = null;
 function closeColorPop() { if (_colorPopEl) { _colorPopEl.remove(); _colorPopEl = null; } }
 
 function showColorPop(x, y, currentColor, onPick) {
-    closeCtx();
-    openNativeMarkerColorPicker(currentColor, onPick);
+    closeColorPop();
+    const pop = document.createElement('div');
+    pop.className = 'sc-color-pop sc-color-pop-compact';
+
+    const swatches = document.createElement('div');
+    swatches.className = 'sc-color-swatches';
+    MARKER_PALETTE.forEach(function(c) {
+        const sw = document.createElement('div');
+        sw.className = 'sc-color-swatch' + (c === currentColor ? ' is-active' : '');
+        sw.style.background = c;
+        sw.title = c;
+        sw.setAttribute('aria-label', c);
+        sw.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+            closeColorPop();
+            if (typeof onPick === 'function') onPick(c);
+        });
+        swatches.appendChild(sw);
+    });
+    pop.appendChild(swatches);
+
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'sc-color-reset-icon';
+    reset.title = 'Obnoviť predvolenú farbu';
+    reset.setAttribute('aria-label', 'Obnoviť predvolenú farbu');
+    reset.textContent = '↺';
+    reset.addEventListener('mousedown', function(e) {
+        e.stopPropagation();
+        closeColorPop();
+        if (typeof onPick === 'function') onPick(null);
+    });
+    pop.appendChild(reset);
+
+    document.body.appendChild(pop);
+    _colorPopEl = pop;
+
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const pw = pop.offsetWidth || 180, ph = pop.offsetHeight || 120;
+    const left = Math.max(8, Math.min(Number(x || 0), vw - pw - 8));
+    const top = Math.max(8, Math.min(Number(y || 0), vh - ph - 8));
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+
+    function onDocClick(e) {
+        if (!pop.contains(e.target)) {
+            closeColorPop();
+            document.removeEventListener('mousedown', onDocClick);
+        }
+    }
+    setTimeout(function() { document.addEventListener('mousedown', onDocClick); }, 50);
 }
 
 function persistSensorMarkerColor(sensorEui, color) {
@@ -2326,46 +2390,7 @@ function persistSensorMarkerColor(sensorEui, color) {
     });
 }
 
-function openNativeMarkerColorPicker(currentColor, onPick) {
-    const input = document.createElement('input');
-    input.type = 'color';
-    input.value = /^#[0-9a-fA-F]{6}$/.test(String(currentColor || '').trim()) ? String(currentColor).trim() : '#1ca8c9';
-    input.style.position = 'fixed';
-    input.style.left = '12px';
-    input.style.top = '12px';
-    input.style.width = '2px';
-    input.style.height = '2px';
-    input.style.opacity = '0.01';
-    input.style.zIndex = '2147483647';
-    input.style.pointerEvents = 'none';
-    input.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(input);
-
-    const cleanup = () => {
-        input.removeEventListener('change', onChange);
-        input.removeEventListener('input', onChange);
-        input.remove();
-    };
-    const onChange = () => {
-        const next = String(input.value || '').trim();
-        cleanup();
-        if (typeof onPick === 'function') onPick(next || null);
-    };
-
-    input.addEventListener('change', onChange);
-    input.addEventListener('input', onChange);
-    try {
-        if (typeof input.showPicker === 'function') {
-            input.showPicker();
-        } else {
-            input.click();
-        }
-    } catch (err) {
-        input.click();
-    }
-}
-
-// Normal popup: status + name + EUI + [Detail â†’] [â‹Ż]
+// Normal popup: status + name + EUI + [Detail ?] [?]
 function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
     const brandBg  = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
     const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
@@ -3506,7 +3531,7 @@ function closeMiniColorPop() {
 function showMiniColorPop(x, y, currentColor, onPick) {
     closeMiniCtx();
     closeMiniColorPop();
-    openNativeMarkerColorPicker(currentColor, onPick);
+    showColorPop(x, y, currentColor, onPick);
 }
 
 function showMiniCtx(eventLike, items) {
@@ -4804,7 +4829,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                     label: appTranslate('dashboard.change_marker_color', 'Zmeniť farbu'),
                     action: () => {
                         const currentColor = marker.__miniNode ? marker.__miniNode.marker_color : '';
-                        showMiniColorPop(clientX, clientY, currentColor || null, (color) => {
+                        showColorPop(clientX, clientY, currentColor || null, (color) => {
                                 persistSensorMarkerColor(markerEui, color).then((result) => {
                                     if (!(result.ok && result.data && result.data.success)) {
                                         showMiniMapToast(
