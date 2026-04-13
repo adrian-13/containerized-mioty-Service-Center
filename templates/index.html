@@ -2276,7 +2276,7 @@ function makeMarkerIcon(color, unlocked, kind = 'sensor') {
     const isBaseStation = kind === 'base_station';
     const label = isBaseStation ? 'BS' : 'S';
     const baseClass = isBaseStation ? 'is-base-station' : 'is-sensor';
-    const fill = `radial-gradient(circle at 32% 30%, rgba(255,255,255,.45) 0 18%, ${c} 19% 100%)`;
+    const fill = c;
     return L.divIcon({
         html: '<div class="sc-map-pin ' + baseClass + '" style="background:' + fill + ';' + border + '"><span class="sc-map-pin-label">' + label + '</span></div>',
         className: 'sc-map-marker',
@@ -3776,7 +3776,7 @@ function makeMiniMarkerIcon(color, unlocked, kind = 'sensor') {
     const isBaseStation = kind === 'base_station';
     const label = isBaseStation ? 'BS' : 'S';
     const baseClass = isBaseStation ? 'is-base-station' : 'is-sensor';
-    const fill = `radial-gradient(circle at 32% 32%, rgba(255,255,255,.95) 0 18%, ${c} 19% 100%)`;
+    const fill = c;
     return L.divIcon({
         html: '<div class="sc-map-pin ' + baseClass + '" style="background:' + fill + ';border:2.5px solid ' + borderColor + ';"><span class="sc-map-pin-label">' + label + '</span></div>',
         className: 'sc-map-marker',
