@@ -276,6 +276,9 @@ class CriticalFlowsE2ETest(unittest.TestCase):
             ],
         )
 
+        # Non-demo user (admin) must never see demo-tenant sensors, regardless
+        # of any URL flag — demo data is now bound exclusively to the dedicated
+        # demo account.
         with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
             session["username"] = "admin"
             session["role"] = "admin"
@@ -287,12 +290,23 @@ class CriticalFlowsE2ETest(unittest.TestCase):
             session["username"] = "admin"
             session["role"] = "admin"
             session["tenant_id"] = ""
+            still_hidden_payload = web_ui._build_customer_dashboard_runtime_payload()
+            still_hidden_nodes = still_hidden_payload["topologyData"]["nodes"]
+
+        # The dedicated demo account is the only context in which demo
+        # inventory becomes visible.
+        with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
+            session["username"] = "test"
+            session["role"] = "viewer"
+            session["tenant_id"] = "test"
             visible_payload = web_ui._build_customer_dashboard_runtime_payload()
             visible_nodes = visible_payload["topologyData"]["nodes"]
 
         hidden_sensor_euis = {node.get("eui") for node in hidden_nodes if node.get("type") == "sensor"}
+        still_hidden_sensor_euis = {node.get("eui") for node in still_hidden_nodes if node.get("type") == "sensor"}
         visible_sensor_euis = {node.get("eui") for node in visible_nodes if node.get("type") == "sensor"}
         self.assertNotIn("00124B001CBCE199", hidden_sensor_euis)
+        self.assertNotIn("00124B001CBCE199", still_hidden_sensor_euis)
         self.assertIn("00124B001CBCE199", visible_sensor_euis)
 
     def test_payload_decoders_route_is_separate_from_administration(self):

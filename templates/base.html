@@ -2474,19 +2474,7 @@
                         </select>
                         <p class="display-setting-note">{{ t('display.theme_note', 'Applies a light color palette variant across the interface.') }}</p>
                     </section>
-                    {% if current_user and current_user.role == 'admin' %}
-                    <section class="display-setting-card">
-                        <div class="d-flex align-items-center justify-content-between gap-3">
-                            <div>
-                                <p class="display-setting-title">{{ t('admin.show_demo_data', 'Zobraziť demo dáta') }}</p>
-                                <p class="display-setting-note">{{ t('admin.show_demo_data_note', 'Zapne alebo skryje demo tenant v administrátorských prehľadoch zariadení, staníc a upozornení.') }}</p>
-                            </div>
-                            <div class="form-check form-switch m-0">
-                                <input class="form-check-input" type="checkbox" id="display-admin-demo-toggle" role="switch" aria-label="{{ t('admin.show_demo_data', 'Zobraziť demo dáta') }}">
-                            </div>
-                        </div>
-                    </section>
-                    {% endif %}
+                    {# Admin demo-data toggle removed: demo dataset is now bound exclusively to the dedicated demo account. #}
                     {% if is_customer_user %}
                     <section class="display-setting-card">
                         <div class="viewer-guide-entry">
@@ -3346,59 +3334,14 @@
 
         const IS_ADMIN_PORTAL = {{ 'true' if current_user and current_user.role == 'admin' else 'false' }};
         const SERVER_UI_PREFERENCES = {{ (((current_user.ui_preferences if current_user else {}) or {}))|tojson|safe }};
-        let adminDemoDataPref = Boolean(SERVER_UI_PREFERENCES.admin_include_demo_data);
         let viewerOnboardingSeen = Boolean(SERVER_UI_PREFERENCES.viewer_onboarding_seen);
 
-        function readAdminDemoDataPref() {
-            return IS_ADMIN_PORTAL ? adminDemoDataPref : false;
-        }
-
-        async function persistAdminDemoDataPref(nextValue) {
-            if (!IS_ADMIN_PORTAL) return nextValue;
-            const response = await fetch('/api/me/preferences', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ui_preferences: {
-                        admin_include_demo_data: Boolean(nextValue)
-                    }
-                })
-            });
-            const payload = await response.json().catch(() => ({}));
-            if (!response.ok || payload.success === false) {
-                throw new Error(payload.message || payload.error || `Request failed (${response.status})`);
-            }
-            adminDemoDataPref = Boolean((payload.ui_preferences || {}).admin_include_demo_data);
-            return adminDemoDataPref;
-        }
-
-        function writeAdminDemoDataPref(enabled, options = {}) {
-            const nextValue = Boolean(enabled);
-            if (!IS_ADMIN_PORTAL) return nextValue;
-            adminDemoDataPref = nextValue;
-            if (options.persist !== false) {
-                persistAdminDemoDataPref(nextValue).then((resolvedValue) => {
-                    if (options.reloadOnPersist) {
-                        window.location.reload();
-                        return;
-                    }
-                    if (options.emit !== false) {
-                        document.dispatchEvent(new CustomEvent('app:admin-demo-data-changed', { detail: { enabled: resolvedValue } }));
-                    }
-                }).catch((error) => {
-                    console.error('Failed to persist admin demo data preference', error);
-                });
-                return nextValue;
-            }
-            if (options.emit !== false) {
-                document.dispatchEvent(new CustomEvent('app:admin-demo-data-changed', { detail: { enabled: nextValue } }));
-            }
-            return nextValue;
-        }
-
+        // Demo data is now bound to the dedicated demo account server-side;
+        // this stub keeps legacy callers compiling but always reports "off"
+        // and performs no server-side persistence.
         window.AdminDemoDataPrefs = {
-            get: readAdminDemoDataPref,
-            set: writeAdminDemoDataPref
+            get: function () { return false; },
+            set: function (_enabled, _options) { return false; }
         };
 
         function readViewerOnboardingSeenPref() {
@@ -3505,12 +3448,10 @@
             const zoomValue = document.getElementById('display-zoom-value');
             const densitySelect = document.getElementById('display-density-select');
             const themeSelect = document.getElementById('display-theme-select');
-            const adminDemoToggle = document.getElementById('display-admin-demo-toggle');
             if (zoomRange) zoomRange.value = String(displayPrefs.scale);
             if (zoomValue) zoomValue.textContent = `${displayPrefs.scale}%`;
             if (densitySelect) densitySelect.value = displayPrefs.density;
             if (themeSelect) themeSelect.value = displayPrefs.theme;
-            if (adminDemoToggle) adminDemoToggle.checked = readAdminDemoDataPref();
         }
 
         function applyColorTheme() {
@@ -3542,7 +3483,6 @@
             const densitySelect = document.getElementById('display-density-select');
             const themeSelect = document.getElementById('display-theme-select');
             const resetBtn = document.getElementById('display-settings-reset');
-            const adminDemoToggle = document.getElementById('display-admin-demo-toggle');
 
             if (zoomRange) {
                 zoomRange.addEventListener('input', (event) => {
@@ -3575,17 +3515,8 @@
                     displayPrefs.scale = DISPLAY_DEFAULTS.scale;
                     displayPrefs.density = DISPLAY_DEFAULTS.density;
                     displayPrefs.theme = DISPLAY_DEFAULTS.theme;
-                    if (adminDemoToggle) {
-                        writeAdminDemoDataPref(false);
-                    }
                     applyDisplayPrefs();
                     saveDisplayPrefs(displayPrefs);
-                });
-            }
-
-            if (adminDemoToggle) {
-                adminDemoToggle.addEventListener('change', (event) => {
-                    writeAdminDemoDataPref(Boolean(event.target.checked), { emit: false, reloadOnPersist: true });
                 });
             }
 

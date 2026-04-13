@@ -141,6 +141,8 @@ AUTH_BOOTSTRAP_DEMO_USERS = os.getenv(
     "AUTH_BOOTSTRAP_DEMO_USERS",
     "true",
 ).strip().lower() == "true"
+DEMO_USERNAME = os.getenv("MIOTY_DEMO_USERNAME", "test").strip()
+DEMO_TENANT_ID = os.getenv("MIOTY_DEMO_TENANT_ID", "test").strip()
 AUTH_FORCE_INITIAL_ADMIN_PASSWORD_CHANGE = os.getenv(
     "AUTH_FORCE_INITIAL_ADMIN_PASSWORD_CHANGE",
     "true",

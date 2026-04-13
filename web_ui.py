@@ -3249,6 +3249,7 @@ def _normalize_tenant_registry_entry(entry, fallback_tenant_id=None):
 
 
 def _demo_tenant_ids() -> set[str]:
+    configured_demo_tenant = _demo_tenant_id_value()
     try:
         registry_map = _tenant_registry_map()
         demo_ids = {
@@ -3268,28 +3269,49 @@ def _demo_tenant_ids() -> set[str]:
             tenant_id = _tenant_id_from_base_station(base_station)
             if _normalize_demo_tenant_flag((registry_map.get(tenant_id) or {}).get("is_demo"), tenant_id):
                 demo_ids.add(tenant_id)
+        if configured_demo_tenant:
+            demo_ids.add(configured_demo_tenant)
         return demo_ids
-    except Exception:
-        return {"test"}
+    except Exception as exc:
+        logger.warning("Failed to compute demo tenant ids: %s", exc)
+        return {configured_demo_tenant} if configured_demo_tenant else set()
 
 
 def _is_demo_tenant_id(tenant_id) -> bool:
     return _normalize_tenant_id(tenant_id, fallback=_default_tenant_id()) in _demo_tenant_ids()
 
 
-def _include_demo_data_requested() -> bool:
-    if _is_customer_role(session.get("role", "viewer")):
-        return True
-    # Skontrolujeme URL parameter
-    if str(request.args.get("include_demo", "") or "").strip().lower() in {"1", "true", "yes", "on"}:
-        return True
-    # Skontrolujeme uložené preferencie v profile používateľa
-    user = get_current_user()
-    return bool(user and user.get("ui_preferences", {}).get("admin_include_demo_data"))
+def _demo_username() -> str:
+    value = getattr(bssci_config, "DEMO_USERNAME", "test")
+    return str(value or "").strip()
 
 
-def _exclude_demo_sensors_for_admin(sensors):
-    if _is_customer_role(session.get("role", "viewer")) or _include_demo_data_requested():
+def _demo_tenant_id_value() -> str:
+    value = getattr(bssci_config, "DEMO_TENANT_ID", "test")
+    return str(value or "").strip() or "test"
+
+
+def _is_demo_user(user=None) -> bool:
+    """Return True only for the dedicated demo account.
+
+    Demo telemetry, demo tenant inventory and demo alert rules are visible
+    exclusively to this single account. Everyone else (admin, user, viewer,
+    customer, ...) works with real data only.
+    """
+    demo_name = _demo_username()
+    if not demo_name:
+        return False
+    if isinstance(user, dict):
+        username = str(user.get("username") or "").strip()
+    elif has_request_context():
+        username = str(session.get("username") or "").strip()
+    else:
+        return False
+    return username == demo_name
+
+
+def _exclude_demo_sensors_for_non_demo_user(sensors):
+    if _is_demo_user():
         return list(sensors or [])
     demo_ids = _demo_tenant_ids()
     return [
@@ -3299,8 +3321,8 @@ def _exclude_demo_sensors_for_admin(sensors):
     ]
 
 
-def _exclude_demo_base_stations_for_admin(base_stations):
-    if _is_customer_role(session.get("role", "viewer")) or _include_demo_data_requested():
+def _exclude_demo_base_stations_for_non_demo_user(base_stations):
+    if _is_demo_user():
         return dict(base_stations or {})
     demo_ids = _demo_tenant_ids()
     return {
@@ -3313,59 +3335,17 @@ def _exclude_demo_base_stations_for_admin(base_stations):
 def _filter_sensors_for_active_scope(sensors, tenant_id=None):
     active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     scoped = _filter_sensors_for_tenant(sensors, tenant_id=active_tenant)
-    if _is_customer_role(session.get("role", "viewer")):
+    if _is_demo_user():
         return scoped
-
-    scoped = _exclude_demo_sensors_for_admin(scoped)
-    if not _include_demo_data_requested():
-        return scoped
-
-    if _is_global_tenant_scope(active_tenant):
-        return _filter_sensors_for_tenant(sensors, tenant_id=active_tenant)
-
-    demo_ids = _demo_tenant_ids()
-    seen = {str((sensor or {}).get("eui", "")).strip().upper() for sensor in scoped if isinstance(sensor, dict)}
-    merged = list(scoped)
-    for sensor in (sensors or []):
-        if not isinstance(sensor, dict):
-            continue
-        sensor_tenant = _tenant_id_from_sensor(sensor)
-        if sensor_tenant not in demo_ids:
-            continue
-        eui = str(sensor.get("eui", "")).strip().upper()
-        if not eui or eui in seen:
-            continue
-        payload = dict(sensor)
-        payload["tenant_id"] = sensor_tenant
-        merged.append(payload)
-        seen.add(eui)
-    return merged
+    return _exclude_demo_sensors_for_non_demo_user(scoped)
 
 
 def _filter_base_stations_for_active_scope(base_stations, tenant_id=None):
     active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     scoped = _filter_base_stations_for_tenant(base_stations, tenant_id=active_tenant)
-    if _is_customer_role(session.get("role", "viewer")):
+    if _is_demo_user():
         return scoped
-
-    scoped = _exclude_demo_base_stations_for_admin(scoped)
-    if not _include_demo_data_requested():
-        return scoped
-
-    if _is_global_tenant_scope(active_tenant):
-        return _filter_base_stations_for_tenant(base_stations, tenant_id=active_tenant)
-
-    demo_ids = _demo_tenant_ids()
-    merged = dict(scoped or {})
-    for eui, bs_data in (base_stations or {}).items():
-        if not isinstance(bs_data, dict):
-            continue
-        bs_tenant = _tenant_id_from_base_station(bs_data)
-        if bs_tenant not in demo_ids:
-            continue
-        merged[eui] = dict(bs_data)
-        merged[eui]["tenant_id"] = bs_tenant
-    return merged
+    return _exclude_demo_base_stations_for_non_demo_user(scoped)
 
 def _is_super_admin(user=None):
     if isinstance(user, dict):
@@ -3406,6 +3386,22 @@ def _resolve_read_tenant_id(requested_tenant=None, *, fallback=None):
     return _normalize_tenant_id(default_fallback, fallback=_default_tenant_id())
 
 def _resolve_write_tenant_id(requested_tenant=None, *, existing_tenant=None):
+    # Demo user is hard-pinned to the demo tenant: they cannot create or
+    # mutate records under any real tenant, regardless of what the payload
+    # contains.
+    if has_request_context() and _is_demo_user():
+        return _normalize_tenant_id(_demo_tenant_id_value(), fallback=_default_tenant_id())
+
+    # Non-demo users must never be able to write into the demo tenant by
+    # supplying its id in the request body. Drop such hints silently and
+    # fall through to the normal resolution path so the write lands in the
+    # user's own scope.
+    if has_request_context() and not _is_demo_user():
+        if str(requested_tenant or "").strip() and _is_demo_tenant_id(requested_tenant):
+            requested_tenant = None
+        if str(existing_tenant or "").strip() and _is_demo_tenant_id(existing_tenant):
+            existing_tenant = None
+
     # Customer-scoped writes are always pinned to the active tenant from session.
     if has_request_context():
         current_role = _normalize_user_role(session.get("role", "viewer"))
@@ -3436,11 +3432,20 @@ def _active_tenant_id():
     if not has_request_context():
         return fallback
 
+    # Demo user is hard-pinned to the demo tenant. They cannot pick another
+    # tenant via X-Tenant-Id header nor through any other override.
+    if _is_demo_user():
+        return _normalize_tenant_id(_demo_tenant_id_value(), fallback=fallback)
+
     role = _normalize_user_role(session.get("role", "viewer"))
     session_tenant = _normalize_user_tenant_for_role(role, session.get("tenant_id"), fallback=fallback)
     requested_tenant = request.headers.get("X-Tenant-Id")
     if requested_tenant and role == "admin":
-        return _normalize_tenant_id(requested_tenant, fallback=fallback)
+        resolved = _normalize_tenant_id(requested_tenant, fallback=fallback)
+        # Admin may not impersonate the demo tenant through the header.
+        if _is_demo_tenant_id(resolved):
+            return ""
+        return resolved
     if role == "admin" and _is_global_tenant_scope(session_tenant):
         return ""
     return _normalize_tenant_id(session_tenant, fallback=fallback)
@@ -4298,6 +4303,11 @@ def _has_viewer_demo_inventory() -> bool:
 
 
 def _ensure_viewer_demo_telemetry_seeded() -> bool:
+    # Demo telemetry is exclusively for the dedicated demo account. Running
+    # the seed for non-demo users would (a) pollute Timescale on cold start
+    # and (b) add latency to every admin request via before_request.
+    if not _is_demo_user():
+        return False
     if not _timescale_telemetry_enabled():
         return False
     if not _has_viewer_demo_inventory():
@@ -6201,10 +6211,8 @@ def _dashboard_scope_cache_key(tenant_id: Optional[str]) -> str:
 
 def _customer_dashboard_cache_key(tenant_id: str) -> str:
     tenant_key = _dashboard_scope_cache_key(tenant_id)
-    version = "v2"
-    if _is_customer_role(session.get("role", "viewer")):
-        return f"{tenant_key}:{version}"
-    return f"{tenant_key}:demo:{1 if _include_demo_data_requested() else 0}:{version}"
+    version = "v3"
+    return f"{tenant_key}:demo:{1 if _is_demo_user() else 0}:{version}"
 
 def _get_cached_customer_dashboard_payload(tenant_id: str):
     tenant_key = _customer_dashboard_cache_key(tenant_id)
@@ -7406,7 +7414,7 @@ def _build_visible_sensor_lookup(active_tenant: str) -> Dict[str, Dict[str, Any]
         sensors = _load_all_sensors()
     except Exception:
         sensors = []
-    sensors = _exclude_demo_sensors_for_admin(sensors)
+    sensors = _exclude_demo_sensors_for_non_demo_user(sensors)
     for sensor in sensors or []:
         if not isinstance(sensor, dict):
             continue
@@ -11055,9 +11063,6 @@ def ensure_json_api():
     # Keep static and login assets outside auth timeout updates.
     is_static_like = endpoint == "static" or path.startswith("/static/")
 
-    if not is_static_like:
-        _ensure_viewer_demo_telemetry_seeded()
-
     # Session timeout enforcement.
     if not is_static_like and path not in ("/login",):
         if 'username' in session:
@@ -11089,6 +11094,8 @@ def ensure_json_api():
             return redirect(url_for('login', reason='inactive'))
         if user and is_api and _is_customer_role(user.get('role', 'viewer')) and _is_customer_blocked_api_path(path):
             return jsonify({'error': 'Internal portal only'}), 403
+        if user and _is_demo_user(user):
+            _ensure_viewer_demo_telemetry_seeded()
 
     if not is_static_like and 'username' in session:
         setup_path = '/auth/setup-admin-password'
@@ -11218,7 +11225,6 @@ def _normalize_admin_audit_entry(entry):
 
 def _default_user_ui_preferences():
     return {
-        "admin_include_demo_data": False,
         "viewer_onboarding_seen": False,
     }
 
@@ -11228,8 +11234,6 @@ def _normalize_user_ui_preferences(raw_preferences):
     if not isinstance(raw_preferences, dict):
         return dict(defaults)
     normalized = dict(defaults)
-    if "admin_include_demo_data" in raw_preferences:
-        normalized["admin_include_demo_data"] = bool(raw_preferences.get("admin_include_demo_data"))
     if "viewer_onboarding_seen" in raw_preferences:
         normalized["viewer_onboarding_seen"] = bool(raw_preferences.get("viewer_onboarding_seen"))
     return normalized
@@ -11239,8 +11243,6 @@ def _merge_user_ui_preferences(existing_preferences, incoming_preferences):
     merged = _normalize_user_ui_preferences(existing_preferences)
     if not isinstance(incoming_preferences, dict):
         return merged
-    if "admin_include_demo_data" in incoming_preferences:
-        merged["admin_include_demo_data"] = bool(incoming_preferences.get("admin_include_demo_data"))
     if "viewer_onboarding_seen" in incoming_preferences:
         merged["viewer_onboarding_seen"] = bool(incoming_preferences.get("viewer_onboarding_seen"))
     return merged
@@ -15072,15 +15074,12 @@ def api_incidents():
     """Return current operational incidents from sensor state and alert rules."""
     try:
         active_tenant = _active_tenant_id()
-        current_role = _normalize_user_role(session.get('role', 'viewer'))
-        cache_key = active_tenant
-        if not _is_customer_role(current_role):
-            cache_key = f"{active_tenant}:demo:{1 if _include_demo_data_requested() else 0}"
+        cache_key = f"{active_tenant}:demo:{1 if _is_demo_user() else 0}"
         cached_payload = _get_cached_incident_feed_payload(cache_key)
         if cached_payload:
             return jsonify(cached_payload)
         incidents = _build_current_incidents(active_tenant)
-        if not _is_customer_role(current_role) and not _include_demo_data_requested():
+        if not _is_demo_user():
             incidents = [
                 item for item in incidents
                 if not _is_demo_tenant_id(item.get('tenant_id') or item.get('active_tenant'))
@@ -15114,8 +15113,8 @@ def api_alerts_history():
         search_filter = str(request.args.get('q') or '').strip().lower()
 
         # Build sensor name lookup
-        filter_demo_events = not _is_customer_role(session.get('role', 'viewer')) and not _include_demo_data_requested()
-        sensors = _exclude_demo_sensors_for_admin(_filter_sensors_for_tenant(_load_all_sensors(), active_tenant))
+        filter_demo_events = not _is_demo_user()
+        sensors = _exclude_demo_sensors_for_non_demo_user(_filter_sensors_for_tenant(_load_all_sensors(), active_tenant))
         visible_sensor_euis = {str(s.get('eui', '')).upper() for s in sensors}
         sensor_names = {str(s.get('eui', '')).upper(): s.get('name') or str(s.get('eui', '')) for s in sensors}
 
@@ -17651,7 +17650,7 @@ def _build_base_stations_runtime_payload() -> Dict[str, Any]:
     config = load_base_station_config()
     active_tenant = _active_tenant_id()
     bs_config = _filter_base_stations_for_tenant(config.get("base_stations", {}), tenant_id=active_tenant)
-    bs_config = _exclude_demo_base_stations_for_admin(bs_config)
+    bs_config = _exclude_demo_base_stations_for_non_demo_user(bs_config)
 
     connected_bs = {}
     connecting_bs = {}
@@ -17925,7 +17924,7 @@ def get_bs_certificates_status():
     try:
         config = load_base_station_config()
         bs_config = _filter_base_stations_for_tenant(config.get("base_stations", {}), tenant_id=_active_tenant_id())
-        bs_config = _exclude_demo_base_stations_for_admin(bs_config)
+        bs_config = _exclude_demo_base_stations_for_non_demo_user(bs_config)
         result = []
         for eui_key, bs_data in bs_config.items():
             eui_lower = eui_key.lower()
@@ -17973,7 +17972,7 @@ def get_bs_uptime():
             load_base_station_config().get("base_stations", {}),
             tenant_id=active_tenant,
         )
-        base_station_map = _exclude_demo_base_stations_for_admin(base_station_map)
+        base_station_map = _exclude_demo_base_stations_for_non_demo_user(base_station_map)
         allowed_bs = {
             str(eui).strip().upper()
             for eui in base_station_map.keys()
@@ -19449,7 +19448,7 @@ def get_bssci_service_status():
             connected_stations = []
             connecting_stations = []
             active_tenant = _active_tenant_id()
-            allowed_bs_config = _exclude_demo_base_stations_for_admin(
+            allowed_bs_config = _exclude_demo_base_stations_for_non_demo_user(
                 _filter_base_stations_for_tenant(
                     load_base_station_config().get("base_stations", {}),
                     tenant_id=active_tenant,
@@ -19500,7 +19499,7 @@ def get_bssci_service_status():
         registered_sensors = 0
         try:
             # Count sensors from configured inventory instead of runtime status to avoid asyncio issues
-            sensors = _exclude_demo_sensors_for_admin(
+            sensors = _exclude_demo_sensors_for_non_demo_user(
                 _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=_active_tenant_id())
             )
             total_sensors = len(sensors)

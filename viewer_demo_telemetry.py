@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Iterable, List
 
 
-TENANT_ID = "test"
+TENANT_ID = (os.getenv("MIOTY_DEMO_TENANT_ID", "test").strip() or "test")
 TENANT_NAME = "Testovaci tenant"
 
 

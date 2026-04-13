@@ -28,7 +28,7 @@
     },
     "test": {
       "password": "test",
-      "role": "customer",
+      "role": "viewer",
       "name": "test",
       "tenant_id": "test",
       "active": true
