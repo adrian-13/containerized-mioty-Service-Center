@@ -2316,9 +2316,14 @@ function showColorPop(x, y, currentColor, onPick) {
         sw.style.background = c;
         sw.title = c;
         sw.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        sw.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
             closeColorPop();
-            onPick(c);
+            if (typeof onPick === 'function') onPick(c);
         });
         swatches.appendChild(sw);
     });
@@ -2326,7 +2331,16 @@ function showColorPop(x, y, currentColor, onPick) {
     const reset = document.createElement('div');
     reset.className = 'sc-color-reset';
     reset.textContent = 'Obnoviť predvolenú';
-    reset.addEventListener('mousedown', function(e) { e.stopPropagation(); closeColorPop(); onPick(null); });
+    reset.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    reset.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeColorPop();
+        if (typeof onPick === 'function') onPick(null);
+    });
     pop.appendChild(reset);
     document.body.appendChild(pop);
     _colorPopEl = pop;
@@ -2338,6 +2352,24 @@ function showColorPop(x, y, currentColor, onPick) {
         if (!pop.contains(e.target)) { closeColorPop(); document.removeEventListener('mousedown', onDocClick); }
     }
     setTimeout(function() { document.addEventListener('mousedown', onDocClick); }, 50);
+}
+
+function persistSensorMarkerColor(sensorEui, color) {
+    return fetch('/api/sensors/' + encodeURIComponent(sensorEui) + '/marker-color', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ color: color || '' })
+    })
+    .then(function(response) {
+        return response.json().then(function(data) {
+            return { ok: response.ok, data: data };
+        }).catch(function() {
+            return { ok: response.ok, data: null };
+        });
+    })
+    .catch(function() {
+        return { ok: false, data: { message: 'Chyba siete.' } };
+    });
 }
 
 // Normal popup: status + name + EUI + [Detail →] [⋯]
@@ -2452,18 +2484,13 @@ function updateMap(sensors) {
                     action: function() {
                         setTimeout(function() {
                             showColorPop(cx, cy, s.marker_color || null, function(color) {
-                                fetch('/api/sensors/' + encodeURIComponent(id) + '/marker-color', {
-                                    method: 'POST', headers: {'Content-Type':'application/json'},
-                                    body: JSON.stringify({color: color || ''})
-                                })
-                                .then(function(r) { return r.json(); })
-                                .then(function(d) {
-                                    if (d.success) {
+                                persistSensorMarkerColor(id, color).then(function(result) {
+                                    if (result.ok && result.data && result.data.success) {
                                         if (color) s.marker_color = color; else delete s.marker_color;
                                         marker.setIcon(makeMarkerIcon(color || statusColor, !!_markerUnlocked[id], 'sensor'));
                                         showMapToast(color ? '\u2713 Farba zmenená' : '\u2713 Farba obnovená', 2000);
                                     } else {
-                                        showMapToast('\u2717 ' + (d.message || 'Chyba'), 2200);
+                                        showMapToast('\u2717 ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba')), 2200);
                                     }
                                 });
                             });
@@ -2508,7 +2535,6 @@ function updateMap(sensors) {
                 saveBtn.addEventListener('click', function() {
                     const pending = _pendingLatLng[id];
                     if (!pending) return;
-                    setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
                     marker.openPopup();
                     fetch('/api/sensors/' + encodeURIComponent(id) + '/gps', {
                         method: 'POST',
@@ -2544,7 +2570,6 @@ function updateMap(sensors) {
                     const pending = _pendingLatLng[id];
                     if (pending) marker.setLatLng([pending._origLat, pending._origLng]);
                     delete _pendingLatLng[id];
-                    setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
                     marker.openPopup();
                     lockMarker();
                     showMapToast('Presunutie zrušené', 1800);
@@ -3506,6 +3531,10 @@ function showMiniColorPop(x, y, currentColor, onPick) {
         swatch.addEventListener('mousedown', (event) => {
             event.preventDefault();
             event.stopPropagation();
+        });
+        swatch.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
             closeMiniColorPop();
             if (typeof onPick === 'function') onPick(color);
         });
@@ -3517,6 +3546,10 @@ function showMiniColorPop(x, y, currentColor, onPick) {
     reset.className = 'sc-color-reset';
     reset.textContent = appTranslate('dashboard.marker_color_reset', 'Obnoviť predvolenú');
     reset.addEventListener('mousedown', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    });
+    reset.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
         closeMiniColorPop();
@@ -4834,20 +4867,19 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                         const currentColor = marker.__miniNode ? marker.__miniNode.marker_color : '';
                         window.setTimeout(() => {
                             showMiniColorPop(clientX, clientY, currentColor || null, (color) => {
-                                fetch('/api/sensors/' + encodeURIComponent(markerEui) + '/marker-color', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ color: color || '' })
-                                })
-                                    .then((response) => response.json().then((data) => ({ ok: response.ok, data })).catch(() => ({ ok: response.ok, data: null })))
-                                    .catch(() => ({ ok: false, data: { error: appTranslate('runtime.network_error', 'Chyba siete.') } }))
-                                    .then((result) => {
-                                        if (result.ok && result.data && result.data.success) {
+                                persistSensorMarkerColor(markerEui, color).then((result) => {
+                                    if (result.ok && result.data && result.data.success) {
                                             if (marker.__miniNode) {
                                                 marker.__miniNode.marker_color = color ? String(color) : '';
                                             }
                                             updateMiniSensorMarkerColor(markerEui, color);
                                             refreshMarkerVisual(!!miniMarkerUnlocked[markerKey]);
+                                            updateMiniCoverageMap(
+                                                latestTopologyData || {},
+                                                latestCoverageState || {},
+                                                latestSensorInventoryData || {},
+                                                latestBaseStationInventoryData || {}
+                                            );
                                             setDashboardMiniInteractionState({});
                                             showMiniMapToast(
                                                 color
