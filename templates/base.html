@@ -2406,11 +2406,6 @@
                         <i class="fas fa-circle-question"></i>
                     </button>
                     {% endif %}
-                    {% if not is_customer_user %}
-                    <button class="topbar-tool" type="button" id="advancedModeBtn" onclick="toggleAdvancedMode()" title="{{ t('display.advanced_mode', 'Pokročilý režim') }}" aria-label="{{ t('display.advanced_mode', 'Pokročilý režim') }}">
-                        <i class="fas fa-flask"></i>
-                    </button>
-                    {% endif %}
                     <button class="topbar-tool" type="button" id="displaySettingsBtn" data-bs-toggle="modal" data-bs-target="#displaySettingsModal" title="{{ t('display.settings', 'Display Settings') }}" aria-label="{{ t('display.settings', 'Display Settings') }}">
                         <i class="fas fa-sliders-h"></i>
                     </button>
@@ -3601,42 +3596,15 @@
             });
         }
 
-        const APP_USER_ROLE = {{ (current_user_role_slug)|tojson if current_user else '"guest"' }};
         const APP_IS_CUSTOMER = {{ 'true' if is_customer_user else 'false' }};
         const APP_ENDPOINT = {{ endpoint|tojson }};
-        const ADVANCED_MODE_KEY = 'service-center.advanced-mode.v1';
         const VIEWER_GUIDE_KEY = 'service-center.viewer-guide.v1';
         const VIEWER_GUIDE_VERSION = '2026-03';
         const SIDEBAR_COLLAPSE_KEY = 'service-center.sidebar-collapsed.v1';
 
-        function _updateAdvancedModeBtn(isAdvanced) {
-            const btn = document.getElementById('advancedModeBtn');
-            if (!btn) return;
-            const labelOn  = appTranslate('display.simple_mode', 'Jednoduchý režim');
-            const labelOff = appTranslate('display.advanced_mode', 'Pokročilý režim');
-            btn.title = isAdvanced ? labelOn : labelOff;
-            btn.setAttribute('aria-label', btn.title);
-            btn.classList.toggle('is-active', isAdvanced);
-        }
-
         function initAdvancedMode() {
-            const defaultAdvanced = !APP_IS_CUSTOMER;
-            let isAdvanced = defaultAdvanced;
-            try {
-                const stored = localStorage.getItem(ADVANCED_MODE_KEY + '.' + APP_USER_ROLE);
-                if (stored !== null) isAdvanced = stored === 'true';
-            } catch (e) {}
+            const isAdvanced = !APP_IS_CUSTOMER;
             document.body.classList.toggle('mode-advanced', isAdvanced);
-            _updateAdvancedModeBtn(isAdvanced);
-        }
-
-        function toggleAdvancedMode() {
-            const isAdvanced = !document.body.classList.contains('mode-advanced');
-            document.body.classList.toggle('mode-advanced', isAdvanced);
-            try {
-                localStorage.setItem(ADVANCED_MODE_KEY + '.' + APP_USER_ROLE, String(isAdvanced));
-            } catch (e) {}
-            _updateAdvancedModeBtn(isAdvanced);
         }
 
         function loadViewerGuidePrefs() {
