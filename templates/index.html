@@ -4115,6 +4115,11 @@ function renderDashboardCacheIndicator() {
 }
 
 function initMiniNetwork() {
+    if (typeof cytoscape === 'undefined') {
+        console.warn('Cytoscape is unavailable; dashboard graph view will stay disabled.');
+        return;
+    }
+
     cyMini = cytoscape({
         container: document.getElementById('cy-mini'),
         style: [
@@ -5723,11 +5728,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initDashboardRailResizers();
     const dashboardGrid = getDashboardGrid();
     if (dashboardGrid) requestAnimationFrame(() => dashboardGrid.classList.add('layout-ready'));
-    if (window.AppPerf && typeof window.AppPerf.observeLazy === 'function') {
-        window.AppPerf.observeLazy('#topology-panel', ensureMiniRuntimeInitialized, { rootMargin: '220px' });
-    } else {
-        ensureMiniRuntimeInitialized();
-    }
+    ensureMiniRuntimeInitialized();
     setDashboardSkeletonState(true, { soft: true });
     refreshNow(false);
     scheduleAutoRefresh();
