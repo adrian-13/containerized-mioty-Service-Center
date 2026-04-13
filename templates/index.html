@@ -3860,6 +3860,20 @@ function ensureMiniRuntimeInitialized() {
 
     setMiniTopologyView('map');
     refreshMiniViewportAfterLayoutChange();
+
+    if (latestStatusData) updateStatusCards(latestStatusData);
+    if (latestTopologyData || latestCoverageState || latestSensorInventoryData || latestBaseStationInventoryData) {
+        if (miniTopologyView === 'graph') {
+            updateTopologyPanel(latestTopologyData || {});
+        } else {
+            updateMiniCoverageMap(
+                latestTopologyData || {},
+                latestCoverageState || {},
+                latestSensorInventoryData || {},
+                latestBaseStationInventoryData || {}
+            );
+        }
+    }
 }
 
 function initDashboardContextMenus() {
