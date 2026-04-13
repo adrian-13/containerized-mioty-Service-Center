@@ -4882,6 +4882,12 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                         }
                                         updateMiniSensorMarkerColor(markerEui, color);
                                         refreshMarkerVisual(!!miniMarkerUnlocked[markerKey]);
+                                        updateMiniCoverageMap(
+                                            latestTopologyData || {},
+                                            latestCoverageState || {},
+                                            latestSensorInventoryData || {},
+                                            latestBaseStationInventoryData || {}
+                                        );
                                         setDashboardMiniInteractionState({});
                                         showMiniMapToast(
                                             color
