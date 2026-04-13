@@ -3819,7 +3819,7 @@ function makeMiniMarkerIcon(color, unlocked, kind = 'sensor') {
     });
 }
 
-function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
+function buildMiniMarkerPopupHtml_legacy(name, shortEui, href, popupId) {
     const brandBg = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
     const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
     return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
@@ -3833,7 +3833,7 @@ function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
         + '</div>';
 }
 
-function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
+function buildMiniMarkerUnlockedPopupHtml_legacy(name, shortEui, popupId, hasMoved) {
     const hintText = hasMoved ? '✓ Premiestnený — uložiť?' : '↕ Presuňte marker na novú polohu';
     const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
     return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
@@ -4868,32 +4868,37 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                         window.setTimeout(() => {
                             showMiniColorPop(clientX, clientY, currentColor || null, (color) => {
                                 persistSensorMarkerColor(markerEui, color).then((result) => {
-                                    if (result.ok && result.data && result.data.success) {
-                                            if (marker.__miniNode) {
-                                                marker.__miniNode.marker_color = color ? String(color) : '';
-                                            }
-                                            updateMiniSensorMarkerColor(markerEui, color);
-                                            refreshMarkerVisual(!!miniMarkerUnlocked[markerKey]);
-                                            updateMiniCoverageMap(
-                                                latestTopologyData || {},
-                                                latestCoverageState || {},
-                                                latestSensorInventoryData || {},
-                                                latestBaseStationInventoryData || {}
-                                            );
-                                            setDashboardMiniInteractionState({});
-                                            showMiniMapToast(
-                                                color
-                                                    ? appTranslate('dashboard.marker_color_saved', 'Farba markera uložená')
-                                                    : appTranslate('dashboard.marker_color_reset_done', 'Predvolená farba obnovená'),
-                                                2200
-                                            );
-                                        } else {
-                                            showMiniMapToast(
-                                                '✕ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uložiť farbu'))),
-                                                2600
-                                            );
+                                    if (!(result.ok && result.data && result.data.success)) {
+                                        showMiniMapToast(
+                                            '✕ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uložiť farbu'))),
+                                            2600
+                                        );
+                                        return;
+                                    }
+
+                                    const finish = () => {
+                                        if (marker.__miniNode) {
+                                            marker.__miniNode.marker_color = color ? String(color) : '';
                                         }
-                                    });
+                                        updateMiniSensorMarkerColor(markerEui, color);
+                                        refreshMarkerVisual(!!miniMarkerUnlocked[markerKey]);
+                                        setDashboardMiniInteractionState({});
+                                        showMiniMapToast(
+                                            color
+                                                ? appTranslate('dashboard.marker_color_saved', 'Farba markera uložená')
+                                                : appTranslate('dashboard.marker_color_reset_done', 'Predvolená farba obnovená'),
+                                            2200
+                                        );
+                                    };
+
+                                    fetchJson(withAdminDemoQuery('/api/sensors?refresh=1'))
+                                        .then((freshSensors) => {
+                                            if (freshSensors) {
+                                                latestSensorInventoryData = freshSensors;
+                                            }
+                                        })
+                                        .finally(finish);
+                                });
                             });
                         }, 80);
                     }
