@@ -380,6 +380,9 @@
     width: 20px !important;
     height: 20px !important;
     overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
 }
 .sc-map-pin {
     display: block;
@@ -389,6 +392,8 @@
     transition: transform .15s, box-shadow .15s;
     cursor: grab;
     overflow: visible;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.92), 0 4px 12px rgba(15,23,42,.34);
 }
 .sc-map-pin:active { cursor: grabbing; }
 .sc-map-pin.is-highlighted { transform: scale(1.35); box-shadow: 0 3px 12px rgba(0,0,0,.38); z-index: 1000; }
@@ -3704,9 +3709,10 @@ function shortId(value, size = 8) {
 
 function makeMiniMarkerIcon(color, unlocked) {
     const c = String(color || '#1ca8c9').trim() || '#1ca8c9';
-    const border = unlocked ? 'border:2.5px solid #eb7e17;' : 'border:2.5px solid rgba(255,255,255,.92);';
+    const borderColor = unlocked ? '#eb7e17' : 'rgba(255,255,255,.92)';
+    const fill = `radial-gradient(circle at 32% 32%, rgba(255,255,255,.95) 0 18%, ${c} 19% 100%)`;
     return L.divIcon({
-        html: '<div class="sc-map-pin" style="background:' + c + ';' + border + '"></div>',
+        html: '<div class="sc-map-pin" style="background:' + fill + ';border:2.5px solid ' + borderColor + ';"></div>',
         className: 'sc-map-marker',
         iconSize: [20, 20],
         iconAnchor: [10, 10],
@@ -4624,7 +4630,9 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
             icon: makeMiniMarkerIcon(markerStyle.fillColor, unlocked),
             draggable: unlocked,
             autoPan: true,
-            bubblingMouseEvents: false
+            bubblingMouseEvents: false,
+            riseOnHover: true,
+            zIndexOffset: isBs ? 1300 : 1200
         });
         marker.__miniBaseStyle = { ...markerStyle };
         marker.__miniKey = markerKey;
