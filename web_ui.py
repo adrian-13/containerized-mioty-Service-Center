@@ -3313,15 +3313,15 @@ def _exclude_demo_base_stations_for_admin(base_stations):
 def _filter_sensors_for_active_scope(sensors, tenant_id=None):
     active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     scoped = _filter_sensors_for_tenant(sensors, tenant_id=active_tenant)
-    # Global admin scope (no tenant restriction) must see ALL sensors regardless of
-    # whether their tenant is flagged as demo.  Demo exclusion only applies when the
-    # admin is already scoped to a specific tenant, so "test"-tenant sensors remain
-    # visible on the network map and dashboard map for a super-admin.
-    if _is_global_tenant_scope(active_tenant):
+    if _is_customer_role(session.get("role", "viewer")):
         return scoped
+
     scoped = _exclude_demo_sensors_for_admin(scoped)
-    if _is_customer_role(session.get("role", "viewer")) or not _include_demo_data_requested():
+    if not _include_demo_data_requested():
         return scoped
+
+    if _is_global_tenant_scope(active_tenant):
+        return _filter_sensors_for_tenant(sensors, tenant_id=active_tenant)
 
     demo_ids = _demo_tenant_ids()
     seen = {str((sensor or {}).get("eui", "")).strip().upper() for sensor in scoped if isinstance(sensor, dict)}
@@ -3345,13 +3345,15 @@ def _filter_sensors_for_active_scope(sensors, tenant_id=None):
 def _filter_base_stations_for_active_scope(base_stations, tenant_id=None):
     active_tenant = _active_tenant_id() if tenant_id is None else tenant_id
     scoped = _filter_base_stations_for_tenant(base_stations, tenant_id=active_tenant)
-    # Global admin scope must see ALL base stations regardless of demo flag,
-    # consistent with the sensor filter behaviour above.
-    if _is_global_tenant_scope(active_tenant):
+    if _is_customer_role(session.get("role", "viewer")):
         return scoped
+
     scoped = _exclude_demo_base_stations_for_admin(scoped)
-    if _is_customer_role(session.get("role", "viewer")) or not _include_demo_data_requested():
+    if not _include_demo_data_requested():
         return scoped
+
+    if _is_global_tenant_scope(active_tenant):
+        return _filter_base_stations_for_tenant(base_stations, tenant_id=active_tenant)
 
     demo_ids = _demo_tenant_ids()
     merged = dict(scoped or {})
@@ -17389,22 +17391,11 @@ def _build_coverage_positions_read_payload() -> Dict[str, Any]:
     """Build tenant-filtered coverage positions payload for map-based customer views."""
     positions_file = _coverage_positions_file()
     active_tenant = _active_tenant_id()
-    # For global admin scope (active_tenant == ""), use the raw tenant filter without
-    # demo-exclusion so that sensors in any tenant (including auto-demo tenants like
-    # "test") are visible on the admin dashboard map.  Customer roles keep strict
-    # per-tenant filtering via _filter_sensors_for_active_scope.
-    if _is_global_tenant_scope(active_tenant):
-        tenant_sensors = _filter_sensors_for_tenant(_load_all_sensors(), tenant_id=active_tenant)
-        tenant_base_stations = _filter_base_stations_for_tenant(
-            load_base_station_config().get("base_stations", {}),
-            tenant_id=active_tenant,
-        )
-    else:
-        tenant_sensors = _filter_sensors_for_active_scope(_load_all_sensors(), tenant_id=active_tenant)
-        tenant_base_stations = _filter_base_stations_for_active_scope(
-            load_base_station_config().get("base_stations", {}),
-            tenant_id=active_tenant,
-        )
+    tenant_sensors = _filter_sensors_for_active_scope(_load_all_sensors(), tenant_id=active_tenant)
+    tenant_base_stations = _filter_base_stations_for_active_scope(
+        load_base_station_config().get("base_stations", {}),
+        tenant_id=active_tenant,
+    )
     tenant_sensor_keys = {
         f"sensor_{str(sensor.get('eui', '')).strip().upper()}"
         for sensor in tenant_sensors
