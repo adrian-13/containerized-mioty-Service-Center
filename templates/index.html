@@ -2253,8 +2253,8 @@ function initMap() {
         L.DomEvent.stopPropagation(e.originalEvent);
         if (placementMode) {
             showCtx(e.originalEvent, [
-                { icon: 'fa-location-dot', primary: true, label: dashboardTr('dashboard.place_sensor_here', 'Umiestni? senzor sem'), action: function() { savePlacementFromMap(placementMode.id, e.latlng.lat, e.latlng.lng); } },
-                { icon: 'fa-xmark', label: dashboardTr('common.cancel', 'Zru?i?'), action: function() { cancelPlacement(true); } },
+                { icon: 'fa-location-dot', primary: true, label: dashboardTr('dashboard.place_sensor_here', 'Umiestniť senzor sem'), action: function() { savePlacementFromMap(placementMode.id, e.latlng.lat, e.latlng.lng); } },
+                { icon: 'fa-xmark', label: dashboardTr('common.cancel', 'Zrušiť'), action: function() { cancelPlacement(true); } },
             ]);
             return;
         }
@@ -2673,7 +2673,7 @@ function renderList(sensors) {
         const hasMetrics = chips.length > 0;
         const needsPlacement = !hasSensorGeo(s);
         const placeBtn = needsPlacement
-            ? '<button type="button" class="mview-row-action" onclick="event.stopPropagation();startPlacement(\'' + esc(id) + '\')"><i class="fas fa-location-dot"></i><span>' + esc(dashboardTr('dashboard.place_on_map', 'Umiestni? na mapu')) + '</span></button>'
+            ? '<button type="button" class="mview-row-action" onclick="event.stopPropagation();startPlacement(\'' + esc(id) + '\')"><i class="fas fa-location-dot"></i><span>' + esc(dashboardTr('dashboard.place_on_map', 'Umiestniť na mapu')) + '</span></button>'
             : '';
         return '<div class="mview-sensor-row' + (hasMetrics ? ' has-metrics' : '') + '" data-sensor-id="' + esc(id) + '" onclick="handleSensorRowClick(\'' + esc(id) + '\')">' +
             '<span class="mview-dot ' + tier + '"></span>' +
@@ -3074,8 +3074,8 @@ function initContextMenus() {
                 const eui = row.dataset.sensorId || '';
                 const sensor = getSensorById(eui);
                 const placementLabel = sensor && hasSensorGeo(sensor)
-                    ? dashboardTr('dashboard.reposition_on_map', 'Upravi? polohu na mape')
-                    : dashboardTr('dashboard.place_on_map', 'Umiestni? na mapu');
+                    ? dashboardTr('dashboard.reposition_on_map', 'Upraviť polohu na mape')
+                    : dashboardTr('dashboard.place_on_map', 'Umiestniť na mapu');
                 showCtx(e, [
                     { icon: 'fa-location-dot', label: placementLabel, action: function() { startPlacement(eui); } },
                     { icon: 'fa-arrow-up-right-from-square', label: 'Otvori? detail', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
@@ -3916,7 +3916,7 @@ function initDashboardContextMenus() {
                 {
                     icon: 'fa-arrow-up-right-from-square',
                     primary: true,
-                    label: appTranslate('dashboard.open_sensor_detail', 'Otvori? detail senzora'),
+                    label: appTranslate('dashboard.open_sensor_detail', 'Otvoriť detail senzora'),
                     action: () => {
                         window.location.href = '/sensors/' + encodeURIComponent(sensorId);
                     }
@@ -4763,8 +4763,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
         };
         const markerContextItems = (clientX, clientY) => {
             const detailLabel = isBs
-                ? appTranslate('dashboard.open_base_station_detail', 'Otvori? detail stanice')
-                : appTranslate('dashboard.open_sensor_detail', 'Otvori? detail senzora');
+                ? appTranslate('dashboard.open_base_station_detail', 'Otvoriť detail stanice')
+                : appTranslate('dashboard.open_sensor_detail', 'Otvoriť detail senzora');
             const isDragOn = !!miniMarkerUnlocked[markerKey];
             const items = [
                 {
@@ -4778,8 +4778,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                 {
                     icon: isDragOn ? 'fa-lock' : 'fa-lock-open',
                     label: isDragOn
-                        ? appTranslate('dashboard.lock_marker_position', 'Zamkn?? polohu')
-                        : appTranslate('dashboard.unlock_marker_move', 'Odomkn?? pres?vanie'),
+                        ? appTranslate('dashboard.lock_marker_position', 'Zamknúť polohu')
+                        : appTranslate('dashboard.unlock_marker_move', 'Odomknúť presúvaňie'),
                     action: () => {
                         if (miniMarkerUnlocked[markerKey]) {
                             delete miniPendingLatLng[markerKey];
@@ -4793,7 +4793,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
             if (!isBs) {
                 items.splice(1, 0, {
                     icon: 'fa-palette',
-                    label: appTranslate('dashboard.change_marker_color', 'Zmeni? farbu'),
+                    label: appTranslate('dashboard.change_marker_color', 'Zmeniť farbu'),
                     action: () => {
                         const currentColor = marker.__miniNode ? marker.__miniNode.marker_color : '';
                         window.setTimeout(() => {
@@ -4801,7 +4801,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                 persistSensorMarkerColor(markerEui, color).then((result) => {
                                     if (!(result.ok && result.data && result.data.success)) {
                                         showMiniMapToast(
-                                            'âś• ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa ulo?i? farbu'))),
+                                            'âś• ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uložiť farbu'))),
                                             2600
                                         );
                                         return;
@@ -4822,8 +4822,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                         setDashboardMiniInteractionState({});
                                         showMiniMapToast(
                                             color
-                                                ? appTranslate('dashboard.marker_color_saved', 'Farba markera ulo?en?')
-                                                : appTranslate('dashboard.marker_color_reset_done', 'Predvolen? farba obnoven?'),
+                                                ? appTranslate('dashboard.marker_color_saved', 'Farba markera uložená')
+                                                : appTranslate('dashboard.marker_color_reset_done', 'Predvolená farba obnovená'),
                                             2200
                                         );
                                     };
