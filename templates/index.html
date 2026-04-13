@@ -2346,8 +2346,12 @@ function showColorPop(x, y, currentColor, onPick) {
     _colorPopEl = pop;
     const vw = window.innerWidth, vh = window.innerHeight;
     const pw = pop.offsetWidth || 180, ph = pop.offsetHeight || 120;
-    pop.style.left = Math.min(x, vw - pw - 8) + 'px';
-    pop.style.top  = Math.min(y, vh - ph - 8) + 'px';
+    const nextLeft = Math.max(8, Math.min(Number(x || 0), vw - pw - 8));
+    const nextTop = (Number(y || 0) + ph + 8 > vh)
+        ? Math.max(8, Number(y || 0) - ph - 8)
+        : Math.max(8, Number(y || 0));
+    pop.style.left = nextLeft + 'px';
+    pop.style.top = nextTop + 'px';
     function onDocClick(e) {
         if (!pop.contains(e.target)) { closeColorPop(); document.removeEventListener('mousedown', onDocClick); }
     }
@@ -3564,10 +3568,16 @@ function showMiniColorPop(x, y, currentColor, onPick) {
     document.body.appendChild(pop);
     miniColorPopEl = pop;
 
-    const maxX = window.innerWidth - pop.offsetWidth - 8;
-    const maxY = window.innerHeight - pop.offsetHeight - 8;
-    pop.style.left = Math.max(8, Math.min(Number(x || 0), maxX)) + 'px';
-    pop.style.top = Math.max(8, Math.min(Number(y || 0), maxY)) + 'px';
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const pw = pop.offsetWidth || 180;
+    const ph = pop.offsetHeight || 120;
+    const nextLeft = Math.max(8, Math.min(Number(x || 0), vw - pw - 8));
+    const nextTop = (Number(y || 0) + ph + 8 > vh)
+        ? Math.max(8, Number(y || 0) - ph - 8)
+        : Math.max(8, Number(y || 0));
+    pop.style.left = nextLeft + 'px';
+    pop.style.top = nextTop + 'px';
 }
 
 function showMiniCtx(eventLike, items) {
