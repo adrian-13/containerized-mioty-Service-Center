@@ -16997,7 +16997,7 @@ def network():
 @login_required
 @internal_portal_required
 def coverage():
-    return redirect(url_for('network'))
+    return redirect(url_for('index'))
 
 def _normalize_eui_upper(value: Any) -> str:
     return str(value or "").strip().upper()

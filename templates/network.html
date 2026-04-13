@@ -1333,62 +1333,20 @@ body.map-fullscreen-active {
 <div id="mapFullscreenBackdrop" onclick="closeActiveFullscreen()"></div>
 
 <div class="network-mode-bar">
-    <div class="network-mode-buttons" role="tablist" aria-label="{{ t('network.workspace_mode', 'Workspace mode') }}">
-        <button class="network-mode-btn is-active" id="workspaceModeCoverage" type="button" onclick="setWorkspaceMode('coverage')">
-            <i class="fas fa-map-marked-alt me-1"></i>{{ t('network.coverage_mode', 'Coverage Mode') }}
-        </button>
-        <button class="network-mode-btn" id="workspaceModeTopology" type="button" onclick="setWorkspaceMode('topology')">
+    <div class="network-mode-buttons" aria-label="{{ t('network.topology_mode', 'Topology Mode') }}">
+        <span class="network-mode-btn is-active" id="workspaceModeTopology">
             <i class="fas fa-project-diagram me-1"></i>{{ t('network.topology_mode', 'Topology Mode') }}
-        </button>
+        </span>
     </div>
     <div class="network-mode-right">
-        <span class="network-mode-meta" id="networkModeHint">{{ t('network.coverage_mode_hint', 'Coverage mode: map + floorplan positioning.') }}</span>
-        <button class="btn btn-outline-secondary btn-sm mode-hidden" id="focusTopologyBtn" onclick="focusTopologyView()"><i class="fas fa-crosshairs"></i> {{ t('common.focus', 'Focus') }}</button>
+        <span class="network-mode-meta" id="networkModeHint">{{ t('network.topology_mode_hint', 'Topology mode: routing graph and link health.') }}</span>
+        <button class="btn btn-outline-secondary btn-sm" id="focusTopologyBtn" onclick="focusTopologyView()"><i class="fas fa-crosshairs"></i> {{ t('common.focus', 'Focus') }}</button>
         <button class="btn btn-primary btn-sm" onclick="refreshNetworkWorkspace()"><i class="fas fa-sync"></i> {{ t('common.refresh', 'Refresh') }}</button>
     </div>
 </div>
 
 <div class="network-control-grid">
-    <div class="network-control-card network-control-card--compact" data-mode="coverage">
-        <div class="network-control-head">
-            <p class="network-control-title"><i class="fas fa-map-marked-alt me-2"></i>{{ t('network.coverage_controls', 'Coverage Controls') }}</p>
-            <span class="network-control-meta">{{ t('common.updated', 'Updated') }} <span id="coverageRefreshStamp">{{ t('common.never', 'never') }}</span></span>
-            <span class="network-control-cache" id="coverageCacheAge">{{ t('common.cache', 'Cache') }} -</span>
-        </div>
-        <div class="network-control-body">
-            <div class="network-control-toolbar">
-                <div class="network-button-row">
-                    <button class="btn btn-primary btn-sm" onclick="refreshNetworkWorkspace()"><i class="fas fa-sync me-1"></i>{{ t('network.refresh_data', 'Refresh Data') }}</button>
-                </div>
-                <div class="network-inline-controls network-inline-controls--chips">
-                    <span class="network-badge-chip"><i class="fas fa-broadcast-tower"></i><span id="coverageBsChip">0 BS</span></span>
-                    <span class="network-badge-chip"><i class="fas fa-microchip"></i><span id="coverageSensorChip">0 Sensors</span></span>
-                    <span class="network-badge-chip"><i class="fas fa-map-pin"></i><span id="coveragePositionChip">0 positioned</span></span>
-                </div>
-            </div>
-            <div class="network-inline-controls network-inline-controls--dense">
-                <div class="form-check m-0">
-                    <input class="form-check-input" type="checkbox" id="showBaseStations" checked>
-                    <label class="form-check-label small" for="showBaseStations">{{ t('network.show_base_stations', 'Show base stations') }}</label>
-                </div>
-                <div class="form-check m-0">
-                    <input class="form-check-input" type="checkbox" id="showSensors" checked>
-                    <label class="form-check-label small" for="showSensors">{{ t('network.show_sensors', 'Show sensors') }}</label>
-                </div>
-                <div class="form-check m-0">
-                    <input class="form-check-input" type="checkbox" id="showHeatmap">
-                    <label class="form-check-label small" for="showHeatmap">{{ t('network.heatmap', 'Heatmap') }}</label>
-                </div>
-                <label class="form-label mb-0 small text-muted">{{ t('network.signal_metric', 'Signal metric') }}</label>
-                <select class="form-select form-select-sm" id="metricSelect">
-                    <option value="snr" selected>{{ t('network.metric_snr', 'SNR (dB)') }}</option>
-                    <option value="rssi">{{ t('network.metric_rssi', 'RSSI (dBm)') }}</option>
-                </select>
-                <span class="network-control-note"><i class="fas fa-location-arrow me-1"></i>{{ t('network.gps_changes_sync', 'GPS changes sync automatically.') }}</span>
-            </div>
-        </div>
-    </div>
-    <div class="network-control-card mode-hidden" data-mode="topology">
+    <div class="network-control-card">
         <div class="network-control-head">
             <p class="network-control-title"><i class="fas fa-project-diagram me-2"></i>{{ t('network.topology_controls', 'Topology Controls') }}</p>
             <span class="network-control-meta">{{ t('common.updated', 'Updated') }} <span id="topologyRefreshStamp">{{ t('common.never', 'never') }}</span></span>
@@ -1465,214 +1423,7 @@ body.map-fullscreen-active {
     </div>
 </div>
 
-<div class="network-section workspace-panel" id="coverageWorkspace" data-mode="coverage">
-    <div class="network-section-head workspace-panel-head">
-        <h5><i class="fas fa-map-marked-alt me-2"></i>{{ t('network.coverage_map_workspace', 'Coverage Map Workspace') }}</h5>
-    </div>
-    <div class="network-section-body workspace-panel-body">
-        <ul class="nav nav-pills workspace-tabs" id="mapTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="osm-tab" data-bs-toggle="tab" data-bs-target="#osm-pane" type="button" role="tab">{{ t('network.openstreetmap', 'OpenStreetMap') }}</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="floorplan-tab" data-bs-toggle="tab" data-bs-target="#floorplan-pane" type="button" role="tab">{{ t('network.floor_plan', 'Floor Plan') }}</button>
-            </li>
-            <li class="nav-item ms-auto" role="presentation">
-                <button class="btn btn-success btn-sm tab-save-btn" type="button" onclick="saveCoveragePositions()">
-                    <i class="fas fa-save me-1"></i>{{ t('network.save_positions', 'Save positions') }}
-                </button>
-            </li>
-        </ul>
-
-        <div class="network-side-panel coverage-legend-inline" id="coverageLegendPanel">
-            <div class="network-side-head with-action">
-                <span>{{ t('common.legend', 'Legend') }}</span>
-                <button type="button" class="network-side-toggle" id="coverageLegendToggle" onclick="toggleLegendPanel('coverageLegendPanel', 'coverageLegendToggle', 'network_coverage_legend_collapsed')">
-                    <i class="fas fa-eye-slash me-1"></i>{{ t('common.hide', 'Hide') }}
-                </button>
-            </div>
-            <div class="network-side-body">
-                <div class="legend-row"><span class="legend-chip-circle" style="width: 20px; height: 20px; background: #ff8c00;"></span><span>{{ t('common.base_station', 'Base Station') }}</span></div>
-                <div class="legend-row"><span class="legend-chip-circle" style="width: 13px; height: 13px; background: #17a2b8;"></span><span>{{ t('common.sensor', 'Sensor') }}</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #00ff00;"></span><span>{{ t('common.excellent', 'Excellent') }} (&gt;10 dB)</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #7fff00;"></span><span>{{ t('common.good', 'Good') }} (5-10 dB)</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ffff00;"></span><span>{{ t('common.fair', 'Fair') }} (0-5 dB)</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff7f00;"></span><span>{{ t('common.poor', 'Poor') }} (-5-0 dB)</span></div>
-                <div class="legend-row"><span style="width: 20px; height: 10px; background: #ff0000;"></span><span>{{ t('common.critical', 'Critical') }} (&lt;-5 dB)</span></div>
-            </div>
-        </div>
-
-        <div class="network-grid coverage-main-grid">
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="osm-pane" role="tabpanel">
-                    <div class="map-canvas" id="osmMapCanvas">
-                        <div class="map-canvas-tools">
-                            <button class="btn btn-light btn-sm" id="osmWheelToggleBtn" type="button" onclick="toggleOsmWheelZoom()">
-                                <i class="fas fa-mouse-pointer me-1"></i>{{ t('network.wheel_zoom_off', 'Wheel zoom off') }}
-                            </button>
-                            <button class="btn btn-light btn-sm" id="osmFullscreenBtn" type="button" onclick="toggleMapFullscreen('osmMapCanvas', 'osmFullscreenBtn')">
-                                <i class="fas fa-expand me-1"></i>{{ t('common.full_screen', 'Full screen') }}
-                            </button>
-                        </div>
-                        <div id="osmMap"></div>
-                    </div>
-                </div>
-                <div class="tab-pane fade" id="floorplan-pane" role="tabpanel">
-                    <div class="network-side-panel mb-2">
-                        <div class="network-side-body d-flex flex-wrap align-items-center justify-content-between gap-2">
-                            <input type="file" id="floorplanUpload" accept="image/*" class="form-control form-control-sm" style="max-width: 260px;">
-                            <div class="btn-group btn-group-sm" id="zoomControls" style="display: none;">
-                                <button class="btn btn-outline-secondary" onclick="zoomFloorplan(-0.25)" title="{{ t('network.zoom_out', 'Zoom Out') }}">-</button>
-                                <button class="btn btn-outline-secondary" id="zoomLevel">100%</button>
-                                <button class="btn btn-outline-secondary" onclick="zoomFloorplan(0.25)" title="{{ t('network.zoom_in', 'Zoom In') }}">+</button>
-                                <button class="btn btn-outline-secondary ms-2" onclick="fitFloorplan()" title="{{ t('network.fit_to_view', 'Fit to View') }}">{{ t('common.fit', 'Fit') }}</button>
-                                <button class="btn btn-outline-secondary" onclick="resetZoom()" title="{{ t('network.reset_to_100', 'Reset to 100%') }}">1:1</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="map-canvas" id="floorplanMapCanvas">
-                        <div class="map-canvas-tools">
-                            <button class="btn btn-light btn-sm" id="floorplanFullscreenBtn" type="button" onclick="toggleMapFullscreen('floorplanMapCanvas', 'floorplanFullscreenBtn')">
-                                <i class="fas fa-expand me-1"></i>{{ t('common.full_screen', 'Full screen') }}
-                            </button>
-                        </div>
-                        <div id="floorplanContainer">
-                            <div id="floorplanPlaceholder" class="text-muted"><i>{{ t('network.upload_floor_plan_start', 'Upload a floor plan image to get started') }}</i></div>
-                            <canvas id="floorplanCanvas" style="display: none; cursor: crosshair;"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="coverage-side-stack">
-                <div class="network-side-panel coverage-selected-panel">
-                    <div class="network-side-head with-action">
-                        <span>{{ t('network.selected_device', 'Selected Device') }}</span>
-                        <button class="network-side-toggle" type="button" id="focusSelectedCoverageDevice">
-                            <i class="fas fa-location-arrow me-1"></i>{{ t('common.focus', 'Focus') }}
-                        </button>
-                    </div>
-                    <div class="network-side-body">
-                        <div class="selected-device-card">
-                            <div class="selected-device-main" id="selectedCoverageDevice">{{ t('network.no_device_selected', 'No device selected') }}</div>
-                            <div class="selected-device-sub" id="selectedCoverageDeviceHint">{{ t('network.select_device_drag_marker', 'Select device, then drag marker on map to update GPS.') }}</div>
-                        </div>
-                        <div class="device-detail-grid">
-                            <div class="device-detail-row"><span>{{ t('common.status', 'Status') }}</span><strong id="selectedDeviceStatus">-</strong></div>
-                            <div class="device-detail-row"><span>{{ t('common.tenant', 'Tenant') }}</span><strong id="selectedDeviceTenant">-</strong></div>
-                            <div class="device-detail-row"><span>{{ t('common.last_seen', 'Last seen') }}</span><strong id="selectedDeviceLastSeen">-</strong></div>
-                            <div class="device-detail-row"><span>{{ t('network.primary_path', 'Primary path') }}</span><strong id="selectedDevicePrimaryPath">-</strong></div>
-                            <div class="device-detail-row"><span>{{ t('network.coverage_links', 'Coverage links') }}</span><strong id="selectedDeviceCoverage">-</strong></div>
-                            <div class="device-detail-row"><span>{{ t('network.best_signal', 'Best signal') }}</span><strong id="selectedDeviceSignal">-</strong></div>
-                            <div class="device-detail-row"><span>{{ t('network.position_source', 'Position source') }}</span><strong id="selectedDevicePositionSource">-</strong></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="network-side-panel coverage-gps-panel">
-                    <div class="network-side-head">{{ t('network.gps_editor', 'GPS Editor') }}</div>
-                    <div class="network-side-body">
-                        <div class="coverage-editor">
-                            <div class="network-gps-grid">
-                                <input type="text" class="form-control form-control-sm" id="gpsLatInput" placeholder="{{ t('common.latitude', 'Latitude') }}" readonly>
-                                <input type="text" class="form-control form-control-sm" id="gpsLngInput" placeholder="{{ t('common.longitude', 'Longitude') }}" readonly>
-                            </div>
-                            <div class="network-button-row placement-button-row">
-                                <button class="btn btn-outline-secondary btn-sm" type="button" id="clearSelectedCoverageDevice">
-                                    <i class="fas fa-times-circle me-1"></i>{{ t('common.clear', 'Clear') }}
-                                </button>
-                            </div>
-                            <p class="placement-inline-note"><i class="fas fa-info-circle me-1"></i>{{ t('network.gps_sync_on_move', 'GPS updates are synchronized automatically when marker is moved.') }}</p>
-
-                            <div class="placement-lock-card">
-                                <div>
-                                    <div class="placement-lock-title" id="coverageLockStatus">{{ t('network.unlocked', 'Unlocked') }}</div>
-                                    <div class="placement-lock-note" id="coverageLockHint">{{ t('network.marker_dragging_enabled', 'Marker dragging and map placement are enabled.') }}</div>
-                                </div>
-                                <div class="form-check form-switch m-0">
-                                    <input class="form-check-input" type="checkbox" id="lockCoveragePositions">
-                                    <label class="form-check-label small fw-semibold" for="lockCoveragePositions">{{ t('network.lock_positions', 'Lock positions') }}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-none">
-                            <strong id="cov_bsCount">0</strong>
-                            <strong id="cov_sensorCount">0</strong>
-                            <strong id="positionedCount">0</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="network-side-panel coverage-device-explorer-panel">
-            <div class="network-side-head">{{ t('network.device_explorer', 'Device Explorer') }}</div>
-            <div class="network-side-body">
-                <div class="coverage-filter-grid coverage-filter-grid-compact">
-                    <input type="search" class="form-control form-control-sm" id="deviceSearchInput" placeholder="{{ t('common.search_by_eui_name', 'Search by EUI or name') }}">
-                    <select class="form-select form-select-sm" id="deviceStatusFilter">
-                        <option value="all" selected>{{ t('common.all_statuses', 'All statuses') }}</option>
-                        <option value="online">{{ t('common.online', 'Online') }}</option>
-                        <option value="warning">{{ t('common.warning', 'Warning') }}</option>
-                        <option value="offline">{{ t('common.offline', 'Offline') }}</option>
-                        <option value="no-data">{{ t('common.no_data', 'No data') }}</option>
-                    </select>
-                    <button class="btn btn-outline-secondary btn-sm" type="button" id="clearDeviceFilters">
-                        <i class="fas fa-eraser me-1"></i>{{ t('common.clear', 'Clear') }}
-                    </button>
-                </div>
-                <div class="coverage-filter-meta">
-                    <div class="device-view-tabs" role="tablist" aria-label="Device type view">
-                        <button type="button" class="device-view-btn is-active" id="deviceViewBsBtn" onclick="setDeviceListMode('bs')">
-                            <i class="fas fa-broadcast-tower"></i>
-                            <span>{{ t('common.base_stations', 'Base Stations') }}</span>
-                            <span class="device-view-count" id="deviceViewBsCount">0</span>
-                        </button>
-                        <button type="button" class="device-view-btn" id="deviceViewSensorBtn" onclick="setDeviceListMode('sensor')">
-                            <i class="fas fa-microchip"></i>
-                            <span>{{ t('common.sensors', 'Sensors') }}</span>
-                            <span class="device-view-count" id="deviceViewSensorCount">0</span>
-                        </button>
-                    </div>
-                    <span class="coverage-filter-summary" id="placementFilterSummary">{{ t('network.showing_devices_initial', 'Showing 0 of 0 devices') }}</span>
-                </div>
-
-                <div class="coverage-device-layout">
-                    <div class="coverage-device-main">
-                        <div class="device-list-section device-list-panel" id="baseStationsPanel">
-                            <div class="device-list-head">
-                                <p class="device-list-title">{{ t('common.base_stations', 'Base Stations') }}</p>
-                                <span class="device-list-count" id="visibleBsCount">0 / 0</span>
-                            </div>
-                            <div class="device-picker-list" id="baseStationList"></div>
-                        </div>
-
-                        <div class="device-list-section device-list-panel is-hidden" id="sensorsPanel">
-                            <div class="device-list-head">
-                                <p class="device-list-title">{{ t('common.sensors', 'Sensors') }}</p>
-                                <span class="device-list-count" id="visibleSensorCount">0 / 0</span>
-                            </div>
-                            <div class="device-picker-list" id="sensorList"></div>
-                        </div>
-                    </div>
-
-                    <div class="coverage-device-side">
-                        <div class="device-list-section is-missing-gps">
-                            <div class="device-list-head">
-                                <p class="device-list-title">{{ t('network.missing_gps', 'Missing GPS') }}</p>
-                                <span class="device-list-count" id="missingGpsCount">0</span>
-                            </div>
-                            <p class="missing-gps-summary" id="missingGpsSummary">{{ t('network.all_devices_have_gps', 'All devices have GPS coordinates and can be shown on OpenStreetMap.') }}</p>
-                            <div class="missing-gps-list" id="missingGpsList"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="network-section workspace-panel mode-hidden" id="topologyWorkspace" data-mode="topology">
+<div class="network-section workspace-panel" id="topologyWorkspace" data-mode="topology">
     <div class="network-section-head workspace-panel-head">
         <h5><i class="fas fa-project-diagram me-2"></i>{{ t('network.topology_workspace', 'Topology Workspace') }}</h5>
         <small>{{ t('network.route_connection_inspection', 'Route and connection inspection') }}</small>
@@ -1928,7 +1679,7 @@ let deviceStatusFilter = 'all';
 let deviceListMode = 'bs';
 let topologyRefreshTimer = null;
 let osmViewState = null;
-let workspaceMode = 'coverage';
+let workspaceMode = 'topology';
 let coveragePositionsLocked = false;
 let activeFullscreenCanvasId = null;
 let activeFullscreenButtonId = null;
@@ -2723,56 +2474,38 @@ function applyCoverageLockState() {
 }
 
 function applyWorkspaceMode() {
-    const isCoverage = workspaceMode === 'coverage';
+    workspaceMode = 'topology';
 
     document.querySelectorAll('[data-mode="coverage"]').forEach(el => {
-        el.classList.toggle('mode-hidden', !isCoverage);
+        el.classList.add('mode-hidden');
     });
     document.querySelectorAll('[data-mode="topology"]').forEach(el => {
-        el.classList.toggle('mode-hidden', isCoverage);
+        el.classList.remove('mode-hidden');
     });
 
-    document.getElementById('workspaceModeCoverage')?.classList.toggle('is-active', isCoverage);
-    document.getElementById('workspaceModeTopology')?.classList.toggle('is-active', !isCoverage);
+    document.getElementById('workspaceModeTopology')?.classList.add('is-active');
 
     const hint = document.getElementById('networkModeHint');
     if (hint) {
-        hint.textContent = isCoverage
-            ? 'Coverage mode: map + floorplan positioning.'
-            : 'Topology mode: routing graph and link health.';
+        hint.textContent = 'Topology mode: routing graph and link health.';
     }
 
     const focusBtn = document.getElementById('focusTopologyBtn');
     if (focusBtn) {
-        focusBtn.classList.toggle('mode-hidden', isCoverage);
+        focusBtn.classList.remove('mode-hidden');
     }
 
-    if (isCoverage) {
-        setTimeout(() => {
-            if (osmMap) {
-                osmMap.invalidateSize();
-                applySavedOsmViewState();
-            }
-            drawFloorplan();
-        }, 120);
-    } else {
-        setTimeout(() => {
-            if (cy) cy.resize();
-        }, 120);
-    }
+    setTimeout(() => {
+        if (cy) cy.resize();
+    }, 120);
 }
 
 function setWorkspaceMode(mode) {
     closeActiveFullscreen();
-    workspaceMode = mode === 'topology' ? 'topology' : 'coverage';
-    localStorage.setItem('network_workspace_mode', workspaceMode);
+    workspaceMode = 'topology';
+    localStorage.removeItem('network_workspace_mode');
     applyWorkspaceMode();
-
-    if (workspaceMode === 'topology') {
-        bootTopologyWorkspace();
-    } else {
-        bootCoverageWorkspace();
-    }
+    bootTopologyWorkspace();
 }
 
 async function bootCoverageWorkspace(force = false) {
@@ -5060,12 +4793,7 @@ function applyRouteVisibility() {
 }
 
 async function refreshNetworkWorkspace() {
-    if (workspaceMode === 'coverage') {
-        await Promise.allSettled([loadDevices(true), refreshTopology(true)]);
-        return;
-    }
-
-    await Promise.allSettled([refreshTopology(true), loadTopology(true)]);
+    await loadTopology(true);
 }
 
 function focusTopologyView() {
@@ -5076,10 +4804,7 @@ function focusTopologyView() {
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', async function() {
-    const savedWorkspaceMode = localStorage.getItem('network_workspace_mode');
-    if (savedWorkspaceMode === 'coverage' || savedWorkspaceMode === 'topology') {
-        workspaceMode = savedWorkspaceMode;
-    }
+    workspaceMode = 'topology';
     const savedDeviceListMode = localStorage.getItem('network_device_list_mode');
     if (savedDeviceListMode === 'bs' || savedDeviceListMode === 'sensor') {
         deviceListMode = savedDeviceListMode;
@@ -5248,12 +4973,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     }, 120);
 
     if (window.AppPerf && typeof window.AppPerf.observeLazy === 'function') {
-        window.AppPerf.observeLazy('#coverageWorkspace', () => {
-            bootCoverageWorkspace().catch((error) => {
-                console.error('Coverage workspace boot failed:', error);
-                setNetworkSectionSkeleton('#coverageWorkspace', false);
-            });
-        }, { rootMargin: '180px' });
         window.AppPerf.observeLazy('#topologyWorkspace', () => {
             bootTopologyWorkspace().catch((error) => {
                 console.error('Topology workspace boot failed:', error);
@@ -5262,11 +4981,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }, { rootMargin: '180px' });
     }
 
-    if (workspaceMode === 'topology') {
-        await bootTopologyWorkspace();
-    } else {
-        await bootCoverageWorkspace();
-    }
+    await bootTopologyWorkspace();
     refreshCoverageLockUi();
     updateSelectedCoverageDevice();
 });
