@@ -377,27 +377,53 @@
     background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    width: 20px !important;
-    height: 20px !important;
+    width: 36px !important;
+    height: 36px !important;
     overflow: visible !important;
     opacity: 1 !important;
     visibility: visible !important;
-    display: block !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 .sc-map-pin {
-    display: block;
-    width: 20px;
-    height: 20px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    transition: transform .15s, box-shadow .15s;
+    transition: transform .15s, box-shadow .15s, filter .15s;
     cursor: grab;
     overflow: visible;
     box-sizing: border-box;
-    box-shadow: 0 0 0 2px rgba(255,255,255,.92), 0 4px 12px rgba(15,23,42,.34);
+    box-shadow: 0 0 0 3px rgba(255,255,255,.95), 0 10px 20px rgba(15,23,42,.32);
+    filter: saturate(1.08);
+    font-family: 'Manrope', system-ui, sans-serif;
+    line-height: 1;
+}
+.sc-map-pin.is-base-station {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+}
+.sc-map-pin-label {
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .38);
+    transform: translateY(-0.5px);
+}
+.sc-map-pin.is-base-station .sc-map-pin-label {
+    font-size: 8px;
 }
 .sc-map-pin:active { cursor: grabbing; }
-.sc-map-pin.is-highlighted { transform: scale(1.35); box-shadow: 0 3px 12px rgba(0,0,0,.38); z-index: 1000; }
-.sc-map-pin.is-dragging { transform: scale(1.2); cursor: grabbing; opacity: .85; }
+.sc-map-pin.is-highlighted { transform: scale(1.16); box-shadow: 0 0 0 3px rgba(255,255,255,.98), 0 0 0 7px rgba(15,23,42,.10), 0 12px 24px rgba(15,23,42,.42); z-index: 1000; }
+.sc-map-pin.is-dragging { transform: scale(1.08); cursor: grabbing; opacity: .92; }
 /* Map toast */
 .sc-map-toast {
     position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
@@ -771,22 +797,51 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
     background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    width: 20px !important;
-    height: 20px !important;
+    width: 36px !important;
+    height: 36px !important;
     overflow: visible !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 .sc-map-pin {
-    display: block;
-    width: 20px;
-    height: 20px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    transition: transform .15s, box-shadow .15s;
+    transition: transform .15s, box-shadow .15s, filter .15s;
     cursor: grab;
     overflow: visible;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 3px rgba(255,255,255,.95), 0 10px 20px rgba(15,23,42,.32);
+    filter: saturate(1.08);
+    font-family: 'Manrope', system-ui, sans-serif;
+    line-height: 1;
+}
+.sc-map-pin.is-base-station {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+}
+.sc-map-pin-label {
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .38);
+    transform: translateY(-0.5px);
+}
+.sc-map-pin.is-base-station .sc-map-pin-label {
+    font-size: 8px;
 }
 .sc-map-pin:active { cursor: grabbing; }
-.sc-map-pin.is-highlighted { transform: scale(1.35); box-shadow: 0 3px 12px rgba(0,0,0,.38); z-index: 1000; }
-.sc-map-pin.is-dragging { transform: scale(1.2); cursor: grabbing; opacity: .85; }
+.sc-map-pin.is-highlighted { transform: scale(1.16); box-shadow: 0 0 0 3px rgba(255,255,255,.98), 0 0 0 7px rgba(15,23,42,.10), 0 12px 24px rgba(15,23,42,.42); z-index: 1000; }
+.sc-map-pin.is-dragging { transform: scale(1.08); cursor: grabbing; opacity: .92; }
 
 /* ═══════════════════════════════════════════════════════
    Dashboard — clean flat layout
@@ -2215,14 +2270,19 @@ const MARKER_PALETTE = ['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891
 const _markerUnlocked = {};  // id → true when drag is enabled
 const _pendingLatLng  = {};  // id → {_origLat,_origLng,lat,lng} pending confirm
 
-function makeMarkerIcon(color, unlocked) {
+function makeMarkerIcon(color, unlocked, kind = 'sensor') {
+    const c = String(color || '#1ca8c9').trim() || '#1ca8c9';
     const border = unlocked ? 'border:2.5px solid #eb7e17;' : 'border:2.5px solid rgba(255,255,255,.92);';
+    const isBaseStation = kind === 'base_station';
+    const label = isBaseStation ? 'BS' : 'S';
+    const baseClass = isBaseStation ? 'is-base-station' : 'is-sensor';
+    const fill = `radial-gradient(circle at 32% 30%, rgba(255,255,255,.45) 0 18%, ${c} 19% 100%)`;
     return L.divIcon({
-        html: '<div class="sc-map-pin" style="background:' + color + ';' + border + '"></div>',
+        html: '<div class="sc-map-pin ' + baseClass + '" style="background:' + fill + ';' + border + '"><span class="sc-map-pin-label">' + label + '</span></div>',
         className: 'sc-map-marker',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
-        popupAnchor: [0, -14]
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        popupAnchor: [0, -18]
     });
 }
 
@@ -2347,7 +2407,7 @@ function updateMap(sensors) {
         const href   = '/sensors/' + esc(id);
 
         const marker = L.marker(latlng, {
-            icon: makeMarkerIcon(pinColor, unlocked),
+            icon: makeMarkerIcon(pinColor, unlocked, 'sensor'),
             draggable: unlocked,
             autoPan: true
         });
@@ -2362,7 +2422,7 @@ function updateMap(sensors) {
         function lockMarker() {
             _markerUnlocked[id] = false;
             marker.dragging.disable();
-            marker.setIcon(makeMarkerIcon(s.marker_color || statusColor, false));
+            marker.setIcon(makeMarkerIcon(s.marker_color || statusColor, false, 'sensor'));
             marker.setPopupContent(buildPopupHtml(name, shortEui, href, id, tier, slabel));
         }
 
@@ -2370,7 +2430,7 @@ function updateMap(sensors) {
         function unlockMarker() {
             _markerUnlocked[id] = true;
             marker.dragging.enable();
-            marker.setIcon(makeMarkerIcon(s.marker_color || statusColor, true));
+            marker.setIcon(makeMarkerIcon(s.marker_color || statusColor, true, 'sensor'));
             if (!_pendingLatLng[id]) {
                 const cur = marker.getLatLng();
                 _pendingLatLng[id] = { _origLat: cur.lat, _origLng: cur.lng, lat: cur.lat, lng: cur.lng };
@@ -2400,7 +2460,7 @@ function updateMap(sensors) {
                                 .then(function(d) {
                                     if (d.success) {
                                         if (color) s.marker_color = color; else delete s.marker_color;
-                                        marker.setIcon(makeMarkerIcon(color || statusColor, !!_markerUnlocked[id]));
+                                        marker.setIcon(makeMarkerIcon(color || statusColor, !!_markerUnlocked[id], 'sensor'));
                                         showMapToast(color ? '\u2713 Farba zmenená' : '\u2713 Farba obnovená', 2000);
                                     } else {
                                         showMapToast('\u2717 ' + (d.message || 'Chyba'), 2200);
@@ -3710,16 +3770,19 @@ function shortId(value, size = 8) {
     return text.length > size ? `${text.slice(0, size)}...` : text;
 }
 
-function makeMiniMarkerIcon(color, unlocked) {
+function makeMiniMarkerIcon(color, unlocked, kind = 'sensor') {
     const c = String(color || '#1ca8c9').trim() || '#1ca8c9';
     const borderColor = unlocked ? '#eb7e17' : 'rgba(255,255,255,.92)';
+    const isBaseStation = kind === 'base_station';
+    const label = isBaseStation ? 'BS' : 'S';
+    const baseClass = isBaseStation ? 'is-base-station' : 'is-sensor';
     const fill = `radial-gradient(circle at 32% 32%, rgba(255,255,255,.95) 0 18%, ${c} 19% 100%)`;
     return L.divIcon({
-        html: '<div class="sc-map-pin" style="background:' + fill + ';border:2.5px solid ' + borderColor + ';"></div>',
+        html: '<div class="sc-map-pin ' + baseClass + '" style="background:' + fill + ';border:2.5px solid ' + borderColor + ';"><span class="sc-map-pin-label">' + label + '</span></div>',
         className: 'sc-map-marker',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
-        popupAnchor: [0, -14]
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        popupAnchor: [0, -18]
     });
 }
 
@@ -4671,7 +4734,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
             : '/sensors/' + encodeURIComponent(markerEui);
         const unlocked = !!miniMarkerUnlocked[markerKey];
         const marker = L.marker([pos.lat, pos.lng], {
-            icon: makeMiniMarkerIcon(markerStyle.fillColor, unlocked),
+            icon: makeMiniMarkerIcon(markerStyle.fillColor, unlocked, node.type),
             draggable: unlocked,
             autoPan: true,
             bubblingMouseEvents: false,
@@ -4713,7 +4776,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
         const refreshMarkerVisual = (isUnlocked = false) => {
             const nextStyle = resolveMarkerVisualStyle();
             marker.__miniBaseStyle = { ...nextStyle };
-            marker.setIcon(makeMiniMarkerIcon(nextStyle.fillColor, isUnlocked));
+            marker.setIcon(makeMiniMarkerIcon(nextStyle.fillColor, isUnlocked, marker.__miniNode ? marker.__miniNode.type : node.type));
         };
         const lockMarker = () => {
             miniMarkerUnlocked[markerKey] = false;
