@@ -3801,26 +3801,6 @@ window.scHandleMiniPopupAction = function(action, popupId, event) {
     return false;
 };
 
-function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
-    return buildPopupHtml(
-        escapeHtml(name),
-        shortEui ? escapeHtml(shortEui) : '',
-        escapeHtml(href),
-        escapeHtml(popupId),
-        null,
-        ''
-    );
-}
-
-function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
-    return buildPopupUnlockedHtml(
-        escapeHtml(name),
-        shortEui ? escapeHtml(shortEui) : '',
-        escapeHtml(popupId),
-        hasMoved
-    );
-}
-
 function getAdminDashboardIncludeDemoData() {
     if (window.AdminDemoDataPrefs && typeof window.AdminDemoDataPrefs.get === 'function') {
         return Boolean(window.AdminDemoDataPrefs.get());
