@@ -2331,7 +2331,8 @@ function showColorPop(x, y, currentColor, onPick) {
         sw.style.background = c;
         sw.title = c;
         sw.setAttribute('aria-label', c);
-        sw.addEventListener('mousedown', function(e) {
+        sw.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
             closeColorPop();
             if (typeof onPick === 'function') onPick(c);
@@ -2346,7 +2347,8 @@ function showColorPop(x, y, currentColor, onPick) {
     reset.title = 'Obnoviť predvolenú farbu';
     reset.setAttribute('aria-label', 'Obnoviť predvolenú farbu');
     reset.textContent = '↺';
-    reset.addEventListener('mousedown', function(e) {
+    reset.addEventListener('click', function(e) {
+        e.preventDefault();
         e.stopPropagation();
         closeColorPop();
         if (typeof onPick === 'function') onPick(null);
@@ -3629,6 +3631,27 @@ function updateMiniSensorMarkerColor(sensorEui, color) {
     });
 }
 
+function syncMiniSensorMarkerColor(sensorEui, color) {
+    const normalized = String(sensorEui || '').trim().toUpperCase();
+    if (!normalized) return;
+
+    updateMiniSensorMarkerColor(normalized, color);
+
+    const markerKey = miniMarkerKey('sensor', normalized);
+    const marker = miniCoverageMarkers && miniCoverageMarkers[markerKey];
+    if (marker && marker.__miniNode) {
+        marker.__miniNode.marker_color = color ? String(color) : '';
+        const nextStyle = getMiniMarkerBaseStyle({
+            ...marker.__miniNode,
+            marker_color: marker.__miniNode.marker_color
+        });
+        marker.__miniBaseStyle = { ...nextStyle };
+        marker.setIcon(makeMiniMarkerIcon(nextStyle.fillColor, !!miniMarkerUnlocked[markerKey], marker.__miniNode.type || 'sensor'));
+    }
+
+    miniMapRenderSignature = null;
+}
+
 function cancelMiniMarkerPlacement(showToast = false) {
     if (!miniPlacementMode) return;
     miniPlacementMode = null;
@@ -4839,7 +4862,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                         if (marker.__miniNode) {
                                             marker.__miniNode.marker_color = color ? String(color) : '';
                                         }
-                                        updateMiniSensorMarkerColor(markerEui, color);
+                                        syncMiniSensorMarkerColor(markerEui, color);
                                         refreshMarkerVisual(!!miniMarkerUnlocked[markerKey]);
                                         updateMiniCoverageMap(
                                             latestTopologyData || {},
