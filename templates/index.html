@@ -741,114 +741,278 @@
     }
 }
 .sc-leaflet-popup .leaflet-popup-content-wrapper {
-    border-radius: .88rem !important;
-    box-shadow: 0 8px 28px rgba(15,23,42,.18) !important;
-    border: 1px solid #dae3f0;
+    border-radius: 1.18rem !important;
+    box-shadow: 0 20px 42px rgba(15,23,42,.18) !important;
+    border: 1px solid #d7e0eb;
     padding: 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
 }
 .sc-leaflet-popup .leaflet-popup-content {
-    margin: .82rem .96rem !important;
+    margin: 0 !important;
     line-height: 1 !important;
+    width: auto !important;
 }
 .sc-leaflet-popup .leaflet-popup-tip-container { margin-top: -1px; }
+.sc-leaflet-popup .leaflet-popup-tip {
+    box-shadow: none !important;
+    background: #fff !important;
+    border: 1px solid #d7e0eb !important;
+}
 .sc-leaflet-popup .leaflet-popup-close-button {
-    font-size: .82rem !important; color: #94a3b8 !important;
-    top: .46rem !important; right: .56rem !important;
+    font-size: .92rem !important;
+    color: #94a3b8 !important;
+    top: .5rem !important;
+    right: .62rem !important;
+    line-height: 1 !important;
+    width: 1.4rem !important;
+    height: 1.4rem !important;
+    border-radius: .46rem !important;
+    background: rgba(255,255,255,.94) !important;
 }
-.sc-leaflet-popup .leaflet-popup-close-button:hover { color: #13263f !important; }
-/* Popup buttons */
+.sc-leaflet-popup .leaflet-popup-close-button:hover {
+    color: #13263f !important;
+    background: #eef4fb !important;
+}
+/* Marker popup card */
+.sc-marker-pop {
+    position: relative;
+    min-width: 15.5rem;
+    max-width: 18rem;
+    padding: .86rem .92rem .82rem 1rem;
+    display: grid;
+    gap: .72rem;
+    font-family: 'Manrope', system-ui, sans-serif;
+}
+.sc-marker-pop::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: .32rem;
+    border-radius: 0 999px 999px 0;
+    background: var(--sc-popup-accent, var(--brand-500));
+}
+.sc-marker-pop-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .72rem;
+    padding-right: 1.5rem;
+}
+.sc-marker-pop-main {
+    min-width: 0;
+    display: grid;
+    gap: .28rem;
+}
+.sc-marker-pop-title {
+    font-size: 1rem;
+    line-height: 1.12;
+    font-weight: 900;
+    color: #0f2135;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sc-marker-pop-eui {
+    font-size: .64rem;
+    line-height: 1.1;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #90a0b2;
+}
+.sc-marker-pop-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .26rem;
+    align-self: flex-start;
+    width: fit-content;
+    padding: .21rem .5rem;
+    border-radius: 999px;
+    font-size: .59rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #fff;
+    box-shadow: 0 8px 14px rgba(15,23,42,.08);
+}
+.sc-marker-pop-note {
+    display: flex;
+    align-items: flex-start;
+    gap: .55rem;
+    padding: .68rem .78rem;
+    border-radius: .9rem;
+    background: #f3f7fc;
+    color: #4f647c;
+    border: 1px solid #e0e9f4;
+    font-size: .76rem;
+    line-height: 1.4;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+}
+.sc-marker-pop-note i {
+    margin-top: .12rem;
+    color: var(--sc-popup-hint-color, var(--brand-500));
+    flex-shrink: 0;
+}
+.sc-marker-pop-note.is-unlocked {
+    background: var(--sc-popup-hint-bg, rgba(22, 163, 74, .08));
+    border-color: rgba(22, 163, 74, .18);
+    color: var(--sc-popup-hint-color, #166534);
+}
+.sc-marker-pop-actions {
+    display: flex;
+    align-items: stretch;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+.sc-marker-pop-button {
+    min-height: 2.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .42rem;
+    flex: 1 1 0;
+    min-width: 0;
+    border-radius: .92rem;
+    padding: .42rem .74rem;
+    font-size: .78rem;
+    font-weight: 850;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: transform .12s, background .12s, color .12s, border-color .12s, box-shadow .12s;
+}
+.sc-marker-pop-button i {
+    font-size: .76rem;
+    line-height: 1;
+}
+.sc-marker-pop-button:hover {
+    transform: translateY(-1px);
+}
+.sc-marker-pop-button.is-primary,
 .sc-popup-detail {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .3rem;
-    background: var(--brand-500); color: #fff; border-radius: .42rem; padding: .34rem .5rem;
-    font-size: .72rem; font-weight: 800; text-decoration: none; border: none; cursor: pointer;
-    transition: background .12s, box-shadow .12s;
+    background: var(--sc-popup-accent, var(--brand-500));
+    color: #fff;
+    box-shadow: 0 8px 16px rgba(var(--brand-rgb), .18);
 }
-.sc-popup-detail:hover { background: var(--brand-600); box-shadow: 0 2px 8px rgba(var(--brand-rgb), .2); }
+.sc-marker-pop-button.is-primary:hover,
+.sc-popup-detail:hover {
+    background: var(--sc-popup-accent-hover, var(--brand-600));
+    box-shadow: 0 10px 18px rgba(var(--brand-rgb), .24);
+}
+.sc-marker-pop-button.is-success,
+.sc-popup-save {
+    background: #16a34a;
+    color: #fff;
+    border-color: #16a34a;
+    box-shadow: 0 8px 16px rgba(22,163,74,.16);
+}
+.sc-marker-pop-button.is-success:hover,
+.sc-popup-save:hover {
+    background: #15803d;
+    border-color: #15803d;
+    box-shadow: 0 10px 18px rgba(22,163,74,.2);
+}
+.sc-marker-pop-button.is-secondary,
+.sc-popup-cancel {
+    background: #f4f7fb;
+    color: #425466;
+    border-color: #d9e3ef;
+}
+.sc-marker-pop-button.is-secondary:hover,
+.sc-popup-cancel:hover {
+    background: #edf3fb;
+    color: #1e293b;
+    border-color: #c8d7e8;
+}
+.sc-marker-pop-button.is-icon,
+.sc-popup-dots {
+    flex: 0 0 2.6rem;
+    width: 2.6rem;
+    min-width: 2.6rem;
+    padding: 0;
+}
+.sc-popup-detail {
+    flex: 1 1 0;
+    min-width: 0;
+}
+/* Popup buttons */
 .sc-popup-dots {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 2.3rem;
-    height: 2.3rem;
     background: #f4f7fb;
     border: 1px solid #d9e3ef;
-    border-radius: .72rem;
+    border-radius: .92rem;
     cursor: pointer;
-    padding: 0 .62rem;
-    font-size: .92rem;
+    padding: 0 .68rem;
+    font-size: .94rem;
     line-height: 1;
     color: #5f738e;
     flex-shrink: 0;
     box-shadow: none;
     appearance: none;
     -webkit-appearance: none;
-    transition: background .12s, color .12s, border-color .12s, transform .12s;
+    transition: background .12s, color .12s, border-color .12s, transform .12s, box-shadow .12s;
 }
 .sc-popup-dots:hover {
     background: #ecf3fb;
     border-color: #c8d7e8;
     color: #1e293b;
-}
-.sc-popup-save {
-    flex: 1;
-    min-height: 2.3rem;
-    background: #16a34a;
-    color: #fff;
-    border: 1px solid #16a34a;
-    border-radius: .72rem;
-    padding: .34rem .72rem;
-    font-size: .72rem;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: none;
-    appearance: none;
-    -webkit-appearance: none;
-    transition: background .12s, box-shadow .12s, border-color .12s;
-}
-.sc-popup-save:hover { background: #15803d; box-shadow: 0 2px 8px rgba(22, 163, 74, .2); }
-.sc-popup-cancel {
-    flex: 1;
-    min-height: 2.3rem;
-    background: #f4f7fb;
-    color: #425466;
-    border: 1px solid #d9e3ef;
-    border-radius: .72rem;
-    padding: .34rem .72rem;
-    font-size: .72rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: none;
-    appearance: none;
-    -webkit-appearance: none;
-    transition: background .12s, color .12s, border-color .12s;
-}
-.sc-popup-cancel:hover {
-    background: #ecf3fb;
-    border-color: #c8d7e8;
-    color: #1e293b;
+    box-shadow: 0 8px 14px rgba(15,23,42,.08);
 }
 /* ── Context menu ── */
 .sc-ctx {
-    position: fixed; z-index: 9000;
-    background: #fff; border: 1px solid #d6dfec; border-radius: .72rem;
-    box-shadow: 0 8px 28px rgba(15,23,42,.18); padding: .32rem 0;
-    min-width: 172px; outline: none;
+    position: fixed;
+    z-index: 9000;
+    background: rgba(255,255,255,.98);
+    border: 1px solid #d6dfec;
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px rgba(15,23,42,.18);
+    padding: .42rem;
+    min-width: 210px;
+    backdrop-filter: blur(12px);
+    outline: none;
     animation: scCtxIn .1s ease;
 }
 @keyframes scCtxIn { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
 .sc-ctx-item {
-    display: flex; align-items: center; gap: .6rem;
-    padding: .46rem .9rem; font-size: .78rem; font-weight: 700; color: #1e2d3d;
-    cursor: pointer; transition: background .1s, color .1s; white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: .62rem;
+    padding: .58rem .76rem;
+    font-size: .79rem;
+    font-weight: 750;
+    color: #1e2d3d;
+    cursor: pointer;
+    transition: background .1s, color .1s, transform .1s;
+    white-space: nowrap;
+    border-radius: .78rem;
 }
-.sc-ctx-item:hover { background: #f3f7fe; color: #1c3a5e; }
+.sc-ctx-item:hover { background: #f3f7fe; color: #1c3a5e; transform: translateY(-1px); }
 .sc-ctx-item.is-primary { color: var(--brand-600); }
 .sc-ctx-item.is-primary:hover { background: rgba(var(--brand-rgb), .09); color: var(--brand-700); }
-.sc-ctx-item.is-primary i { opacity: 1; color: var(--brand-500); }
+.sc-ctx-item.is-primary i { opacity: 1; color: var(--brand-500); background: rgba(var(--brand-rgb), .12); }
 .sc-ctx-item.is-danger { color: #dc2626; }
 .sc-ctx-item.is-danger:hover { background: rgba(220,53,69,.07); }
-.sc-ctx-item i { width: .9rem; text-align: center; font-size: .78rem; opacity: .72; flex-shrink: 0; }
-.sc-ctx-sep { height: 1px; background: #edf2f9; margin: .24rem 0; }
+.sc-ctx-item.is-danger i { color: #dc2626; background: rgba(220,53,69,.09); }
+.sc-ctx-item i {
+    width: 1.6rem;
+    height: 1.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .58rem;
+    font-size: .74rem;
+    opacity: .82;
+    flex-shrink: 0;
+    background: #f2f6fb;
+    color: #5f738e;
+}
+.sc-ctx-sep { height: 1px; background: #edf2f9; margin: .28rem .18rem; }
 .mview-alert-row { cursor: context-menu; }
 
 /* ── Smooth animations system ── */
@@ -1670,12 +1834,13 @@ body.is-resizing-dashboard-row {
 .sc-ctx {
     position: fixed;
     z-index: 9000;
-    background: #ffffff;
+    background: rgba(255,255,255,.98);
     border: 1px solid #d6dfec;
-    border-radius: 0.72rem;
-    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
-    padding: 0.32rem 0;
-    min-width: 172px;
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+    padding: .42rem;
+    min-width: 210px;
+    backdrop-filter: blur(12px);
     outline: none;
     animation: scCtxIn 0.1s ease;
 }
@@ -1688,19 +1853,21 @@ body.is-resizing-dashboard-row {
 .sc-ctx-item {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.46rem 0.9rem;
-    font-size: 0.78rem;
-    font-weight: 700;
+    gap: .62rem;
+    padding: .58rem .76rem;
+    font-size: .79rem;
+    font-weight: 750;
     color: #1e2d3d;
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.1s, color 0.1s;
+    transition: background 0.1s, color 0.1s, transform 0.1s;
+    border-radius: .78rem;
 }
 
 .sc-ctx-item:hover {
     background: #f3f7fe;
     color: #1c3a5e;
+    transform: translateY(-1px);
 }
 
 .sc-ctx-item.is-primary {
@@ -1708,16 +1875,47 @@ body.is-resizing-dashboard-row {
 }
 
 .sc-ctx-item.is-primary:hover {
-    background: rgba(var(--brand-rgb), 0.09);
+    background: rgba(var(--brand-rgb), .09);
     color: var(--brand-700);
 }
 
+.sc-ctx-item.is-primary i {
+    opacity: 1;
+    color: var(--brand-500);
+    background: rgba(var(--brand-rgb), .12);
+}
+
+.sc-ctx-item.is-danger {
+    color: #dc2626;
+}
+
+.sc-ctx-item.is-danger:hover {
+    background: rgba(220,53,69,.07);
+}
+
+.sc-ctx-item.is-danger i {
+    color: #dc2626;
+    background: rgba(220,53,69,.09);
+}
+
 .sc-ctx-item i {
-    width: 0.9rem;
-    text-align: center;
-    font-size: 0.78rem;
-    opacity: 0.72;
+    width: 1.6rem;
+    height: 1.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .58rem;
+    font-size: .74rem;
+    opacity: .82;
     flex-shrink: 0;
+    background: #f2f6fb;
+    color: #5f738e;
+}
+
+.sc-ctx-sep {
+    height: 1px;
+    background: #edf2f9;
+    margin: .28rem .18rem;
 }
 
 @keyframes scToastIn {
@@ -2854,39 +3052,64 @@ function showMapToast(msg, ms) {
     setTimeout(function() { if (el.parentNode) el.remove(); if (_mapToast === el) _mapToast = null; }, ms || 2200);
 }
 
+function buildMarkerPopupCard(options) {
+    const styleParts = [];
+    if (options.accentColor) styleParts.push('--sc-popup-accent:' + options.accentColor);
+    if (options.accentHover) styleParts.push('--sc-popup-accent-hover:' + options.accentHover);
+    if (options.hintColor) styleParts.push('--sc-popup-hint-color:' + options.hintColor);
+    if (options.hintBg) styleParts.push('--sc-popup-hint-bg:' + options.hintBg);
+    const styleAttr = styleParts.length ? ' style="' + styleParts.join(';') + ';"' : '';
+    return '<div class="sc-marker-pop' + (options.variant ? ' ' + options.variant : '') + '"' + styleAttr + '>'
+        + '<div class="sc-marker-pop-header">'
+        + '<div class="sc-marker-pop-main">'
+        + (options.statusLabel ? '<span class="sc-marker-pop-status" style="background:' + esc(options.statusColor || options.accentColor || '#64748b') + '">' + esc(options.statusLabel) + '</span>' : '')
+        + '<div class="sc-marker-pop-title">' + esc(options.title || '') + '</div>'
+        + (options.eui ? '<div class="sc-marker-pop-eui">' + esc(options.eui) + '</div>' : '')
+        + '</div>'
+        + (options.dotButtonHtml || '')
+        + '</div>'
+        + (options.noteHtml ? '<div class="sc-marker-pop-note' + (options.noteClass ? ' ' + options.noteClass : '') + '">' + options.noteHtml + '</div>' : '')
+        + (options.actionsHtml ? '<div class="sc-marker-pop-actions">' + options.actionsHtml + '</div>' : '')
+        + '</div>';
+}
+
 
 // Normal popup: status + name + EUI + [Detail →] [⋯]
 function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
     const brandBg  = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
     const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
     const statusColor = tier && STATUS_COLORS[tier] ? STATUS_COLORS[tier] : null;
-    const statusBadge = statusColor ? '<div style="display:inline-flex;align-items:center;gap:.26rem;background:' + statusColor + ';color:#fff;border-radius:.3rem;padding:.2rem .4rem;font-size:.62rem;font-weight:700;margin-bottom:.22rem"><span style="width:.32rem;height:.32rem;border-radius:50%;background:currentColor;opacity:.7"></span>' + esc(slabel || tier) + '</div>' : '';
-    return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
-        + (statusBadge ? statusBadge + '<div style="margin-bottom:.18rem"></div>' : '')
-        + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + name + '</div>'
-        + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.36rem">' + shortEui + '</div>' : '')
-        + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
-        + '<div style="display:flex;align-items:center;gap:.36rem">'
-            + '<a href="' + href + '" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;background:' + brandBg + ';color:#fff;border-radius:.42rem;padding:.38rem .6rem;font-size:.74rem;font-weight:800;text-decoration:none;border:none;letter-spacing:.01em;transition:background .12s" onmouseover="this.style.background=\'' + brandHov + '\'" onmouseout="this.style.background=\'' + brandBg + '\'">Detail \u2192</a>'
-            + '<button id="sc-popup-dots-' + mid + '" class="sc-popup-dots" title="Možnosti">⋯</button>' 
-        + '</div>'
-        + '</div>';
+    return buildMarkerPopupCard({
+        title: name,
+        eui: shortEui,
+        statusLabel: slabel || tier,
+        statusColor: statusColor || brandBg,
+        accentColor: brandBg,
+        accentHover: brandHov,
+        dotButtonHtml: '<button type="button" id="sc-popup-dots-' + mid + '" class="sc-popup-dots sc-marker-pop-button is-icon" title="Možnosti"><i class="fas fa-ellipsis-h"></i></button>',
+        actionsHtml: '<a href="' + href + '" class="sc-popup-detail sc-marker-pop-button is-primary"><i class="fas fa-arrow-up-right-from-square"></i><span>Detail →</span></a>'
+    });
 }
 
 // Unlocked popup: name + EUI + hint + [Uložiť polohu] [Zrušiť]
 function buildPopupUnlockedHtml(name, shortEui, mid, hasMoved) {
     const hintText = hasMoved ? '✓ Marker presunutý — uložiť?' : '↕ Presuňte marker na novú polohu';
     const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
-    return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
-        + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + name + '</div>'
-        + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.24rem">' + shortEui + '</div>' : '')
-        + '<div style="font-size:.69rem;font-weight:700;color:' + hintColor + ';margin-bottom:.3rem">' + hintText + '</div>'
-        + '<div style="border-top:1px solid #edf2f9;margin:.28rem 0 .36rem"></div>'
-        + '<div style="display:flex;gap:.38rem">'
-            + (hasMoved ? '<button id="sc-popup-save-' + mid + '" class="sc-popup-save">Uložiť polohu</button>' : '')
-            + '<button id="sc-popup-cancel-' + mid + '" class="sc-popup-cancel">Zrušiť</button>' 
-        + '</div>'
-        + '</div>';
+    return buildMarkerPopupCard({
+        variant: 'is-unlocked',
+        title: name,
+        eui: shortEui,
+        statusLabel: hasMoved ? 'Pripravené na uloženie' : 'Presúvanie',
+        statusColor: hintColor,
+        accentColor: hintColor,
+        accentHover: hasMoved ? '#15803d' : '#d97706',
+        hintColor: hintColor,
+        hintBg: hasMoved ? 'rgba(22, 163, 74, .10)' : 'rgba(235, 126, 23, .10)',
+        noteClass: 'is-unlocked',
+        noteHtml: '<i class="fas fa-route"></i><span>' + esc(hintText) + '</span>',
+        actionsHtml: (hasMoved ? '<button type="button" id="sc-popup-save-' + mid + '" class="sc-popup-save sc-marker-pop-button is-success"><i class="fas fa-floppy-disk"></i><span>Uložiť polohu</span></button>' : '')
+            + '<button type="button" id="sc-popup-cancel-' + mid + '" class="sc-popup-cancel sc-marker-pop-button is-secondary"><i class="fas fa-xmark"></i><span>Zrušiť</span></button>'
+    });
 }
 
 function updateMap(sensors) {
@@ -4303,30 +4526,36 @@ function fetchJson(url) {
 }
 
 function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
-    return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
-        + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + escapeHtml(name) + '</div>'
-        + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.36rem">' + escapeHtml(shortEui) + '</div>' : '')
-        + '<div style="border-top:1px solid #edf2f9;margin:.3rem 0 .38rem"></div>'
-        + '<div style="display:flex;align-items:center;gap:.36rem">'
-        + '<a href="' + escapeHtml(href) + '" class="sc-popup-detail">Detail →</a>' 
-        + '<button type="button" id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots" title="Možnosti" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'dots\', \'" + escapeHtml(popupId) + "\', event)">⋯</button>' 
-        + '</div>'
-        + '</div>';
+    return buildMarkerPopupCard({
+        title: name,
+        eui: shortEui,
+        statusLabel: 'Detail senzora',
+        statusColor: '#2563eb',
+        accentColor: '#2563eb',
+        accentHover: '#1d4ed8',
+        dotButtonHtml: '<button type="button" id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots sc-marker-pop-button is-icon" title="Možnosti" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'dots\', \'" + escapeHtml(popupId) + "\', event)"><i class="fas fa-ellipsis-h"></i></button>',
+        actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail sc-marker-pop-button is-primary"><i class="fas fa-arrow-up-right-from-square"></i><span>Detail →</span></a>'
+    });
 }
 
 function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
     const hintText = hasMoved ? '✓ Marker presunutý — uložiť?' : '↕ Presuňte marker na novú polohu';
     const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
-    return '<div style="min-width:168px;font-family:\'Manrope\',system-ui,sans-serif;padding:.05rem 0">'
-        + '<div style="font-weight:900;font-size:.96rem;color:#0f2135;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;margin-bottom:.2rem">' + escapeHtml(name) + '</div>'
-        + (shortEui ? '<div style="font-size:.63rem;color:#9aaab8;font-family:monospace;letter-spacing:.04em;margin-bottom:.24rem">' + escapeHtml(shortEui) + '</div>' : '')
-        + '<div style="font-size:.69rem;font-weight:700;color:' + hintColor + ';margin-bottom:.3rem">' + hintText + '</div>'
-        + '<div style="border-top:1px solid #edf2f9;margin:.28rem 0 .36rem"></div>'
-        + '<div style="display:flex;gap:.38rem">'
-        + (hasMoved ? '<button type="button" id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'save\', \'" + escapeHtml(popupId) + "\', event)">Uložiť polohu</button>' : '')
-        + '<button type="button" id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'cancel\', \'" + escapeHtml(popupId) + "\', event)">Zrušiť</button>' 
-        + '</div>'
-        + '</div>';
+    return buildMarkerPopupCard({
+        variant: 'is-unlocked',
+        title: name,
+        eui: shortEui,
+        statusLabel: hasMoved ? 'Pripravené na uloženie' : 'Presúvanie',
+        statusColor: hintColor,
+        accentColor: hintColor,
+        accentHover: hasMoved ? '#15803d' : '#d97706',
+        hintColor: hintColor,
+        hintBg: hasMoved ? 'rgba(22, 163, 74, .10)' : 'rgba(235, 126, 23, .10)',
+        noteClass: 'is-unlocked',
+        noteHtml: '<i class="fas fa-route"></i><span>' + esc(hintText) + '</span>',
+        actionsHtml: (hasMoved ? '<button type="button" id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save sc-marker-pop-button is-success" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'save\', \'" + escapeHtml(popupId) + "\', event)"><i class="fas fa-floppy-disk"></i><span>Uložiť polohu</span></button>' : '')
+            + '<button type="button" id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel sc-marker-pop-button is-secondary" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'cancel\', \'" + escapeHtml(popupId) + "\', event)"><i class="fas fa-xmark"></i><span>Zrušiť</span></button>'
+    });
 }
 
 window.__scMiniPopupActions = window.__scMiniPopupActions || Object.create(null);
