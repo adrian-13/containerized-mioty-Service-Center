@@ -3912,11 +3912,11 @@ function toNumber(value, fallback = 0) {
 
 function escapeHtml(value) {
     return String(value ?? '')
-        .replaceAll('&', '&')
+        .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
-        .replaceAll('>', '>')
-        .replaceAll('"', '"')
-        .replaceAll("'", ''');
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 }
 
 function miniMarkerKey(type, eui) {
