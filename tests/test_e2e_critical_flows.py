@@ -319,6 +319,8 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         branch_split = template.index("{% if is_customer_user %}", scripts_start)
         self.assertLess(template.index("function showColorPop"), branch_split)
         self.assertLess(template.index("function persistSensorMarkerColor"), branch_split)
+        self.assertEqual(template.count("function showColorPop("), 1)
+        self.assertEqual(template.count("function persistSensorMarkerColor("), 1)
 
     def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):
         with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
