@@ -2358,8 +2358,8 @@ function showColorPop(x, y, currentColor, onPick) {
 
     const vw = window.innerWidth, vh = window.innerHeight;
     const pw = pop.offsetWidth || 180, ph = pop.offsetHeight || 120;
-    const left = Math.max(8, Math.min(Number(x || 0), vw - pw - 8));
-    const top = Math.max(8, Math.min(Number(y || 0), vh - ph - 8));
+    const left = Math.max(8, Math.round((vw - pw) / 2));
+    const top = Math.max(8, Math.round((vh - ph) / 2));
     pop.style.left = left + 'px';
     pop.style.top = top + 'px';
 
@@ -3182,7 +3182,6 @@ let miniGraphInitialized = false;
 let miniGraphUserViewLocked = false;
 let miniMapToastTimer = null;
 let miniCtxEl = null;
-let miniColorPopEl = null;
 let miniCoverageMarkers = {};
 let miniMapRenderSignature = null;
 let miniGraphRenderSignature = null;
@@ -3522,10 +3521,7 @@ function closeMiniCtx() {
 }
 
 function closeMiniColorPop() {
-    if (miniColorPopEl) {
-        miniColorPopEl.remove();
-        miniColorPopEl = null;
-    }
+    /* shared color popup is managed by closeColorPop() */
 }
 
 function showMiniColorPop(x, y, currentColor, onPick) {
@@ -4829,7 +4825,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                     label: appTranslate('dashboard.change_marker_color', 'Zmeniť farbu'),
                     action: () => {
                         const currentColor = marker.__miniNode ? marker.__miniNode.marker_color : '';
-                        showColorPop(clientX, clientY, currentColor || null, (color) => {
+                        showMiniColorPop(clientX, clientY, currentColor || null, (color) => {
                                 persistSensorMarkerColor(markerEui, color).then((result) => {
                                     if (!(result.ok && result.data && result.data.success)) {
                                         showMiniMapToast(
