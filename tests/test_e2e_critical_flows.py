@@ -321,9 +321,10 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertLess(template.index("function persistSensorMarkerColor"), branch_split)
         self.assertEqual(template.count("function showColorPop("), 1)
         self.assertEqual(template.count("function persistSensorMarkerColor("), 1)
-        self.assertIn("const host = boundsEl && typeof boundsEl.getBoundingClientRect === 'function' ? boundsEl : document.body;", template)
-        self.assertIn("host.appendChild(pop);", template)
-        self.assertIn("pop.style.position = host === document.body ? 'fixed' : 'absolute';", template)
+        self.assertIn("document.body.appendChild(pop);", template)
+        self.assertIn("pop.style.position = 'fixed';", template)
+        self.assertIn("const minLeft = hostRect.left + 8;", template)
+        self.assertIn("const minTop = hostRect.top + 8;", template)
 
     def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):
         with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
