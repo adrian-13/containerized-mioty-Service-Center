@@ -2851,6 +2851,7 @@ let lastLoadTs = null;
 let tickTimer = null;
 let placementMode = null;
 let pendingPlacementSensorEui = '';
+let mapFirstMarkerFitDone = false;
 
 try {
     pendingPlacementSensorEui = String(new URLSearchParams(window.location.search).get('place_sensor') || '').trim().toUpperCase();
@@ -3329,6 +3330,22 @@ function updateMap(sensors) {
             renderErrors += 1;
             console.error('Marker render failed', s, error);
         }
+    });
+
+    if (bounds.length > 0 && !mapFirstMarkerFitDone) {
+        try {
+            mviewMap.fitBounds(bounds, { padding: [36, 36], maxZoom: 16 });
+            mapFirstMarkerFitDone = true;
+        } catch (error) {
+            console.warn('Map fitBounds failed:', error);
+        }
+    }
+
+    console.info('Dashboard map render:', {
+        inputCount: Array.isArray(sensors) ? sensors.length : 0,
+        geolocatedCount: geo.length,
+        renderedCount: Object.keys(sensorMarkers).length,
+        renderErrors
     });
 
     if (renderErrors > 0) {
