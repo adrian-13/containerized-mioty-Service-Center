@@ -323,6 +323,8 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertEqual(template.count("function persistSensorMarkerColor("), 1)
         self.assertIn("MARKER_COLOR_OPTIONS", template)
         self.assertIn("getMarkerColorMeta", template)
+        self.assertIn("ensureColorPopupStyles", template)
+        self.assertIn("sc-color-pop-runtime-style", template)
         self.assertIn("sc-color-pop-header", template)
         self.assertIn("sc-color-pop-shell", template)
         self.assertIn("sc-color-pop-footer", template)

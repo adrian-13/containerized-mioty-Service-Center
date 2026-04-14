@@ -2268,6 +2268,52 @@ let _sharedColorPopEl = null;
 let _sharedColorPopDismissHandler = null;
 let _sharedColorPopKeyHandler = null;
 
+function ensureColorPopupStyles() {
+    if (document.getElementById('sc-color-pop-runtime-style')) return;
+    const style = document.createElement('style');
+    style.id = 'sc-color-pop-runtime-style';
+    style.textContent = [
+        '.sc-color-pop{position:fixed;z-index:9100;width:min(19rem,calc(100vw - 1rem));background:linear-gradient(180deg,#fff 0%,#f8fbff 100%);border:1px solid #d6dfec;border-radius:1rem;box-shadow:0 18px 42px rgba(15,23,42,.18);overflow:hidden;}',
+        '.sc-color-pop-shell{display:grid;gap:.78rem;padding:.84rem .84rem .86rem;}',
+        '.sc-color-pop-header{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem;}',
+        '.sc-color-pop-brand{display:flex;align-items:flex-start;gap:.68rem;min-width:0;}',
+        '.sc-color-pop-badge{width:2rem;height:2rem;border-radius:.68rem;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);box-shadow:0 8px 18px rgba(37,99,235,.22);}',
+        '.sc-color-pop-copy{min-width:0;display:grid;gap:.08rem;}',
+        '.sc-color-pop-kicker{font-size:.6rem;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:#7a8fa8;}',
+        '.sc-color-pop-title{font-size:.92rem;line-height:1.15;font-weight:900;color:#10253f;}',
+        '.sc-color-pop-note{font-size:.72rem;line-height:1.35;color:#6c7f96;}',
+        '.sc-color-pop-close{width:1.75rem;height:1.75rem;border:1px solid #d6dfec;border-radius:.56rem;background:#fff;color:#52657c;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;transition:background .12s,color .12s,border-color .12s,transform .12s;}',
+        '.sc-color-pop-close:hover{background:#eff5fb;color:#10253f;border-color:#bfd0e4;transform:translateY(-1px);}',
+        '.sc-color-pop-body{display:grid;gap:.64rem;}',
+        '.sc-color-section-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;}',
+        '.sc-color-section-title{font-size:.7rem;line-height:1;text-transform:uppercase;letter-spacing:.1em;font-weight:900;color:#6f8298;}',
+        '.sc-color-section-pill{font-size:.66rem;line-height:1;font-weight:800;color:#43607f;background:#edf4fb;border:1px solid #d9e4f1;border-radius:999px;padding:.28rem .5rem;}',
+        '.sc-color-swatches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem;}',
+        '.sc-color-swatch{position:relative;appearance:none;border:1px solid #dbe4ef;border-radius:.82rem;background:#fff;padding:.48rem .5rem;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.06);display:flex;align-items:center;gap:.48rem;min-width:0;transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease,background .12s ease;}',
+        '.sc-color-swatch:hover{transform:translateY(-1px);border-color:#bfd0e4;box-shadow:0 8px 18px rgba(15,23,42,.08);}',
+        '.sc-color-swatch:focus-visible,.sc-color-pop-close:focus-visible,.sc-color-reset-button:focus-visible{outline:2px solid #2563eb;outline-offset:2px;}',
+        '.sc-color-swatch.is-active{border-color:#10253f;background:linear-gradient(180deg,#fbfdff 0%,#eff5fb 100%);box-shadow:0 0 0 1px rgba(16,37,63,.1),0 10px 22px rgba(15,23,42,.12);}',
+        '.sc-color-swatch-chip{width:1.42rem;height:1.42rem;border-radius:.48rem;flex-shrink:0;border:1px solid rgba(15,23,42,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(15,23,42,.1);position:relative;}',
+        '.sc-color-swatch.is-active .sc-color-swatch-chip::after{content:"\\2713";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:900;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);}',
+        '.sc-color-swatch-meta{min-width:0;display:grid;gap:.03rem;}',
+        '.sc-color-swatch-label{font-size:.76rem;line-height:1.08;font-weight:900;color:#10253f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+        '.sc-color-swatch-value{font-size:.62rem;line-height:1.05;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6d8095;}',
+        '.sc-color-pop-footer{display:flex;align-items:center;justify-content:space-between;gap:.65rem;padding-top:.18rem;border-top:1px solid #e6edf6;}',
+        '.sc-color-current{display:flex;align-items:center;gap:.46rem;min-width:0;}',
+        '.sc-color-current-sample{width:1rem;height:1rem;border-radius:50%;border:1px solid rgba(15,23,42,.12);box-shadow:0 1px 2px rgba(15,23,42,.12);flex-shrink:0;}',
+        '.sc-color-current-sample.is-default{background:repeating-linear-gradient(135deg,#d8e1ed 0 6px,#eef3f8 6px 12px);}',
+        '.sc-color-current-copy{display:grid;gap:.02rem;min-width:0;}',
+        '.sc-color-current-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;font-weight:900;color:#7b8ca0;}',
+        '.sc-color-current-value{font-size:.76rem;line-height:1.1;font-weight:800;color:#122038;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:8rem;}',
+        '.sc-color-current-value.is-default{color:#6c7f96;}',
+        '.sc-color-reset-button{display:inline-flex;align-items:center;gap:.34rem;border:1px solid #d6dfec;border-radius:999px;background:#f4f7fb;color:#425466;padding:.34rem .58rem;font-size:.72rem;font-weight:800;cursor:pointer;flex-shrink:0;transition:background .12s,color .12s,border-color .12s,transform .12s;}',
+        '.sc-color-reset-button:hover{background:#ecf3fb;color:#10253f;border-color:#bfd0e4;transform:translateY(-1px);}',
+        '.sc-color-reset-button:disabled{opacity:.55;cursor:not-allowed;transform:none;}',
+        '@media (max-width: 540px){.sc-color-pop{width:min(18rem,calc(100vw - .75rem));}.sc-color-swatches{grid-template-columns:1fr;}.sc-color-pop-footer{flex-direction:column;align-items:stretch;}.sc-color-reset-button{justify-content:center;}}'
+    ].join('');
+    document.head.appendChild(style);
+}
+
 function closeColorPop() {
     if (_sharedColorPopDismissHandler) {
         document.removeEventListener('mousedown', _sharedColorPopDismissHandler);
@@ -2304,6 +2350,7 @@ function getMarkerColorMeta(color) {
 }
 
 function showColorPop(x, y, currentColor, onPick, boundsEl) {
+    ensureColorPopupStyles();
     closeColorPop();
     const currentMeta = getMarkerColorMeta(currentColor);
     const pop = document.createElement('div');
