@@ -2746,7 +2746,7 @@ function savePlacementFromMap(id, lat, lng) {
             showMapToast(dashboardTr('dashboard.place_sensor_saved', 'Poloha senzora uložená'), 2400);
             setTimeout(function() { focusOnMap(id); }, 80);
         } else {
-            showMapToast('\u2717 ' + ((res.data && (res.data.message || res.data.error)) || dashboardTr('dashboard.place_sensor_save_failed', 'Nepodarilo sa ulo?i? polohu')), 2600);
+            showMapToast('\u2717 ' + ((res.data && (res.data.message || res.data.error)) || dashboardTr('dashboard.place_sensor_save_failed', 'Nepodarilo sa uložiť polohu')), 2600);
         }
     });
 }
@@ -4926,7 +4926,7 @@ async function saveMiniMapView() {
         }
         latestCoverageState = payload;
         miniCoverageViewInitialized = true;
-        setMiniMapSaveStatus('ok', appTranslate('dashboard.view_saved', 'Poh?ad ulo?en?'));
+        setMiniMapSaveStatus('ok', appTranslate('dashboard.view_saved', 'Pohľad uložený'));
         showMiniMapToast(appTranslate('dashboard.view_saved_toast', 'Pohľad uložený'), 2000);
     } catch (error) {
         setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'));

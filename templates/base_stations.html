@@ -740,7 +740,7 @@
             <div class="dropdown-menu dropdown-menu-end p-2 sensor-view-menu">
                 <div class="small fw-semibold text-muted mb-1">{{ t('common.density', 'Density') }}</div>
                 <div class="bs-density-toggle" role="group" aria-label="{{ t('base_stations.list_density', 'Base station list density') }}">
-                    <button type="button" class="bs-density-btn" id="bsViewDetailedBtn">{{ t('common.expanded', 'Roz??ren?') }}</button>
+                    <button type="button" class="bs-density-btn" id="bsViewDetailedBtn">{{ t('common.expanded', 'Rozšírené') }}</button>
                     <button type="button" class="bs-density-btn" id="bsViewCompactBtn">{{ t('common.compact', 'Compact') }}</button>
                 </div>
             </div>
@@ -1880,7 +1880,7 @@ function saveBaseStation() {
 
 function deleteBaseStation(eui) {
     if (!BS_CAN_MANAGE_BASE_STATIONS) return;
-    if (!confirm(`Vymaza? z?klad?ov? stanicu ${eui}?`)) return;
+    if (!confirm(`Vymazať základňovú stanicu ${eui}?`)) return;
     fetch(`/api/base-stations/${eui}`, {method: 'DELETE'})
         .then(r => r.json())
         .then(data => {
