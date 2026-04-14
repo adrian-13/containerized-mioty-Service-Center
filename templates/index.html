@@ -2502,18 +2502,19 @@ function updateMap(sensors) {
                     action: function() { if (!!_markerUnlocked[id]) lockMarker(); else unlockMarker(); } },
                 { icon: 'fa-palette', label: 'Zmeni? farbu',
                     action: function() {
-                        showColorPop(cx, cy, s.marker_color || null, function(color) {
-                                persistSensorMarkerColor(id, color).then(function(result) {
-                                    if (result.ok && result.data && result.data.success) {
-                                        if (color) s.marker_color = color; else delete s.marker_color;
-                                        marker.setIcon(makeMarkerIcon(color || statusColor, !!_markerUnlocked[id], 'sensor'));
-                                        showMapToast(color ? '? Farba zmenen?' : '? Farba obnoven?', 2000);
-                                    } else {
-                                        showMapToast('\u2717 ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba')), 2200);
-                                    }
+                        setTimeout(function() {
+                            showColorPop(cx, cy, s.marker_color || null, function(color) {
+                                    persistSensorMarkerColor(id, color).then(function(result) {
+                                        if (result.ok && result.data && result.data.success) {
+                                            if (color) s.marker_color = color; else delete s.marker_color;
+                                            marker.setIcon(makeMarkerIcon(color || statusColor, !!_markerUnlocked[id], 'sensor'));
+                                            showMapToast(color ? '? Farba zmenen?' : '? Farba obnoven?', 2000);
+                                        } else {
+                                            showMapToast('\u2717 ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba')), 2200);
+                                        }
+                                    });
                                 });
-                            });
-
+                        }, 80);
                     } },
                 '-',
                 { icon: 'fa-circle-plus', primary: true, label: 'Prida? upozornenie',
@@ -4848,7 +4849,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                     label: appTranslate('dashboard.change_marker_color', 'Zmeniť farbu'),
                     action: () => {
                         const currentColor = marker.__miniNode ? marker.__miniNode.marker_color : '';
-                        showMiniColorPop(clientX, clientY, currentColor || null, (color) => {
+                        setTimeout(() => {
+                            showMiniColorPop(clientX, clientY, currentColor || null, (color) => {
                                 persistSensorMarkerColor(markerEui, color).then((result) => {
                                     if (!(result.ok && result.data && result.data.success)) {
                                         showMiniMapToast(
@@ -4888,6 +4890,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                         .finally(finish);
                                 });
                             });
+                        }, 80);
 
                     }
                 });

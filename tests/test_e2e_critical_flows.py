@@ -300,6 +300,16 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertTrue(body.get("success"), body)
         self.assertIsNone(body.get("marker_color"))
 
+    def test_mini_marker_color_popup_is_deferred(self):
+        template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "index.html")
+        with open(template_path, "r", encoding="utf-8") as fh:
+            template = fh.read()
+
+        self.assertRegex(
+            template,
+            r"setTimeout\(\(\) => \{\s*showMiniColorPop\(clientX, clientY, currentColor \|\| null, \(color\) => \{",
+        )
+
     def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):
         with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
             session["username"] = "admin"
