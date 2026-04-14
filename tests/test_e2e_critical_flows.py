@@ -302,18 +302,17 @@ class CriticalFlowsE2ETest(unittest.TestCase):
 
     def test_mini_marker_color_popup_is_deferred(self):
         template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "index.html")
-        with open(template_path, "rb") as fh:
-            template = fh.read().decode("latin-1")
+        with open(template_path, "r", encoding="utf-8") as fh:
+            template = fh.read()
 
         self.assertRegex(
             template,
-            r"setTimeout\(\(\) => \{\s*showMiniColorPop\(clientX, clientY, currentColor \|\| null, \(color\) => \{",
+            r"setTimeout\(\(\) => \{\s*showMiniColorPop\(clientX, clientY, currentColor \|\| null, \(color\) => \{" ,
         )
-
     def test_shared_color_helpers_are_available_before_branch_split(self):
         template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "index.html")
-        with open(template_path, "rb") as fh:
-            template = fh.read().decode("latin-1")
+        with open(template_path, "r", encoding="utf-8") as fh:
+            template = fh.read()
 
         scripts_start = template.index("{% block scripts %}")
         branch_split = template.index("{% if is_customer_user %}", scripts_start)
@@ -325,6 +324,11 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertIn("getMarkerColorMeta", template)
         self.assertIn("ensureColorPopupStyles", template)
         self.assertIn("sc-color-pop-runtime-style", template)
+        self.assertIn("Presúvanie odomknuté", template)
+        self.assertIn("Zmeniť farbu", template)
+        self.assertIn("Otvoriť detail senzora", template)
+        self.assertIn("Odomknúť presúvanie", template)
+        self.assertIn("Farba markera uložená", template)
         self.assertIn("sc-color-pop-header", template)
         self.assertIn("sc-color-pop-shell", template)
         self.assertIn("sc-color-pop-footer", template)
@@ -336,7 +340,6 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertIn("pop.style.position = 'fixed';", template)
         self.assertIn("const minLeft = hostRect.left + 8;", template)
         self.assertIn("const minTop = hostRect.top + 8;", template)
-
     def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):
         with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
             session["username"] = "admin"

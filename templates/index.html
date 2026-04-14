@@ -2951,7 +2951,7 @@ function updateMap(sensors) {
                 _pendingLatLng[id] = { _origLat: cur.lat, _origLng: cur.lng, lat: cur.lat, lng: cur.lng };
             }
             marker.setPopupContent(buildPopupUnlockedHtml(name, shortEui, id, false));
-            showMapToast('PresÄ‚Ĺźvanie odomknutÄ‚Â© \u2014 presuÄąÂte marker', 2800);
+            showMapToast('Presúvanie odomknuté — presuňte marker', 2800);
         }
 
         // Shared context menu items for right-click and â‹Ż button
@@ -2961,9 +2961,9 @@ function updateMap(sensors) {
                 { icon: 'fa-arrow-up-right-from-square', label: 'Detail senzora',
                     action: function() { window.location.href = '/sensors/' + encodeURIComponent(id); } },
                 { icon: isDragOn ? 'fa-lock' : 'fa-lock-open',
-                    label: isDragOn ? 'Zamkn?? polohu' : 'Odomkn?? pres?vanie',
+                    label: isDragOn ? 'Zamknúť polohu' : 'Odomknúť presúvanie',
                     action: function() { if (!!_markerUnlocked[id]) lockMarker(); else unlockMarker(); } },
-                { icon: 'fa-palette', label: 'Zmeni? farbu',
+                { icon: 'fa-palette', label: 'Zmeniť farbu',
                     action: function() {
                         setTimeout(function() {
                             showColorPop(cx, cy, s.marker_color || null, function(color) {
@@ -2971,7 +2971,7 @@ function updateMap(sensors) {
                                         if (result.ok && result.data && result.data.success) {
                                             if (color) s.marker_color = color; else delete s.marker_color;
                                             marker.setIcon(makeMarkerIcon(color || statusColor, !!_markerUnlocked[id], 'sensor'));
-                                            showMapToast(color ? '? Farba zmenen?' : '? Farba obnoven?', 2000);
+                                            showMapToast(color ? '✓ Farba zmenená' : '✓ Farba obnovená', 2000);
                                         } else {
                                             showMapToast('\u2717 ' + (((result.data && (result.data.message || result.data.error)) || 'Chyba')), 2200);
                                         }
@@ -3055,7 +3055,7 @@ function updateMap(sensors) {
                     delete _pendingLatLng[id];
                     marker.openPopup();
                     lockMarker();
-                    showMapToast('Presunutie zruÄąË‡enÄ‚Â©', 1800);
+                    showMapToast('Presunutie zrušené', 1800);
                 });
             }
         });
@@ -3577,7 +3577,7 @@ function initContextMenus() {
                     : dashboardTr('dashboard.place_on_map', 'UmiestniĹĄ na mapu');
                 showCtx(e, [
                     { icon: 'fa-location-dot', label: placementLabel, action: function() { startPlacement(eui); } },
-                    { icon: 'fa-arrow-up-right-from-square', label: 'Otvori? detail', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
+                    { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť detail', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
                     { icon: 'fa-circle-plus', primary: true, label: 'Prida? upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(eui); } },
                 ]);
             } else {
@@ -3601,7 +3601,7 @@ function initContextMenus() {
                     { icon: 'fa-clock-rotate-left', label: 'Potvrdi? na 4 hodiny',  action: function() { if (ackKey) { ackAlert(ackKey, 4);  renderAlerts(allSensors); } } },
                     { icon: 'fa-check-double',       label: 'Potvrdi? na 24 hod?n', action: function() { if (ackKey) { ackAlert(ackKey, 24); renderAlerts(allSensors); } } },
                     '-',
-                    { icon: 'fa-arrow-up-right-from-square', label: 'Otvori? senzor', action: function() { if (eui) window.location.href = '/sensors/' + encodeURIComponent(eui); } },
+                    { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť senzor', action: function() { if (eui) window.location.href = '/sensors/' + encodeURIComponent(eui); } },
                 ]);
             } else {
                 // Empty area / header
@@ -4188,7 +4188,7 @@ function saveMiniMarkerPlacement(lat, lng) {
                 setTimeout(() => focusMiniMarker(markerKey), 60);
             } else {
                 showMiniMapToast(
-                    'Ă˘Ĺ›â€˘ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_move_failed', 'Nepodarilo sa ulo?i? polohu'))),
+                    '✖ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_move_failed', 'Nepodarilo sa uložiť polohu'))),
                     2600
                 );
             }
@@ -4433,7 +4433,7 @@ function initDashboardContextMenus() {
                 {
                     icon: 'fa-arrow-up-right-from-square',
                     primary: true,
-                    label: appTranslate('dashboard.open_sensor_detail', 'OtvoriĹĄ detail senzora'),
+                    label: appTranslate('dashboard.open_sensor_detail', 'Otvoriť detail senzora'),
                     action: () => {
                         window.location.href = '/sensors/' + encodeURIComponent(sensorId);
                     }
@@ -5276,12 +5276,12 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
             }
             marker.setPopupContent(buildMiniMarkerUnlockedPopupHtml(label, shortEui, popupId, false));
             marker.openPopup();
-            showMiniMapToast('Pres?vanie odomknut? ? presu?te marker', 2800);
+            showMiniMapToast('Presúvanie odomknuté — presuňte marker', 2800);
         };
         const markerContextItems = (clientX, clientY) => {
             const detailLabel = isBs
-                ? appTranslate('dashboard.open_base_station_detail', 'OtvoriĹĄ detail stanice')
-                : appTranslate('dashboard.open_sensor_detail', 'OtvoriĹĄ detail senzora');
+                ? appTranslate('dashboard.open_base_station_detail', 'Otvoriť detail stanice')
+                : appTranslate('dashboard.open_sensor_detail', 'Otvoriť detail senzora');
             const isDragOn = !!miniMarkerUnlocked[markerKey];
             const items = [
                 {
@@ -5295,8 +5295,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                 {
                     icon: isDragOn ? 'fa-lock' : 'fa-lock-open',
                     label: isDragOn
-                        ? appTranslate('dashboard.lock_marker_position', 'ZamknĂşĹĄ polohu')
-                        : appTranslate('dashboard.unlock_marker_move', 'OdomknĂşĹĄ presĂşvaĹie'),
+                        ? appTranslate('dashboard.lock_marker_position', 'Zamknúť polohu')
+                        : appTranslate('dashboard.unlock_marker_move', 'Odomknúť presúvanie'),
                     action: () => {
                         if (miniMarkerUnlocked[markerKey]) {
                             delete miniPendingLatLng[markerKey];
@@ -5310,7 +5310,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
             if (!isBs) {
                 items.splice(1, 0, {
                     icon: 'fa-palette',
-                    label: appTranslate('dashboard.change_marker_color', 'ZmeniĹĄ farbu'),
+                    label: appTranslate('dashboard.change_marker_color', 'Zmeniť farbu'),
                     action: () => {
                         const currentColor = marker.__miniNode ? marker.__miniNode.marker_color : '';
                         setTimeout(() => {
@@ -5318,7 +5318,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                 persistSensorMarkerColor(markerEui, color).then((result) => {
                                     if (!(result.ok && result.data && result.data.success)) {
                                         showMiniMapToast(
-                                            'Ă˘Ĺ›â€˘ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uloĹľiĹĄ farbu'))),
+                                            '✖ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uložiť farbu'))),
                                             2600
                                         );
                                         return;
@@ -5339,8 +5339,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                         setDashboardMiniInteractionState({});
                                         showMiniMapToast(
                                             color
-                                                ? appTranslate('dashboard.marker_color_saved', 'Farba markera uloĹľenĂˇ')
-                                                : appTranslate('dashboard.marker_color_reset_done', 'PredvolenĂˇ farba obnovenĂˇ'),
+                                                ? appTranslate('dashboard.marker_color_saved', 'Farba markera uložená')
+                                                : appTranslate('dashboard.marker_color_reset_done', 'Predvolená farba obnovená'),
                                             2200
                                         );
                                     };
@@ -5416,7 +5416,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                 delete miniPendingLatLng[markerKey];
                 lockMarker();
                 setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
-                marker.openPopup();
+                showMiniMapToast('Presunutie zrušené', 1800);
                 showMiniMapToast('Presunutie zruÄąË‡enÄ‚Â©', 1800);
             }
         };
@@ -5502,7 +5502,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                     lockMarker();
                     setDashboardMiniInteractionState({ activeKey: markerKey, hoverKey: '' });
                     marker.openPopup();
-                    showMiniMapToast('Presunutie zruÄąË‡enÄ‚Â©', 1800);
+                    showMiniMapToast('Presunutie zrušené', 1800);
                 });
             }
         });
