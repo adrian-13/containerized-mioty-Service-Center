@@ -2056,16 +2056,22 @@ function showColorPop(x, y, currentColor, onPick, boundsEl) {
     });
     pop.appendChild(reset);
 
-    document.body.appendChild(pop);
+    const host = boundsEl && typeof boundsEl.getBoundingClientRect === 'function' ? boundsEl : document.body;
+    const hostRect = host === document.body
+        ? { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight }
+        : host.getBoundingClientRect();
+    host.appendChild(pop);
+    pop.style.position = host === document.body ? 'fixed' : 'absolute';
     const rect = pop.getBoundingClientRect();
-    const bounds = boundsEl && typeof boundsEl.getBoundingClientRect === 'function' ? boundsEl.getBoundingClientRect() : null;
-    const minLeft = bounds ? bounds.left + 8 : 8;
-    const maxLeft = bounds ? bounds.right - rect.width - 8 : window.innerWidth - rect.width - 8;
-    const minTop = bounds ? bounds.top + 8 : 8;
-    const maxTop = bounds ? bounds.bottom - rect.height - 8 : window.innerHeight - rect.height - 8;
-    let left = x - rect.width / 2;
-    let top = y - rect.height - 14;
-    if (top < minTop) top = y + 14;
+    const localX = x - hostRect.left;
+    const localY = y - hostRect.top;
+    const minLeft = 8;
+    const maxLeft = Math.max(minLeft, hostRect.right - hostRect.left - rect.width - 8);
+    const minTop = 8;
+    const maxTop = Math.max(minTop, hostRect.bottom - hostRect.top - rect.height - 8);
+    let left = localX - rect.width / 2;
+    let top = localY - rect.height - 14;
+    if (top < minTop) top = localY + 14;
     left = Math.max(minLeft, Math.min(left, maxLeft));
     top = Math.max(minTop, Math.min(top, maxTop));
     pop.style.left = left + 'px';
