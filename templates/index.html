@@ -2008,6 +2008,93 @@ body.is-resizing-dashboard-row {
 
 {% block scripts %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const MARKER_PALETTE = ['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891b2','#db2777','#374151','#f59e0b','#059669'];
+let _sharedColorPopEl = null;
+
+function closeColorPop() {
+    if (_sharedColorPopEl) {
+        _sharedColorPopEl.remove();
+        _sharedColorPopEl = null;
+    }
+}
+
+function showColorPop(x, y, currentColor, onPick) {
+    closeColorPop();
+    const pop = document.createElement('div');
+    pop.className = 'sc-color-pop sc-color-pop-compact';
+
+    const swatches = document.createElement('div');
+    swatches.className = 'sc-color-swatches';
+    MARKER_PALETTE.forEach(function(c) {
+        const sw = document.createElement('div');
+        sw.className = 'sc-color-swatch' + (c === currentColor ? ' is-active' : '');
+        sw.style.background = c;
+        sw.title = c;
+        sw.setAttribute('aria-label', c);
+        sw.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeColorPop();
+            if (typeof onPick === 'function') onPick(c);
+        });
+        swatches.appendChild(sw);
+    });
+    pop.appendChild(swatches);
+
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'sc-color-reset-icon';
+    reset.title = 'Obnoviť predvolenú farbu';
+    reset.setAttribute('aria-label', 'Obnoviť predvolenú farbu');
+    reset.textContent = '↶';
+    reset.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeColorPop();
+        if (typeof onPick === 'function') onPick(null);
+    });
+    pop.appendChild(reset);
+
+    document.body.appendChild(pop);
+    const rect = pop.getBoundingClientRect();
+    let left = x - rect.width / 2;
+    let top = y - rect.height - 14;
+    if (left < 8) left = 8;
+    if (left + rect.width > window.innerWidth - 8) left = window.innerWidth - rect.width - 8;
+    if (top < 8) top = y + 14;
+    if (top + rect.height > window.innerHeight - 8) top = window.innerHeight - rect.height - 8;
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    _sharedColorPopEl = pop;
+
+    function onDocClick(e) {
+        if (!pop.contains(e.target)) {
+            closeColorPop();
+            document.removeEventListener('mousedown', onDocClick);
+        }
+    }
+    setTimeout(function() { document.addEventListener('mousedown', onDocClick); }, 50);
+}
+
+function persistSensorMarkerColor(sensorEui, color) {
+    return fetch('/api/sensors/' + encodeURIComponent(sensorEui) + '/marker-color', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ color: color || '' })
+    })
+    .then(function(response) {
+        return response.json().then(function(data) {
+            return { ok: response.ok, data: data };
+        }).catch(function() {
+            return { ok: response.ok, data: null };
+        });
+    })
+    .catch(function() {
+        return { ok: false, data: { message: 'Chyba siete.' } };
+    });
+}
+</script>
 {% if is_customer_user %}
 <script>
 (function() {

@@ -310,6 +310,16 @@ class CriticalFlowsE2ETest(unittest.TestCase):
             r"setTimeout\(\(\) => \{\s*showMiniColorPop\(clientX, clientY, currentColor \|\| null, \(color\) => \{",
         )
 
+    def test_shared_color_helpers_are_available_before_branch_split(self):
+        template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "index.html")
+        with open(template_path, "r", encoding="utf-8") as fh:
+            template = fh.read()
+
+        scripts_start = template.index("{% block scripts %}")
+        branch_split = template.index("{% if is_customer_user %}", scripts_start)
+        self.assertLess(template.index("function showColorPop"), branch_split)
+        self.assertLess(template.index("function persistSensorMarkerColor"), branch_split)
+
     def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):
         with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
             session["username"] = "admin"
