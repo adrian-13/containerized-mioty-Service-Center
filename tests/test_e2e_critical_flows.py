@@ -302,8 +302,8 @@ class CriticalFlowsE2ETest(unittest.TestCase):
 
     def test_mini_marker_color_popup_is_deferred(self):
         template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "index.html")
-        with open(template_path, "r", encoding="utf-8") as fh:
-            template = fh.read()
+        with open(template_path, "rb") as fh:
+            template = fh.read().decode("latin-1")
 
         self.assertRegex(
             template,
@@ -312,8 +312,8 @@ class CriticalFlowsE2ETest(unittest.TestCase):
 
     def test_shared_color_helpers_are_available_before_branch_split(self):
         template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "index.html")
-        with open(template_path, "r", encoding="utf-8") as fh:
-            template = fh.read()
+        with open(template_path, "rb") as fh:
+            template = fh.read().decode("latin-1")
 
         scripts_start = template.index("{% block scripts %}")
         branch_split = template.index("{% if is_customer_user %}", scripts_start)
@@ -321,6 +321,15 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertLess(template.index("function persistSensorMarkerColor"), branch_split)
         self.assertEqual(template.count("function showColorPop("), 1)
         self.assertEqual(template.count("function persistSensorMarkerColor("), 1)
+        self.assertIn("MARKER_COLOR_OPTIONS", template)
+        self.assertIn("getMarkerColorMeta", template)
+        self.assertIn("sc-color-pop-header", template)
+        self.assertIn("sc-color-pop-shell", template)
+        self.assertIn("sc-color-pop-footer", template)
+        self.assertIn("sc-color-pop-close", template)
+        self.assertIn("sc-color-swatch-label", template)
+        self.assertIn("sc-color-reset-button", template)
+        self.assertIn("e.key === 'Escape'", template)
         self.assertIn("document.body.appendChild(pop);", template)
         self.assertIn("pop.style.position = 'fixed';", template)
         self.assertIn("const minLeft = hostRect.left + 8;", template)
