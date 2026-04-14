@@ -233,6 +233,73 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         euis = {row.get("eui") for row in bs_payload.get("base_stations", [])}
         self.assertEqual(euis, {"129af3fffe01f125"})
 
+    def test_sensor_marker_color_persists_and_is_returned_by_api(self):
+        self._write_json(
+            self.users_file,
+            {
+                "users": {
+                    "admin": {
+                        "name": "Administrator",
+                        "role": "admin",
+                        "tenant_id": "",
+                        "password": "rotated-admin-pass",
+                        "require_password_change": False,
+                        "bootstrap_password_state": "rotated",
+                    },
+                },
+                "role_permissions": {
+                    "admin": {
+                        "can_edit_sensors": True,
+                        "can_edit_config": True,
+                        "can_manage_certificates": True,
+                    }
+                },
+            },
+        )
+        self._write_json(
+            self.sensor_file,
+            [
+                {
+                    "eui": "00124B001CBCE171",
+                    "nwKey": "00112233445566778899AABBCCDDEEFF",
+                    "shortAddr": "A171",
+                    "bidi": False,
+                    "name": "Default tenant sensor",
+                    "tenant_id": "default",
+                }
+            ],
+        )
+
+        self._login("admin", "admin", "default")
+        sensor_eui = "00124B001CBCE171"
+
+        resp = self.client.post(
+            f"/api/sensors/{sensor_eui}/marker-color",
+            json={"color": "#123456"},
+        )
+        self.assertEqual(resp.status_code, 200, resp.get_data(as_text=True))
+        body = resp.get_json()
+        self.assertTrue(body.get("success"), body)
+        self.assertEqual(body.get("marker_color"), "#123456")
+
+        sensors_after = self._read_json(self.sensor_file)
+        sensor_row = next(s for s in sensors_after if s["eui"] == sensor_eui)
+        self.assertEqual(sensor_row.get("marker_color"), "#123456")
+
+        resp = self.client.get("/api/sensors")
+        self.assertEqual(resp.status_code, 200, resp.get_data(as_text=True))
+        sensor_map = resp.get_json() or {}
+        self.assertEqual(sensor_map[sensor_eui].get("marker_color"), "#123456")
+
+        resp = self.client.post(
+            f"/api/sensors/{sensor_eui}/marker-color",
+            json={"color": ""},
+        )
+        self.assertEqual(resp.status_code, 200, resp.get_data(as_text=True))
+        body = resp.get_json()
+        self.assertTrue(body.get("success"), body)
+        self.assertIsNone(body.get("marker_color"))
+
     def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):
         with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
             session["username"] = "admin"

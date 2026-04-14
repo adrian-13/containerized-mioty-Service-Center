@@ -906,7 +906,8 @@ function showColorPop(x, y, currentColor, onPick) {
         sw.style.background = c;
         sw.title = c;
         sw.setAttribute('aria-label', c);
-        sw.addEventListener('mousedown', function(e) {
+        sw.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
             closeColorPop();
             if (typeof onPick === 'function') onPick(c);
@@ -920,7 +921,12 @@ function showColorPop(x, y, currentColor, onPick) {
     reset.title = 'Obnovi? predvolen? farbu';
     reset.setAttribute('aria-label', 'Obnovi? predvolen? farbu');
     reset.textContent = '?';
-    reset.addEventListener('mousedown', function(e) { e.stopPropagation(); closeColorPop(); if (typeof onPick === 'function') onPick(null); });
+    reset.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeColorPop();
+        if (typeof onPick === 'function') onPick(null);
+    });
     pop.appendChild(reset);
     document.body.appendChild(pop);
     _colorPopEl = pop;
