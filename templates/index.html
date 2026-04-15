@@ -4595,7 +4595,7 @@ function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
         statusColor: '#2563eb',
         accentColor: '#2563eb',
         accentHover: '#1d4ed8',
-        dotButtonHtml: '<button type="button" id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots sc-marker-pop-button is-icon" title="Možnosti" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'dots\', \'" + escapeHtml(popupId) + "\', event)"><i class="fas fa-ellipsis-h"></i></button>',
+        dotButtonHtml: '<button type="button" id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots sc-marker-pop-button is-icon" title="Možnosti"><i class="fas fa-ellipsis-h"></i></button>',
         actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail sc-marker-pop-button is-primary"><i class="fas fa-arrow-up-right-from-square"></i><span>Detail →</span></a>'
     });
 }
@@ -4615,8 +4615,8 @@ function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
         hintBg: hasMoved ? 'rgba(22, 163, 74, .10)' : 'rgba(235, 126, 23, .10)',
         noteClass: 'is-unlocked',
         noteHtml: '<i class="fas fa-route"></i><span>' + escapeHtml(hintText) + '</span>',
-        actionsHtml: (hasMoved ? '<button type="button" id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save sc-marker-pop-button is-success" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'save\', \'" + escapeHtml(popupId) + "\', event)"><i class="fas fa-floppy-disk"></i><span>Uložiť polohu</span></button>' : '')
-            + '<button type="button" id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel sc-marker-pop-button is-secondary" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'cancel\', \'" + escapeHtml(popupId) + "\', event)"><i class="fas fa-xmark"></i><span>Zrušiť</span></button>'
+        actionsHtml: (hasMoved ? '<button type="button" id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save sc-marker-pop-button is-success"><i class="fas fa-floppy-disk"></i><span>Uložiť polohu</span></button>' : '')
+            + '<button type="button" id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel sc-marker-pop-button is-secondary"><i class="fas fa-xmark"></i><span>Zrušiť</span></button>'
     });
 }
 
