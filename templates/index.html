@@ -741,13 +741,12 @@
     }
 }
 .sc-leaflet-popup .leaflet-popup-content-wrapper {
-    border-radius: 1rem !important;
-    box-shadow: 0 18px 38px rgba(15,23,42,.18) !important;
-    border: 1px solid rgba(214,223,236,.92) !important;
-    padding: .12rem !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
     overflow: visible;
-    background:
-        linear-gradient(180deg, rgba(255,255,255,.99), rgba(248,251,255,.99)) !important;
+    background: transparent !important;
 }
 .sc-leaflet-popup .leaflet-popup-content {
     margin: 0 !important;
@@ -757,9 +756,9 @@
 }
 .sc-leaflet-popup .leaflet-popup-tip-container { margin-top: -2px; }
 .sc-leaflet-popup .leaflet-popup-tip {
-    box-shadow: 0 2px 6px rgba(15,23,42,.10) !important;
+    box-shadow: none !important;
     background: #fff !important;
-    border: 1px solid rgba(214,223,236,.92) !important;
+    border: 0 !important;
 }
 .sc-leaflet-popup .leaflet-popup-close-button {
     font-size: .84rem !important;
@@ -782,29 +781,29 @@
     position: relative;
     min-width: 12.2rem;
     max-width: 15.2rem;
-    padding: .14rem .18rem .16rem;
+    padding: .54rem .58rem .56rem;
     font-family: 'Manrope', system-ui, sans-serif;
     color: #0f172a;
-    border-radius: .92rem;
-    overflow: visible;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: linear-gradient(180deg, #fff 0%, #f7fbff 100%);
+    border: 1px solid rgba(214,223,236,.96);
+    box-shadow: 0 16px 34px rgba(15,23,42,.16);
     backdrop-filter: none;
 }
 .sc-marker-pop-header {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr;
     align-items: start;
-    gap: .28rem;
+    gap: .18rem;
     padding: 0;
     border-bottom: 0;
     background: transparent;
 }
 .sc-marker-pop.is-unlocked .sc-marker-pop-header {
-    gap: .22rem;
+    gap: .14rem;
     padding: 0;
 }
 .sc-marker-pop-main {
@@ -813,32 +812,8 @@
     gap: .06rem;
     align-content: start;
 }
-.sc-marker-pop-badge {
-    width: 1.52rem;
-    height: 1.52rem;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    background:
-        linear-gradient(180deg, rgba(37,99,235,.14), rgba(37,99,235,.08));
-    color: var(--sc-popup-accent, var(--brand-500));
-    border: 1px solid rgba(37,99,235,.14);
-    box-shadow:
-        0 8px 16px rgba(37,99,235,.10),
-        inset 0 1px 0 rgba(255,255,255,.85);
-}
-.sc-marker-pop-badge i {
-    font-size: .66rem;
-    line-height: 1;
-}
-.sc-marker-pop.is-unlocked .sc-marker-pop-badge {
-    width: 1.28rem;
-    height: 1.28rem;
-}
-.sc-marker-pop.is-unlocked .sc-marker-pop-badge i {
-    font-size: .56rem;
+.sc-marker-pop.has-rail .sc-marker-pop-main {
+    padding-right: 1.8rem;
 }
 .sc-marker-pop.is-unlocked .sc-marker-pop-title {
     font-size: .92rem;
@@ -865,8 +840,8 @@
 }
 .sc-marker-pop-rail {
     position: absolute;
-    top: .02rem;
-    right: .02rem;
+    top: .1rem;
+    right: .1rem;
     z-index: 2;
     display: flex;
     align-items: flex-start;
@@ -936,9 +911,6 @@
 .sc-marker-pop-status i {
     font-size: .56rem;
     line-height: 1;
-}
-.sc-marker-pop.is-unlocked .sc-marker-pop-status i {
-    font-size: .5rem;
 }
 .sc-marker-pop-note {
     display: flex;
@@ -2935,46 +2907,33 @@ function buildMarkerPopupCard(options) {
     if (options.hintBg) styleParts.push('--sc-popup-hint-bg:' + options.hintBg);
     const cardStyle = [
         'position:relative',
-        'min-width:14.2rem',
-        'max-width:18.25rem',
-        'padding:0',
+        'min-width:12.2rem',
+        'max-width:15.2rem',
+        'padding:.54rem .58rem .56rem',
         'font-family:Manrope,system-ui,sans-serif',
         'color:#0f172a',
-        'border-radius:0',
-        'overflow:visible',
-        'background:transparent',
-        'border:0',
-        'box-shadow:none',
+        'border-radius:1rem',
+        'overflow:hidden',
+        'background:linear-gradient(180deg, #fff 0%, #f7fbff 100%)',
+        'border:1px solid rgba(214,223,236,.96)',
+        'box-shadow:0 16px 34px rgba(15,23,42,.16)',
         'backdrop-filter:none'
     ].join(';') + (styleParts.length ? ';' + styleParts.join(';') : '');
     const headerStyle = [
         'position:relative',
         'z-index:1',
         'display:grid',
-        'grid-template-columns:auto 1fr auto',
+        'grid-template-columns:1fr',
         'align-items:start',
-        'gap:.44rem',
-        'padding:.56rem .66rem .08rem',
+        'gap:.18rem',
+        'padding:0',
         'border-bottom:0',
         'background:transparent'
-    ].join(';');
-    const badgeStyle = [
-        'width:1.92rem',
-        'height:1.92rem',
-        'border-radius:999px',
-        'display:inline-flex',
-        'align-items:center',
-        'justify-content:center',
-        'flex-shrink:0',
-        'background:linear-gradient(180deg, rgba(37,99,235,.14), rgba(37,99,235,.08))',
-        'color:var(--sc-popup-accent, var(--brand-500))',
-        'border:1px solid rgba(37,99,235,.14)',
-        'box-shadow:0 8px 16px rgba(37,99,235,.10), inset 0 1px 0 rgba(255,255,255,.85)'
     ].join(';');
     const mainStyle = [
         'min-width:0',
         'display:grid',
-        'gap:.1rem',
+        'gap:.08rem',
         'align-content:start'
     ].join(';');
     const euiStyle = [
@@ -3023,24 +2982,26 @@ function buildMarkerPopupCard(options) {
     const noteStyle = [
         'display:flex',
         'align-items:center',
-        'gap:.5rem',
-        'padding:.28rem .66rem .08rem',
+        'gap:.34rem',
+        'padding:.28rem 0 .08rem',
         'background:transparent',
         'color:#51657d',
         'border:0',
-        'font-size:.7rem',
+        'font-size:.66rem',
         'line-height:1.35'
     ].join(';');
     const actionsStyle = [
         'display:grid',
         'grid-template-columns:1fr',
-        'gap:.28rem',
-        'padding:.38rem .66rem .66rem'
+        'gap:.18rem',
+        'padding:.08rem 0 0'
     ].join(';');
     const actionsClass = options.actionsClass ? ' ' + options.actionsClass : '';
-    return '<div class="sc-marker-pop' + (options.variant ? ' ' + options.variant : '') + '" style="' + cardStyle + '">'
+    const popClass = ['sc-marker-pop'];
+    if (options.variant) popClass.push(options.variant);
+    if (options.dotButtonHtml) popClass.push('has-rail');
+    return '<div class="' + popClass.join(' ') + '" style="' + cardStyle + '">'
         + '<div class="sc-marker-pop-header" style="' + headerStyle + '">'
-        + (options.badgeHtml ? '<div class="sc-marker-pop-badge" style="' + badgeStyle + '">' + options.badgeHtml + '</div>' : '')
         + '<div class="sc-marker-pop-main" style="' + mainStyle + '">'
         + (options.kicker ? '<div class="sc-marker-pop-kicker">' + escapeHtml(options.kicker) + '</div>' : '')
         + '<div class="sc-marker-pop-title">' + escapeHtml(options.title || '') + '</div>'
@@ -3375,7 +3336,6 @@ function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
     const brandBg  = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
     const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
     return buildMarkerPopupCard({
-        badgeHtml: '<i class="fas fa-microchip"></i>',
         title: name,
         eui: shortEui,
         accentColor: brandBg,
@@ -4823,7 +4783,6 @@ function fetchJson(url) {
 
 function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
     return buildMarkerPopupCard({
-        badgeHtml: '<i class="fas fa-microchip"></i>',
         title: name,
         eui: shortEui,
         accentColor: '#2563eb',

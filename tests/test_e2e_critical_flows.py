@@ -346,7 +346,7 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         with open(template_path, "r", encoding="utf-8") as fh:
             template = fh.read()
 
-        self.assertIn("sc-marker-pop-badge", template)
+        self.assertNotIn("sc-marker-pop-badge", template)
         self.assertIn("sc-marker-pop-rail", template)
         self.assertIn("sc-marker-pop-eui-label", template)
         self.assertIn("sc-marker-pop-eui-value", template)
