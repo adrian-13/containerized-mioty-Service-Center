@@ -4,7 +4,7 @@
       "id": "default",
       "name": "Super admin",
       "description": "Reserved global scope for super admin inventory and system-owned data.",
-      "created_at": "2026-04-13T11:07:39.146094+00:00",
+      "created_at": "2026-04-14T13:40:06.650653+00:00",
       "is_demo": false
     }
   ]

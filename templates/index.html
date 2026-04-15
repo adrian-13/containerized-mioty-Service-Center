@@ -5457,52 +5457,54 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
     let sensorTotal = 0;
     let baseShown = 0;
     let sensorShown = 0;
+    let renderErrors = 0;
 
     const markerCoords = [];
     nodeEntries.forEach(({ node, pos }) => {
-        const isBs = node.type === 'base_station';
-        if (isBs) {
-            baseTotal += 1;
-        } else {
-            sensorTotal += 1;
-        }
-        if (!pos) return;
+        try {
+            const isBs = node.type === 'base_station';
+            if (isBs) {
+                baseTotal += 1;
+            } else {
+                sensorTotal += 1;
+            }
+            if (!pos) return;
 
-        if (isBs) {
-            baseShown += 1;
-        } else {
-            sensorShown += 1;
-        }
+            if (isBs) {
+                baseShown += 1;
+            } else {
+                sensorShown += 1;
+            }
 
-        const markerStyle = getMiniMarkerBaseStyle(node);
-        const markerKey = miniMarkerKey(node.type, node.eui || '');
-        const popupId = markerKey.replace(/[^a-z0-9_-]+/gi, '-');
-        const label = node.label || shortId(node.eui || '', 10);
-        const markerEui = String(node.eui || '').trim().toUpperCase();
-        const shortEui = markerEui.replace(/(.{4})(?=.)/g, '$1 ');
-        const detailUrl = isBs
-            ? '/base-stations/' + encodeURIComponent(markerEui)
-            : '/sensors/' + encodeURIComponent(markerEui);
-        const unlocked = !!miniMarkerUnlocked[markerKey];
-        const marker = L.marker([pos.lat, pos.lng], {
-            icon: makeMiniMarkerIcon(markerStyle.fillColor, unlocked, node.type),
-            draggable: unlocked,
-            autoPan: true,
-            bubblingMouseEvents: false,
-            riseOnHover: true,
-            zIndexOffset: isBs ? 1300 : 1200
-        });
-        marker.__miniBaseStyle = { ...markerStyle };
-        marker.__miniKey = markerKey;
-        marker.__miniNode = {
-            type: String(node.type || ''),
-            eui: markerEui,
-            label,
-            marker_color: String(node.marker_color || '').trim()
-        };
-        marker.__miniRowSelector = isBs
-            ? `.gateway-item[data-gateway-eui="${escapeHtml(markerEui)}"]`
-            : `.sensor-item[data-sensor-id="${escapeHtml(markerEui)}"]`;
+            const markerStyle = getMiniMarkerBaseStyle(node);
+            const markerKey = miniMarkerKey(node.type, node.eui || '');
+            const popupId = markerKey.replace(/[^a-z0-9_-]+/gi, '-');
+            const label = node.label || shortId(node.eui || '', 10);
+            const markerEui = String(node.eui || '').trim().toUpperCase();
+            const shortEui = markerEui.replace(/(.{4})(?=.)/g, '$1 ');
+            const detailUrl = isBs
+                ? '/base-stations/' + encodeURIComponent(markerEui)
+                : '/sensors/' + encodeURIComponent(markerEui);
+            const unlocked = !!miniMarkerUnlocked[markerKey];
+            const marker = L.marker([pos.lat, pos.lng], {
+                icon: makeMiniMarkerIcon(markerStyle.fillColor, unlocked, node.type),
+                draggable: unlocked,
+                autoPan: true,
+                bubblingMouseEvents: false,
+                riseOnHover: true,
+                zIndexOffset: isBs ? 1300 : 1200
+            });
+            marker.__miniBaseStyle = { ...markerStyle };
+            marker.__miniKey = markerKey;
+            marker.__miniNode = {
+                type: String(node.type || ''),
+                eui: markerEui,
+                label,
+                marker_color: String(node.marker_color || '').trim()
+            };
+            marker.__miniRowSelector = isBs
+                ? `.gateway-item[data-gateway-eui="${escapeHtml(markerEui)}"]`
+                : `.sensor-item[data-sensor-id="${escapeHtml(markerEui)}"]`;
 
         marker.bindPopup(
             unlocked
@@ -5808,12 +5810,20 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
             const originalEvent = event.originalEvent || {};
             showMiniCtx(originalEvent, markerContextItems(Number(originalEvent.clientX || 0), Number(originalEvent.clientY || 0)));
         });
-        marker.addTo(miniCoverageLayer);
-        if (marker.__miniKey) {
-            miniCoverageMarkers[marker.__miniKey] = marker;
+            marker.addTo(miniCoverageLayer);
+            if (marker.__miniKey) {
+                miniCoverageMarkers[marker.__miniKey] = marker;
+            }
+            markerCoords.push([pos.lat, pos.lng]);
+        } catch (error) {
+            renderErrors += 1;
+            console.error('Mini marker render failed', node, error);
         }
-        markerCoords.push([pos.lat, pos.lng]);
     });
+
+    if (renderErrors > 0) {
+        showMiniMapToast('✗ Niektoré mini markery sa nepodarilo zobraziť', 2600);
+    }
 
     const savedView = parseMiniCoverageOsmView(coverageState);
     if (!miniCoverageViewInitialized) {
