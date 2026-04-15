@@ -340,6 +340,21 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertIn("pop.style.position = 'fixed';", template)
         self.assertIn("const minLeft = hostRect.left + 8;", template)
         self.assertIn("const minTop = hostRect.top + 8;", template)
+
+    def test_sensor_popup_card_is_structured_and_labeled(self):
+        template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "index.html")
+        with open(template_path, "r", encoding="utf-8") as fh:
+            template = fh.read()
+
+        self.assertIn("sc-marker-pop-badge", template)
+        self.assertIn("sc-marker-pop-rail", template)
+        self.assertIn("sc-marker-pop-eui-label", template)
+        self.assertIn("sc-marker-pop-eui-value", template)
+        self.assertIn("Detail senzora →", template)
+        self.assertIn("Pripravené na uloženie", template)
+        self.assertIn("Presúvanie", template)
+        self.assertIn("✓ Marker presunutý — uložiť?", template)
+        self.assertIn("↕ Presuňte marker na novú polohu", template)
     def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):
         with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
             session["username"] = "admin"
