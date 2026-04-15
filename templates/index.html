@@ -3071,9 +3071,9 @@ function buildMarkerPopupCard(options) {
     return '<div class="sc-marker-pop' + (options.variant ? ' ' + options.variant : '') + '"' + styleAttr + '>'
         + '<div class="sc-marker-pop-header">'
         + '<div class="sc-marker-pop-main">'
-        + (options.statusLabel ? '<span class="sc-marker-pop-status" style="background:' + esc(options.statusColor || options.accentColor || '#64748b') + '">' + esc(options.statusLabel) + '</span>' : '')
-        + '<div class="sc-marker-pop-title">' + esc(options.title || '') + '</div>'
-        + (options.eui ? '<div class="sc-marker-pop-eui">' + esc(options.eui) + '</div>' : '')
+        + (options.statusLabel ? '<span class="sc-marker-pop-status" style="background:' + escapeHtml(options.statusColor || options.accentColor || '#64748b') + '">' + escapeHtml(options.statusLabel) + '</span>' : '')
+        + '<div class="sc-marker-pop-title">' + escapeHtml(options.title || '') + '</div>'
+        + (options.eui ? '<div class="sc-marker-pop-eui">' + escapeHtml(options.eui) + '</div>' : '')
         + '</div>'
         + (options.dotButtonHtml || '')
         + '</div>'
@@ -4564,6 +4564,27 @@ function fetchJson(url) {
     return fetch(url)
         .then(response => response.ok ? response.json() : null)
         .catch(() => null);
+}
+
+function buildMarkerPopupCard(options) {
+    const styleParts = [];
+    if (options.accentColor) styleParts.push('--sc-popup-accent:' + options.accentColor);
+    if (options.accentHover) styleParts.push('--sc-popup-accent-hover:' + options.accentHover);
+    if (options.hintColor) styleParts.push('--sc-popup-hint-color:' + options.hintColor);
+    if (options.hintBg) styleParts.push('--sc-popup-hint-bg:' + options.hintBg);
+    const styleAttr = styleParts.length ? ' style="' + styleParts.join(';') + ';"' : '';
+    return '<div class="sc-marker-pop' + (options.variant ? ' ' + options.variant : '') + '"' + styleAttr + '>'
+        + '<div class="sc-marker-pop-header">'
+        + '<div class="sc-marker-pop-main">'
+        + (options.statusLabel ? '<span class="sc-marker-pop-status" style="background:' + esc(options.statusColor || options.accentColor || '#64748b') + '">' + esc(options.statusLabel) + '</span>' : '')
+        + '<div class="sc-marker-pop-title">' + esc(options.title || '') + '</div>'
+        + (options.eui ? '<div class="sc-marker-pop-eui">' + esc(options.eui) + '</div>' : '')
+        + '</div>'
+        + (options.dotButtonHtml || '')
+        + '</div>'
+        + (options.noteHtml ? '<div class="sc-marker-pop-note' + (options.noteClass ? ' ' + options.noteClass : '') + '">' + options.noteHtml + '</div>' : '')
+        + (options.actionsHtml ? '<div class="sc-marker-pop-actions">' + options.actionsHtml + '</div>' : '')
+        + '</div>';
 }
 
 function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
