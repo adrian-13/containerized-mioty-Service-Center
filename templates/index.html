@@ -618,7 +618,7 @@
     position: relative;
 }
 .sc-color-swatch.is-active .sc-color-swatch-chip::after {
-    content: 'âś“';
+    content: '✓';
     position: absolute;
     inset: 0;
     display: flex;
@@ -1243,20 +1243,20 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                     <input type="text"
                            id="mviewSearch"
                            class="mview-search"
-                           placeholder="{{ t('common.search', 'HÄľadaĹĄ...') }}"
+                           placeholder="{{ t('common.search', 'Hľadať...') }}"
                            oninput="mviewHandleSearchInput()"
                            autocomplete="off">
                 </div>
             </div>
             <div class="mview-filters" id="mviewFilters">
                 <button class="mview-filter is-active" data-filter="all" onclick="mviewSetFilter('all')">
-                    {{ t('common.all', 'VĹˇetky') }} <span class="mview-filter-count" id="mviewFiltAll">0</span>
+                    {{ t('common.all', 'Všetky') }} <span class="mview-filter-count" id="mviewFiltAll">0</span>
                 </button>
                 <button class="mview-filter f-online" data-filter="online" onclick="mviewSetFilter('online')">
                     <span class="mview-dot online"></span> Online <span class="mview-filter-count" id="mviewFiltOnline">0</span>
                 </button>
                 <button class="mview-filter f-initial" data-filter="initial" onclick="mviewSetFilter('initial')">
-                    <span class="mview-dot initial"></span> ÄŚakĂˇ na dĂˇta <span class="mview-filter-count" id="mviewFiltInitial">0</span>
+                    <span class="mview-dot initial"></span> Čaká na dáta <span class="mview-filter-count" id="mviewFiltInitial">0</span>
                 </button>
                 <button class="mview-filter f-warn" data-filter="warn" onclick="mviewSetFilter('warn')">
                     <span class="mview-dot warn"></span> Upozornenie <span class="mview-filter-count" id="mviewFiltWarn">0</span>
@@ -1266,7 +1266,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                 </button>
             </div>
             <div class="mview-list-body" id="mviewSensorList">
-                <div class="text-center text-muted py-4" style="font-size:0.85rem;">{{ t('runtime.loading', 'NaÄŤĂ­tavam...') }}</div>
+                <div class="text-center text-muted py-4" style="font-size:0.85rem;">{{ t('runtime.loading', 'Načítavam...') }}</div>
             </div>
             <div class="mview-vresizer" id="mviewVResizer"></div>
             <div class="mview-alerts-panel">
@@ -1275,7 +1275,7 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
                     <span class="mview-alerts-badge" id="mviewAlertsBadge"></span>
                 </div>
                 <div class="mview-alerts-body" id="mviewAlerts">
-                    <div class="mview-alerts-empty">Ĺ˝iadne upozornenia</div>
+                    <div class="mview-alerts-empty">Žiadne upozornenia</div>
                 </div>
             </div>
         </div>
@@ -1284,10 +1284,10 @@ button:active, .mview-sensor-row:active, .mview-alert-row:active {
             <div class="mview-placement-bar" id="mviewPlacementBar">
                 <div class="mview-placement-copy">
                     <div class="mview-placement-title">{{ t('dashboard.place_sensor_on_map_title', 'Umiestnenie senzora na mapu') }}</div>
-                    <div class="mview-placement-note"><span id="mviewPlacementSensorName"></span> Â· {{ t('dashboard.place_sensor_on_map_note', 'Kliknite do mapy na miesto, kde sa senzor nachĂˇdza.') }}</div>
+                    <div class="mview-placement-note"><span id="mviewPlacementSensorName"></span> · {{ t('dashboard.place_sensor_on_map_note', 'Kliknite do mapy na miesto, kde sa senzor nachádza.') }}</div>
                 </div>
                 <div class="mview-placement-actions">
-                    <button type="button" class="mview-placement-cancel" onclick="cancelPlacement(true)">{{ t('common.cancel', 'ZruĹˇiĹĄ') }}</button>
+                    <button type="button" class="mview-placement-cancel" onclick="cancelPlacement(true)">{{ t('common.cancel', 'Zrušiť') }}</button>
                 </div>
             </div>
             <div id="mview-map"></div>
@@ -2509,7 +2509,7 @@ body.is-resizing-dashboard-row {
                     </div>
                     <div class="topology-map-tools">
                         <span class="topology-map-position" id="mini-map-position">{{ t('dashboard.map_position_placeholder', 'Lat --, Lng --, Z --') }}</span>
-                        <span class="topology-map-summary" id="mini-map-summary">{{ t('dashboard.map_summary_placeholder', 'BS 0/0 Â· Sensors 0/0') }}</span>
+                        <span class="topology-map-summary" id="mini-map-summary">{{ t('dashboard.map_summary_placeholder', 'BS 0/0 · Sensors 0/0') }}</span>
                         <button type="button" class="topology-mini-save" id="mini-map-save-btn">{{ t('dashboard.save_view', 'Save view') }}</button>
                         <span class="topology-mini-save-status" id="mini-map-save-status"></span>
                     </div>
@@ -2538,16 +2538,16 @@ body.is-resizing-dashboard-row {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const MARKER_COLOR_OPTIONS = [
-    { value: '#2563eb', label: 'ModrĂˇ' },
-    { value: '#16a34a', label: 'ZelenĂˇ' },
-    { value: '#dc2626', label: 'ÄŚervenĂˇ' },
-    { value: '#d97706', label: 'OranĹľovĂˇ' },
-    { value: '#7c3aed', label: 'FialovĂˇ' },
-    { value: '#0891b2', label: 'TyrkysovĂˇ' },
-    { value: '#db2777', label: 'RuĹľovĂˇ' },
-    { value: '#374151', label: 'SivĂˇ' },
-    { value: '#f59e0b', label: 'JantĂˇrovĂˇ' },
-    { value: '#059669', label: 'SmaragdovĂˇ' }
+    { value: '#2563eb', label: 'Modrá' },
+    { value: '#16a34a', label: 'Zelená' },
+    { value: '#dc2626', label: 'Červená' },
+    { value: '#d97706', label: 'Oranžová' },
+    { value: '#7c3aed', label: 'Fialová' },
+    { value: '#0891b2', label: 'Tyrkysová' },
+    { value: '#db2777', label: 'Ružová' },
+    { value: '#374151', label: 'Sivá' },
+    { value: '#f59e0b', label: 'Jantárová' },
+    { value: '#059669', label: 'Smaragdová' }
 ];
 const MARKER_PALETTE = MARKER_COLOR_OPTIONS.map(function(option) { return option.value; });
 let _sharedColorPopEl = null;
@@ -2620,7 +2620,7 @@ function getMarkerColorMeta(color) {
     if (!value) {
         return {
             value: '',
-            label: 'PredvolenĂˇ farba',
+            label: 'Predvolená farba',
             option: null
         };
     }
@@ -2630,7 +2630,7 @@ function getMarkerColorMeta(color) {
     }) || null;
     return {
         value: value,
-        label: option ? option.label : 'VlastnĂˇ farba',
+        label: option ? option.label : 'Vlastná farba',
         option: option
     };
 }
@@ -2642,7 +2642,7 @@ function showColorPop(x, y, currentColor, onPick, boundsEl) {
     const pop = document.createElement('div');
     pop.className = 'sc-color-pop';
     pop.setAttribute('role', 'dialog');
-    pop.setAttribute('aria-label', 'VĂ˝ber farby markera');
+    pop.setAttribute('aria-label', 'Výber farby markera');
 
     const shell = document.createElement('div');
     shell.className = 'sc-color-pop-shell';
@@ -2662,7 +2662,7 @@ function showColorPop(x, y, currentColor, onPick, boundsEl) {
     copy.innerHTML = ''
         + '<div class="sc-color-pop-kicker">Marker</div>'
         + '<div class="sc-color-pop-title">Farba markera</div>'
-        + '<div class="sc-color-pop-note">Vyber farbu z palety alebo obnov predvolenĂş.</div>';
+        + '<div class="sc-color-pop-note">Vyber farbu z palety alebo obnov predvolenú.</div>';
 
     brand.appendChild(badge);
     brand.appendChild(copy);
@@ -2671,9 +2671,9 @@ function showColorPop(x, y, currentColor, onPick, boundsEl) {
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.className = 'sc-color-pop-close';
-    closeBtn.title = 'ZavrieĹĄ';
-    closeBtn.setAttribute('aria-label', 'ZavrieĹĄ');
-    closeBtn.textContent = 'Ă—';
+    closeBtn.title = 'Zavrieť';
+    closeBtn.setAttribute('aria-label', 'Zavrieť');
+    closeBtn.textContent = '×';
     closeBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -2689,7 +2689,7 @@ function showColorPop(x, y, currentColor, onPick, boundsEl) {
     sectionHead.className = 'sc-color-section-head';
     const sectionTitle = document.createElement('span');
     sectionTitle.className = 'sc-color-section-title';
-    sectionTitle.textContent = 'RĂ˝chly vĂ˝ber';
+    sectionTitle.textContent = 'Rýchly výber';
     const sectionPill = document.createElement('span');
     sectionPill.className = 'sc-color-section-pill';
     sectionPill.textContent = MARKER_COLOR_OPTIONS.length + ' farieb';
@@ -2746,12 +2746,12 @@ function showColorPop(x, y, currentColor, onPick, boundsEl) {
     currentCopy.className = 'sc-color-current-copy';
     const currentLabel = document.createElement('span');
     currentLabel.className = 'sc-color-current-label';
-    currentLabel.textContent = 'AktuĂˇlna';
+    currentLabel.textContent = 'Aktuálna';
     const currentValue = document.createElement('span');
     currentValue.className = 'sc-color-current-value' + (currentMeta.value ? '' : ' is-default');
     currentValue.textContent = currentMeta.value
-        ? currentMeta.label + ' Â· ' + currentMeta.value.toUpperCase()
-        : 'PredvolenĂˇ farba';
+        ? currentMeta.label + ' · ' + currentMeta.value.toUpperCase()
+        : 'Predvolená farba';
     currentCopy.appendChild(currentLabel);
     currentCopy.appendChild(currentValue);
     current.appendChild(sample);
@@ -2760,8 +2760,8 @@ function showColorPop(x, y, currentColor, onPick, boundsEl) {
     const reset = document.createElement('button');
     reset.type = 'button';
     reset.className = 'sc-color-reset-button' + (currentMeta.value ? '' : ' is-muted');
-    reset.title = 'ObnoviĹĄ predvolenĂş farbu';
-    reset.setAttribute('aria-label', 'ObnoviĹĄ predvolenĂş farbu');
+    reset.title = 'Obnoviť predvolenú farbu';
+    reset.setAttribute('aria-label', 'Obnoviť predvolenú farbu');
     reset.innerHTML = '<i class="fas fa-rotate-left"></i><span>Reset</span>';
     reset.disabled = !currentMeta.value;
     reset.addEventListener('click', function(e) {
@@ -3035,27 +3035,27 @@ function SENSOR_TIER(sensor) {
     return STATUS_TIER_RAW(sensor && (sensor.activity_status || sensor.status));
 }
 const STATUS_LABELS = {
-    new: 'NovĂ˝', awaiting_first_data: 'ÄŚakĂˇ na prvĂ© dĂˇta',
-    active: 'AktĂ­vny', online: 'Online', connected: 'Online', quiet: 'PokojovĂ˝ stav',
-    warning: 'Upozornenie', warn: 'Upozornenie', degraded: 'Upozornenie', stale: 'Bez udalosti dlhĹˇie', auto_detach_pending: 'OdpĂˇja sa',
-    offline: 'Offline', disconnected: 'Offline', inactive: 'Offline', auto_detached: 'OdpojenĂ˝',
-    no_data: 'Bez dĂˇt', unknown: 'NeznĂˇmy'
+    new: 'Nový', awaiting_first_data: 'Čaká na prvé dáta',
+    active: 'Aktívny', online: 'Online', connected: 'Online', quiet: 'Pokojový stav',
+    warning: 'Upozornenie', warn: 'Upozornenie', degraded: 'Upozornenie', stale: 'Bez udalosti dlhšie', auto_detach_pending: 'Odpája sa',
+    offline: 'Offline', disconnected: 'Offline', inactive: 'Offline', auto_detached: 'Odpojený',
+    no_data: 'Bez dát', unknown: 'Neznámy'
 };
 function SENSOR_STATUS_LABEL(sensor) {
     const raw = sensor && (sensor.lifecycle_status || sensor.activity_status || sensor.status);
-    if (!raw) return 'NeznĂˇmy';
+    if (!raw) return 'Neznámy';
     return STATUS_LABELS[String(raw).toLowerCase()] || STATUS_LABELS[raw] || String(raw);
 }
 
 const MSKIP = new Set(['co2_last_calibration_ppm','days_to_next_calibration','co2_error','calibration_not_done','temperature_2_c','humidity_2_pct','pressure_pa','altitude_m']);
-const MLABEL = {co2_1_ppm:'COâ‚‚',temperature_1_c:'Teplota',humidity_1_pct:'VlhkosĹĄ',battery_v_est:'BatĂ©ria',any_alarm_active:'Alarm',open_count:'Otvorenia'};
+const MLABEL = {co2_1_ppm:'CO₂',temperature_1_c:'Teplota',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm',open_count:'Otvorenia'};
 function mLabel(k) { return MLABEL[k] || k.replace(/_/g,' '); }
 function mFmt(k, v) {
-    if (typeof v === 'boolean') return [v ? 'ĂNO' : 'NIE', ''];
+    if (typeof v === 'boolean') return [v ? 'ÁNO' : 'NIE', ''];
     const n = Number(v);
     if (!Number.isFinite(n)) return [String(v), ''];
     if (k.endsWith('_ppm'))   return [Math.round(n).toString(), 'ppm'];
-    if (k.endsWith('_c'))     return [n.toFixed(1), 'Â°C'];
+    if (k.endsWith('_c'))     return [n.toFixed(1), '°C'];
     if (k.endsWith('_pct'))   return [Math.round(n).toString(), '%'];
     if (k.endsWith('_v_est') || k.endsWith('_v')) return [n.toFixed(2), 'V'];
     return [String(n), ''];
@@ -3086,7 +3086,7 @@ function timeAgo(ts) {
     const d = new Date(ts);
     if (isNaN(d)) return null;
     const sec = Math.round((Date.now() - d) / 1000);
-    if (sec < 10)  return 'prĂˇve teraz';
+    if (sec < 10)  return 'práve teraz';
     if (sec < 60)  return 'pred ' + sec + ' s';
     const min = Math.round(sec / 60);
     if (min < 60)  return 'pred ' + min + ' min';
@@ -3178,7 +3178,7 @@ function cancelPlacement(showToast) {
     if (!placementMode) return;
     placementMode = null;
     updatePlacementUi();
-    if (showToast) showMapToast(dashboardTr('dashboard.place_sensor_cancelled', 'Umiestnenie senzora zruĹˇenĂ©'), 2200);
+    if (showToast) showMapToast(dashboardTr('dashboard.place_sensor_cancelled', 'Umiestnenie senzora zrušené'), 2200);
 }
 window.cancelPlacement = cancelPlacement;
 function startPlacement(id, options) {
@@ -3192,7 +3192,7 @@ function startPlacement(id, options) {
         const current = geoOf(sensor);
         if (current) mviewMap.setView(current, Math.max(mviewMap.getZoom(), 15));
     }
-    showMapToast(dashboardTr('dashboard.place_sensor_prompt', 'Kliknite do mapy a poloha senzora sa uloĹľĂ­.'), 3200);
+    showMapToast(dashboardTr('dashboard.place_sensor_prompt', 'Kliknite do mapy a poloha senzora sa uloží.'), 3200);
 }
 window.startPlacement = startPlacement;
 function savePlacementFromMap(id, lat, lng) {
@@ -3215,10 +3215,10 @@ function savePlacementFromMap(id, lat, lng) {
             const filtered = applyFilter(allSensors);
             renderList(filtered);
             updateMap(filtered);
-            showMapToast(dashboardTr('dashboard.place_sensor_saved', 'Poloha senzora uloĹľenĂˇ'), 2400);
+            showMapToast(dashboardTr('dashboard.place_sensor_saved', 'Poloha senzora uložená'), 2400);
             setTimeout(function() { focusOnMap(id); }, 80);
         } else {
-            showMapToast('\u2717 ' + ((res.data && (res.data.message || res.data.error)) || dashboardTr('dashboard.place_sensor_save_failed', 'Nepodarilo sa uloĹľiĹĄ polohu')), 2600);
+            showMapToast('\u2717 ' + ((res.data && (res.data.message || res.data.error)) || dashboardTr('dashboard.place_sensor_save_failed', 'Nepodarilo sa uložiť polohu')), 2600);
         }
     });
 }
@@ -3279,14 +3279,14 @@ function initMap() {
         L.DomEvent.stopPropagation(e.originalEvent);
         if (placementMode) {
             showCtx(e.originalEvent, [
-                { icon: 'fa-location-dot', primary: true, label: dashboardTr('dashboard.place_sensor_here', 'UmiestniĹĄ senzor sem'), action: function() { savePlacementFromMap(placementMode.id, e.latlng.lat, e.latlng.lng); } },
-                { icon: 'fa-xmark', label: dashboardTr('common.cancel', 'ZruĹˇiĹĄ'), action: function() { cancelPlacement(true); } },
+                { icon: 'fa-location-dot', primary: true, label: dashboardTr('dashboard.place_sensor_here', 'Umiestniť senzor sem'), action: function() { savePlacementFromMap(placementMode.id, e.latlng.lat, e.latlng.lng); } },
+                { icon: 'fa-xmark', label: dashboardTr('common.cancel', 'Zrušiť'), action: function() { cancelPlacement(true); } },
             ]);
             return;
         }
         showCtx(e.originalEvent, [
-            { icon: 'fa-map-pin', label: 'NastaviĹĄ ako vĂ˝chodzĂ­ pohÄľad',
-                action: function() { saveMapView(); showMapToast('âś“ PohÄľad uloĹľenĂ˝', 2000); } },
+            { icon: 'fa-map-pin', label: 'Nastaviť ako východzí pohľad',
+                action: function() { saveMapView(); showMapToast('✓ Pohľad uložený', 2000); } },
         ]);
     });
 }
@@ -3663,7 +3663,7 @@ function renderList(sensors) {
     if (!el) return;
     if (!sensors.length) {
         el.innerHTML = '<div class="text-center text-muted py-4" style="font-size:0.85rem;">' +
-            (currentFilter === 'all' && !currentSearchQuery ? 'Ĺ˝iadne senzory' : 'Ĺ˝iadne vĂ˝sledky') + '</div>';
+            (currentFilter === 'all' && !currentSearchQuery ? 'Žiadne senzory' : 'Žiadne výsledky') + '</div>';
         return;
     }
     const _listFirst = !el.dataset.initialized;
@@ -3671,7 +3671,7 @@ function renderList(sensors) {
         const raw    = s.activity_status || s.status || 'unknown';
         const tier   = SENSOR_TIER(s);
         const name   = esc(s.name || s.eui || s.device_eui || s.sensor_id || '\u2014');
-        const _tierLabel = { online: 'Online', initial: 'ÄŚakĂˇ na dĂˇta', warn: 'Upozornenie', offline: 'Offline' };
+        const _tierLabel = { online: 'Online', initial: 'Čaká na dáta', warn: 'Upozornenie', offline: 'Offline' };
         const slabel = esc(_tierLabel[tier] || SENSOR_STATUS_LABEL(s));
         const id     = sensorId(s);
         const href   = '/sensors/' + esc(id);
@@ -3680,7 +3680,7 @@ function renderList(sensors) {
         const hasMetrics = chips.length > 0;
         const needsPlacement = !hasSensorGeo(s);
         const placeBtn = needsPlacement
-            ? '<button type="button" class="mview-row-action" onclick="event.stopPropagation();startPlacement(\'' + esc(id) + '\')"><i class="fas fa-location-dot"></i><span>' + esc(dashboardTr('dashboard.place_on_map', 'UmiestniĹĄ na mapu')) + '</span></button>' 
+            ? '<button type="button" class="mview-row-action" onclick="event.stopPropagation();startPlacement(\'' + esc(id) + '\')"><i class="fas fa-location-dot"></i><span>' + esc(dashboardTr('dashboard.place_on_map', 'Umiestniť na mapu')) + '</span></button>' 
             : '';
         return '<div class="mview-sensor-row' + (hasMetrics ? ' has-metrics' : '') + '" data-sensor-id="' + esc(id) + '" onclick="handleSensorRowClick(\'' + esc(id) + '\')">' +
             '<span class="mview-dot ' + tier + '"></span>' +
@@ -3691,7 +3691,7 @@ function renderList(sensors) {
             '</span>' +
             '<span class="mview-badge ' + tier + '">' + slabel + '</span>' +
             placeBtn +
-            (hasMetrics ? '<button class="mview-expand-btn" onclick="toggleMetricsDrop(\'' + esc(id) + '\',event)" title="ZobraziĹĄ metriky"><i class="fas fa-chevron-down"></i></button>' : '') +
+            (hasMetrics ? '<button class="mview-expand-btn" onclick="toggleMetricsDrop(\'' + esc(id) + '\',event)" title="Zobraziť metriky"><i class="fas fa-chevron-down"></i></button>' : '') +
             '<a href="' + href + '" class="mview-sensor-link" onclick="event.stopPropagation()" title="Detail">' +
                 '<i class="fas fa-chevron-right"></i>' +
             '</a>' +
@@ -3754,9 +3754,9 @@ function startTick() {
 }
 
 /* â”€â”€ Alerts â”€â”€ */
-const COND_LABEL_DASH = {'gt':'>','gte':'â‰Ą','lt':'<','lte':'â‰¤','eq':'='};
-const METRIC_UNIT_DASH = {co2_1_ppm:'ppm',co2_2_ppm:'ppm',temperature_1_c:'Â°C',temperature_2_c:'Â°C',humidity_1_pct:'%',battery_v_est:'V'};
-const METRIC_NAMES_DASH = {co2_1_ppm:'COâ‚‚',co2_2_ppm:'COâ‚‚ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'VlhkosĹĄ',battery_v_est:'BatĂ©ria',any_alarm_active:'Alarm aktĂ­vny',alarm_count:'PoÄŤet alarmov',open_count:'PoÄŤet otvorenĂ­'};
+const COND_LABEL_DASH = {'gt':'>','gte':'≥','lt':'<','lte':'≤','eq':'='};
+const METRIC_UNIT_DASH = {co2_1_ppm:'ppm',co2_2_ppm:'ppm',temperature_1_c:'°C',temperature_2_c:'°C',humidity_1_pct:'%',battery_v_est:'V'};
+const METRIC_NAMES_DASH = {co2_1_ppm:'CO₂',co2_2_ppm:'CO₂ (predch.)',temperature_1_c:'Teplota',temperature_2_c:'Teplota 2',humidity_1_pct:'Vlhkosť',battery_v_est:'Batéria',any_alarm_active:'Alarm aktívny',alarm_count:'Počet alarmov',open_count:'Počet otvorení'};
 
 function renderAlerts() {
     const body  = document.getElementById('mviewAlerts');
@@ -3782,7 +3782,7 @@ function renderAlerts() {
             }
             const _alertFirst = !body.dataset.initialized;
             if (!visible.length) {
-                body.innerHTML = '<div class="mview-alerts-empty">Ĺ˝iadne upozornenia</div>';
+            body.innerHTML = '<div class="mview-alerts-empty">Žiadne upozornenia</div>';
                 return;
             }
             body.innerHTML = visible.map(function(item) {
@@ -4085,17 +4085,17 @@ function initContextMenus() {
                 const eui = row.dataset.sensorId || '';
                 const sensor = getSensorById(eui);
                 const placementLabel = sensor && hasSensorGeo(sensor)
-                    ? dashboardTr('dashboard.reposition_on_map', 'UpraviĹĄ polohu na mape')
-                    : dashboardTr('dashboard.place_on_map', 'UmiestniĹĄ na mapu');
+                    ? dashboardTr('dashboard.reposition_on_map', 'Upraviť polohu na mape')
+                    : dashboardTr('dashboard.place_on_map', 'Umiestniť na mapu');
                 showCtx(e, [
                     { icon: 'fa-location-dot', label: placementLabel, action: function() { startPlacement(eui); } },
                     { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť detail', action: function() { window.location.href = '/sensors/' + encodeURIComponent(eui); } },
-                    { icon: 'fa-circle-plus', primary: true, label: 'PridaĹĄ upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(eui); } },
+                    { icon: 'fa-circle-plus', primary: true, label: 'Pridať upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(eui); } },
                 ]);
             } else {
                 // Empty area
                 showCtx(e, [
-                    { icon: 'fa-plus', label: 'PridaĹĄ senzor', action: function() { window.location.href = '/sensors?add=1'; } },
+                    { icon: 'fa-plus', label: 'Pridať senzor', action: function() { window.location.href = '/sensors?add=1'; } },
                 ]);
             }
         });
@@ -4110,15 +4110,15 @@ function initContextMenus() {
                 const eui    = row.dataset.eui    || '';
                 const ackKey = row.dataset.ackKey || '';
                 showCtx(e, [
-                    { icon: 'fa-clock-rotate-left', label: 'PotvrdiĹĄ na 4 hodiny',  action: function() { if (ackKey) { ackAlert(ackKey, 4);  renderAlerts(allSensors); } } },
-                    { icon: 'fa-check-double',       label: 'PotvrdiĹĄ na 24 hodĂ­n', action: function() { if (ackKey) { ackAlert(ackKey, 24); renderAlerts(allSensors); } } },
+                    { icon: 'fa-clock-rotate-left', label: 'Potvrdiť na 4 hodiny',  action: function() { if (ackKey) { ackAlert(ackKey, 4);  renderAlerts(allSensors); } } },
+                    { icon: 'fa-check-double',       label: 'Potvrdiť na 24 hodín', action: function() { if (ackKey) { ackAlert(ackKey, 24); renderAlerts(allSensors); } } },
                     '-',
                     { icon: 'fa-arrow-up-right-from-square', label: 'Otvoriť senzor', action: function() { if (eui) window.location.href = '/sensors/' + encodeURIComponent(eui); } },
                 ]);
             } else {
                 // Empty area / header
                 showCtx(e, [
-                    { icon: 'fa-circle-plus', primary: true, label: 'PridaĹĄ upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(''); } },
+                    { icon: 'fa-circle-plus', primary: true, label: 'Pridať upozornenie', action: function() { window.location.href = buildNewAlertRuleUrl(''); } },
                 ]);
             }
         });
@@ -4696,11 +4696,11 @@ function saveMiniMarkerPlacement(lat, lng) {
                 const markerKey = miniMarkerKey(miniPlacementMode.type, miniPlacementMode.eui);
                 miniPlacementMode = null;
                 updateMiniPlacementUi();
-                showMiniMapToast(appTranslate('dashboard.marker_move_saved', 'Poloha uloĹľenĂˇ'), 2300);
+                showMiniMapToast(appTranslate('dashboard.marker_move_saved', 'Poloha uložená'), 2300);
                 setTimeout(() => focusMiniMarker(markerKey), 60);
             } else {
                 showMiniMapToast(
-                    'âś– ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_move_failed', 'Nepodarilo sa uloĹľiĹĄ polohu'))),
+                    '✖ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_move_failed', 'Nepodarilo sa uložiť polohu'))),
                     2600
                 );
             }
@@ -4908,8 +4908,8 @@ function initDashboardContextMenus() {
                 ? (latestSensorInventoryData[sensorId] || latestSensorInventoryData[sensorId.toLowerCase()] || null)
                 : null;
             const placementLabel = sensorHasDashboardMapLocation(sensor || { eui: sensorId })
-                ? appTranslate('dashboard.reposition_on_map', 'UpraviĹĄ polohu na mape')
-                : appTranslate('dashboard.place_on_map', 'UmiestniĹĄ na mapu');
+                ? appTranslate('dashboard.reposition_on_map', 'Upraviť polohu na mape')
+                : appTranslate('dashboard.place_on_map', 'Umiestniť na mapu');
             showMiniCtx(event, [
                 {
                     icon: 'fa-location-dot',
@@ -5249,12 +5249,12 @@ function initMiniCoverageMap() {
                 {
                     icon: 'fa-location-dot',
                     primary: true,
-                    label: appTranslate('dashboard.place_marker_here', 'UmiestniĹĄ marker sem'),
+                    label: appTranslate('dashboard.place_marker_here', 'Umiestniť marker sem'),
                     action: () => saveMiniMarkerPlacement(event.latlng.lat, event.latlng.lng)
                 },
                 {
                     icon: 'fa-xmark',
-                    label: appTranslate('common.cancel', 'ZruĹˇiĹĄ'),
+                    label: appTranslate('common.cancel', 'Zrušiť'),
                     action: () => cancelMiniMarkerPlacement(true)
                 }
             ]);
@@ -5264,7 +5264,7 @@ function initMiniCoverageMap() {
             {
                 icon: 'fa-map-pin',
                 primary: true,
-                label: appTranslate('dashboard.set_default_map_view', 'NastaviĹĄ ako vĂ˝chodzĂ­ pohÄľad'),
+                label: appTranslate('dashboard.set_default_map_view', 'Nastaviť ako východzí pohľad'),
                 action: () => saveMiniMapView()
             }
         ]);
@@ -5359,9 +5359,9 @@ function updateMiniMapSummary(summary = null) {
     const sensorShown = Number(data.sensorShown || 0);
     const sensorTotal = Number(data.sensorTotal || 0);
     const demoActive = !!data.demoActive;
-    const demoSuffix = demoActive ? ' Â· demo' : '';
+    const demoSuffix = demoActive ? ' · demo' : '';
 
-    label.textContent = `BS ${baseShown}/${baseTotal} Â· Sensors ${sensorShown}/${sensorTotal}${demoSuffix}`;
+    label.textContent = `BS ${baseShown}/${baseTotal} · Sensors ${sensorShown}/${sensorTotal}${demoSuffix}`;
 }
 
 function setMiniMapSaveStatus(kind, text) {
@@ -5414,17 +5414,17 @@ async function saveMiniMapView() {
             } catch (error) {
                 // ignore JSON parse issues
             }
-            setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed', `UloĹľenie zlyhalo: ${errorText}`, { error: errorText }));
-            showMiniMapToast(appTranslate('dashboard.save_failed_short', 'UloĹľenie zlyhalo'), 2200);
+            setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed', `Uloženie zlyhalo: ${errorText}`, { error: errorText }));
+            showMiniMapToast(appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'), 2200);
             return;
         }
         latestCoverageState = payload;
         miniCoverageViewInitialized = true;
-        setMiniMapSaveStatus('ok', appTranslate('dashboard.view_saved', 'PohÄľad uloĹľenĂ˝'));
-        showMiniMapToast(appTranslate('dashboard.view_saved_toast', 'PohÄľad uloĹľenĂ˝'), 2000);
+        setMiniMapSaveStatus('ok', appTranslate('dashboard.view_saved', 'Pohľad uložený'));
+        showMiniMapToast(appTranslate('dashboard.view_saved_toast', 'Pohľad uložený'), 2000);
     } catch (error) {
-        setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed_short', 'UloĹľenie zlyhalo'));
-        showMiniMapToast(appTranslate('dashboard.save_failed_short', 'UloĹľenie zlyhalo'), 2200);
+        setMiniMapSaveStatus('err', appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'));
+        showMiniMapToast(appTranslate('dashboard.save_failed_short', 'Uloženie zlyhalo'), 2200);
     }
 }
 
@@ -5814,7 +5814,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                 persistSensorMarkerColor(markerEui, color).then((result) => {
                                     if (!(result.ok && result.data && result.data.success)) {
                                         showMiniMapToast(
-                                            'âś– ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uloĹľiĹĄ farbu'))),
+                                            '✖ ' + (((result.data && (result.data.message || result.data.error)) || appTranslate('dashboard.marker_color_failed', 'Nepodarilo sa uložiť farbu'))),
                                             2600
                                         );
                                         return;
@@ -5835,8 +5835,8 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
                                         setDashboardMiniInteractionState({});
                                         showMiniMapToast(
                                             color
-                                                ? appTranslate('dashboard.marker_color_saved', 'Farba markera uloĹľenĂˇ')
-                                                : appTranslate('dashboard.marker_color_reset_done', 'PredvolenĂˇ farba obnovenĂˇ'),
+                                                ? appTranslate('dashboard.marker_color_saved', 'Farba markera uložená')
+                                                : appTranslate('dashboard.marker_color_reset_done', 'Predvolená farba obnovená'),
                                             2200
                                         );
                                     };
@@ -6046,7 +6046,7 @@ function updateMiniCoverageMap(topologyData, coverageState, sensorInventoryData,
     });
 
     if (renderErrors > 0) {
-        showMiniMapToast('âś— NiektorĂ© mini markery sa nepodarilo zobraziĹĄ', 2600);
+        showMiniMapToast('✖ Niektoré mini markery sa nepodarilo zobraziť', 2600);
     }
 
     const savedView = parseMiniCoverageOsmView(coverageState);
@@ -6218,7 +6218,7 @@ function updateStatusCards(data) {
     document.getElementById('bs-count').textContent = bsCount;
     document.getElementById('bs-detail').textContent = appTranslate(
         connectingCount > 0 ? 'dashboard.connected_connecting_compact' : 'dashboard.connected_only_compact',
-        connectingCount > 0 ? `${bsCount} connected Â· +${connectingCount} connecting` : `${bsCount} connected`,
+        connectingCount > 0 ? `${bsCount} connected · +${connectingCount} connecting` : `${bsCount} connected`,
         { connected: bsCount, connecting: connectingCount, count: bsCount }
     );
     previousSnapshot.connectedBs = bsCount;
@@ -6594,7 +6594,7 @@ function updateSensorRuntimeList(data) {
         const name = escapeHtml(sensor && (sensor.name || sensor.label || shortId(eui, 10)) || shortId(eui, 10));
         const missingLocation = !sensorHasDashboardMapLocation(sensor);
         const locationMeta = missingLocation
-            ? `<span class="sensor-flag is-warning" title="${escapeHtml(appTranslate('network.gps_not_configured', 'GPS nie je nakonfigurovanĂ©'))}"><i class="fas fa-exclamation"></i></span>`
+            ? `<span class="sensor-flag is-warning" title="${escapeHtml(appTranslate('network.gps_not_configured', 'GPS nie je nakonfigurované'))}"><i class="fas fa-exclamation"></i></span>`
             : '';
         const issueMeta = tier !== 'online'
             ? `<span class="sensor-meta"><span class="sensor-pill">${escapeHtml(sensorRuntimeLabel(sensor))}</span></span>`
@@ -6616,7 +6616,7 @@ function buildIncidents(status, healthPacketLoss, vmCapable, trafficInfo) {
 
     if (!tlsActive) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_tls_offline', 'TLS server is offline.') });
     if (mqttEnabled && !mqttActive) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_mqtt_disconnected', 'MQTT broker is disconnected.') });
-    if (connectedBs === 0) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_no_connected_bs', 'Nie je pripojenĂˇ Ĺľiadna zĂˇkladĹovĂˇ stanica.') });
+    if (connectedBs === 0) incidents.push({ level: 'danger', text: appTranslate('dashboard.incident_no_connected_bs', 'Nie je pripojená žiadna základňová stanica.') });
     if (initialSensors > 0) incidents.push({
         level: 'warn',
         text: appTranslate('dashboard.incident_initial_sensors_pending', `${initialSensors} sensors are still waiting for first data.`, {
@@ -6677,8 +6677,8 @@ function renderIncidents(incidents) {
         rail.innerHTML =
             '<li class="all-clear-state">' +
             '<span class="all-clear-icon"><i class="fas fa-check"></i></span>' +
-            '<p class="all-clear-title">' + appTranslate('dashboard.all_clear_title', 'VĹˇetko je v poriadku') + '</p>' +
-            '<p class="all-clear-note">' + appTranslate('dashboard.all_clear_note_short', 'Ĺ˝iadne upozornenia.') + '</p>' +
+            '<p class="all-clear-title">' + appTranslate('dashboard.all_clear_title', 'Všetko je v poriadku') + '</p>' +
+            '<p class="all-clear-note">' + appTranslate('dashboard.all_clear_note_short', 'Žiadne upozornenia.') + '</p>' +
             '</li>';
         return;
     }
