@@ -2818,6 +2818,183 @@ function persistSensorMarkerColor(sensorEui, color) {
         return { ok: false, data: { message: 'Chyba siete.' } };
     });
 }
+
+function markerPopupButtonBaseStyle() {
+    return [
+        'min-height:2.75rem',
+        'display:inline-flex',
+        'align-items:center',
+        'justify-content:center',
+        'gap:.42rem',
+        'width:100%',
+        'min-width:0',
+        'border-radius:1rem',
+        'padding:.46rem .82rem',
+        'font-size:.79rem',
+        'font-weight:850',
+        'text-decoration:none',
+        'border:1px solid transparent',
+        'cursor:pointer',
+        'box-shadow:none',
+        'appearance:none',
+        '-webkit-appearance:none',
+        'transition:transform .12s, background .12s, color .12s, border-color .12s, box-shadow .12s'
+    ].join(';');
+}
+
+function markerPopupIconButtonStyle() {
+    return [
+        'width:2.75rem',
+        'min-width:2.75rem',
+        'min-height:2.75rem',
+        'padding:0',
+        'border-radius:.95rem'
+    ].join(';');
+}
+
+function markerPopupDotsStyle() {
+    return [
+        'display:inline-flex',
+        'align-items:center',
+        'justify-content:center',
+        'background:rgba(244,247,251,.92)',
+        'border:1px solid #d9e3ef',
+        'border-radius:.95rem',
+        'cursor:pointer',
+        'padding:0',
+        'font-size:.96rem',
+        'line-height:1',
+        'color:#5f738e',
+        'flex-shrink:0',
+        'box-shadow:none',
+        'appearance:none',
+        '-webkit-appearance:none',
+        'transition:background .12s, color .12s, border-color .12s, transform .12s, box-shadow .12s'
+    ].join(';');
+}
+
+function buildMarkerPopupCard(options) {
+    const styleParts = [];
+    if (options.accentColor) styleParts.push('--sc-popup-accent:' + options.accentColor);
+    if (options.accentHover) styleParts.push('--sc-popup-accent-hover:' + options.accentHover);
+    if (options.hintColor) styleParts.push('--sc-popup-hint-color:' + options.hintColor);
+    if (options.hintBg) styleParts.push('--sc-popup-hint-bg:' + options.hintBg);
+    const cardStyle = [
+        'position:relative',
+        'min-width:17rem',
+        'max-width:22rem',
+        'padding:0',
+        'font-family:Manrope,system-ui,sans-serif',
+        'color:#0f172a',
+        'border-radius:1.22rem',
+        'overflow:hidden',
+        'background:linear-gradient(180deg, rgba(255,255,255,.99), rgba(244,248,253,.98))',
+        'border:1px solid rgba(148,163,184,.22)',
+        'box-shadow:0 24px 52px rgba(15,23,42,.20), 0 4px 10px rgba(15,23,42,.10)',
+        'backdrop-filter:blur(14px)'
+    ].join(';') + (styleParts.length ? ';' + styleParts.join(';') : '');
+    const headerStyle = [
+        'position:relative',
+        'z-index:1',
+        'display:grid',
+        'grid-template-columns:auto 1fr auto',
+        'align-items:start',
+        'gap:.84rem',
+        'padding:1.02rem 1rem .78rem',
+        'border-bottom:1px solid rgba(148,163,184,.14)',
+        'background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(247,250,254,.82))'
+    ].join(';');
+    const badgeStyle = [
+        'width:2.55rem',
+        'height:2.55rem',
+        'border-radius:999px',
+        'display:inline-flex',
+        'align-items:center',
+        'justify-content:center',
+        'flex-shrink:0',
+        'background:linear-gradient(180deg, rgba(37,99,235,.14), rgba(37,99,235,.08))',
+        'color:var(--sc-popup-accent, var(--brand-500))',
+        'border:1px solid rgba(37,99,235,.14)',
+        'box-shadow:0 8px 16px rgba(37,99,235,.10), inset 0 1px 0 rgba(255,255,255,.85)'
+    ].join(';');
+    const mainStyle = [
+        'min-width:0',
+        'display:grid',
+        'gap:.36rem',
+        'align-content:start'
+    ].join(';');
+    const euiStyle = [
+        'display:inline-flex',
+        'align-items:center',
+        'gap:.42rem',
+        'width:fit-content',
+        'padding:.35rem .58rem',
+        'border-radius:999px',
+        'background:#edf4fb',
+        'border:1px solid #d7e3ef',
+        'color:#50657d',
+        'font-size:.68rem',
+        'font-weight:800',
+        'line-height:1',
+        'letter-spacing:.08em',
+        'text-transform:uppercase',
+        'box-shadow:inset 0 1px 0 rgba(255,255,255,.7)'
+    ].join(';');
+    const euiLabelStyle = 'color:#7b8ca1';
+    const euiValueStyle = [
+        'font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace',
+        'font-size:.76rem',
+        'letter-spacing:.08em',
+        'color:#162536'
+    ].join(';');
+    const statusStyle = [
+        'display:inline-flex',
+        'align-items:center',
+        'gap:.28rem',
+        'align-self:flex-start',
+        'width:fit-content',
+        'padding:.23rem .58rem',
+        'border-radius:999px',
+        'font-size:.61rem',
+        'font-weight:900',
+        'text-transform:uppercase',
+        'letter-spacing:.1em',
+        'color:#fff',
+        'box-shadow:0 10px 18px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.16)'
+    ].join(';');
+    const noteStyle = [
+        'display:flex',
+        'align-items:flex-start',
+        'gap:.55rem',
+        'padding:.68rem .78rem',
+        'border-radius:.9rem',
+        'background:linear-gradient(180deg, #f5f9fd, #eff5fb)',
+        'color:#4f647c',
+        'border:1px solid #dce7f2',
+        'font-size:.76rem',
+        'line-height:1.4',
+        'box-shadow:inset 0 1px 0 rgba(255,255,255,.7)'
+    ].join(';');
+    const actionsStyle = [
+        'display:grid',
+        'grid-template-columns:repeat(auto-fit, minmax(8.2rem, 1fr))',
+        'gap:.55rem',
+        'padding:0 1rem 1rem'
+    ].join(';');
+    return '<div class="sc-marker-pop' + (options.variant ? ' ' + options.variant : '') + '" style="' + cardStyle + '">'
+        + '<div class="sc-marker-pop-header" style="' + headerStyle + '">'
+        + (options.badgeHtml ? '<div class="sc-marker-pop-badge" style="' + badgeStyle + '">' + options.badgeHtml + '</div>' : '')
+        + '<div class="sc-marker-pop-main" style="' + mainStyle + '">'
+        + (options.statusLabel ? '<span class="sc-marker-pop-status" style="' + statusStyle + 'background:' + escapeHtml(options.statusColor || options.accentColor || '#64748b') + '">' + escapeHtml(options.statusLabel) + '</span>' : '')
+        + '<div class="sc-marker-pop-title">' + escapeHtml(options.title || '') + '</div>'
+        + (options.eui ? '<div class="sc-marker-pop-eui" style="' + euiStyle + '"><span class="sc-marker-pop-eui-label" style="' + euiLabelStyle + '">EUI</span><span class="sc-marker-pop-eui-value" style="' + euiValueStyle + '">' + escapeHtml(options.eui) + '</span></div>' : '')
+        + '</div>'
+        + (options.dotButtonHtml ? '<div class="sc-marker-pop-rail" style="display:flex;align-items:flex-start;justify-content:flex-end;">' + options.dotButtonHtml + '</div>' : '')
+        + '</div>'
+        + (options.noteHtml ? '<div class="sc-marker-pop-note' + (options.noteClass ? ' ' + options.noteClass : '') + '" style="' + noteStyle + '">' + options.noteHtml + '</div>' : '')
+        + (options.actionsHtml ? '<div class="sc-marker-pop-actions" style="' + actionsStyle + '">' + options.actionsHtml + '</div>' : '')
+        + '</div>';
+}
 </script>
 {% if is_customer_user %}
 <script>
