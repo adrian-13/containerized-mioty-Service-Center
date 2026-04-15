@@ -936,6 +936,7 @@
     grid-template-columns: 1fr;
     gap: .36rem;
     padding: .54rem .78rem .78rem;
+    justify-items: stretch;
 }
 .sc-marker-pop-actions.has-secondary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -977,6 +978,13 @@
     background: var(--sc-popup-accent, var(--brand-500));
     color: #fff;
     box-shadow: 0 6px 12px rgba(var(--brand-rgb), .12);
+}
+.sc-popup-detail.is-compact {
+    width: fit-content;
+    min-width: 0;
+    justify-self: start;
+    padding-inline: .78rem;
+    border-radius: .72rem;
 }
 .sc-marker-pop-button.is-primary:hover,
 .sc-popup-detail:hover {
@@ -3333,7 +3341,7 @@ function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
         accentColor: brandBg,
         accentHover: brandHov,
         dotButtonHtml: '<button type="button" id="sc-popup-dots-' + mid + '" class="sc-popup-dots sc-marker-pop-button is-icon" style="' + markerPopupIconButtonStyle() + ';' + markerPopupDotsStyle() + '" title="Možnosti"><i class="fas fa-ellipsis-h"></i></button>',
-        actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail sc-marker-pop-button is-primary" style="' + markerPopupButtonBaseStyle() + ';background:var(--sc-popup-accent, var(--brand-500));color:#fff;box-shadow:0 6px 12px rgba(var(--brand-rgb), .12);" ><i class="fas fa-arrow-up-right-from-square"></i><span>Detail senzora →</span></a>'
+        actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail is-compact sc-marker-pop-button is-primary" style="' + markerPopupButtonBaseStyle() + ';background:var(--sc-popup-accent, var(--brand-500));color:#fff;box-shadow:0 6px 12px rgba(var(--brand-rgb), .12);" ><i class="fas fa-arrow-up-right-from-square"></i><span>Detail senzora →</span></a>'
     });
 }
 
@@ -4788,7 +4796,7 @@ function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
         accentColor: '#2563eb',
         accentHover: '#1d4ed8',
         dotButtonHtml: '<button type="button" id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots sc-marker-pop-button is-icon" style="' + markerPopupIconButtonStyle() + ';' + markerPopupDotsStyle() + '" title="Možnosti"><i class="fas fa-ellipsis-h"></i></button>',
-        actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail sc-marker-pop-button is-primary" style="' + markerPopupButtonBaseStyle() + ';background:var(--sc-popup-accent, var(--brand-500));color:#fff;box-shadow:0 6px 12px rgba(var(--brand-rgb), .12);" ><i class="fas fa-arrow-up-right-from-square"></i><span>Detail senzora →</span></a>'
+        actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail is-compact sc-marker-pop-button is-primary" style="' + markerPopupButtonBaseStyle() + ';background:var(--sc-popup-accent, var(--brand-500));color:#fff;box-shadow:0 6px 12px rgba(var(--brand-rgb), .12);" ><i class="fas fa-arrow-up-right-from-square"></i><span>Detail senzora →</span></a>'
     });
 }
 
