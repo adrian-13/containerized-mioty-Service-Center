@@ -355,6 +355,9 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertIn("Presúvanie", template)
         self.assertIn("✓ Marker presunutý — uložiť?", template)
         self.assertIn("↕ Presuňte marker na novú polohu", template)
+        self.assertIn("markerPopupButtonBaseStyle()", template)
+        self.assertNotIn("buildMiniMarkerPopupHtml_legacy", template)
+        self.assertNotIn("buildMiniMarkerUnlockedPopupHtml_legacy", template)
     def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):
         with web_ui.app.test_request_context("/api/customer/dashboard/runtime"):
             session["username"] = "admin"
