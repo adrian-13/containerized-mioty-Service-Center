@@ -780,8 +780,8 @@
 /* Marker popup card */
 .sc-marker-pop {
     position: relative;
-    min-width: 15.5rem;
-    max-width: 19rem;
+    min-width: 14.2rem;
+    max-width: 18.25rem;
     padding: 0;
     font-family: 'Manrope', system-ui, sans-serif;
     color: #0f172a;
@@ -804,20 +804,20 @@
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: start;
-    gap: .58rem;
-    padding: .72rem .78rem .16rem;
+    gap: .44rem;
+    padding: .56rem .66rem .08rem;
     border-bottom: 0;
     background: transparent;
 }
 .sc-marker-pop-main {
     min-width: 0;
     display: grid;
-    gap: .14rem;
+    gap: .1rem;
     align-content: start;
 }
 .sc-marker-pop-badge {
-    width: 2.08rem;
-    height: 2.08rem;
+    width: 1.92rem;
+    height: 1.92rem;
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
@@ -832,11 +832,11 @@
         inset 0 1px 0 rgba(255,255,255,.85);
 }
 .sc-marker-pop-badge i {
-    font-size: .92rem;
+    font-size: .84rem;
     line-height: 1;
 }
 .sc-marker-pop-title {
-    font-size: .93rem;
+    font-size: .9rem;
     line-height: 1.15;
     font-weight: 900;
     color: #0f2135;
@@ -848,28 +848,33 @@
 .sc-marker-pop-eui {
     display: inline-flex;
     align-items: center;
+    flex-wrap: nowrap;
     gap: .42rem;
     width: fit-content;
-    padding: .24rem .44rem;
+    max-width: 100%;
+    padding: .18rem .36rem;
     border-radius: 999px;
     background: rgba(237,244,251,.78);
     border: 1px solid #d7e3ef;
     color: #50657d;
-    font-size: .58rem;
+    font-size: .55rem;
     font-weight: 800;
     line-height: 1;
     letter-spacing: .08em;
     text-transform: uppercase;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+    white-space: nowrap;
 }
 .sc-marker-pop-eui-label {
     color: #7b8ca1;
+    white-space: nowrap;
 }
 .sc-marker-pop-eui-value {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: .62rem;
-    letter-spacing: .06em;
+    font-size: .58rem;
+    letter-spacing: .04em;
     color: #162536;
+    white-space: nowrap;
 }
 .sc-marker-pop-kicker {
     font-size: .56rem;
@@ -904,7 +909,7 @@
     display: flex;
     align-items: flex-start;
     gap: .55rem;
-    padding: .38rem .78rem .12rem;
+    padding: .28rem .66rem .08rem;
     border-radius: 0;
     background: transparent;
     color: #4f647c;
@@ -914,9 +919,9 @@
     box-shadow: none;
 }
 .sc-marker-pop-note.is-banner {
-    margin: .14rem .78rem 0;
-    padding: .42rem .56rem;
-    border-radius: .78rem;
+    margin: .08rem .66rem 0;
+    padding: .34rem .5rem;
+    border-radius: .68rem;
     background: linear-gradient(180deg, #f7fbff, #f1f6fd);
     border: 1px solid #dce7f2;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
@@ -934,15 +939,15 @@
 .sc-marker-pop-actions {
     display: grid;
     grid-template-columns: 1fr;
-    gap: .36rem;
-    padding: .54rem .78rem .78rem;
+    gap: .28rem;
+    padding: .38rem .66rem .66rem;
     justify-items: stretch;
 }
 .sc-marker-pop-actions.has-secondary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .sc-marker-pop-button {
-    min-height: 2.12rem;
+    min-height: 1.95rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -950,8 +955,8 @@
     width: 100%;
     min-width: 0;
     border-radius: .78rem;
-    padding: .3rem .62rem;
-    font-size: .7rem;
+    padding: .26rem .56rem;
+    font-size: .68rem;
     font-weight: 850;
     text-decoration: none;
     border: 1px solid transparent;
@@ -2835,16 +2840,16 @@ function persistSensorMarkerColor(sensorEui, color) {
 
 function markerPopupButtonBaseStyle() {
     return [
-        'min-height:2.28rem',
+        'min-height:2rem',
         'display:inline-flex',
         'align-items:center',
         'justify-content:center',
-        'gap:.35rem',
+        'gap:.28rem',
         'width:100%',
         'min-width:0',
-        'border-radius:.84rem',
-        'padding:.34rem .7rem',
-        'font-size:.72rem',
+        'border-radius:.76rem',
+        'padding:.28rem .58rem',
+        'font-size:.68rem',
         'font-weight:850',
         'text-decoration:none',
         'border:1px solid transparent',
@@ -2858,11 +2863,11 @@ function markerPopupButtonBaseStyle() {
 
 function markerPopupIconButtonStyle() {
     return [
-        'width:2.18rem',
-        'min-width:2.18rem',
-        'min-height:2.18rem',
+        'width:1.86rem',
+        'min-width:1.86rem',
+        'min-height:1.86rem',
         'padding:0',
-        'border-radius:.78rem'
+        'border-radius:.7rem'
     ].join(';');
 }
 
@@ -2895,8 +2900,8 @@ function buildMarkerPopupCard(options) {
     if (options.hintBg) styleParts.push('--sc-popup-hint-bg:' + options.hintBg);
     const cardStyle = [
         'position:relative',
-        'min-width:15.5rem',
-        'max-width:19rem',
+        'min-width:14.2rem',
+        'max-width:18.25rem',
         'padding:0',
         'font-family:Manrope,system-ui,sans-serif',
         'color:#0f172a',
@@ -2913,14 +2918,14 @@ function buildMarkerPopupCard(options) {
         'display:grid',
         'grid-template-columns:auto 1fr auto',
         'align-items:start',
-        'gap:.62rem',
-        'padding:.72rem .78rem .2rem',
+        'gap:.44rem',
+        'padding:.56rem .66rem .08rem',
         'border-bottom:0',
         'background:transparent'
     ].join(';');
     const badgeStyle = [
-        'width:2.55rem',
-        'height:2.55rem',
+        'width:1.92rem',
+        'height:1.92rem',
         'border-radius:999px',
         'display:inline-flex',
         'align-items:center',
@@ -2934,32 +2939,36 @@ function buildMarkerPopupCard(options) {
     const mainStyle = [
         'min-width:0',
         'display:grid',
-        'gap:.2rem',
+        'gap:.1rem',
         'align-content:start'
     ].join(';');
     const euiStyle = [
         'display:inline-flex',
         'align-items:center',
+        'flex-wrap:nowrap',
         'gap:.42rem',
         'width:fit-content',
-        'padding:.28rem .48rem',
+        'max-width:100%',
+        'padding:.18rem .36rem',
         'border-radius:999px',
         'background:rgba(237,244,251,.78)',
         'border:1px solid #d7e3ef',
         'color:#50657d',
-        'font-size:.61rem',
+        'font-size:.55rem',
         'font-weight:800',
         'line-height:1',
         'letter-spacing:.08em',
         'text-transform:uppercase',
-        'box-shadow:inset 0 1px 0 rgba(255,255,255,.7)'
+        'box-shadow:inset 0 1px 0 rgba(255,255,255,.7)',
+        'white-space:nowrap'
     ].join(';');
-    const euiLabelStyle = 'color:#7b8ca1';
+    const euiLabelStyle = 'color:#7b8ca1;white-space:nowrap';
     const euiValueStyle = [
         'font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace',
-        'font-size:.68rem',
-        'letter-spacing:.07em',
-        'color:#162536'
+        'font-size:.58rem',
+        'letter-spacing:.04em',
+        'color:#162536',
+        'white-space:nowrap'
     ].join(';');
     const statusStyle = [
         'display:inline-flex',
@@ -2980,7 +2989,7 @@ function buildMarkerPopupCard(options) {
         'display:flex',
         'align-items:center',
         'gap:.5rem',
-        'padding:0 .78rem 0',
+        'padding:.28rem .66rem .08rem',
         'background:transparent',
         'color:#51657d',
         'border:0',
@@ -2990,8 +2999,8 @@ function buildMarkerPopupCard(options) {
     const actionsStyle = [
         'display:grid',
         'grid-template-columns:1fr',
-        'gap:.36rem',
-        'padding:.54rem .78rem .78rem'
+        'gap:.28rem',
+        'padding:.38rem .66rem .66rem'
     ].join(';');
     const actionsClass = options.actionsClass ? ' ' + options.actionsClass : '';
     return '<div class="sc-marker-pop' + (options.variant ? ' ' + options.variant : '') + '" style="' + cardStyle + '">'
