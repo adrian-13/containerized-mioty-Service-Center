@@ -741,23 +741,24 @@
     }
 }
 .sc-leaflet-popup .leaflet-popup-content-wrapper {
-    border-radius: 1.18rem !important;
-    box-shadow: 0 20px 42px rgba(15,23,42,.18) !important;
-    border: 1px solid #d7e0eb;
-    padding: 0;
-    overflow: hidden;
-    background: linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: 0;
+    padding: 0 !important;
+    overflow: visible;
+    background: transparent !important;
 }
 .sc-leaflet-popup .leaflet-popup-content {
     margin: 0 !important;
     line-height: 1 !important;
+    padding: 0 !important;
     width: auto !important;
 }
 .sc-leaflet-popup .leaflet-popup-tip-container { margin-top: -1px; }
 .sc-leaflet-popup .leaflet-popup-tip {
     box-shadow: none !important;
-    background: #fff !important;
-    border: 1px solid #d7e0eb !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f8fd 100%) !important;
+    border: 1px solid rgba(148,163,184,.22) !important;
 }
 .sc-leaflet-popup .leaflet-popup-close-button {
     font-size: .92rem !important;
@@ -777,19 +778,19 @@
 /* Marker popup card */
 .sc-marker-pop {
     position: relative;
-    min-width: 16.5rem;
-    max-width: 21rem;
+    min-width: 17rem;
+    max-width: 22rem;
     padding: 0;
     font-family: 'Manrope', system-ui, sans-serif;
     color: #0f172a;
     border-radius: 1.22rem;
     overflow: hidden;
     background:
-        linear-gradient(180deg, rgba(255,255,255,.99), rgba(246,249,253,.96));
+        linear-gradient(180deg, rgba(255,255,255,.99), rgba(244,248,253,.98));
     border: 1px solid rgba(148,163,184,.22);
     box-shadow:
-        0 24px 52px rgba(15,23,42,.18),
-        0 4px 10px rgba(15,23,42,.08);
+        0 24px 52px rgba(15,23,42,.20),
+        0 4px 10px rgba(15,23,42,.10);
     backdrop-filter: blur(14px);
 }
 .sc-marker-pop::before {
@@ -816,8 +817,10 @@
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: start;
-    gap: .78rem;
-    padding: 1rem 1rem .72rem;
+    gap: .84rem;
+    padding: 1.02rem 1rem .78rem;
+    border-bottom: 1px solid rgba(148,163,184,.14);
+    background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(247,250,254,.82));
 }
 .sc-marker-pop-main {
     min-width: 0;
@@ -908,9 +911,9 @@
     gap: .55rem;
     padding: .68rem .78rem;
     border-radius: .9rem;
-    background: #f3f7fc;
+    background: linear-gradient(180deg, #f5f9fd, #eff5fb);
     color: #4f647c;
-    border: 1px solid #e0e9f4;
+    border: 1px solid #dce7f2;
     font-size: .76rem;
     line-height: 1.4;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
