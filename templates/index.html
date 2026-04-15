@@ -756,82 +756,103 @@
 }
 .sc-leaflet-popup .leaflet-popup-tip-container { margin-top: -2px; }
 .sc-leaflet-popup .leaflet-popup-tip {
-    box-shadow: none !important;
-    background: #fff !important;
+    box-shadow: 0 12px 24px rgba(15,23,42,.1) !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%) !important;
     border: 0 !important;
 }
 .sc-leaflet-popup .leaflet-popup-close-button {
-    font-size: .84rem !important;
-    color: #94a3b8 !important;
-    top: .38rem !important;
-    right: .5rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: .82rem !important;
+    color: #6b7d91 !important;
+    top: .58rem !important;
+    right: .62rem !important;
     line-height: 1 !important;
-    width: 1.22rem !important;
-    height: 1.22rem !important;
-    border-radius: .46rem !important;
-    background: transparent !important;
+    width: 1.55rem !important;
+    height: 1.55rem !important;
+    border-radius: .48rem !important;
+    border: 1px solid rgba(214,223,236,.96) !important;
+    background: rgba(255,255,255,.96) !important;
+    box-shadow: 0 10px 18px rgba(15,23,42,.08) !important;
     z-index: 4 !important;
 }
 .sc-leaflet-popup .leaflet-popup-close-button:hover {
     color: #13263f !important;
-    background: rgba(238,244,251,.85) !important;
+    background: #f3f7fc !important;
+    border-color: #cad7e5 !important;
 }
 /* Marker popup card */
 .sc-marker-pop {
     position: relative;
-    min-width: 12.2rem;
-    max-width: 15.2rem;
-    padding: .54rem .58rem .56rem;
+    min-width: 13.2rem;
+    max-width: 16.2rem;
+    padding: .9rem .92rem .86rem;
     font-family: 'Manrope', system-ui, sans-serif;
     color: #0f172a;
-    border-radius: 1rem;
+    border-radius: .92rem;
     overflow: hidden;
-    background: linear-gradient(180deg, #fff 0%, #f7fbff 100%);
-    border: 1px solid rgba(214,223,236,.96);
-    box-shadow: 0 16px 34px rgba(15,23,42,.16);
+    background: linear-gradient(180deg, #fff 0%, #f5f9ff 100%);
+    border: 1px solid rgba(219,228,240,.96);
+    box-shadow: 0 20px 42px rgba(15,23,42,.18);
     backdrop-filter: none;
+}
+.sc-marker-pop::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--sc-popup-accent, var(--brand-500));
+    opacity: .92;
 }
 .sc-marker-pop-header {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
-    gap: .18rem;
+    gap: .68rem;
     padding: 0;
     border-bottom: 0;
     background: transparent;
 }
 .sc-marker-pop.is-unlocked .sc-marker-pop-header {
-    gap: .14rem;
+    gap: .58rem;
     padding: 0;
 }
 .sc-marker-pop-main {
     min-width: 0;
     display: grid;
-    gap: .06rem;
+    gap: .42rem;
     align-content: start;
 }
 .sc-marker-pop.has-rail .sc-marker-pop-main {
-    padding-right: 1.8rem;
+    padding-right: 0;
 }
 .sc-marker-pop.is-unlocked .sc-marker-pop-title {
-    font-size: .92rem;
-    line-height: 1.12;
+    font-size: .98rem;
+    line-height: 1.18;
 }
 .sc-marker-pop.is-unlocked {
-    min-width: 12rem;
-    max-width: 15rem;
+    min-width: 13rem;
+    max-width: 16rem;
 }
 .sc-marker-pop.is-unlocked .sc-marker-pop-main {
-    gap: .04rem;
+    gap: .38rem;
+}
+.sc-marker-pop-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .34rem;
+    min-height: 1rem;
 }
 .sc-marker-pop-title {
-    font-size: .92rem;
-    line-height: 1.1;
+    font-size: 1rem;
+    line-height: 1.18;
     font-weight: 800;
-    color: #0f2135;
-    letter-spacing: -.01em;
+    color: #10243a;
+    letter-spacing: 0;
     white-space: normal;
     overflow: hidden;
     display: -webkit-box;
@@ -839,52 +860,49 @@
     -webkit-box-orient: vertical;
 }
 .sc-marker-pop-rail {
-    position: absolute;
-    top: .1rem;
-    right: .1rem;
-    z-index: 2;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: flex-end;
 }
 .sc-marker-pop-eui {
-    display: inline-flex;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    flex-wrap: nowrap;
-    gap: .32rem;
-    width: fit-content;
+    gap: .52rem;
+    width: 100%;
     max-width: 100%;
-    padding: .14rem .3rem;
-    border-radius: 999px;
-    background: rgba(237,244,251,.78);
-    border: 1px solid #d7e3ef;
-    color: #50657d;
-    font-size: .53rem;
+    padding: .44rem .52rem;
+    border-radius: .62rem;
+    background: linear-gradient(180deg, rgba(247,250,252,.98), rgba(240,245,251,.98));
+    border: 1px solid #dde8f3;
+    color: #4f647c;
+    font-size: .56rem;
     font-weight: 800;
     line-height: 1;
-    letter-spacing: .08em;
+    letter-spacing: .1em;
     text-transform: uppercase;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
-    white-space: nowrap;
 }
 .sc-marker-pop-eui-label {
-    color: #7b8ca1;
+    color: #7890a8;
     white-space: nowrap;
 }
 .sc-marker-pop-eui-value {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: .55rem;
-    letter-spacing: .03em;
+    font-size: .66rem;
+    letter-spacing: .04em;
     color: #162536;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .sc-marker-pop-kicker {
-    font-size: .56rem;
+    font-size: .58rem;
     font-weight: 900;
     line-height: 1;
     text-transform: uppercase;
-    letter-spacing: .14em;
-    color: #7a8fa8;
+    letter-spacing: .12em;
+    color: #6f8499;
 }
 .sc-marker-pop-status {
     display: inline-flex;
@@ -892,19 +910,19 @@
     gap: .28rem;
     align-self: flex-start;
     width: fit-content;
-    padding: .18rem .44rem;
+    padding: .24rem .48rem;
     border-radius: 999px;
-    font-size: .54rem;
+    font-size: .55rem;
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: .1em;
+    letter-spacing: .08em;
     color: #fff;
     box-shadow:
-        0 10px 18px rgba(15,23,42,.10),
+        0 10px 18px rgba(15,23,42,.12),
         inset 0 1px 0 rgba(255,255,255,.16);
 }
 .sc-marker-pop.is-unlocked .sc-marker-pop-status {
-    padding: .16rem .42rem;
+    padding: .22rem .44rem;
     font-size: .52rem;
     letter-spacing: .08em;
 }
@@ -916,22 +934,18 @@
     display: flex;
     align-items: flex-start;
     gap: .34rem;
-    padding: .04rem 0 0;
-    border-radius: 0;
-    background: transparent;
-    color: #4f647c;
-    font-size: .66rem;
-    line-height: 1.35;
-    border: 0;
-    box-shadow: none;
-}
-.sc-marker-pop-note.is-banner {
-    margin: .02rem 0 0;
-    padding: .16rem .22rem;
-    border-radius: .56rem;
+    margin-top: .14rem;
+    padding: .5rem .58rem;
+    border-radius: .62rem;
     background: linear-gradient(180deg, #f7fbff, #f1f6fd);
+    color: #4f647c;
+    font-size: .68rem;
+    line-height: 1.35;
     border: 1px solid #dce7f2;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
+}
+.sc-marker-pop-note.is-banner {
+    margin-top: .18rem;
 }
 .sc-marker-pop-note i {
     margin-top: .1rem;
@@ -939,32 +953,33 @@
     flex-shrink: 0;
 }
 .sc-marker-pop-note.is-unlocked {
-    background: transparent;
+    background: var(--sc-popup-hint-bg, rgba(22,163,74,.10));
     border-color: transparent;
     color: var(--sc-popup-hint-color, #166534);
+    box-shadow: none;
 }
 .sc-marker-pop-actions {
     display: grid;
     grid-template-columns: 1fr;
-    gap: .18rem;
-    padding: .08rem 0 0;
+    gap: .42rem;
+    padding: .62rem 0 0;
     justify-items: stretch;
 }
 .sc-marker-pop-actions.has-secondary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .sc-marker-pop-button {
-    min-height: 1.5rem;
+    min-height: 2.2rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: .34rem;
+    gap: .4rem;
     width: 100%;
     min-width: 0;
-    border-radius: .78rem;
-    padding: .22rem .48rem;
-    font-size: .61rem;
-    font-weight: 850;
+    border-radius: .62rem;
+    padding: .32rem .72rem;
+    font-size: .72rem;
+    font-weight: 800;
     text-decoration: none;
     border: 1px solid transparent;
     cursor: pointer;
@@ -974,7 +989,7 @@
     transition: transform .12s, background .12s, color .12s, border-color .12s, box-shadow .12s;
 }
 .sc-marker-pop-button i {
-    font-size: .68rem;
+    font-size: .74rem;
     line-height: 1;
 }
 .sc-marker-pop-button:hover {
@@ -982,57 +997,56 @@
 }
 .sc-marker-pop-rail {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: flex-end;
 }
 .sc-marker-pop-button.is-primary,
 .sc-popup-detail {
     background: var(--sc-popup-accent, var(--brand-500));
     color: #fff;
-    box-shadow: 0 8px 18px rgba(var(--brand-rgb), .16);
+    box-shadow: 0 14px 24px rgba(var(--brand-rgb), .2);
 }
 .sc-popup-detail.is-compact {
-    width: fit-content;
-    min-width: 0;
-    justify-self: start;
-    padding-inline: .46rem;
-    border-radius: .7rem;
+    width: 100%;
+    justify-self: stretch;
+    padding-inline: .72rem;
+    border-radius: .62rem;
 }
 .sc-marker-pop-button.is-primary:hover,
 .sc-popup-detail:hover {
     background: var(--sc-popup-accent-hover, var(--brand-600));
-    box-shadow: 0 10px 20px rgba(var(--brand-rgb), .2);
+    box-shadow: 0 16px 26px rgba(var(--brand-rgb), .24);
 }
 .sc-marker-pop-button.is-success,
 .sc-popup-save {
     background: #16a34a;
     color: #fff;
     border-color: #16a34a;
-    box-shadow: 0 6px 12px rgba(22,163,74,.12);
+    box-shadow: 0 12px 22px rgba(22,163,74,.18);
 }
 .sc-marker-pop-button.is-success:hover,
 .sc-popup-save:hover {
     background: #15803d;
     border-color: #15803d;
-    box-shadow: 0 8px 16px rgba(22,163,74,.16);
+    box-shadow: 0 14px 24px rgba(22,163,74,.22);
 }
 .sc-marker-pop-button.is-secondary,
 .sc-popup-cancel {
-    background: #f4f7fb;
-    color: #425466;
-    border-color: #d9e3ef;
+    background: #f7f9fc;
+    color: #334155;
+    border-color: #d6e1ec;
 }
 .sc-marker-pop-button.is-secondary:hover,
 .sc-popup-cancel:hover {
-    background: #edf3fb;
+    background: #eef4fa;
     color: #1e293b;
     border-color: #c8d7e8;
 }
 .sc-marker-pop-button.is-icon,
 .sc-popup-dots {
-    width: 1.72rem;
-    min-width: 1.72rem;
-    min-height: 1.72rem;
+    width: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
     padding: 0;
     border-radius: .62rem;
 }
@@ -1044,25 +1058,25 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(244,247,251,.92);
-    border: 1px solid #d9e3ef;
+    background: rgba(255,255,255,.96);
+    border: 1px solid #d6e1ec;
     border-radius: .62rem;
     cursor: pointer;
     padding: 0;
-    font-size: .76rem;
+    font-size: .82rem;
     line-height: 1;
-    color: #5f738e;
+    color: #5b7087;
     flex-shrink: 0;
-    box-shadow: none;
+    box-shadow: 0 10px 18px rgba(15,23,42,.08);
     appearance: none;
     -webkit-appearance: none;
     transition: background .12s, color .12s, border-color .12s, transform .12s, box-shadow .12s;
 }
 .sc-popup-dots:hover {
-    background: #ecf3fb;
+    background: #f3f7fc;
     border-color: #c8d7e8;
     color: #1e293b;
-    box-shadow: 0 8px 14px rgba(15,23,42,.08);
+    box-shadow: 0 12px 20px rgba(15,23,42,.1);
 }
 /* â”€â”€ Context menu â”€â”€ */
 .sc-ctx {
@@ -2847,17 +2861,17 @@ function persistSensorMarkerColor(sensorEui, color) {
 
 function markerPopupButtonBaseStyle() {
     return [
-        'min-height:2rem',
+        'min-height:2.2rem',
         'display:inline-flex',
         'align-items:center',
         'justify-content:center',
-        'gap:.28rem',
+        'gap:.4rem',
         'width:100%',
         'min-width:0',
-        'border-radius:.76rem',
-        'padding:.28rem .58rem',
-        'font-size:.68rem',
-        'font-weight:850',
+        'border-radius:.62rem',
+        'padding:.32rem .72rem',
+        'font-size:.72rem',
+        'font-weight:800',
         'text-decoration:none',
         'border:1px solid transparent',
         'cursor:pointer',
@@ -2870,11 +2884,11 @@ function markerPopupButtonBaseStyle() {
 
 function markerPopupIconButtonStyle() {
     return [
-        'width:1.86rem',
-        'min-width:1.86rem',
-        'min-height:1.86rem',
+        'width:2rem',
+        'min-width:2rem',
+        'min-height:2rem',
         'padding:0',
-        'border-radius:.7rem'
+        'border-radius:.62rem'
     ].join(';');
 }
 
@@ -2883,16 +2897,16 @@ function markerPopupDotsStyle() {
         'display:inline-flex',
         'align-items:center',
         'justify-content:center',
-        'background:rgba(244,247,251,.92)',
-        'border:1px solid #d9e3ef',
-        'border-radius:.78rem',
+        'background:rgba(255,255,255,.96)',
+        'border:1px solid #d6e1ec',
+        'border-radius:.62rem',
         'cursor:pointer',
         'padding:0',
-        'font-size:.84rem',
+        'font-size:.82rem',
         'line-height:1',
-        'color:#5f738e',
+        'color:#5b7087',
         'flex-shrink:0',
-        'box-shadow:none',
+        'box-shadow:0 10px 18px rgba(15,23,42,.08)',
         'appearance:none',
         '-webkit-appearance:none',
         'transition:background .12s, color .12s, border-color .12s, transform .12s, box-shadow .12s'
@@ -2907,25 +2921,25 @@ function buildMarkerPopupCard(options) {
     if (options.hintBg) styleParts.push('--sc-popup-hint-bg:' + options.hintBg);
     const cardStyle = [
         'position:relative',
-        'min-width:12.2rem',
-        'max-width:15.2rem',
-        'padding:.54rem .58rem .56rem',
+        'min-width:13.2rem',
+        'max-width:16.2rem',
+        'padding:.9rem .92rem .86rem',
         'font-family:Manrope,system-ui,sans-serif',
         'color:#0f172a',
-        'border-radius:1rem',
+        'border-radius:.92rem',
         'overflow:hidden',
-        'background:linear-gradient(180deg, #fff 0%, #f7fbff 100%)',
-        'border:1px solid rgba(214,223,236,.96)',
-        'box-shadow:0 16px 34px rgba(15,23,42,.16)',
+        'background:linear-gradient(180deg, #fff 0%, #f5f9ff 100%)',
+        'border:1px solid rgba(219,228,240,.96)',
+        'box-shadow:0 20px 42px rgba(15,23,42,.18)',
         'backdrop-filter:none'
     ].join(';') + (styleParts.length ? ';' + styleParts.join(';') : '');
     const headerStyle = [
         'position:relative',
         'z-index:1',
         'display:grid',
-        'grid-template-columns:1fr',
+        'grid-template-columns:minmax(0,1fr) auto',
         'align-items:start',
-        'gap:.18rem',
+        'gap:.68rem',
         'padding:0',
         'border-bottom:0',
         'background:transparent'
@@ -2933,36 +2947,44 @@ function buildMarkerPopupCard(options) {
     const mainStyle = [
         'min-width:0',
         'display:grid',
-        'gap:.08rem',
+        'gap:.42rem',
         'align-content:start'
     ].join(';');
-    const euiStyle = [
-        'display:inline-flex',
+    const metaStyle = [
+        'display:flex',
         'align-items:center',
-        'flex-wrap:nowrap',
-        'gap:.42rem',
-        'width:fit-content',
+        'flex-wrap:wrap',
+        'gap:.34rem',
+        'min-height:1rem'
+    ].join(';');
+    const euiStyle = [
+        'display:grid',
+        'grid-template-columns:auto minmax(0,1fr)',
+        'align-items:center',
+        'gap:.52rem',
+        'width:100%',
         'max-width:100%',
-        'padding:.18rem .36rem',
-        'border-radius:999px',
-        'background:rgba(237,244,251,.78)',
-        'border:1px solid #d7e3ef',
-        'color:#50657d',
-        'font-size:.55rem',
+        'padding:.44rem .52rem',
+        'border-radius:.62rem',
+        'background:linear-gradient(180deg, rgba(247,250,252,.98), rgba(240,245,251,.98))',
+        'border:1px solid #dde8f3',
+        'color:#4f647c',
+        'font-size:.56rem',
         'font-weight:800',
         'line-height:1',
-        'letter-spacing:.08em',
+        'letter-spacing:.1em',
         'text-transform:uppercase',
         'box-shadow:inset 0 1px 0 rgba(255,255,255,.7)',
-        'white-space:nowrap'
     ].join(';');
-    const euiLabelStyle = 'color:#7b8ca1;white-space:nowrap';
+    const euiLabelStyle = 'color:#7890a8;white-space:nowrap';
     const euiValueStyle = [
         'font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace',
-        'font-size:.58rem',
+        'font-size:.66rem',
         'letter-spacing:.04em',
         'color:#162536',
-        'white-space:nowrap'
+        'white-space:nowrap',
+        'overflow:hidden',
+        'text-overflow:ellipsis'
     ].join(';');
     const statusStyle = [
         'display:inline-flex',
@@ -2970,31 +2992,34 @@ function buildMarkerPopupCard(options) {
         'gap:.28rem',
         'align-self:flex-start',
         'width:fit-content',
-        'padding:.2rem .5rem',
+        'padding:.24rem .48rem',
         'border-radius:999px',
-        'font-size:.56rem',
+        'font-size:.55rem',
         'font-weight:900',
         'text-transform:uppercase',
-        'letter-spacing:.1em',
+        'letter-spacing:.08em',
         'color:#fff',
-        'box-shadow:0 10px 18px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.16)'
+        'box-shadow:0 10px 18px rgba(15,23,42,.12), inset 0 1px 0 rgba(255,255,255,.16)'
     ].join(';');
     const noteStyle = [
         'display:flex',
-        'align-items:center',
+        'align-items:flex-start',
         'gap:.34rem',
-        'padding:.28rem 0 .08rem',
-        'background:transparent',
+        'margin-top:.14rem',
+        'padding:.5rem .58rem',
+        'background:linear-gradient(180deg, #f7fbff, #f1f6fd)',
         'color:#51657d',
-        'border:0',
-        'font-size:.66rem',
+        'border:1px solid #dce7f2',
+        'border-radius:.62rem',
+        'box-shadow:inset 0 1px 0 rgba(255,255,255,.65)',
+        'font-size:.68rem',
         'line-height:1.35'
     ].join(';');
     const actionsStyle = [
         'display:grid',
         'grid-template-columns:1fr',
-        'gap:.18rem',
-        'padding:.08rem 0 0'
+        'gap:.42rem',
+        'padding:.62rem 0 0'
     ].join(';');
     const actionsClass = options.actionsClass ? ' ' + options.actionsClass : '';
     const popClass = ['sc-marker-pop'];
@@ -3003,12 +3028,11 @@ function buildMarkerPopupCard(options) {
     return '<div class="' + popClass.join(' ') + '" style="' + cardStyle + '">'
         + '<div class="sc-marker-pop-header" style="' + headerStyle + '">'
         + '<div class="sc-marker-pop-main" style="' + mainStyle + '">'
-        + (options.kicker ? '<div class="sc-marker-pop-kicker">' + escapeHtml(options.kicker) + '</div>' : '')
+        + ((options.kicker || options.statusLabel) ? '<div class="sc-marker-pop-meta" style="' + metaStyle + '">' + (options.kicker ? '<div class="sc-marker-pop-kicker">' + escapeHtml(options.kicker) + '</div>' : '') + (options.statusLabel ? '<span class="sc-marker-pop-status" style="' + statusStyle + 'background:' + escapeHtml(options.statusColor || options.accentColor || '#64748b') + '">' + escapeHtml(options.statusLabel) + '</span>' : '') + '</div>' : '')
         + '<div class="sc-marker-pop-title">' + escapeHtml(options.title || '') + '</div>'
         + (options.eui ? '<div class="sc-marker-pop-eui" style="' + euiStyle + '"><span class="sc-marker-pop-eui-label" style="' + euiLabelStyle + '">EUI</span><span class="sc-marker-pop-eui-value" style="' + euiValueStyle + '">' + escapeHtml(options.eui) + '</span></div>' : '')
-        + (options.statusLabel ? '<span class="sc-marker-pop-status" style="' + statusStyle + 'background:' + escapeHtml(options.statusColor || options.accentColor || '#64748b') + '">' + escapeHtml(options.statusLabel) + '</span>' : '')
         + '</div>'
-        + (options.dotButtonHtml ? '<div class="sc-marker-pop-rail" style="display:flex;align-items:flex-start;justify-content:flex-end;">' + options.dotButtonHtml + '</div>' : '')
+        + (options.dotButtonHtml ? '<div class="sc-marker-pop-rail" style="display:flex;align-items:center;justify-content:flex-end;">' + options.dotButtonHtml + '</div>' : '')
         + '</div>'
         + (options.noteHtml ? '<div class="sc-marker-pop-note' + (options.noteClass ? ' ' + options.noteClass : '') + '" style="' + noteStyle + '">' + options.noteHtml + '</div>' : '')
         + (options.actionsHtml ? '<div class="sc-marker-pop-actions' + actionsClass + '" style="' + actionsStyle + '">' + options.actionsHtml + '</div>' : '')
@@ -3336,10 +3360,13 @@ function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
     const brandBg  = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#eb7e17';
     const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
     return buildMarkerPopupCard({
+        kicker: 'Senzor',
         title: name,
         eui: shortEui,
         accentColor: brandBg,
         accentHover: brandHov,
+        statusLabel: slabel,
+        statusColor: STATUS_COLORS[tier] || '#94a3b8',
         dotButtonHtml: '<button type="button" id="sc-popup-dots-' + mid + '" class="sc-popup-dots sc-marker-pop-button is-icon" style="' + markerPopupIconButtonStyle() + ';' + markerPopupDotsStyle() + '" title="Možnosti"><i class="fas fa-ellipsis-h"></i></button>',
         actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail is-compact sc-marker-pop-button is-primary" style="' + markerPopupButtonBaseStyle() + ';background:var(--sc-popup-accent, var(--brand-500));color:#fff;" ><i class="fas fa-arrow-up-right-from-square"></i><span>Detail senzora →</span></a>'
     });
@@ -3351,6 +3378,7 @@ function buildPopupUnlockedHtml(name, shortEui, mid, hasMoved) {
     const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
     return buildMarkerPopupCard({
         variant: 'is-unlocked',
+        kicker: 'Úprava polohy',
         title: name,
         eui: shortEui,
         accentColor: hintColor,
@@ -3360,8 +3388,8 @@ function buildPopupUnlockedHtml(name, shortEui, mid, hasMoved) {
         noteClass: 'is-unlocked is-banner',
         noteHtml: '<i class="fas fa-route"></i><span>' + escapeHtml(hintText) + '</span>',
         actionsClass: 'has-secondary',
-        actionsHtml: (hasMoved ? '<button type="button" id="sc-popup-save-' + mid + '" class="sc-popup-save sc-marker-pop-button is-success" style="' + markerPopupButtonBaseStyle() + ';background:#16a34a;color:#fff;border-color:#16a34a;box-shadow:0 6px 12px rgba(22,163,74,.12);"><i class="fas fa-floppy-disk"></i><span>Uložiť polohu</span></button>' : '')
-            + '<button type="button" id="sc-popup-cancel-' + mid + '" class="sc-popup-cancel sc-marker-pop-button is-secondary" style="' + markerPopupButtonBaseStyle() + ';background:#f4f7fb;color:#425466;border-color:#d9e3ef;"><i class="fas fa-xmark"></i><span>Zrušiť</span></button>'
+        actionsHtml: (hasMoved ? '<button type="button" id="sc-popup-save-' + mid + '" class="sc-popup-save sc-marker-pop-button is-success" style="' + markerPopupButtonBaseStyle() + ';background:#16a34a;color:#fff;border-color:#16a34a;box-shadow:0 12px 22px rgba(22,163,74,.18);"><i class="fas fa-floppy-disk"></i><span>Uložiť polohu</span></button>' : '')
+            + '<button type="button" id="sc-popup-cancel-' + mid + '" class="sc-popup-cancel sc-marker-pop-button is-secondary" style="' + markerPopupButtonBaseStyle() + ';background:#f7f9fc;color:#334155;border-color:#d6e1ec;"><i class="fas fa-xmark"></i><span>Zrušiť</span></button>'
     });
 }
 
@@ -4783,6 +4811,7 @@ function fetchJson(url) {
 
 function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
     return buildMarkerPopupCard({
+        kicker: 'Senzor',
         title: name,
         eui: shortEui,
         accentColor: '#2563eb',
@@ -4797,6 +4826,7 @@ function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
     const hintColor = hasMoved ? '#16a34a' : '#eb7e17';
     return buildMarkerPopupCard({
         variant: 'is-unlocked',
+        kicker: 'Úprava polohy',
         title: name,
         eui: shortEui,
         accentColor: hintColor,
@@ -4806,8 +4836,8 @@ function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
         noteClass: 'is-unlocked is-banner',
         noteHtml: '<i class="fas fa-route"></i><span>' + escapeHtml(hintText) + '</span>',
         actionsClass: 'has-secondary',
-        actionsHtml: (hasMoved ? '<button type="button" id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save sc-marker-pop-button is-success" style="' + markerPopupButtonBaseStyle() + ';background:#16a34a;color:#fff;border-color:#16a34a;box-shadow:0 6px 12px rgba(22,163,74,.12);"><i class="fas fa-floppy-disk"></i><span>Uložiť polohu</span></button>' : '')
-            + '<button type="button" id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel sc-marker-pop-button is-secondary" style="' + markerPopupButtonBaseStyle() + ';background:#f4f7fb;color:#425466;border-color:#d9e3ef;"><i class="fas fa-xmark"></i><span>Zrušiť</span></button>'
+        actionsHtml: (hasMoved ? '<button type="button" id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save sc-marker-pop-button is-success" style="' + markerPopupButtonBaseStyle() + ';background:#16a34a;color:#fff;border-color:#16a34a;box-shadow:0 12px 22px rgba(22,163,74,.18);"><i class="fas fa-floppy-disk"></i><span>Uložiť polohu</span></button>' : '')
+            + '<button type="button" id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel sc-marker-pop-button is-secondary" style="' + markerPopupButtonBaseStyle() + ';background:#f7f9fc;color:#334155;border-color:#d6e1ec;"><i class="fas fa-xmark"></i><span>Zrušiť</span></button>'
     });
 }
 
