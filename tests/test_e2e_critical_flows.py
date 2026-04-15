@@ -354,6 +354,7 @@ class CriticalFlowsE2ETest(unittest.TestCase):
         self.assertIn("✓ Marker presunutý — uložiť?", template)
         self.assertIn("↕ Presuňte marker na novú polohu", template)
         self.assertIn("markerPopupButtonBaseStyle()", template)
+        self.assertIn("width:fit-content;min-width:0;justify-self:start", template)
         self.assertNotIn("buildMiniMarkerPopupHtml_legacy", template)
         self.assertNotIn("buildMiniMarkerUnlockedHtml_legacy", template)
     def test_global_admin_dashboard_cache_key_is_distinct_from_default_scope(self):

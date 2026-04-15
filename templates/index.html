@@ -804,14 +804,14 @@
     display: grid;
     grid-template-columns: auto 1fr;
     align-items: start;
-    gap: .34rem;
-    padding: .5rem .5rem .06rem;
+    gap: .26rem;
+    padding: .4rem .38rem .04rem;
     border-bottom: 0;
     background: transparent;
 }
 .sc-marker-pop.is-unlocked .sc-marker-pop-header {
-    gap: .18rem;
-    padding: .26rem .34rem 0;
+    gap: .14rem;
+    padding: .22rem .28rem 0;
     grid-template-columns: 1fr;
 }
 .sc-marker-pop-main {
@@ -852,14 +852,14 @@
     line-height: 1.08;
 }
 .sc-marker-pop.is-unlocked {
-    min-width: 13.4rem;
-    max-width: 16.8rem;
+    min-width: 12.8rem;
+    max-width: 16.2rem;
 }
 .sc-marker-pop.is-unlocked .sc-marker-pop-main {
     gap: .06rem;
 }
 .sc-marker-pop-title {
-    font-size: .86rem;
+    font-size: .84rem;
     line-height: 1.15;
     font-weight: 900;
     color: #0f2135;
@@ -870,8 +870,8 @@
 }
 .sc-marker-pop-rail {
     position: absolute;
-    top: .28rem;
-    right: .28rem;
+    top: .2rem;
+    right: .2rem;
     z-index: 2;
     display: flex;
     align-items: flex-start;
@@ -949,7 +949,7 @@
     display: flex;
     align-items: flex-start;
     gap: .55rem;
-    padding: .22rem .56rem .06rem;
+    padding: .18rem .48rem .04rem;
     border-radius: 0;
     background: transparent;
     color: #4f647c;
@@ -959,8 +959,8 @@
     box-shadow: none;
 }
 .sc-marker-pop-note.is-banner {
-    margin: .02rem .36rem 0;
-    padding: .16rem .3rem;
+    margin: .02rem .3rem 0;
+    padding: .14rem .26rem;
     border-radius: .56rem;
     background: linear-gradient(180deg, #f7fbff, #f1f6fd);
     border: 1px solid #dce7f2;
@@ -980,14 +980,14 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: .16rem;
-    padding: .14rem .36rem .36rem;
+    padding: .1rem .3rem .3rem;
     justify-items: stretch;
 }
 .sc-marker-pop-actions.has-secondary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .sc-marker-pop-button {
-    min-height: 1.58rem;
+    min-height: 1.46rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -995,8 +995,8 @@
     width: 100%;
     min-width: 0;
     border-radius: .78rem;
-    padding: .14rem .38rem;
-    font-size: .61rem;
+    padding: .12rem .34rem;
+    font-size: .59rem;
     font-weight: 850;
     text-decoration: none;
     border: 1px solid transparent;
@@ -1028,8 +1028,8 @@
     width: fit-content;
     min-width: 0;
     justify-self: start;
-    padding-inline: .5rem;
-    border-radius: .58rem;
+    padding-inline: .46rem;
+    border-radius: .56rem;
 }
 .sc-marker-pop-button.is-primary:hover,
 .sc-popup-detail:hover {
@@ -3381,7 +3381,6 @@ function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
     const brandHov = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#ca6208';
     const statusColor = tier && STATUS_COLORS[tier] ? STATUS_COLORS[tier] : null;
     return buildMarkerPopupCard({
-        kicker: 'Senzor',
         badgeHtml: '<i class="fas fa-microchip"></i>',
         title: name,
         eui: shortEui,
@@ -3390,7 +3389,7 @@ function buildPopupHtml(name, shortEui, href, mid, tier, slabel) {
         accentColor: brandBg,
         accentHover: brandHov,
         dotButtonHtml: '<button type="button" id="sc-popup-dots-' + mid + '" class="sc-popup-dots sc-marker-pop-button is-icon" style="' + markerPopupIconButtonStyle() + ';' + markerPopupDotsStyle() + '" title="Možnosti"><i class="fas fa-ellipsis-h"></i></button>',
-        actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail is-compact sc-marker-pop-button is-primary" style="' + markerPopupButtonBaseStyle() + ';background:var(--sc-popup-accent, var(--brand-500));color:#fff;box-shadow:0 6px 12px rgba(var(--brand-rgb), .12);" ><i class="fas fa-arrow-up-right-from-square"></i><span>Detail senzora →</span></a>'
+        actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail is-compact sc-marker-pop-button is-primary" style="' + markerPopupButtonBaseStyle() + ';width:fit-content;min-width:0;justify-self:start;background:var(--sc-popup-accent, var(--brand-500));color:#fff;box-shadow:0 6px 12px rgba(var(--brand-rgb), .12);padding-inline:.46rem;" ><i class="fas fa-arrow-up-right-from-square"></i><span>Detail senzora →</span></a>'
     });
 }
 
@@ -4832,7 +4831,6 @@ function fetchJson(url) {
 
 function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
     return buildMarkerPopupCard({
-        kicker: 'Senzor',
         badgeHtml: '<i class="fas fa-microchip"></i>',
         title: name,
         eui: shortEui,
@@ -4841,7 +4839,7 @@ function buildMiniMarkerPopupHtml(name, shortEui, href, popupId) {
         accentColor: '#2563eb',
         accentHover: '#1d4ed8',
         dotButtonHtml: '<button type="button" id="sc-popup-dots-' + escapeHtml(popupId) + '" class="sc-popup-dots sc-marker-pop-button is-icon" style="' + markerPopupIconButtonStyle() + ';' + markerPopupDotsStyle() + '" title="Možnosti"><i class="fas fa-ellipsis-h"></i></button>',
-        actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail is-compact sc-marker-pop-button is-primary" style="' + markerPopupButtonBaseStyle() + ';background:var(--sc-popup-accent, var(--brand-500));color:#fff;box-shadow:0 6px 12px rgba(var(--brand-rgb), .12);" ><i class="fas fa-arrow-up-right-from-square"></i><span>Detail senzora →</span></a>'
+        actionsHtml: '<a href="' + escapeHtml(href) + '" class="sc-popup-detail is-compact sc-marker-pop-button is-primary" style="' + markerPopupButtonBaseStyle() + ';width:fit-content;min-width:0;justify-self:start;background:var(--sc-popup-accent, var(--brand-500));color:#fff;box-shadow:0 6px 12px rgba(var(--brand-rgb), .12);padding-inline:.46rem;" ><i class="fas fa-arrow-up-right-from-square"></i><span>Detail senzora →</span></a>'
     });
 }
 
