@@ -4576,9 +4576,9 @@ function buildMarkerPopupCard(options) {
     return '<div class="sc-marker-pop' + (options.variant ? ' ' + options.variant : '') + '"' + styleAttr + '>'
         + '<div class="sc-marker-pop-header">'
         + '<div class="sc-marker-pop-main">'
-        + (options.statusLabel ? '<span class="sc-marker-pop-status" style="background:' + esc(options.statusColor || options.accentColor || '#64748b') + '">' + esc(options.statusLabel) + '</span>' : '')
-        + '<div class="sc-marker-pop-title">' + esc(options.title || '') + '</div>'
-        + (options.eui ? '<div class="sc-marker-pop-eui">' + esc(options.eui) + '</div>' : '')
+        + (options.statusLabel ? '<span class="sc-marker-pop-status" style="background:' + escapeHtml(options.statusColor || options.accentColor || '#64748b') + '">' + escapeHtml(options.statusLabel) + '</span>' : '')
+        + '<div class="sc-marker-pop-title">' + escapeHtml(options.title || '') + '</div>'
+        + (options.eui ? '<div class="sc-marker-pop-eui">' + escapeHtml(options.eui) + '</div>' : '')
         + '</div>'
         + (options.dotButtonHtml || '')
         + '</div>'
@@ -4614,7 +4614,7 @@ function buildMiniMarkerUnlockedPopupHtml(name, shortEui, popupId, hasMoved) {
         hintColor: hintColor,
         hintBg: hasMoved ? 'rgba(22, 163, 74, .10)' : 'rgba(235, 126, 23, .10)',
         noteClass: 'is-unlocked',
-        noteHtml: '<i class="fas fa-route"></i><span>' + esc(hintText) + '</span>',
+        noteHtml: '<i class="fas fa-route"></i><span>' + escapeHtml(hintText) + '</span>',
         actionsHtml: (hasMoved ? '<button type="button" id="sc-popup-save-' + escapeHtml(popupId) + '" class="sc-popup-save sc-marker-pop-button is-success" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'save\', \'" + escapeHtml(popupId) + "\', event)"><i class="fas fa-floppy-disk"></i><span>Uložiť polohu</span></button>' : '')
             + '<button type="button" id="sc-popup-cancel-' + escapeHtml(popupId) + '" class="sc-popup-cancel sc-marker-pop-button is-secondary" onmousedown="event.stopPropagation()" onclick="return window.scHandleMiniPopupAction(\'cancel\', \'" + escapeHtml(popupId) + "\', event)"><i class="fas fa-xmark"></i><span>Zrušiť</span></button>'
     });
